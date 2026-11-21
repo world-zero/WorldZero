@@ -5,7 +5,7 @@ Seam: ``_global_tasks_query``. Scoped to the CHARACTER, not the account. No
 the same windowed Select, so suppressed rows take their number with them.
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest
 import pytest_asyncio
@@ -17,7 +17,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.task import Task, TaskStatus
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
 
 async def _make_task(
@@ -32,6 +32,7 @@ async def _make_task(
         created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         created_at=created_at,
+        activated_at=created_at,
     )
     db_session.add(task)
     await db_session.commit()
@@ -138,3 +139,115 @@ async def test_a_second_character_on_an_old_account_starts_clean(
         "a second character on an existing account starts clean for the same "
         f"reason the first one did; got {ids}"
     )
+
+
+async def _set_status(client, auth_headers, task_id: int, status: str) -> None:
+    resp = await client.put(
+        f"/admin/tasks/{task_id}/status", json={"status": status}, headers=auth_headers
+    )
+    assert resp.status_code == 200, resp.text
+
+
+def _global_items(body: dict) -> list[dict]:
+    return [i for i in body["items"] if i["type"] == "global_task"]
+
+
+def _pending(character: Character, title: str, created_at) -> Task:
+    return Task(
+        title=title,
+        point_value=10,
+        level_required=0,
+        status=TaskStatus.pending,
+        created_by_id=character.id,
+        primary_faction_slug=DEFAULT_FACTION_SLUG,
+        created_at=created_at,
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_proposal_is_announced_when_approved_not_when_proposed(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+):
+    """#3775: stamped on the approval, not the proposal."""
+    await make_admin(db_session, account)
+    proposed = character.created_at
+    task = _pending(character, "Proposed long ago", proposed)
+    db_session.add(task)
+    await db_session.commit()
+    assert _global_items(await _global_feed(client, auth_headers)) == []
+
+    await _set_status(client, auth_headers, task.id, "active")
+    items = _global_items(await _global_feed(client, auth_headers))
+    await db_session.refresh(task)
+    assert [i["payload"]["task_id"] for i in items] == [task.id]
+    assert task.activated_at > proposed
+    assert datetime.fromisoformat(items[0]["timestamp"]) == task.activated_at
+
+
+@pytest.mark.asyncio
+async def test_a_task_proposed_before_the_character_but_approved_after_is_news(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+):
+    await make_admin(db_session, account)
+    task = _pending(
+        character, "Pending when they joined", character.created_at - timedelta(days=3)
+    )
+    db_session.add(task)
+    await db_session.commit()
+
+    await _set_status(client, auth_headers, task.id, "active")
+    assert task.id in _task_ids(await _global_feed(client, auth_headers))
+
+
+@pytest.mark.asyncio
+async def test_retire_then_reactivate_is_not_announced_again(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+):
+    await make_admin(db_session, account)
+    task = _pending(character, "Back and forth", character.created_at)
+    db_session.add(task)
+    await db_session.commit()
+    await _set_status(client, auth_headers, task.id, "active")
+    await db_session.refresh(task)
+    first = task.activated_at
+
+    await _set_status(client, auth_headers, task.id, "retired")
+    await _set_status(client, auth_headers, task.id, "active")
+    await db_session.refresh(task)
+    assert task.activated_at == first
+    items = _global_items(await _global_feed(client, auth_headers))
+    assert len(items) == 1
+    assert datetime.fromisoformat(items[0]["timestamp"]) == first
+
+
+@pytest.mark.asyncio
+async def test_a_late_approval_sits_above_what_went_live_meanwhile(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    auth_headers: dict,
+):
+    await make_admin(db_session, account)
+    early = await _make_task(
+        db_session, character, "Went live meanwhile", character.created_at
+    )
+    late = _pending(character, "Approved last", character.created_at)
+    db_session.add(late)
+    await db_session.commit()
+    await _set_status(client, auth_headers, late.id, "active")
+
+    items = _global_items(await _global_feed(client, auth_headers))
+    assert [i["payload"]["task_id"] for i in items] == [late.id, early.id]

@@ -683,7 +683,7 @@ async def update_task_status(
         opens = backdoor_opens_at or datetime.now(timezone.utc)
         _check_backdoor_window(opens, backdoor_closes_at)
         task.backdoor_opens_at, task.backdoor_closes_at = opens, backdoor_closes_at
-    task.status = new_status
+    task.set_status(new_status)
     await session.flush()
     await log_mod_action(
         session, actor_id, "task_status", "task", task_id, new_status.value
@@ -960,7 +960,7 @@ async def roll_into_era(
     )
 
     for task in to_reactivate:
-        task.status = TaskStatus.active
+        task.set_status(TaskStatus.active)
     tasks_created = await sync_era_tasks(session, era_config, creator_id)
 
     # Durable first, live second; see `commit_and_bind_live_era`.

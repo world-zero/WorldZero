@@ -13,6 +13,7 @@ ADR-0036: ``_count_sources`` wraps the same Select, so badges drop with the row.
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import func
 from sqlalchemy import select as sa_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -67,6 +68,7 @@ async def board(
         created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
         task_type=TaskType.standard,
+        activated_at=func.now(),
     )
     meta = Task(
         title="Do it in verse",
@@ -78,6 +80,7 @@ async def board(
         primary_faction_slug="wow",
         task_type=TaskType.metatask,
         metatask_faction_slug="wow",
+        activated_at=func.now(),
     )
     db_session.add_all([standard, meta])
     await db_session.commit()

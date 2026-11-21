@@ -444,6 +444,7 @@ table role
   constraint uq_role_name UNIQUE (name)
 
 table task
+  column activated_at timestamp with time zone
   column backdoor_closes_at timestamp with time zone
   column backdoor_opens_at timestamp with time zone
   column created_at timestamp with time zone NOT NULL DEFAULT now()

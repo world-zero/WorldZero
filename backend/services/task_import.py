@@ -10,7 +10,7 @@ import io
 from dataclasses import dataclass
 
 from pydantic import ValidationError
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import CROSS_FACTION_SLUG
@@ -285,6 +285,7 @@ async def import_tasks_from_csv(
                 task_type=TaskType.standard,
                 created_by_id=character.id,
                 status=TaskStatus.active,
+                activated_at=func.now(),
             )
         )
     session.add_all(created)
