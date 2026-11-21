@@ -60,7 +60,8 @@ def hash_provider_user_id(provider: str, provider_user_id: str) -> str:
 
 
 def _is_live_at(created_at: datetime) -> bool:
-    return created_at > datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
+    expiry = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
+    return created_at > expiry
 
 
 def _is_live(tombstone: AccountTombstone) -> bool:
@@ -102,11 +103,11 @@ async def consume_returning_tombstone(
     tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
     if tombstone is None:
         return None
-    carried = (
-        (tombstone.created_at, tombstone.carried_from_account_id or tombstone.account_id)
-        if tombstone.mod_banned
-        else None
-    )
+    if not tombstone.mod_banned:
+        carried = None
+    else:
+        origin = tombstone.carried_from_account_id or tombstone.account_id
+        carried = (tombstone.created_at, origin)
     await session.delete(tombstone)
     await session.flush()
     return carried

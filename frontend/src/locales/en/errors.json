@@ -15,7 +15,7 @@
     "TASK_PROPOSAL_LEVEL_TOO_LOW": "Must be level {{level}} or above to propose tasks.",
     "METATASK_PROPOSAL_LEVEL_TOO_LOW": "Must be level {{level}} or above to propose metatasks.",
     "SECOND_CHARACTER_LEVEL_TOO_LOW": "Must reach level {{level}} before creating additional characters.",
-    "CHARACTER_CREATION_BANNED": "A moderator banned one of your characters, so you can't create another until a moderator lifts the ban or it runs out.",
+    "CHARACTER_CREATION_BANNED": "A moderator banned one of your characters, so you can't create another until that's lifted.",
     "PRAXIS_MODE_UNAVAILABLE": "Praxis mode not available.",
 
     "FLAG_LEVEL_TOO_LOW": "Must be level {{level}} or above to flag.",
