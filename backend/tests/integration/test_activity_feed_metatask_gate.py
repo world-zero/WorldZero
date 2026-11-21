@@ -13,7 +13,8 @@ ADR-0036: ``_count_sources`` wraps the same Select, so badges drop with the row.
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy import func, select as sa_select
+from sqlalchemy import func
+from sqlalchemy import select as sa_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA

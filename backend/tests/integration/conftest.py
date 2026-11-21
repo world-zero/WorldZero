@@ -382,6 +382,7 @@ async def active_task(db_session: AsyncSession, character: Character) -> Task:
         point_value=10,
         level_required=0,
         status=TaskStatus.active,
+        activated_at=func.now(),
         created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )

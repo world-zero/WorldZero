@@ -6,6 +6,7 @@ Load-bearing: the activity-feed fan-out runs once, not once per panel.
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.activity_feed as activity_feed_service
@@ -157,6 +158,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             point_value=10,
             level_required=0,
             status=TaskStatus.active,
+            activated_at=func.now(),
             created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
