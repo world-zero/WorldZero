@@ -389,7 +389,7 @@
     },
     "notifications": {
       "eyebrow": "Notifications",
-      "emailPending": "Email delivery is not implemented yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
+      "emailPending": "Email isn't switched on for this server yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
       "columnPage": "Updates",
       "columnEmail": "Email",
       "columnPush": "Push",
@@ -572,5 +572,14 @@
     "kept": "Points you awarded to other players stay with them.",
     "again": "If you sign in again with the same Google or Discord account, World Zero will offer to start you fresh as a new player.",
     "home": "Back to the front page"
+  },
+  "unsubscribe": {
+    "title": "Email settings",
+    "working": "Turning that off…",
+    "one": "Done. We won't email you about \"{{event}}\" any more.",
+    "all": "Turn them all off",
+    "allDone": "Done. We won't send you any notification email.",
+    "invalid": "That link isn't valid, so nothing changed. You can change your emails in Settings.",
+    "settings": "Change your notification settings"
   }
 }

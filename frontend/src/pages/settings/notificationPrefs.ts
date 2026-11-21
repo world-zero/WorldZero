@@ -6,8 +6,8 @@ import type { components } from '../../api/generated/schema'
  * assert it.
  *
  * `on_updates` is live (`services/notification_prefs.muted_feed_types`).
- * `by_email` is stored intent only: nothing sends email yet (#2164), and the
- * card's pending line keeps that honest (#1263). Do not add a sender here.
+ * `by_email` is live (`services/push.notify` queues the mail, #2164); the card's
+ * pending line shows only while the server has no mail key (#1263). No sender here.
  *
  * `locked` comes from the server (derived from `FEED_SOURCES`); never re-derive
  * it here, or a new request type gets silently unlocked.

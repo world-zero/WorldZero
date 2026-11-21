@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     VAPID_PUBLIC_KEY: str = ""
     VAPID_PRIVATE_KEY: str = ""
     VAPID_CONTACT: str = ""
+    # Resend (#2164). Blank key = email is off and silent. EMAIL_FROM must be an
+    # address on the verified mail.worldzero.org.
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = ""
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

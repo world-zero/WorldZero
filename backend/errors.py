@@ -228,6 +228,10 @@ class ErrorCode(str, enum.Enum):
     admin_cannot_target_self = "ADMIN_CANNOT_TARGET_SELF"
     admin_target_needs_owner = "ADMIN_TARGET_NEEDS_OWNER"
 
+    # -- Email (#2164) ------------------------------------------------------
+    #: 400: an unsubscribe link whose token is forged, cut short or not ours.
+    email_unsubscribe_bad_token = "EMAIL_UNSUBSCRIBE_BAD_TOKEN"
+
 
 #: The keys of a coded ``detail`` body.
 DETAIL_CODE_KEY = "code"

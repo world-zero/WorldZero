@@ -5033,6 +5033,10 @@
       "NotificationPrefsOut": {
         "description": "Every row, keyed by event, defaults filled in.",
         "properties": {
+          "email_available": {
+            "title": "Email Available",
+            "type": "boolean"
+          },
           "events": {
             "additionalProperties": {
               "$ref": "#/components/schemas/NotificationPrefOut"
@@ -5059,6 +5063,7 @@
         "required": [
           "events",
           "push_available",
+          "email_available",
           "vapid_public_key"
         ],
         "title": "NotificationPrefsOut",
@@ -7713,6 +7718,20 @@
           "accepted_at"
         ],
         "title": "TermsAcceptanceOut",
+        "type": "object"
+      },
+      "UnsubscribeOut": {
+        "description": "The event key whose email was turned off (the page names it).",
+        "properties": {
+          "event": {
+            "title": "Event",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event"
+        ],
+        "title": "UnsubscribeOut",
         "type": "object"
       },
       "ValidationError": {
@@ -12461,6 +12480,92 @@
         ]
       }
     },
+    "/email/unsubscribe": {
+      "post": {
+        "description": "Turn off email for the one event that sent the mail. Idempotent; also the\ntarget of the one-click ``List-Unsubscribe-Post``.",
+        "operationId": "unsubscribe_email_unsubscribe_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsubscribeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe",
+        "tags": [
+          "email"
+        ]
+      }
+    },
+    "/email/unsubscribe-all": {
+      "post": {
+        "description": "The \"turn them all off\" button: every row's email, not only this one.",
+        "operationId": "unsubscribe_all_email_unsubscribe_all_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsubscribeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe All",
+        "tags": [
+          "email"
+        ]
+      }
+    },
     "/factions": {
       "get": {
         "description": "All non-hidden factions, Albescent included for everyone (ADR-0082).\n\nSecrecy is redaction at render (``utils/factions.ts``), not omission here.\n``FactionOut`` is ``{slug, status}``, so only the slug ships.",
@@ -13119,7 +13224,7 @@
     },
     "/me/notification-prefs": {
       "get": {
-        "description": "This account's notification switches, resolved, every row (#1047).\n\nPer account, not character. ``by_email`` is stored intent only (no email is\nsent yet, #2164); ``on_updates`` is live.",
+        "description": "This account's notification switches, resolved, every row (#1047).\n\nPer account, not character. All three switches are live; ``email_available``\nsays whether this server can send mail at all (#2164).",
         "operationId": "my_notification_prefs_me_notification_prefs_get",
         "parameters": [
           {

@@ -12,10 +12,11 @@ from starlette.middleware.sessions import SessionMiddleware
 from config import settings
 from db import AsyncSessionLocal, engine
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
-from routers import comments, contact, copy, google_photos, me, push, terms
+from routers import comments, contact, copy, email, google_photos, me, push, terms
 from schemas.system import HealthOut
 from services.character_stats import deliver_invitations_to_all
 from services.era import rebind_live_era
+from services.email import email_available
 from services.push import push_available
 from services.praxis_room import (
     PRAXIS_ROOM_APP,
@@ -39,6 +40,7 @@ async def lifespan(app: FastAPI):
     )
 
     push_available()  # logs an ERROR at boot if the VAPID config is malformed
+    email_available()  # same for the Resend config
 
     # Praxis rooms hold CRDT docs in-process: exactly one instance (ADR-0073).
     # A second instance raises here and the deploy fails loudly.
@@ -165,6 +167,7 @@ app.include_router(contact.router, prefix="/contact", tags=["contact"])
 app.include_router(activity_feed.router, prefix="/activity-feed", tags=["activity-feed"])
 app.include_router(terms.router, prefix="/terms", tags=["terms"])
 app.include_router(push.router, prefix="/push", tags=["push"])
+app.include_router(email.router, prefix="/email", tags=["email"])
 app.include_router(copy.router, tags=["copy"])  # prefix embedded (/copy-overrides)
 
 

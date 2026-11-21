@@ -23,10 +23,10 @@ import {
 } from '../notificationPrefs'
 
 /**
- * Notifications (#1047): ten rows, three switches each (Page, Email, Push), PER ACCOUNT. Rules live
+ * Notifications (#1047): eleven rows, three switches each (Page, Email, Push), PER ACCOUNT. Rules live
  * in `../notificationPrefs.ts` (see there for what each axis means); this file
- * is fetch, save and markup. The email-pending line is what keeps the Email
- * column honest (#1263): do NOT delete it, and do not fake a send.
+ * is fetch, save and markup. The email-pending line keeps the Email column
+ * honest (#1263) and shows only while the server cannot send mail (#2164).
  *
  * The master row doubles as the header: the only row whose cells name the columns.
  */
@@ -303,6 +303,7 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [vapidKey, setVapidKey] = useState<string | null>(null)
+  const [emailOff, setEmailOff] = useState(false)
   const [subscribed, setSubscribed] = useState(true)
   const [denied, setDenied] = useState(
     () => typeof Notification !== 'undefined' && Notification.permission === 'denied',
@@ -315,6 +316,7 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
         if (live) {
           setPrefs(data.events)
           setVapidKey(data.vapid_public_key ?? null)
+          setEmailOff(!data.email_available)
         }
         return data.vapid_public_key ? deviceSubscribed().catch(() => false) : true
       })
@@ -375,10 +377,11 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
       sectionId={sectionId}
       title={t('settings.notifications.eyebrow')}
     >
-      {/* Owner ruling 2026-08-31: the switch stores intent, #2164 delivers. */}
-      <p style={PENDING_LINE} data-testid="settings-notifications-email-pending">
-        {t('settings.notifications.emailPending')}
-      </p>
+      {emailOff && (
+        <p style={PENDING_LINE} data-testid="settings-notifications-email-pending">
+          {t('settings.notifications.emailPending')}
+        </p>
+      )}
 
       {prefs && (
         <NotificationRows

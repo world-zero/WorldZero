@@ -37,6 +37,7 @@ from services.data_export import stream as export_stream
 from services.notification_prefs import apply_update, muted_feed_types, resolve_prefs
 from services.praxis import list_praxes
 from services.praxis_out import build_praxis_cards
+from services.email import email_available
 from services.push import push_available
 
 router = APIRouter()
@@ -108,6 +109,7 @@ def _prefs_out(raw: object) -> NotificationPrefsOut:
             for key, pref in resolve_prefs(raw).items()
         },
         push_available=push_available(),
+        email_available=email_available(),
         vapid_public_key=settings.VAPID_PUBLIC_KEY if push_available() else None,
     )
 
@@ -118,8 +120,8 @@ async def my_notification_prefs(
 ) -> NotificationPrefsOut:
     """This account's notification switches, resolved, every row (#1047).
 
-    Per account, not character. ``by_email`` is stored intent only (no email is
-    sent yet, #2164); ``on_updates`` is live.
+    Per account, not character. All three switches are live; ``email_available``
+    says whether this server can send mail at all (#2164).
     """
     return _prefs_out(account.notification_prefs)
 

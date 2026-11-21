@@ -1,9 +1,9 @@
-"""Web push (#3678): the shared ``notify()`` fan-out and the sender.
+"""Web push (#3678) and notification email (#2164): the shared ``notify()`` fan-out.
 
 Payloads carry keys and values, never English (ADR-0031): the service worker builds
 the text from its strings file. Never put ``account_id``, email, photos or star values
-in one. Pushes queue on the session and leave only after the commit that made the
-event real.
+in one. Pushes and mail queue on the session and leave only after the commit that
+made the event real.
 """
 
 import asyncio
@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 from config import settings
 from db import AsyncSessionLocal
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account
+from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.comment import Comment, CommentMention
 from models.duel import Duel
@@ -48,6 +48,13 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_VOTE_ON_MINE,
 )
 from services.block_service import blocked_counterpart_ids
+from services.email import (
+    catalog,
+    build_message,
+    email_available,
+    send_email,
+    unsubscribe_token,
+)
 from services.era_gates import meets_vote_level
 from services.notification_prefs import LEVEL_UP, resolve_prefs
 
@@ -63,6 +70,7 @@ PUSH_TIMEOUT_SECONDS = 10
 RATING_COLLAPSE_WINDOW = timedelta(hours=24)
 
 _OUTBOX = "push_outbox"
+_EMAIL_OUTBOX = "email_outbox"
 _in_flight: set[asyncio.Task] = set()
 
 
@@ -192,18 +200,30 @@ async def deliver(
             await session.commit()
 
 
+async def deliver_email(batch: list[tuple[str, str, dict]]) -> None:
+    """Send each queued ``(kind, to, message)``. A failure is logged and lost, never retried."""
+    for kind, to, message in batch:
+        try:
+            await send_email(to, **message)
+        except Exception:
+            # Never log the address: it is the one thing a log must not hold.
+            logger.exception("email for %s failed", kind)
+
+
 @event.listens_for(Session, "after_commit")
 def _send_queued(session: Session) -> None:
-    batch = session.info.pop(_OUTBOX, None)
-    if batch:
-        task = asyncio.get_running_loop().create_task(deliver(batch))
-        _in_flight.add(task)
-        task.add_done_callback(_in_flight.discard)
+    for outbox, send in ((_OUTBOX, deliver), (_EMAIL_OUTBOX, deliver_email)):
+        batch = session.info.pop(outbox, None)
+        if batch:
+            task = asyncio.get_running_loop().create_task(send(batch))
+            _in_flight.add(task)
+            task.add_done_callback(_in_flight.discard)
 
 
 @event.listens_for(Session, "after_rollback")
 def _drop_queued(session: Session) -> None:
     session.info.pop(_OUTBOX, None)
+    session.info.pop(_EMAIL_OUTBOX, None)
 
 
 async def notify(
@@ -218,8 +238,9 @@ async def notify(
     count: Optional[int] = None,
     faction: Optional[str] = None,
 ) -> None:
-    """Queue a push for a character's account if it is on, wanted and has a device."""
-    if not push_available():
+    """Queue a push and/or an email for a character's account, each if on and wanted."""
+    push_on, email_on = push_available(), email_available()
+    if not (push_on or email_on):
         return
     recipient = await session.get(Character, recipient_id)
     if recipient is None or recipient.status != CharacterStatus.active:
@@ -229,8 +250,45 @@ async def notify(
     ):
         return
     account = await session.get(Account, recipient.account_id)
-    if account is None or not resolve_prefs(account.notification_prefs)[kind].by_push:
+    if account is None or account.status != AccountStatus.active:
         return
+    pref = resolve_prefs(account.notification_prefs)[kind]
+    # ponytail: only the single-recipient rows have mail wording (email.json); the
+    # broadcast rows (era announcement, rules change, global task) stay unwired for
+    # email. A mailing to everyone needs batching and rate limits first.
+    if email_on and pref.by_email and account.email and kind in catalog()["kinds"]:
+        # ponytail: one mail per rating, no collapsing like push; the row is opt-in.
+        message = build_message(
+            kind=kind,
+            token=unsubscribe_token(account.id, kind),
+            url=url,
+            actor=actor.display_name if actor else None,
+            task_title=task_title,
+            faction=faction,
+        )
+        session.sync_session.info.setdefault(_EMAIL_OUTBOX, []).append(
+            (kind, account.email, message)
+        )
+    if push_on and pref.by_push:
+        await _queue_push(
+            session,
+            recipient,
+            {
+                "kind": kind,
+                "tag": tag,
+                "url": url,
+                "character": recipient.display_name,
+                "actor": actor.display_name if actor else None,
+                "task": task_title,
+                "count": count,
+                "faction": faction,
+            },
+        )
+
+
+async def _queue_push(
+    session: AsyncSession, recipient: Character, payload: dict
+) -> None:
     subscriptions = (
         await session.scalars(
             select(PushSubscription).where(
@@ -240,16 +298,6 @@ async def notify(
     ).all()
     if not subscriptions:
         return
-    payload = {
-        "kind": kind,
-        "tag": tag,
-        "url": url,
-        "character": recipient.display_name,
-        "actor": actor.display_name if actor else None,
-        "task": task_title,
-        "count": count,
-        "faction": faction,
-    }
     targets = [Target(s.id, s.endpoint, s.p256dh, s.auth) for s in subscriptions]
     session.sync_session.info.setdefault(_OUTBOX, []).append((payload, targets))
 
