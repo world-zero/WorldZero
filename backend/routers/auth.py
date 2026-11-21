@@ -14,7 +14,7 @@ from config import settings
 from db import get_db
 from errors import ErrorCode, coded_error, detail_code, raise_coded
 from game_config import CURRENT_ERA
-from models.account import Account, AccountTombstone, AuthProvider
+from models.account import Account, AuthProvider
 from schemas.auth import (
     CurrentUser,
     DevLoginOut,
@@ -24,8 +24,8 @@ from schemas.auth import (
 )
 from schemas.character import CharacterCreate
 from services.account_deletion import (
-    hash_provider_user_id,
-    resolve_account_tombstone,
+    consume_returning_tombstone,
+    reapply_ban_tombstone,
 )
 from services.auth import (
     ReturningPlayerConsentRequired,
@@ -326,11 +326,7 @@ async def confirm_returning_player(
     provider_user_id = pending["provider_user_id"]
 
     # Must go before create_or_get_account so it takes the stranger path.
-    tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
-    ban_since = tombstone.created_at if tombstone and tombstone.mod_banned else None
-    if tombstone is not None:
-        await session.delete(tombstone)
-        await session.flush()
+    ban_since = await consume_returning_tombstone(provider, provider_user_id, session)
 
     account = await create_or_get_account(
         provider=provider,
@@ -341,18 +337,9 @@ async def confirm_returning_player(
     )
 
     if ban_since is not None:
-        # Same deletion time, so the 90 days don't restart; sign-in finds the
-        # OAuth row first, so this tombstone never re-triggers the gate (ADR-0081).
-        session.add(
-            AccountTombstone(
-                account_id=account.id,
-                provider=provider,
-                provider_user_hash=hash_provider_user_id(provider, provider_user_id),
-                mod_banned=True,
-                created_at=ban_since,
-            )
+        await reapply_ban_tombstone(
+            account.id, provider, provider_user_id, ban_since, session
         )
-        await session.flush()
 
     # The question has been answered; a second POST is an ordinary 404.
     del request.session[_PENDING_SIGNUP_KEY]

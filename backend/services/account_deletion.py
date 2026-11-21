@@ -90,6 +90,43 @@ async def resolve_account_tombstone(
     return tombstone
 
 
+async def consume_returning_tombstone(
+    provider: str, provider_user_id: str, session: AsyncSession
+) -> datetime | None:
+    """Clear this identity's tombstone; return its deletion time if it carried a ban."""
+    tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
+    if tombstone is None:
+        return None
+    ban_since = tombstone.created_at if tombstone.mod_banned else None
+    await session.delete(tombstone)
+    await session.flush()
+    return ban_since
+
+
+async def reapply_ban_tombstone(
+    account_id: int,
+    provider: str,
+    provider_user_id: str,
+    ban_since: datetime,
+    session: AsyncSession,
+) -> None:
+    """Re-write a carried ban against the new account.
+
+    Same deletion time, so the 90 days don't restart; sign-in finds the OAuth
+    row first, so this tombstone never re-triggers the gate (ADR-0081).
+    """
+    session.add(
+        AccountTombstone(
+            account_id=account_id,
+            provider=provider,
+            provider_user_hash=hash_provider_user_id(provider, provider_user_id),
+            mod_banned=True,
+            created_at=ban_since,
+        )
+    )
+    await session.flush()
+
+
 async def delete_account(
     account_id: int,
     session: AsyncSession,
@@ -229,19 +266,6 @@ async def _replace_oauth_identity_with_a_tombstone(
 
     for row in providers:
         digest = hash_provider_user_id(row.provider, row.provider_user_id)
-        # Delete-rejoin-delete within retention: replace the unique pair. A
-        # standing ban on the old row carries over, else the loop launders it.
-        old = (
-            await session.execute(
-                select(AccountTombstone).where(
-                    AccountTombstone.provider == row.provider,
-                    AccountTombstone.provider_user_hash == digest,
-                )
-            )
-        ).scalar_one_or_none()
-        carries_ban = mod_banned or (
-            old is not None and old.mod_banned and _is_live(old)
-        )
         await session.execute(
             delete(AccountTombstone).where(
                 AccountTombstone.provider == row.provider,
@@ -253,7 +277,7 @@ async def _replace_oauth_identity_with_a_tombstone(
                 account_id=account.id,
                 provider=row.provider,
                 provider_user_hash=digest,
-                mod_banned=carries_ban,
+                mod_banned=mod_banned,
             )
         )
     await session.flush()
