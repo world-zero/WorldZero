@@ -221,6 +221,12 @@ class ErrorCode(str, enum.Enum):
     #: The owner cannot be demoted from the page.
     admin_cannot_revoke_owner = "ADMIN_CANNOT_REVOKE_OWNER"
 
+    # -- Admin permissions + admin-on-admin guard (#3847, #3821) ------------
+    admin_permission_required = "ADMIN_PERMISSION_REQUIRED"
+    admin_cannot_target_owner = "ADMIN_CANNOT_TARGET_OWNER"
+    admin_cannot_target_self = "ADMIN_CANNOT_TARGET_SELF"
+    admin_target_needs_owner = "ADMIN_TARGET_NEEDS_OWNER"
+
 
 #: The keys of a coded ``detail`` body.
 DETAIL_CODE_KEY = "code"

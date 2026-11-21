@@ -55,7 +55,7 @@ async def test_bulk_remove_carries_the_note_and_keeps_an_old_one_when_none(
 
 
 @pytest.mark.asyncio
-async def test_stats_edit_message_archive_and_import_are_logged_in_their_kinds(
+async def test_message_archive_and_import_are_logged_in_their_kinds(
     client, account, character, character2, auth_headers, db_session
 ):
     await make_admin(db_session, account)
@@ -63,11 +63,6 @@ async def test_stats_edit_message_archive_and_import_are_logged_in_their_kinds(
     db_session.add(msg)
     await db_session.commit()
 
-    await client.patch(
-        f"/admin/characters/{character2.id}/stats",
-        json={"score": 5},
-        headers=auth_headers,
-    )
     await client.patch(f"/admin/messages/{msg.id}/archive", headers=auth_headers)
     imported = await client.post(
         "/admin/tasks/import-csv",
@@ -79,7 +74,6 @@ async def test_stats_edit_message_archive_and_import_are_logged_in_their_kinds(
     logged = await db_session.execute(select(ModAction).order_by(ModAction.id))
     rows = logged.scalars()
     assert [(r.action, r.target_type) for r in rows] == [
-        ("stats_edit", "character"),
         ("message_archive", "message"),
         ("task_import", "task"),
     ]
@@ -89,7 +83,7 @@ async def test_stats_edit_message_archive_and_import_are_logged_in_their_kinds(
         page = response.json()
         return {i["action"] for i in page["items"]}
 
-    assert await actions("people") == {"stats_edit", "message_archive"}
+    assert await actions("people") == {"message_archive"}
     assert await actions("tasks") == {"task_import"}
 
 

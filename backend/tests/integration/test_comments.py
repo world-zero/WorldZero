@@ -12,10 +12,9 @@ from models.comment import MAX_COMMENT_BODY, Comment
 from models.era import Era
 from models.flag import Flag
 from models.praxis import ModerationStatus, Praxis
-from models.roles import AccountRole, Role
 from models.task import Task
 from services.comment import create_comment
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 
 
 async def _set_level(
@@ -507,13 +506,7 @@ async def test_an_admin_below_the_level_gate_can_actually_post(
 
     ``character`` is level 0, so only the admin short-circuit can pass this.
     """
-    role = Role(name="admin", description="Administrator")
-    db_session.add(role)
-    await db_session.flush()
-    db_session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id)
-    )
-    await db_session.commit()
+    await make_admin(db_session, account)
 
     me_response = await client.get("/auth/me", headers=auth_headers)
     assert me_response.status_code == 200, me_response.text

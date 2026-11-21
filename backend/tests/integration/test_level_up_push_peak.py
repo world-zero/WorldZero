@@ -12,9 +12,7 @@ from models.account import Account
 from models.character import Character
 from models.era import Era
 from models.push_subscription import PushSubscription
-from schemas.admin import CharacterStatsPatch
 from services import character_stats
-from services.admin_service import set_character_stats
 from services.era import apply_era_reset
 from tests.integration.test_push import PRIVATE, PUBLIC, _queued
 
@@ -101,14 +99,3 @@ async def test_level_one_pushes_in_a_new_era_despite_a_higher_character_peak(
     await apply_era_reset([character], new_era, db_session)
     set_level(1)
     assert await _recalc(db_session, character, new_era) == 1
-
-
-@pytest.mark.asyncio
-async def test_a_mod_set_level_does_not_push_on_the_next_recalc(
-    db_session, account, character, era, opted_in, set_level
-):
-    await set_character_stats(
-        character.id, CharacterStatsPatch(level=3), db_session, actor_id=account.id
-    )
-    set_level(3)
-    assert await _recalc(db_session, character, era) == 0

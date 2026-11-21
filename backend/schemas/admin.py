@@ -107,27 +107,6 @@ class OverviewStats(WireModel):
     active_accounts: int = 0
 
 
-class CharacterStatsPatch(WireModel):
-    """Only supplied fields are updated."""
-
-    level: int | None = Field(None, ge=0)
-    score: int | None = Field(None, ge=0)
-    all_time_score: int | None = Field(None, ge=0)
-    votes_available: int | None = Field(None, ge=0)
-
-
-class CharacterStatsOut(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    character_id: int
-    era_id: int
-    score: int
-    all_time_score: int
-    level: int
-    votes_available: int
-
-
 class ModerationAction(WireModel):
     status: Literal["visible", "hidden", "failed"]
     admin_note: str | None = Field(None, max_length=1000)

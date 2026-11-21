@@ -1,17 +1,16 @@
 """
-Grant — or revoke — the admin role on a character's account.
+Grant — or revoke — the owner role on a character's account.
 
-Idempotent grant; revoking a non-admin is refused.
+The owner role is settable only here or in the DB, never from a web page
+(ADR-0101). Idempotent grant; revoking a non-owner is refused.
 
 Usage:
     python elevate_admin.py pixie                # dev (default)
     python elevate_admin.py pixie --env prod     # production
     python elevate_admin.py --env prod           # defaults username to 'pixie'
-    python elevate_admin.py pixie --revoke       # take the admin role away
+    python elevate_admin.py pixie --revoke       # take the owner role away
 
-The owner can also do this from ``/admin/admins`` (#3258); this script is the
-server-side path and works with no owner session. Deliberately admin-only: it is
-the only role ``dependencies.require_admin`` reads.
+Ordinary admins (permission boxes) are made from ``/admin/admins`` by an owner.
 """
 
 import argparse
@@ -22,13 +21,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from models.character import Character
-from models.roles import AccountRole, Role
+from models.roles import OWNER_ROLE_NAME, AccountRole, Role
 from script_utils import add_env_argument, get_settings
 from services.admin_service import assign_or_revoke_role
 from services.mod_log import log_mod_action
 
-#: The only role the application reads (``dependencies.require_admin``).
-ADMIN_ROLE_NAME = "admin"
+ADMIN_ROLE_NAME = OWNER_ROLE_NAME
 #: ``assign_or_revoke_role``'s action vocabulary — mirrors ``schemas.admin.RoleAction``.
 REVOKE_ACTION = "revoke"
 
@@ -65,7 +63,7 @@ async def run(username: str, env: str, revoke: bool) -> None:
                 )
             )
             if held.scalar_one_or_none() is None:
-                print(f"ERROR: account {account_id} ('{username}') is not an admin - nothing to revoke.")
+                print(f"ERROR: account {account_id} ('{username}') is not an owner - nothing to revoke.")
                 await engine.dispose()
                 sys.exit(1)
 
@@ -77,7 +75,7 @@ async def run(username: str, env: str, revoke: bool) -> None:
                 session=session,
             )
             await session.commit()
-            print(f"\nDone: Account {account_id} (character: '{username}') is no longer an admin.")
+            print(f"\nDone: Account {account_id} (character: '{username}') is no longer an owner.")
             await engine.dispose()
             return
 
@@ -86,12 +84,12 @@ async def run(username: str, env: str, revoke: bool) -> None:
         )
         admin_role = role_result.scalar_one_or_none()
         if not admin_role:
-            print("'admin' role not found - creating it")
-            admin_role = Role(name=ADMIN_ROLE_NAME, description="Full administrative access")
+            print("'owner' role not found - creating it")
+            admin_role = Role(name=ADMIN_ROLE_NAME, description="Holds every permission")
             session.add(admin_role)
             await session.flush()
         else:
-            print(f"Found 'admin' role (id={admin_role.id})")
+            print(f"Found 'owner' role (id={admin_role.id})")
 
         existing = await session.execute(
             select(AccountRole).where(
@@ -100,7 +98,7 @@ async def run(username: str, env: str, revoke: bool) -> None:
             )
         )
         if existing.scalar_one_or_none():
-            print(f"Account {account_id} is already an admin. Nothing to do.")
+            print(f"Account {account_id} is already an owner. Nothing to do.")
             await engine.dispose()
             return
 
@@ -116,13 +114,13 @@ async def run(username: str, env: str, revoke: bool) -> None:
         )
         await session.commit()
 
-        print(f"\nDone: Account {account_id} (character: '{username}') is now an admin.")
+        print(f"\nDone: Account {account_id} (character: '{username}') is now an owner.")
 
     await engine.dispose()
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Grant or revoke the admin role on a character's account.")
+    parser = argparse.ArgumentParser(description="Grant or revoke the owner role on a character's account.")
     parser.add_argument("username", nargs="?", default="pixie", help="Character username (default: pixie)")
     add_env_argument(parser)
     parser.add_argument(

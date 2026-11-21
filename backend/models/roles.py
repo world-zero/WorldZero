@@ -1,3 +1,4 @@
+import enum
 from datetime import datetime
 
 from sqlalchemy import (
@@ -11,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models.base import Base
+from models.base import Base, string_enum
 from models.mixins import TimestampMixin
 
 
@@ -41,4 +42,42 @@ class AccountRole(Base):
     )
     granted_by_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=False
+    )
+
+
+OWNER_ROLE_NAME = "owner"
+
+
+class Permission(enum.Enum):
+    """The nine admin checkboxes (ADR-0101); a tenth widens the CHECK."""
+
+    handle_reports = "handle_reports"
+    ban_suspend = "ban_suspend"
+    review_proposals = "review_proposals"
+    manage_tasks = "manage_tasks"
+    delete_import_tasks = "delete_import_tasks"
+    read_messages = "read_messages"
+    edit_copy = "edit_copy"
+    small_world = "small_world"
+    roll_era = "roll_era"
+
+
+class AccountPermission(Base):
+    __tablename__ = "account_permission"
+    __table_args__ = (
+        UniqueConstraint("account_id", "permission", name="uq_account_permission"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(), primary_key=True)
+    account_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("account.id"), nullable=False
+    )
+    permission: Mapped[Permission] = mapped_column(
+        string_enum(Permission), nullable=False
+    )
+    granted_by_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("account.id"), nullable=False
+    )
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )

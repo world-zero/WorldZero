@@ -1,7 +1,7 @@
 """Duel service — challenge flow for two-linked-praxes duels (ADR-0011).
 
 Two solo praxes linked by a Duel row: pending → active → settled, or declined.
-Praxis-id-keyed helpers live in the leaf ``services.praxis_duel`` (#2872).
+Praxis-id-keyed helpers live in ``services.praxis_duel`` (#2872).
 """
 
 from datetime import datetime, timedelta, timezone

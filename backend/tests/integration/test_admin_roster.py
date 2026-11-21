@@ -1,10 +1,9 @@
-"""The owner-only admin roster (#3258). ``OWNER_ACCOUNT_ID`` points at ``account``."""
+"""The owner-only admin roster (#3258)."""
 import pytest
 from httpx import AsyncClient
 
-import dependencies
 from models.account import Account
-from tests.integration.factories import make_admin
+from tests.integration.factories import make_admin, make_owner
 
 
 @pytest.fixture
@@ -23,18 +22,17 @@ def other(character2):
 
 
 @pytest.fixture
-def owner_is_account(monkeypatch, account: Account) -> Account:
-    monkeypatch.setattr(dependencies, "OWNER_ACCOUNT_ID", account.id)
+def owner_is_account(account: Account) -> Account:
     return account
 
 
-async def test_is_owner_only_for_the_owner_account_with_admin(
+async def test_is_owner_only_for_the_account_holding_the_owner_role(
     client, db_session, account, account2, character, other,
     hdr, hdr2, owner_is_account,
 ):
     me = await client.get("/auth/me", headers=hdr)
-    assert me.json()["is_owner"] is False  # owner's id, no admin role yet
-    await make_admin(db_session, account)
+    assert me.json()["is_owner"] is False
+    await make_owner(db_session, account)
     me = await client.get("/auth/me", headers=hdr)
     assert me.json()["is_owner"] is True
     plain = await client.get("/auth/me", headers=hdr2)
@@ -54,7 +52,7 @@ async def test_non_owner_admin_gets_403_on_all_three_routes(
 async def test_owner_lists_grants_and_revokes(
     client, db_session, account, character, other, hdr, owner_is_account
 ):
-    await make_admin(db_session, account)
+    await make_owner(db_session, account)
 
     listed = (await client.get("/admin/admins", headers=hdr)).json()
     assert listed == [
@@ -84,7 +82,7 @@ def code(response) -> str:
 async def test_refusals_carry_their_codes(
     client, db_session, account, character, other, hdr, owner_is_account
 ):
-    await make_admin(db_session, account)
+    await make_owner(db_session, account)
 
     r = await client.delete(f"/admin/admins/{character.username}", headers=hdr)
     assert (r.status_code, code(r)) == (409, "ADMIN_CANNOT_REVOKE_OWNER")

@@ -8,9 +8,9 @@ moves the era must pass the faction itself; ``test_live_era_frozen_constants.py`
 enforces it.
 """
 
-from typing import Optional
+from typing import Iterable, Optional
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import real_faction_slugs
@@ -28,7 +28,13 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
-from models.roles import AccountRole, Role
+from models.roles import (
+    OWNER_ROLE_NAME,
+    AccountPermission,
+    AccountRole,
+    Permission,
+    Role,
+)
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 
@@ -46,16 +52,37 @@ async def make_account(session: AsyncSession, email: str) -> Account:
     return account
 
 
-async def make_admin(session: AsyncSession, account: Account, *, commit: bool = True) -> None:
-    """Grant the admin role; ``commit`` for callers whose code opens its own session."""
-    role = Role(name="admin", description="Administrator")
-    session.add(role)
-    await session.flush()
-    session.add(AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id))
+async def make_admin(
+    session: AsyncSession,
+    account: Account,
+    *,
+    commit: bool = True,
+    permissions: Iterable[Permission] = tuple(Permission),
+) -> None:
+    """An admin who is not the owner: ``permissions`` (default all nine).
+
+    ``commit`` for callers whose code opens its own session.
+    """
+    for permission in permissions:
+        session.add(
+            AccountPermission(
+                account_id=account.id, permission=permission, granted_by_id=account.id
+            )
+        )
     if commit:
         await session.commit()
     else:
         await session.flush()
+
+
+async def make_owner(session: AsyncSession, account: Account) -> None:
+    role = await session.scalar(select(Role).where(Role.name == OWNER_ROLE_NAME))
+    if role is None:
+        role = Role(name=OWNER_ROLE_NAME, description="Owner")
+        session.add(role)
+        await session.flush()
+    session.add(AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id))
+    await session.commit()
 
 
 async def make_character(
