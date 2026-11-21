@@ -17,7 +17,7 @@ import { listRelationships } from "../../api/relationships";
 import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import i18n from "../../i18n";
-import { extractError } from "../../utils/errors";
+import { ErrorCode, extractError, extractErrorCode } from "../../utils/errors";
 import { signupOutcome } from "../../hooks/useTaskSignup";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { isLevelJumpSignup } from "./levelJump";
@@ -181,8 +181,11 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
           setFoes(foes);
         }
       })
-      .catch((err) =>
-        setFetchError(extractError(err, i18n.t("tasks:detail.loadError"))),
+      .catch((err) => {
+        // A coded 404 leaves task null so the page shows its not-found line.
+        if (extractErrorCode(err) === ErrorCode.taskNotFound) return;
+        setFetchError(extractError(err, i18n.t("tasks:detail.loadError")));
+      }
       )
       .finally(() => setLoading(false));
     // Key on the character id, not `user`: an auth-object identity change would

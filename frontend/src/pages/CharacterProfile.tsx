@@ -5,7 +5,7 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle"
  * form-factor branch: each body is responsive itself (#1319).
  */
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ApiError } from "../api/apiError";
 import { getCharacter } from "../api/characters";
@@ -28,7 +28,7 @@ import AddRelationshipButtons from "./characterProfile/AddRelationshipButtons";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
 import { useTaskSignup } from "../hooks/useTaskSignup";
-import { extractError } from "../utils/errors";
+import { ErrorCode, extractError, extractErrorCode } from "../utils/errors";
 import { levelTrack } from "../utils/levelTrack";
 import { useFactionBackdrop } from "../components/backdrop/BackdropContext";
 import FactionProfileBody, {
@@ -185,7 +185,7 @@ export default function CharacterProfile() {
 
   if (loading)
     return <div className="py-8 font-body text-muted">{t("loading")}</div>;
-  if (error)
+  if (error && extractErrorCode(error) !== ErrorCode.characterNotFound)
     return (
       <div className="py-8">
         <ErrorBanner message={<>{extractError(error, t("profile.loadError"))}{" "}
@@ -199,7 +199,11 @@ export default function CharacterProfile() {
     );
   if (!character)
     return (
-      <div className="py-8 font-body text-muted">{t("states.characterNotFound")}</div>
+      <div className="py-8 font-body text-muted">{t("states.characterNotFound")}{" "}
+        <Link to="/leaderboard" className="underline">
+          {t("states.backToPlayers")}
+        </Link>
+      </div>
     );
 
   const isOwn = user?.character?.id === character.id;

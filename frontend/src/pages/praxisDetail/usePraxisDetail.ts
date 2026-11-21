@@ -21,7 +21,7 @@ import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
 import { useCan } from "../../auth/permissions";
-import { extractError } from "../../utils/errors";
+import { ErrorCode, extractError, extractErrorCode } from "../../utils/errors";
 import { useCastTally } from "../../components/vote/castTallies";
 import {
   applyPendingCast,
@@ -160,9 +160,10 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
         setVoters(vr);
         setComments(c);
       })
-      .catch((err) =>
-        setFetchError(extractError(err, t("detail.errors.load"))),
-      )
+      .catch((err) => {
+        if (extractErrorCode(err) === ErrorCode.praxisNotFound) return;
+        setFetchError(extractError(err, t("detail.errors.load")));
+      })
       .finally(() => setLoading(false));
   }, [idParam]);
 

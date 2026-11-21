@@ -5,7 +5,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * One responsive archetype per faction (ADR-0058) — no form-factor branch.
  * Archetypes mount `TaskDetailComments` themselves.
  */
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "../components/ui/PageTitle";
 import StartHereMark from "../components/StartHereMark";
@@ -45,7 +45,12 @@ export default function TaskDetail() {
 
   if (!state.task)
     return (
-      <div className="py-8 font-body text-muted">{t("detail.notFound")}</div>
+      <div className="py-8 font-body text-muted">
+        {t("detail.notFound")}{" "}
+        <Link to="/tasks" className="underline">
+          {t("detail.backToTasks")}
+        </Link>
+      </div>
     );
 
   const slug = state.task.primary_faction_slug ?? null;

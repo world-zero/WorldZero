@@ -14,7 +14,10 @@
   "skipToContent": "Skip to content",
   "states": {
     "tryRefreshing": "Try refreshing.",
-    "characterNotFound": "Character not found."
+    "characterNotFound": "Character not found.",
+    "backToPlayers": "Back to players.",
+    "pageNotFound": "Page not found.",
+    "backHome": "Back to the start."
   },
   "relationships": {
     "blocked": "Blocked",

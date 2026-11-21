@@ -38,6 +38,7 @@
     "fetchError": "<0>Try refreshing.</0>",
     "loadError": "Couldn't load this task.",
     "notFound": "Task not found.",
+    "backToTasks": "Back to tasks.",
     "pageTitle": "Task",
     "levelJump": {
       "tag": "Level-jump",

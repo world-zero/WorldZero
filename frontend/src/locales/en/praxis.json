@@ -74,7 +74,8 @@
   },
   "detail": {
     "retry": "Try refreshing.",
-    "notFound": "Not found.",
+    "notFound": "Praxis not found.",
+    "backToPraxis": "Back to praxis.",
     "hiddenBanner": "This praxis is hidden. Only its author and admins can see it.",
     "sections": {
       "proof": "Proof",
