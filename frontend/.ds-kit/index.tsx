@@ -162,7 +162,6 @@ export { default as FeedCardInvitationLetter } from "../src/components/feed/Feed
 export { default as FeedCardRouter } from "../src/components/feed/FeedCardRouter";
 export { default as FeedChassisBand } from "../src/components/feed/FeedChassisBand";
 export { default as FeedDateDivider } from "../src/components/feed/FeedDateDivider";
-export { default as FeedEmptyState } from "../src/components/feed/FeedEmptyState";
 export { default as FeedItemSlot } from "../src/components/feed/FeedItemSlot";
 export { default as FeedRowActions } from "../src/components/feed/FeedRowActions";
 export { default as FeedRowContent } from "../src/components/feed/FeedRowContent";
