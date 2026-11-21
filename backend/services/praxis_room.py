@@ -482,7 +482,7 @@ class PraxisRoomServer(WebsocketServer):
             room = self.rooms.get(name)
             if room is not None:
                 await self.start_room(room)
-                await self._observed(room)
+                await self._observed(name, room)
                 return room
 
             room = YRoom(
@@ -500,14 +500,22 @@ class PraxisRoomServer(WebsocketServer):
             await self._load_or_seed(room, name)
             self._start_flusher(room, name)
             room.ready = True
-            await self._observed(room)
+            await self._observed(name, room)
             return room
 
-    @staticmethod
-    async def _observed(room: YRoom) -> None:
+    async def _observed(self, name: str, room: YRoom) -> None:
         # The store observer is subscribed by a task; an update applied before it
-        # runs reaches memory but never the rows. Bounded so a dead task can't hang.
-        await asyncio.wait_for(room.ydoc_observed.wait(), _OBSERVER_WAIT_SECONDS)
+        # runs reaches memory but never the rows. A dead task must not leave the
+        # room behind for every later caller to wait on. Caller holds ``_open_lock``.
+        try:
+            await asyncio.wait_for(room.ydoc_observed.wait(), _OBSERVER_WAIT_SECONDS)
+        except TimeoutError:
+            await self._evict_locked(name, room)
+            raise_coded(
+                503,
+                ErrorCode.praxis_room_unavailable,
+                "The shared draft isn't ready. Try again in a moment.",
+            )
 
     def _start_flusher(self, room: YRoom, name: str) -> None:
         """Copy document changes into the praxis (#1743); subscribed after the seed."""

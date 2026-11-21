@@ -26,6 +26,7 @@ from pycrdt import (
     create_update_message,
     read_message,
 )
+from pycrdt.websocket import YRoom
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -1923,6 +1924,15 @@ async def test_a_submit_on_an_unopened_room_stores_its_text(
         state = base64.b64encode(offline.get_update()).decode()
         if socket_holds_room:
             await rooms.open(collab.id, account.id)
+            # The socket is accepted before its room opens; a submit racing that
+            # open deadlocks on the harness lock (production has no such lock).
+            await _wait_for(
+                lambda: getattr(
+                    rooms.server.rooms.get(room_name_for(collab.id)), "ready", False
+                )
+                and rooms.server.rooms[room_name_for(collab.id)].ydoc_observed.is_set(),
+                "the socket's room to open",
+            )
 
         await rooms.submit(collab.id, character.id, doc_state=state)
         proposed_at = (await _proposal(rooms, collab.id))[1]
@@ -1949,3 +1959,20 @@ async def test_a_submit_on_an_unopened_room_stores_its_text(
             character3.id: False,
         }
         assert (await _proposal(rooms, collab.id))[1] == proposed_at
+
+
+async def test_a_room_whose_observer_never_arms_is_dropped_and_refused(
+    db_session, collab, monkeypatch,
+) -> None:
+    async def never_armed(self) -> None:
+        await asyncio.sleep(3600)
+
+    monkeypatch.setattr(YRoom, "_watch_ready", never_armed)
+    monkeypatch.setattr(praxis_room, "_OBSERVER_WAIT_SECONDS", 0.05)
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        with pytest.raises(HTTPException) as caught:
+            await rooms.server.get_room(room_name_for(collab.id))
+
+        assert caught.value.status_code == 503
+        assert caught.value.detail["code"] == "PRAXIS_ROOM_UNAVAILABLE"
+        assert rooms.room_doc(collab.id) is None
