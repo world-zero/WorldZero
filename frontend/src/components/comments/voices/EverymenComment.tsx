@@ -5,53 +5,58 @@
  * because red mention ink is 4.49:1 on paper but AA on the panel (#1223).
  * Behaviour lives in the shared helpers; one component, no mobile twin (ADR-0063).
  */
-import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import FactionAvatar from '../../avatar/FactionAvatar'
-import { useAuth } from '../../../auth/AuthContext'
-import { formatCommentTime } from '../../../utils/commentTime'
-import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import FactionAvatar from "../../avatar/FactionAvatar";
+import { useAuth } from "../../../auth/AuthContext";
+import { formatCommentTime } from "../../../utils/commentTime";
+import {
+  type CommentProps,
+  authorToCharacter,
+  ComposerControls,
+  MentionText,
+} from "../shared";
 import {
   CommentEditor,
   OwnerControls,
   useOwnerEdit,
   useOwnerReveal,
-} from '../OwnerControls'
-import { CommentFlagControl, canFlagComment } from '../FlagControl'
-import { factionRoleVars } from '../../../utils/factionRoles'
-import { factionBodyVars } from '../../../utils/factionBodyFace'
+} from "../OwnerControls";
+import { CommentFlagControl, canFlagComment } from "../FlagControl";
+import { factionRoleVars } from "../../../utils/factionRoles";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /** Red as rule and fill, never type; AA ink per #924. */
-const ACCENT = 'var(--everymen-red)'
-const ON_ACCENT = 'var(--faction-everymen-on-accent)'
-const PANEL = 'var(--faction-everymen-sheet-panel)'
+const ACCENT = "var(--everymen-red)";
+const ON_ACCENT = "var(--faction-everymen-on-accent)";
+const PANEL = "var(--faction-everymen-sheet-panel)";
 /** Field inset into the panel; deeper than it in both themes. */
-const FIELD = 'var(--everymen-paper)'
-const BODY_INK = 'var(--everymen-paper-text)'
+const FIELD = "var(--everymen-paper)";
+const BODY_INK = "var(--everymen-paper-text)";
 
 const DATELINE = {
-  fontFamily: 'var(--faction-everymen-body-font)',
-  fontSize: 'var(--text-md)',
-  letterSpacing: '0.15em',
-  textTransform: 'uppercase',
-  whiteSpace: 'nowrap',
-  color: 'inherit',
-} as const
+  fontFamily: "var(--faction-everymen-body-font)",
+  fontSize: "var(--text-md)",
+  letterSpacing: "0.15em",
+  textTransform: "uppercase",
+  whiteSpace: "nowrap",
+  color: "inherit",
+} as const;
 
 const BYLINE = {
-  fontFamily: 'var(--ev-voice-face)',
+  fontFamily: "var(--ev-voice-face)",
   // Content tier: Bebas is narrow enough that 18px reads like 14 of a normal face.
-  fontSize: 'var(--text-content)',
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
+  fontSize: "var(--text-content)",
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
   lineHeight: 1.15,
-  color: 'inherit',
-  textDecoration: 'none',
+  color: "inherit",
+  textDecoration: "none",
   minWidth: 0,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-} as const
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+} as const;
 
 /** The slip both modes sit on (and the surface root for the role map). */
 function Slip({
@@ -61,19 +66,20 @@ function Slip({
   children,
   containerProps,
 }: {
-  avatar: ReactNode
-  byline: ReactNode
-  dateline: ReactNode
-  children: ReactNode
-  containerProps?: React.ComponentPropsWithoutRef<'div'>
+  avatar: ReactNode;
+  byline: ReactNode;
+  dateline: ReactNode;
+  children: ReactNode;
+  containerProps?: React.ComponentPropsWithoutRef<"div">;
 }) {
   return (
     <div
       style={{
-        ...factionBodyVars("everymen"), ...factionRoleVars('everymen', 'ev-voice'),
-        display: 'flex',
-        gap: 'var(--space-md)',
-        alignItems: 'flex-start',
+        ...factionBodyVars("everymen"),
+        ...factionRoleVars("everymen", "ev-voice"),
+        display: "flex",
+        gap: "var(--space-md)",
+        alignItems: "flex-start",
       }}
     >
       {avatar}
@@ -82,38 +88,38 @@ function Slip({
         style={{
           flex: 1,
           minWidth: 0,
-          background: 'var(--everymen-paper)',
+          background: "var(--everymen-paper)",
           color: BODY_INK,
           // The double frame, as the feed slip rules it: plate edge…
-          border: '2px solid var(--everymen-frame)',
+          border: "2px solid var(--everymen-frame)",
           // …4px pad…
-          padding: 'var(--space-xs)',
-          boxShadow: 'var(--faction-everymen-slip-shadow)',
+          padding: "var(--space-xs)",
+          boxShadow: "var(--faction-everymen-slip-shadow)",
         }}
       >
         {/* …and inner hairline. */}
-        <div style={{ border: '1px solid var(--faction-everymen-sheet-hair)' }}>
+        <div style={{ border: "1px solid var(--faction-everymen-sheet-hair)" }}>
           {/* Byline band: red fill + masthead ink (5.24:1 / 4.59:1). */}
           <div
             style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              justifyContent: 'space-between',
-              gap: 'var(--space-md)',
-              flexWrap: 'wrap',
-              background: 'var(--everymen-red)',
-              color: 'var(--everymen-masthead-text)',
-              borderBottom: '3px double var(--everymen-paper)',
-              padding: 'var(--feed-bar-pad)',
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: "var(--space-md)",
+              flexWrap: "wrap",
+              background: "var(--everymen-red)",
+              color: "var(--everymen-masthead-text)",
+              borderBottom: "3px double var(--everymen-paper)",
+              padding: "var(--feed-bar-pad)",
             }}
           >
             {byline}
             <span
               style={{
-                display: 'inline-flex',
-                alignItems: 'baseline',
-                gap: 'var(--space-sm)',
-                color: 'inherit',
+                display: "inline-flex",
+                alignItems: "baseline",
+                gap: "var(--space-sm)",
+                color: "inherit",
               }}
             >
               {dateline}
@@ -122,7 +128,7 @@ function Slip({
           <div
             style={{
               background: PANEL,
-              padding: 'var(--ev-panel-pad)',
+              padding: "var(--ev-panel-pad)",
             }}
           >
             {children}
@@ -130,16 +136,16 @@ function Slip({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function EverymenComment(props: CommentProps) {
-  const { t } = useTranslation('praxis')
-  const { user } = useAuth()
-  const reveal = useOwnerReveal()
+  const { t } = useTranslation("praxis");
+  const { user } = useAuth();
+  const reveal = useOwnerReveal();
 
-  if (props.mode === 'composer') {
-    const { character, value, onChange, onSubmit, submitting } = props
+  if (props.mode === "composer") {
+    const { character, value, onChange, onSubmit, submitting } = props;
     return (
       <Slip
         avatar={<FactionAvatar character={character} size="sm" />}
@@ -160,31 +166,36 @@ export default function EverymenComment(props: CommentProps) {
             hint={
               <span
                 style={{
-                  fontFamily: 'var(--faction-everymen-body-font)',
-                  fontSize: 'var(--text-md)',
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  color: 'var(--everymen-muted)',
+                  fontFamily: "var(--faction-everymen-body-font)",
+                  fontSize: "var(--text-md)",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "var(--everymen-muted)",
                 }}
               >
-                {t('comments.mentionHint')}
+                {t("comments.mentionHint")}
               </span>
             }
           />
         </div>
       </Slip>
-    )
+    );
   }
 
-  const { comment, onEdited, onWithdrawn } = props
-  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
-  const canFlag = canFlagComment(comment, user?.character?.id)
-  const showControls = !owner.editing && (owner.isOwner || canFlag)
+  const { comment, onEdited, onWithdrawn } = props;
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn });
+  const canFlag = canFlagComment(comment, user?.character?.id);
+  const showControls = !owner.editing && (owner.isOwner || canFlag);
   // The foot rule is never gated (#2733); `<OwnerControls reveal>` gates itself.
 
   return (
     <Slip
-      avatar={<FactionAvatar character={authorToCharacter(comment.author)} size="sm" />}
+      avatar={
+        <FactionAvatar
+          character={authorToCharacter(comment.author)}
+          size="sm"
+        />
+      }
       containerProps={reveal.containerProps}
       byline={
         <Link to={`/characters/${comment.author.id}`} style={BYLINE}>
@@ -198,7 +209,7 @@ export default function EverymenComment(props: CommentProps) {
           {comment.is_edited && (
             <span style={DATELINE}>
               <span aria-hidden="true">· </span>
-              {t('comments.edited')}
+              {t("comments.edited")}
             </span>
           )}
         </>
@@ -207,10 +218,10 @@ export default function EverymenComment(props: CommentProps) {
       <div
         className="content-text"
         style={{
-          fontFamily: 'var(--faction-everymen-body-font)',
+          fontFamily: "var(--faction-everymen-body-font)",
           color: BODY_INK,
           lineHeight: 1.55,
-          overflowWrap: 'anywhere',
+          overflowWrap: "anywhere",
         }}
       >
         {owner.editing ? (
@@ -224,6 +235,7 @@ export default function EverymenComment(props: CommentProps) {
         ) : (
           <MentionText
             body={comment.body_text}
+            censored={comment.is_censored}
             mentions={comment.mentions}
             // Red ink is only legible on this panel (#1223).
             accent="var(--faction-everymen-sheet-accent)"
@@ -233,13 +245,13 @@ export default function EverymenComment(props: CommentProps) {
       {showControls && (
         <div
           style={{
-            display: 'flex',
-            alignItems: 'baseline',
-            flexWrap: 'wrap',
-            gap: 'var(--space-md)',
-            marginTop: 'var(--space-md)',
-            paddingTop: 'var(--space-sm)',
-            borderTop: '1px solid var(--faction-everymen-sheet-hair)',
+            display: "flex",
+            alignItems: "baseline",
+            flexWrap: "wrap",
+            gap: "var(--space-md)",
+            marginTop: "var(--space-md)",
+            paddingTop: "var(--space-sm)",
+            borderTop: "1px solid var(--faction-everymen-sheet-hair)",
           }}
         >
           <OwnerControls owner={owner} reveal={reveal} />
@@ -247,5 +259,5 @@ export default function EverymenComment(props: CommentProps) {
         </div>
       )}
     </Slip>
-  )
+  );
 }

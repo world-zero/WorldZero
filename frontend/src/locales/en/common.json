@@ -25,9 +25,10 @@
     "block": "block",
     "blockAria": "Block {{name}}",
     "blockError": "Could not block.",
+    "censoredComment": "Hidden — you blocked this player",
     "blockConfirm": {
       "title": "Block {{name}}?",
-      "body": "Taunts stop crossing between you, and they leave your activity feed. Nothing else changes, and they are not told — a block is silent. You can unblock at any time.",
+      "body": "They can't invite you, challenge you or nudge you, and their taunts stop. Their comments and mentions show up hidden for you, so you'll see they're talking but not what they said. You'll still see what they complete. You won't be able to invite or challenge them either. They aren't told. You can unblock anytime.",
       "action": "Block"
     },
     "addFriend": "Friend",

@@ -52,6 +52,7 @@ import type { EditPraxisState } from "../useEditPraxis";
 import { collabPublishWindow } from "./waitingClock";
 import { formatClockTime } from "../../../utils/dates";
 import Breadcrumb from "../../../components/nav/Breadcrumb";
+import { useBlockedIds } from "../../../hooks/useBlockedIds";
 
 // Ornament geometry: raw px per WORLD_ZERO_STYLE §4a.
 const RING_SIZE = 72;
@@ -422,6 +423,7 @@ export default function PraxisWaitingSurface({
   now,
 }: PraxisWaitingSurfaceProps) {
   const { t } = useTranslation("forms");
+  const blockedIds = useBlockedIds(duel != null);
   const sizes = useComposerSizes();
   const config = useGameConfig();
   if (!praxis) return null;
@@ -568,7 +570,8 @@ export default function PraxisWaitingSurface({
                 dress={dress}
                 completed={completed}
                 onNudge={
-                  duel?.status === "active"
+                  duel?.status === "active" &&
+                  !blockedIds.has(sides.foe.character_id)
                     ? () => nudge(sides.foe.character_id)
                     : undefined
                 }

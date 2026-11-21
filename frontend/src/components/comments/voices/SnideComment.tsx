@@ -1,19 +1,24 @@
-import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import FactionAvatar from '../../avatar/FactionAvatar'
-import { useAuth } from '../../../auth/AuthContext'
-import { formatCommentTime } from '../../../utils/commentTime'
-import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
+import type { CSSProperties } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import FactionAvatar from "../../avatar/FactionAvatar";
+import { useAuth } from "../../../auth/AuthContext";
+import { formatCommentTime } from "../../../utils/commentTime";
+import {
+  type CommentProps,
+  authorToCharacter,
+  ComposerControls,
+  MentionText,
+} from "../shared";
 import {
   CommentEditor,
   OwnerControls,
   useOwnerEdit,
   useOwnerReveal,
-} from '../OwnerControls'
-import { CommentFlagControl, canFlagComment } from '../FlagControl'
-import { Ransom } from '../../factionMarks/snideAtoms'
-import { factionBodyVars } from '../../../utils/factionBodyFace'
+} from "../OwnerControls";
+import { CommentFlagControl, canFlagComment } from "../FlagControl";
+import { Ransom } from "../../factionMarks/snideAtoms";
+import { factionBodyVars } from "../../../utils/factionBodyFace";
 
 /**
  * S.N.I.D.E. comment voice — the intercepted slip (#1198), same object as the feed
@@ -29,51 +34,61 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 function slip(): CSSProperties {
   return {
     ...factionBodyVars("snide"),
-    position: 'relative',
-    background: 'var(--faction-snide-slip-paper)',
-    color: 'var(--faction-snide-slip-ink)',
-    border: '1.5px solid var(--faction-snide-slip-ink)',
+    position: "relative",
+    background: "var(--faction-snide-slip-paper)",
+    color: "var(--faction-snide-slip-ink)",
+    border: "1.5px solid var(--faction-snide-slip-ink)",
     backgroundImage:
-      'radial-gradient(var(--faction-snide-slip-grain) 1px, transparent 1px),' +
-      'radial-gradient(var(--faction-snide-slip-grain) 1px, transparent 1px)',
-    backgroundSize: '3px 3px, 4px 4px',
-    backgroundPosition: '0 0, 2px 1px',
-    boxShadow: 'var(--snide-slip-shadow, var(--faction-snide-slip-shadow))',
-    transform: 'var(--snide-slip-tilt)',
+      "radial-gradient(var(--faction-snide-slip-grain) 1px, transparent 1px)," +
+      "radial-gradient(var(--faction-snide-slip-grain) 1px, transparent 1px)",
+    backgroundSize: "3px 3px, 4px 4px",
+    backgroundPosition: "0 0, 2px 1px",
+    boxShadow: "var(--snide-slip-shadow, var(--faction-snide-slip-shadow))",
+    transform: "var(--snide-slip-tilt)",
     // eslint-disable-next-line local/no-raw-style-values -- ornament: graded 20/18/16 inset, no scale rung between 16 and 24 (§4a).
-    padding: '20px 18px 16px',
-  }
+    padding: "20px 18px 16px",
+  };
 }
 
 const TYPED: CSSProperties = {
-  fontFamily: 'var(--faction-snide-font-type)',
-  fontSize: 'var(--text-lg)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.1em',
-}
+  fontFamily: "var(--faction-snide-font-type)",
+  fontSize: "var(--text-lg)",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+};
 
 const FIELD = {
   // Acid as rule and fill; press near-black prints on it in both themes.
-  accent: 'var(--faction-snide-acid)',
-  onAccent: 'var(--faction-snide-ink)',
-  bg: 'var(--faction-snide-slip-field)',
-  text: 'var(--faction-snide-slip-ink)',
-} as const
+  accent: "var(--faction-snide-acid)",
+  onAccent: "var(--faction-snide-ink)",
+  bg: "var(--faction-snide-slip-field)",
+  text: "var(--faction-snide-slip-ink)",
+} as const;
 
 export default function SnideComment(props: CommentProps) {
-  const { t } = useTranslation('praxis')
-  const { user } = useAuth()
-  const reveal = useOwnerReveal()
+  const { t } = useTranslation("praxis");
+  const { user } = useAuth();
+  const reveal = useOwnerReveal();
 
-  if (props.mode === 'composer') {
-    const { character, value, onChange, onSubmit, submitting } = props
+  if (props.mode === "composer") {
+    const { character, value, onChange, onSubmit, submitting } = props;
     return (
       <div style={slip()} aria-busy={submitting}>
-        <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            gap: "var(--space-md)",
+            alignItems: "flex-start",
+          }}
+        >
           <FactionAvatar character={character} size="sm" />
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* `.content-text` here sizes the textarea (`font: inherit`) */}
-            <div className="content-text" style={{ fontFamily: 'var(--faction-snide-font-type)' }}>
+            <div
+              className="content-text"
+              style={{ fontFamily: "var(--faction-snide-font-type)" }}
+            >
               <ComposerControls
                 value={value}
                 onChange={onChange}
@@ -84,8 +99,13 @@ export default function SnideComment(props: CommentProps) {
                 bg={FIELD.bg}
                 text={FIELD.text}
                 hint={
-                  <span style={{ ...TYPED, color: 'var(--faction-snide-slip-faint)' }}>
-                    {t('comments.mentionHint')}
+                  <span
+                    style={{
+                      ...TYPED,
+                      color: "var(--faction-snide-slip-faint)",
+                    }}
+                  >
+                    {t("comments.mentionHint")}
                   </span>
                 }
               />
@@ -93,30 +113,58 @@ export default function SnideComment(props: CommentProps) {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
-  const { comment, onEdited, onWithdrawn } = props
-  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
-  const canFlag = canFlagComment(comment, user?.character?.id)
-  const showControls = !owner.editing && (owner.isOwner || canFlag)
+  const { comment, onEdited, onWithdrawn } = props;
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn });
+  const canFlag = canFlagComment(comment, user?.character?.id);
+  const showControls = !owner.editing && (owner.isOwner || canFlag);
   // The foot rule is never gated (#2733); `<OwnerControls reveal>` gates itself.
 
   return (
     <div style={slip()} {...reveal.containerProps}>
-      <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
-        <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
+      <div
+        style={{
+          position: "relative",
+          display: "flex",
+          gap: "var(--space-md)",
+          alignItems: "flex-start",
+        }}
+      >
+        <FactionAvatar
+          character={authorToCharacter(comment.author)}
+          size="sm"
+        />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)', flexWrap: 'wrap' }}>
-            <Link to={`/characters/${comment.author.id}`} style={{ textDecoration: 'none' }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: "var(--space-md)",
+              marginBottom: "var(--space-sm)",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              to={`/characters/${comment.author.id}`}
+              style={{ textDecoration: "none" }}
+            >
               <Ransom text={comment.author.display_name} size={16} />
             </Link>
-            <span style={{ ...TYPED, color: 'var(--faction-snide-composer-muted)', whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                ...TYPED,
+                color: "var(--faction-snide-composer-muted)",
+                whiteSpace: "nowrap",
+              }}
+            >
               {formatCommentTime(comment.created_at)}
               {comment.is_edited && (
                 <>
                   <span aria-hidden="true"> · </span>
-                  {t('comments.edited')}
+                  {t("comments.edited")}
                 </>
               )}
             </span>
@@ -124,10 +172,10 @@ export default function SnideComment(props: CommentProps) {
           <div
             className="content-text"
             style={{
-              fontFamily: 'var(--faction-snide-font-type)',
+              fontFamily: "var(--faction-snide-font-type)",
               lineHeight: 1.5,
-              letterSpacing: '0.01em',
-              overflowWrap: 'anywhere',
+              letterSpacing: "0.01em",
+              overflowWrap: "anywhere",
             }}
           >
             {owner.editing ? (
@@ -141,6 +189,7 @@ export default function SnideComment(props: CommentProps) {
             ) : (
               <MentionText
                 body={comment.body_text}
+                censored={comment.is_censored}
                 mentions={comment.mentions}
                 accent="var(--faction-snide-slip-acid-ink)"
               />
@@ -149,14 +198,14 @@ export default function SnideComment(props: CommentProps) {
           {showControls && (
             <div
               style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                flexWrap: 'wrap',
-                gap: 'var(--space-md)',
-                marginTop: 'var(--space-md)',
-                paddingTop: 'var(--space-sm)',
-                borderTop: '1px solid var(--faction-snide-note-rule)',
-                  }}
+                display: "flex",
+                alignItems: "baseline",
+                flexWrap: "wrap",
+                gap: "var(--space-md)",
+                marginTop: "var(--space-md)",
+                paddingTop: "var(--space-sm)",
+                borderTop: "1px solid var(--faction-snide-note-rule)",
+              }}
             >
               <OwnerControls owner={owner} reveal={reveal} />
               <CommentFlagControl comment={comment} />
@@ -165,5 +214,5 @@ export default function SnideComment(props: CommentProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
