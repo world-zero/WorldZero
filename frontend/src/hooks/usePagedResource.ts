@@ -1,4 +1,4 @@
-import { useEffect, useState, type DependencyList } from 'react'
+import { useCallback, useEffect, useState, type DependencyList } from 'react'
 import { useResource } from './useResource'
 import type { KeyedResourceCache } from './cachedResource'
 import { CACHE_EPOCH } from '../utils/cacheEpoch'
@@ -9,13 +9,13 @@ import type { CurrentUser } from '../api/auth'
 
 export const DEFAULT_PAGE_SIZE = 50
 
-/** Load more iff the page came back full — no total count needed. */
-export function pageHasMore(pageLength: number | null | undefined, limit: number): boolean {
-  return pageLength === limit
-}
-
-export function growLimit(current: number, pageSize: number): number {
-  return current + pageSize
+/** Load more iff the last page came back full — no total count needed. */
+export function pageHasMore(
+  loaded: number | null | undefined,
+  offset: number,
+  pageSize: number,
+): boolean {
+  return loaded === offset + pageSize
 }
 
 /**
@@ -45,19 +45,20 @@ export function pageCacheKey(viewer: string, deps: DependencyList): string {
 
 /**
  * One page read; caches the FIRST page only (repeat views are first-page events).
- *
- * ponytail: grown windows always refetch; upgrade: key on `[...deps, limit]`
- * with a bounded map in `createKeyedResourceCache`.
+ * A request never asks for more than `pageSize` rows, so it stays under any
+ * route's `limit` ceiling however deep the list goes.
  */
 export function loadPage<T>(
-  fetchPage: (limit: number) => Promise<T[]>,
-  limit: number,
+  fetchPage: (offset: number, limit: number) => Promise<T[]>,
+  offset: number,
   pageSize: number,
   deps: DependencyList,
   cached: PagedCache<T> | undefined,
 ): Promise<T[]> {
-  if (cached === undefined || limit !== pageSize) return fetchPage(limit)
-  return cached.cache.read(pageCacheKey(cached.viewer, deps), () => fetchPage(limit))
+  if (cached === undefined || offset !== 0) return fetchPage(offset, pageSize)
+  return cached.cache.read(pageCacheKey(cached.viewer, deps), () =>
+    fetchPage(0, pageSize),
+  )
 }
 
 interface PagedResource<T> {
@@ -65,45 +66,58 @@ interface PagedResource<T> {
   loading: boolean
   error: Error | null
   hasMore: boolean
-  /** Grow the window by one page (refetches; does not append). */
+  /** Fetch the next page and append it. */
   loadMore: () => void
   /** Call on filter/sort change so a grown window isn't stranded. */
   resetWindow: () => void
 }
 
 /**
- * Growing-window pagination over {@link useResource} (#644): `limit` rides in the
- * dep key, so "load more" refetches a wider window. `deps` is the caller's filter
- * key; wrap filter setters with `resetWindow()`. `cached` opts the first page
- * into Class B (see {@link loadPage}). Offset accumulation is the upgrade path
- * if a list outgrows the refetch.
+ * Offset pagination over {@link useResource} (#644): "load more" fetches the next
+ * `pageSize` rows and appends them. `deps` is the caller's filter key; wrap
+ * filter setters with `resetWindow()`. `cached` opts the first page into Class B
+ * (see {@link loadPage}). Offset paging can repeat or skip a row if the list
+ * shifts between loads; a refresh resets it.
  */
 export function usePagedResource<T>(
-  fetchPage: (limit: number) => Promise<T[]>,
+  fetchPage: (offset: number, limit: number) => Promise<T[]>,
   deps: DependencyList,
   pageSize: number = DEFAULT_PAGE_SIZE,
   cached?: PagedCache<T>,
 ): PagedResource<T> {
-  const [limit, setLimit] = useState(pageSize)
+  const [pageState, setWindow] = useState<{ prior: T[]; offset: number }>({
+    prior: [],
+    offset: 0,
+  })
+  const { prior, offset } = pageState
 
   const { data, loading, error, refetch } = useResource(
-    () => loadPage(fetchPage, limit, pageSize, deps, cached),
-    [...deps, limit],
+    async () => [
+      ...prior,
+      ...(await loadPage(fetchPage, offset, pageSize, deps, cached)),
+    ],
+    [...deps, offset],
   )
 
-  // Re-read on era rollover (epoch outranks TTL, ADR-0072).
+  // Re-read on era rollover (epoch outranks TTL, ADR-0072); held pages are stale.
   const isCached = cached !== undefined
+  const restart = useCallback(() => {
+    setWindow({ prior: [], offset: 0 })
+    refetch()
+  }, [refetch])
   useEffect(
-    () => (isCached ? CACHE_EPOCH.onDrop(refetch) : undefined),
-    [isCached, refetch],
+    () => (isCached ? CACHE_EPOCH.onDrop(restart) : undefined),
+    [isCached, restart],
   )
 
   return {
     data,
     loading,
     error,
-    hasMore: pageHasMore(data?.length, limit),
-    loadMore: () => setLimit((current) => growLimit(current, pageSize)),
-    resetWindow: () => setLimit(pageSize),
+    hasMore: pageHasMore(data?.length, offset, pageSize),
+    loadMore: () => {
+      if (data !== null) setWindow({ prior: data, offset: data.length })
+    },
+    resetWindow: () => setWindow({ prior: [], offset: 0 }),
   }
 }

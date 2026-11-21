@@ -3,7 +3,7 @@
  *
  * Every axis lives in the URL (#1367), no mirrored `useState`; writes replace,
  * not push, so Back leaves the page. Search is debounced 200ms; the read is a
- * `usePagedResource` growing window (#645). `canSignUp` asks the server (#1130),
+ * `usePagedResource` paged read (#645). `canSignUp` asks the server (#1130),
  * so no era rule is read here. Eligibility's default is viewer-relative; see
  * {@link EligibilityDefault}.
  */
@@ -285,7 +285,7 @@ export function useTasks(): TasksState {
   // `getAll` returns a fresh array each render, so the dep is the joined string.
   const factionKey = selectedFactions.join(',')
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
-    (limit) =>
+    (offset, limit) =>
       viewerPending
         ? Promise.resolve<TaskOut[]>([])
         : listTasks({
@@ -300,6 +300,7 @@ export function useTasks(): TasksState {
             // No `exclude_character_id` (#2264): `can_sign_up` already hides
             // tasks you're working, and "All tasks" should mean all tasks.
             limit,
+            offset,
           }),
     [taskType, sort, status, factionKey, canSignUp, trimmedQuery, viewerPending],
     PAGE_LIMIT,

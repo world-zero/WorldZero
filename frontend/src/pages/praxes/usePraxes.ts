@@ -94,7 +94,7 @@ export function usePraxes(): PraxesFeedState {
   const factionKey = filters.factions.join(',')
 
   const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
-    (limit) =>
+    (offset, limit) =>
       listPraxes({
         status: 'submitted',
         task_id: taskId ?? undefined,
@@ -105,6 +105,7 @@ export function usePraxes(): PraxesFeedState {
         era_scope: filters.eraScope,
         q: trimmedQuery || undefined,
         limit,
+        offset,
       }),
     [taskId, factionKey, voted, filters.sort, filters.eraScope, trimmedQuery],
     PAGE_LIMIT,
