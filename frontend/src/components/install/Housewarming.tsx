@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import { Trans, useTranslation } from 'react-i18next'
 import { turnOnAskedPush } from '../push/askedPush'
+import InstallDialog from './InstallDialog'
 import InstallWisp from './InstallWisp'
 import './installCopy'
 import './installAsk.css'
@@ -37,8 +37,8 @@ export default function Housewarming({ vapidKey, name, platform, onAnswered, onC
     setBusy(false)
   }
 
-  return createPortal(
-    <div className="wzi-welcome" role="dialog" aria-labelledby="hw-h" data-testid="housewarming">
+  return (
+    <InstallDialog labelledBy="hw-h" className="wzi-welcome">
       <div className="wzi-confetti wzi-confetti--wide" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /></div>
       <div className={`wzi-icon wzi-icon--big ${platform === 'android' ? 'wzi-icon--round' : ''}`}>
         <span className="wzi-icon-word">{'WØ'}</span>
@@ -75,7 +75,6 @@ export default function Housewarming({ vapidKey, name, platform, onAnswered, onC
           </>
         )}
       </section>
-    </div>,
-    document.body,
+    </InstallDialog>
   )
 }

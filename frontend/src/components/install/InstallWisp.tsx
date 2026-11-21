@@ -14,13 +14,14 @@ interface Props {
   readonly hat?: WispHat
 }
 
-/** The wisp as a button: a poke makes it boing for 700ms (the design's startle). */
+/** The wisp as a button: a poke makes it boing for 700ms (the design's startle), unless motion is reduced. */
 export default function InstallWisp({ pose, confidence, className, size = 75, held, hat }: Props) {
   const { t } = useTranslation('install')
   const [boing, setBoing] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   useEffect(() => () => clearTimeout(timer.current), [])
   const poke = () => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     clearTimeout(timer.current)
     setBoing(true)
     timer.current = setTimeout(() => setBoing(false), 700)

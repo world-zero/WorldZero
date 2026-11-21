@@ -2,7 +2,6 @@
 import { isIphoneSafari } from './installPrompt'
 
 export const INSTALL_ASK_KEY = 'wz:installAsk'
-const VISIT_KEY = 'wz:installAskVisit'
 
 export interface AskState {
   /** ms when the first ask was first shown. */
@@ -35,21 +34,12 @@ export function patchAsk(patch: AskState): AskState {
   return next
 }
 
-/** The ask is shown once per browser visit at most; the re-ask must not land in the same visit as the first. */
-export function markVisit(): void {
-  try {
-    sessionStorage.setItem(VISIT_KEY, '1')
-  } catch {
-    // Without session storage the re-ask simply waits for a rating, which is the lesser rule.
-  }
-}
+// Module state, not storage: a page load is a visit, and a new storage key would need cookie-card copy.
+let askedThisVisit = false
 
-function sameVisit(): boolean {
-  try {
-    return sessionStorage.getItem(VISIT_KEY) === '1'
-  } catch {
-    return false
-  }
+/** The re-ask must not land in the same visit as the first ask. */
+export function markVisit(asked = true): void {
+  askedThisVisit = asked
 }
 
 /** iPhone Safari or an Android browser; any other phone browser cannot be installed from, so it is never asked. */
@@ -73,7 +63,7 @@ export function firstAskDue(s: AskState, e: Env): boolean {
 /** Everything but the rating: the caller fetches the feed only once this holds. */
 export function reAskPossible(s: AskState, e: Env): boolean {
   if (!inBrowser(e) || s.first === undefined || s.secondDone) return false
-  return s.second !== undefined || !sameVisit()
+  return s.second !== undefined || !askedThisVisit
 }
 
 /** A rating that landed after the first ask; once the re-ask has been shown it stays until answered. */

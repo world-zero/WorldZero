@@ -427,6 +427,7 @@ const SKIN_OWNED = [
   "PraxisFlagBlock",
   "PraxisDetailComments",
   "PushAsk",
+  "InstallSheet",
   "DuelCard",
   "MetataskSeal",
   // Score-panel gate (#1444): a rule, not dress.

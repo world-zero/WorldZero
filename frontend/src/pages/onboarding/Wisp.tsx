@@ -90,7 +90,7 @@ export default function Wisp({ size = 52, confidence = 0.5, hat, sleeping = fals
   const path = hat ? BALD : WISP
   return (
     <svg
-      className={['pw msc', sleeping && 'wsleep', pose && `pose-${pose}`, className].filter(Boolean).join(' ')}
+      className={['pw msc', sleeping && 'wsleep', pose && ['pose', pose].join('-'), className].filter(Boolean).join(' ')}
       viewBox="14 0 72 106"
       width={size}
       height={Math.round((size * 106) / 72)}

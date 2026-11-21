@@ -14,15 +14,13 @@ vi.mock('../../../api/client', () => ({ apiGet: m.get }))
 vi.mock('../../../api/activityFeed', () => ({ getActivityFeed: m.feed }))
 vi.mock('../../../utils/firstPraxis', () => ({ isFirstPraxis: m.first }))
 vi.mock('../../push/askedPush', () => ({ turnOnAskedPush: m.turnOn }))
-vi.mock('../../push/PushAsk', () => ({ default: () => 'PUSH_ASK' }))
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: { character: { id: 7, display_name: 'Agent Teacup' } } }),
 }))
 vi.mock('../../../utils/pushSubscribe', () => ({ pushBlock: m.block, deviceSubscribed: m.subscribed }))
 
 import '../../../i18n'
-import { readFileSync } from 'node:fs'
-import FirstPraxisAsk from '../FirstPraxisAsk'
+import InstallSheet from '../InstallSheet'
 import HomeInstallAsks from '../HomeInstallAsks'
 import InstallFlow from '../InstallFlow'
 import { INSTALL_ASK_KEY, markVisit, patchAsk, readAsk } from '../../../utils/installAsk'
@@ -44,7 +42,7 @@ function env(ua: string, { phone = true, standalone = false } = {}) {
 beforeEach(() => {
   vi.resetAllMocks()
   localStorage.clear()
-  sessionStorage.clear()
+  markVisit(false)
   m.first.mockResolvedValue(true)
   m.block.mockReturnValue('ok')
   m.subscribed.mockResolvedValue(false)
@@ -57,37 +55,30 @@ afterEach(() => {
   window.dispatchEvent(new Event('appinstalled'))
 })
 
-describe('under the first praxis', () => {
+describe('install sheet under the first praxis (phone)', () => {
   it('a phone gets the install sheet and never PushAsk', async () => {
     env(IPHONE)
-    render(<FirstPraxisAsk praxisId={5} />)
+    render(<InstallSheet praxisId={5} />)
     expect(await screen.findByText('Can I live on your home screen?')).toBeTruthy()
-    expect(screen.queryByText('PUSH_ASK')).toBeNull()
     expect(readAsk().first).toBeTypeOf('number')
-  })
-
-  it('desktop keeps PushAsk', () => {
-    env(IPHONE, { phone: false })
-    render(<FirstPraxisAsk praxisId={5} />)
-    expect(screen.getByText('PUSH_ASK')).toBeTruthy()
   })
 
   it('not the first praxis, or already standalone: no sheet', async () => {
     env(IPHONE)
     m.first.mockResolvedValue(false)
-    render(<FirstPraxisAsk praxisId={5} />)
+    render(<InstallSheet praxisId={5} />)
     await waitFor(() => expect(m.first).toHaveBeenCalled())
     expect(screen.queryByTestId('install-ask')).toBeNull()
     cleanup()
     env(IPHONE, { standalone: true })
-    render(<FirstPraxisAsk praxisId={5} />)
+    render(<InstallSheet praxisId={5} />)
     await act(async () => {})
     expect(screen.queryByTestId('install-ask')).toBeNull()
   })
 
   it('Not yet records the answer and names Settings', async () => {
     env(IPHONE)
-    render(<FirstPraxisAsk praxisId={5} />)
+    render(<InstallSheet praxisId={5} />)
     fireEvent.click(await screen.findByText('Not yet'))
     expect(screen.getByText('No rush.')).toBeTruthy()
     expect(readAsk().firstDone).toBe(true)
@@ -150,7 +141,7 @@ describe('Home: housewarming and the one re-ask', () => {
     cleanup()
     render(<HomeInstallAsks />)
     await act(async () => {})
-    expect(screen.queryByTestId('housewarming')).toBeNull()
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
   it('no housewarming where push cannot turn on', async () => {
@@ -158,7 +149,7 @@ describe('Home: housewarming and the one re-ask', () => {
     m.block.mockReturnValue('denied')
     render(<HomeInstallAsks />)
     await act(async () => {})
-    expect(screen.queryByTestId('housewarming')).toBeNull()
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
   const rated = (at: number) => m.feed.mockResolvedValue({ items: [{ timestamp: new Date(at).toISOString() }] })
@@ -199,13 +190,31 @@ describe('Home: housewarming and the one re-ask', () => {
   })
 })
 
-describe('reduced motion', () => {
-  it('stills every pose, crumb, confetti and pop to its resting frame', () => {
-    const css = readFileSync('src/components/install/installAsk.css', 'utf8')
-    const block = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'))
-    expect(block).toMatch(/\.wzi-wisp \*[^{]*\{[^}]*animation: none !important/)
-    expect(block).toMatch(/\.wzi-crumbs span/)
-    expect(block).toMatch(/\.wzi-confetti span/)
-    expect(block).toMatch(/\.wzi-pop/)
+describe('poking the wisp', () => {
+  const poke = () => fireEvent.click(screen.getByLabelText('Poke the wisp'))
+  const reduced = (on: boolean) => {
+    const q = window.matchMedia
+    window.matchMedia = ((m: string) => ({ ...q(m), matches: m.includes('reduced-motion') ? on : q(m).matches })) as typeof q
+  }
+
+  it('boings, then settles back to its pose', () => {
+    env(IPHONE)
+    vi.useFakeTimers()
+    const { container } = render(<InstallFlow platform="iphone" onAnswered={vi.fn()} onClose={vi.fn()} />)
+    reduced(false)
+    poke()
+    expect(container.querySelector('svg.pose-boing')).not.toBeNull()
+    act(() => void vi.advanceTimersByTime(700))
+    expect(container.querySelector('svg.pose-peek')).not.toBeNull()
+    vi.useRealTimers()
+  })
+
+  it('reduced motion keeps the resting frame: no boing', () => {
+    env(IPHONE)
+    const { container } = render(<InstallFlow platform="iphone" onAnswered={vi.fn()} onClose={vi.fn()} />)
+    reduced(true)
+    poke()
+    expect(container.querySelector('svg.pose-boing')).toBeNull()
+    expect(container.querySelector('svg.pose-peek')).not.toBeNull()
   })
 })

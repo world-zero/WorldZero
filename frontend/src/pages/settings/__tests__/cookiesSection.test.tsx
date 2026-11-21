@@ -76,7 +76,7 @@ const KNOWN_WRITERS = [
   'hooks/useSidebarPanelLayout.ts',
   'hooks/useTheme.tsx',
   'pages/factionDetail/sectionDisclosure.tsx',
-  'utils/installPrompt.ts',
+  'utils/installAsk.ts',
   'utils/pushAskDismissed.ts',
   'utils/onboardingResume.ts',
 ]

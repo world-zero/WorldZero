@@ -1,8 +1,8 @@
 import { useState, useSyncExternalStore, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
 import { Trans, useTranslation } from 'react-i18next'
 import { heldInstallPrompt, subscribeInstallPrompt } from '../../utils/installPrompt'
 import type { InstallPlatform } from '../../utils/installAsk'
+import InstallDialog from './InstallDialog'
 import InstallWisp from './InstallWisp'
 import './installCopy'
 import './installAsk.css'
@@ -56,13 +56,11 @@ export default function InstallFlow({ platform, reask = false, onAnswered, onClo
     onClose()
   }
 
-  const overlay = (id: string, children: ReactNode, cls = '') =>
-    createPortal(
-      <div className={`wzi-overlay ${cls}`} role="dialog" aria-labelledby={id}>
-        {children}
-      </div>,
-      document.body,
-    )
+  const overlay = (id: string, children: ReactNode, cls = '') => (
+    <InstallDialog labelledBy={id} className={`wzi-overlay ${cls}`}>
+      {children}
+    </InstallDialog>
+  )
 
   const stepCard = (
     id: string,

@@ -15,7 +15,7 @@ const phone = { phone: true, standalone: false, platform: 'iphone' as const }
 
 beforeEach(() => {
   localStorage.clear()
-  sessionStorage.clear()
+  markVisit(false)
 })
 
 describe('install ask gating (#4052)', () => {
