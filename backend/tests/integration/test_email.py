@@ -195,4 +195,15 @@ async def test_a_bad_token_is_a_400_not_a_500(client: AsyncClient, path: str):
 async def test_get_unsubscribe_redirects_to_the_frontend_page(client: AsyncClient):
     resp = await client.get("/email/unsubscribe?token=abc", follow_redirects=False)
     assert resp.status_code == 303
-    assert resp.headers["location"].endswith("/unsubscribe?token=abc")
+    base = settings.FRONTEND_URL.rstrip("/")
+    assert resp.headers["location"] == f"{base}/unsubscribe?token=abc"
+
+
+@pytest.mark.asyncio
+async def test_get_unsubscribe_redirect_keeps_a_hostile_token_in_its_param(
+    client: AsyncClient,
+):
+    resp = await client.get(
+        "/email/unsubscribe", params={"token": "a&x=1"}, follow_redirects=False
+    )
+    assert resp.headers["location"].endswith("/unsubscribe?token=a%26x%3D1")

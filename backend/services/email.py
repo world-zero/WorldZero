@@ -13,6 +13,7 @@ import logging
 from functools import cache
 from pathlib import Path
 from typing import Optional
+from urllib.parse import quote
 
 import httpx
 from cryptography.fernet import Fernet, InvalidToken
@@ -89,7 +90,8 @@ def read_unsubscribe_token(token: str) -> Optional[tuple[int, str]]:
 
 
 def unsubscribe_page_url(token: str) -> str:
-    return f"{settings.FRONTEND_URL.rstrip('/')}/unsubscribe?token={token}"
+    base = settings.FRONTEND_URL.rstrip("/")
+    return f"{base}/unsubscribe?token={quote(token, safe='')}"
 
 
 @cache

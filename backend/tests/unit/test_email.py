@@ -5,6 +5,7 @@ No network: ``send_email`` is never called here.
 """
 
 import base64
+from urllib.parse import quote
 
 import pytest
 
@@ -23,12 +24,12 @@ BROADCAST_ROWS = {"era_announcement", "rules_change", "global_task"}
 
 
 def test_token_round_trips_and_hides_nothing_readable():
-    token = unsubscribe_token(41, "vote_on_mine")
-    assert read_unsubscribe_token(token) == (41, "vote_on_mine")
+    token = unsubscribe_token(90817263541, "vote_on_mine")
+    assert read_unsubscribe_token(token) == (90817263541, "vote_on_mine")
     assert "@" not in token
     for segment in token.replace("=", "").split("."):
         raw = base64.urlsafe_b64decode(segment + "=" * (-len(segment) % 4))
-        assert b"41" not in raw and b"vote_on_mine" not in raw
+        assert b"90817263541" not in raw and b"vote_on_mine" not in raw
 
 
 def test_a_tampered_or_foreign_token_is_rejected():
@@ -78,7 +79,7 @@ def test_the_footer_names_the_setting_and_the_stop_link_and_headers_are_set():
     assert message["subject"] == "Ada <b> commented on your praxis"
     for part in ("html", "text"):
         assert "Comments on my praxis" in message[part]
-        assert f"/unsubscribe?token={token}" in message[part]
+        assert f"/unsubscribe?token={quote(token, safe='')}" in message[part]
         assert "/settings" in message[part]
     assert "Ada <b>" not in message["html"]  # escaped
     assert message["headers"]["List-Unsubscribe"].endswith(
