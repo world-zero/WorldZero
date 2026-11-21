@@ -97,7 +97,8 @@
       "loadMore": "Load more",
       "loadMoreCount_one": "{{count}} more player",
       "loadMoreCount_other": "{{count}} more players",
-      "empty": "No players match your filters."
+      "empty": "No players match your filters.",
+      "podiumOnly": "Everyone's on the podium so far."
     },
     "mobile": {
       "factionLevel": "{{faction}} · Lv {{level}}"

@@ -217,7 +217,9 @@ interface RosterView {
   /** The viewer's own row, drawn after the gap. Null whenever it is not pinned. */
   pinned: RankedPlayer | null
   hasMore: boolean
-  /** Size of the FILTERED set — what the "{{count}} players" chip states. */
+  /** Everyone the view covers, podium included — what the "{{count}} players" chip states. */
+  count: number
+  /** The roster's own size (the podium is not in it at rest); load-more counts from this. */
   total: number
 }
 
@@ -229,6 +231,7 @@ export function rosterView(
   roster: RankedPlayer[],
   visible: number,
   myCharId: number | null,
+  covered: number = roster.length,
 ): RosterView {
   const rows = roster.slice(0, visible)
   const base: RosterView = {
@@ -236,6 +239,7 @@ export function rosterView(
     gap: null,
     pinned: null,
     hasMore: visible < roster.length,
+    count: covered,
     total: roster.length,
   }
   if (myCharId == null) return base

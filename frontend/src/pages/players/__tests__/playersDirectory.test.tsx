@@ -161,11 +161,11 @@ describe('the faction race', () => {
 })
 
 describe('the roster', () => {
-  it('links every row to its profile and states the filtered count', () => {
+  it('links every row to its profile and states the everyone count', () => {
     const { html, text } = render(<DesktopPlayers {...props()} />)
     expect(html, 'rank 4 is a link — the design draws none and that is a bug')
       .toContain('href="/characters/44"')
-    expect(text, 'count is the roster set, not the field').toContain('11 players')
+    expect(text, 'count is everyone, podium included').toContain('14 players')
   })
 
   it('marks the signed-in player and pins them below a gap row', () => {

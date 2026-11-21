@@ -91,7 +91,7 @@ export default function PlayersDirectory({
     () => selectRoster(ranked, filters, related),
     [ranked, filters, related],
   )
-  const view = rosterView(roster, visible, myCharId)
+  const view = rosterView(roster, visible, myCharId, hasActiveFilter(filters) ? roster.length : ranked.length)
   const lanes = mobile ? standings.slice(0, RACE_PREVIEW) : standings
   const hiddenLanes = standings.length - RACE_PREVIEW
   const sectionGap = mobile ? 'var(--space-xl)' : 'var(--space-3xl)'
@@ -183,7 +183,7 @@ export default function PlayersDirectory({
       <section style={{ marginTop: sectionGap }}>
         <SectionHeading
           title={t('leaderboard.roster.heading')}
-          meta={<span className="label-heading">{t('leaderboard.playersCount', { count: view.total })}</span>}
+          meta={<span className="label-heading">{t('leaderboard.playersCount', { count: view.count })}</span>}
           open={rosterOpen}
           onToggle={() => setRosterOpen(!rosterOpen)}
           fontSize={headingSize}
@@ -206,10 +206,13 @@ export default function PlayersDirectory({
 
             {view.total === 0 ? (
               <div style={{ marginTop: mobile ? 'var(--space-lg)' : 'var(--space-xl)' }}>
-                <FilterBarEmpty
-                  title={t('leaderboard.roster.empty')}
-                  onClearAll={hasActiveFilter(filters) ? clearFilters : undefined}
-                />
+                {hasActiveFilter(filters) ? (
+                  <FilterBarEmpty title={t('leaderboard.roster.empty')} onClearAll={clearFilters} />
+                ) : (
+                  <p className="text-center" style={{ color: 'var(--color-text-secondary)' }}>
+                    {t('leaderboard.roster.podiumOnly')}
+                  </p>
+                )}
               </div>
             ) : (
               <>
