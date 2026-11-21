@@ -376,7 +376,9 @@
           "task_withdraw": "withdrew",
           "stats_edit": "edited the stats of",
           "role_grant": "granted a role to",
-          "role_revoke": "revoked a role from"
+          "role_revoke": "revoked a role from",
+          "permission_grant": "granted a permission to",
+          "permission_revoke": "revoked a permission from"
         }
       }
     },
@@ -566,6 +568,8 @@
         "stats_edit": "edited the stats of",
         "role_grant": "made admin",
         "role_revoke": "removed admin",
+        "permission_grant": "granted a permission to",
+        "permission_revoke": "revoked a permission from",
         "era_roll": "rolled into",
       "task_import": "imported tasks",
       "message_archive": "archived a message",
