@@ -176,11 +176,12 @@ def compute_praxis_score(
     meta_task_points: int = 0,
     duel_multiplier: float = 1.0,
     habit_bonus: int = 0,
+    rival_bonus: int = 0,
 ) -> float:
     """Score for a single praxis or collaboration member.
 
     Formula: task_point_value × faction_multiplier × duel_multiplier
-             + meta_task_points + total_stars + habit_bonus
+             + meta_task_points + total_stars + habit_bonus + rival_bonus
 
     Only base points multiply (ADR-0086): the multipliers judge the task, so
     metatask points, stars and the seal-stamped habit bonus (#1617) stay flat.
@@ -195,4 +196,5 @@ def compute_praxis_score(
         + exact(meta_task_points)
         + exact(total_stars)
         + exact(habit_bonus)
+        + exact(rival_bonus)
     )

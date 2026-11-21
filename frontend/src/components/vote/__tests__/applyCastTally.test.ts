@@ -55,6 +55,7 @@ const MINE_SIDE: DuelSideOut = {
   win_multiplier: 1,
   loss_multiplier: 1,
   tie_multiplier: 1,
+  rival_bonus: 0,
 }
 
 const RIVAL_SIDE: DuelSideOut = {
@@ -70,6 +71,7 @@ const RIVAL_SIDE: DuelSideOut = {
   win_multiplier: 1,
   loss_multiplier: 1,
   tie_multiplier: 1,
+  rival_bonus: 0,
 }
 
 const DUEL: DuelDetailOut = {

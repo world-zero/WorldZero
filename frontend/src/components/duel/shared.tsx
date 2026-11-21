@@ -67,6 +67,8 @@ interface DuelStakes {
   tie: number
   /** Duel never happens (declined): plain solo. */
   solo: number
+  /** Flat, on top of whichever figure wins (ADR-0100); `0` off a Rival duel. */
+  rival: number
 }
 
 /** Base points for one side: server-resolved multipliers (#2865) × task points. */
@@ -80,7 +82,15 @@ export function duelStakes(
     lose: taskPointValue * me.loss_multiplier,
     tie: taskPointValue * me.tie_multiplier,
     solo: taskPointValue,
+    rival: me.rival_bonus,
   }
+}
+
+/** The rival-bonus sentence, appended to a paragraph the host already styles. */
+export function RivalBonusSentence({ points }: { points: number }) {
+  const { t } = useTranslation('praxis')
+  if (!(points > 0)) return null
+  return <> {t('duelStakes.rivalBonus', { points: formatPoints(points) })}</>
 }
 
 
@@ -177,6 +187,7 @@ export function StakesTiles({
       >
         {t('duelStakes.tieLine', { points: formatPoints(stakes.tie) })}{' '}
         {t('duelStakes.beforeVotes')}
+        <RivalBonusSentence points={stakes.rival} />
       </p>
     </div>
   )

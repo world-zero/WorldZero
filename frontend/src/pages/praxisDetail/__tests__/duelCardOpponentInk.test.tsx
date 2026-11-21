@@ -51,6 +51,7 @@ function duelAgainst(hostSlug: string, rivalSlug: string): DuelDetailOut {
     win_multiplier: 1,
     loss_multiplier: 1,
     tie_multiplier: 1,
+    rival_bonus: 0,
     ...overrides,
   })
   return {

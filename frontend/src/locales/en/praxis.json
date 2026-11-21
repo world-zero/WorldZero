@@ -229,6 +229,7 @@
     "loseLabel": "If you lose",
     "tieLine": "A tie pays {{points}}.",
     "beforeVotes": "Base points, before crowd votes — stars add on top.",
+    "rivalBonus": "Rival duel: whoever wins, tiebreak included, takes {{points}} more on top.",
     "soloFallback": "Nothing is at stake yet. If {{name}} declines, this scores as an ordinary praxis worth {{points}}."
   },
   "duelRoster": {

@@ -6,7 +6,7 @@ A→B plus B→A gives the display status. Blocking is its own record
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
@@ -46,6 +46,28 @@ def compute_display_status(
     if outgoing_type is None and incoming_type == "foe":
         return DISPLAY_STATUS_TARGETED
     return DISPLAY_STATUS_UNKNOWN
+
+
+async def are_rivals(
+    character_a_id: int, character_b_id: int, session: AsyncSession
+) -> bool:
+    """Both foe edges exist: the *Rivals* display status."""
+    count = await session.scalar(
+        select(func.count()).select_from(Relationship).where(
+            Relationship.type == RelationshipType.foe,
+            or_(
+                and_(
+                    Relationship.from_character_id == character_a_id,
+                    Relationship.to_character_id == character_b_id,
+                ),
+                and_(
+                    Relationship.from_character_id == character_b_id,
+                    Relationship.to_character_id == character_a_id,
+                ),
+            ),
+        )
+    )
+    return count == 2
 
 
 def _to_list_item(
