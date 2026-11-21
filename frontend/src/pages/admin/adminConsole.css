@@ -37,3 +37,8 @@
   .adm-main { padding: var(--space-md); }
 }
 .adm-copy-index { max-width: 24rem; }
+
+/* `transform` contains the phone skin's `position: fixed` scrim per level. */
+@media (max-width: 767px) and (pointer: coarse) {
+  .adm-levelup-frame { position: relative; transform: translateZ(0); overflow: hidden; height: 760px; }
+}
