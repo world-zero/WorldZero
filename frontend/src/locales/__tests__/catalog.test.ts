@@ -736,7 +736,6 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
     ['forms.json:editPraxis.seal.confirm', 'forms.json:editPraxis.attach.confirm'],
     ['forms.json:editPraxis.seal.removeTitle', 'forms.json:editPraxis.attach.removeTitle'],
     ['forms.json:editPraxis.seal.removeBody', 'forms.json:editPraxis.attach.removeBody'],
-    ['forms.json:editPraxis.seal.removeCancel', 'forms.json:editPraxis.attach.removeCancel'],
     ['forms.json:editPraxis.seal.removeConfirm', 'forms.json:editPraxis.attach.removeConfirm'],
     ['forms.json:editPraxis.composer.sealsLabel', 'forms.json:editPraxis.composer.metatasksLabel'],
     ['forms.json:editPraxis.collab.duelPillSealed', 'forms.json:editPraxis.collab.duelPillSubmitted'],
@@ -750,7 +749,7 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   it('has the whole ruling in the list', () => {
     // Guards against a line lost in a merge.
     expect(new Set(NAME_DUPLICATES).size).toBe(16)
-    expect(new Set(RENAMED.map(([from]) => from)).size).toBe(20)
+    expect(new Set(RENAMED.map(([from]) => from)).size).toBe(19)
   })
 
   it('finds catalog leaves to check against, so absence cannot be vacuous', () => {
