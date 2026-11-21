@@ -1,4 +1,4 @@
-"""Rival duel bonus (#3858): snapshot on accept, flat bonus to whoever duel_winner names."""
+"""Rival duel bonus (#3858): snapshot on accept, flat bonus to duel_winner's pick."""
 
 import pytest
 from sqlalchemy import delete, select
@@ -24,7 +24,9 @@ from tests.integration.factories import (
 
 BONUS = CURRENT_ERA.rival_duel_bonus
 TIE_TAKER = next(
-    s for s in real_faction_slugs(CURRENT_ERA) if CURRENT_ERA.factions[s].takes_duel_ties
+    s
+    for s in real_faction_slugs(CURRENT_ERA)
+    if CURRENT_ERA.factions[s].takes_duel_ties
 )
 NOT_TIE_TAKER = next(
     s
@@ -70,7 +72,8 @@ async def _accepted(session: AsyncSession, era: Era, label: str, *edges) -> Duel
     opponent = await make_character(session, era, username=f"{label}op")
     await raise_to_duel_level(session, opponent.id)
     for edge in edges:
-        session.add(_foe(*{"ch": (challenger, opponent), "op": (opponent, challenger)}[edge]))
+        pair = {"ch": (challenger, opponent), "op": (opponent, challenger)}[edge]
+        session.add(_foe(*pair))
     task = await make_task(session, challenger)
     praxis = await make_solo_praxis(
         session, task, challenger, status=PraxisStatus.in_progress
@@ -95,7 +98,8 @@ async def test_accept_snapshots_mutual_foes_only(db_session: AsyncSession, era: 
     assert one_sided.rival_bonus is False
     detail = await get_duel_detail(rivals.id, None, db_session)
     assert detail.challenger.rival_bonus == detail.opponent.rival_bonus == BONUS
-    assert (await get_duel_detail(one_sided.id, None, db_session)).opponent.rival_bonus == 0
+    plain = await get_duel_detail(one_sided.id, None, db_session)
+    assert plain.opponent.rival_bonus == 0
     assert (await _accepted(db_session, era, "non")).rival_bonus is False
 
 
@@ -104,7 +108,8 @@ async def test_edges_changed_after_accept_keep_the_bonus(
     db_session: AsyncSession, era: Era
 ):
     duel = await _accepted(db_session, era, "snap", "ch", "op")
-    challenger_id = (await db_session.get(Praxis, duel.challenger_praxis_id)).created_by_id
+    challenger_praxis = await db_session.get(Praxis, duel.challenger_praxis_id)
+    challenger_id = challenger_praxis.created_by_id
     await db_session.execute(delete(Relationship))
     db_session.add(
         CharacterBlock(

@@ -127,7 +127,7 @@ class Duel(CreatedAtMixin, Base):
         Integer, nullable=True
     )
     opponent_final_points: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    # Mutual foes at accept (ADR-0100); never re-read, so later edge edits can't move it.
+    # Mutual foes at accept (ADR-0100); never re-read, so edge edits can't move it.
     rival_bonus: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )

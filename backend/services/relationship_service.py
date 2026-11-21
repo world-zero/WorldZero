@@ -48,8 +48,10 @@ def compute_display_status(
     return DISPLAY_STATUS_UNKNOWN
 
 
-async def are_rivals(character_a_id: int, character_b_id: int, session: AsyncSession) -> bool:
-    """Both foe edges exist: the *Rivals* display status, read straight from the edges."""
+async def are_rivals(
+    character_a_id: int, character_b_id: int, session: AsyncSession
+) -> bool:
+    """Both foe edges exist: the *Rivals* display status."""
     count = await session.scalar(
         select(func.count()).select_from(Relationship).where(
             Relationship.type == RelationshipType.foe,

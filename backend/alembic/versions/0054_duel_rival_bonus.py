@@ -18,7 +18,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.execute(
-        "ALTER TABLE duel ADD COLUMN IF NOT EXISTS rival_bonus BOOLEAN NOT NULL DEFAULT false"
+        "ALTER TABLE duel ADD COLUMN IF NOT EXISTS "
+        "rival_bonus BOOLEAN NOT NULL DEFAULT false"
     )
 
 
