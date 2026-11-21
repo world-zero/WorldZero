@@ -101,7 +101,7 @@ from services.signup_eligibility import (
     meets_task_level,
 )
 from services.task import get_task_for_viewer
-from services.vote import void_account_vote_on_join
+from services.vote import refund_vote_budget, void_account_vote_on_join
 from services.vote_tally import counted_votes
 
 
@@ -777,6 +777,10 @@ async def delete_praxis(
             detail="Cannot delete a submitted praxis. Move it to editing first.",
         )
     await discard_dissolved_duels_for_praxis(praxis_id, session)
+    # The votes cascade away in the DB; refund the voters first (#3933).
+    votes = await session.scalars(select(Vote).where(Vote.praxis_id == praxis_id))
+    for vote in votes:
+        await refund_vote_budget(vote, session)
     await session.delete(praxis)
     await session.flush()
 
