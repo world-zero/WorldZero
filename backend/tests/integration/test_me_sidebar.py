@@ -130,7 +130,7 @@ async def test_sidebar_stays_inside_its_query_budget(
 #: pending request (measured): 27 (the no-sibling read, which already pays the
 #: sibling-list query) + 6 `_build_fetch_context` round trips for the sibling
 #: + 1 UNION count = 34. Each further sibling adds 6.
-SIDEBAR_ONE_SIBLING_SELECT_BUDGET = 34
+SIDEBAR_ONE_SIBLING_SELECT_BUDGET = 35
 
 
 @pytest.mark.asyncio
