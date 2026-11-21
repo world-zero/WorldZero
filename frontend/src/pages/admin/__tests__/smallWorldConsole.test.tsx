@@ -4,9 +4,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '../../../i18n'
+import { ALL_PERMISSIONS } from '../../../test/fixtures'
 
 const api = vi.hoisted(() => ({ getSmallWorld: vi.fn(), setSmallWorld: vi.fn() }))
 vi.mock('../../../api/admin', () => api)
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: { is_admin: true, permissions: ALL_PERMISSIONS } }) }))
 
 import AdminRail from '../../../components/admin/AdminRail'
 import SmallWorldTab from '../SmallWorldTab'

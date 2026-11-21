@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../../../i18n'
+import { ALL_PERMISSIONS } from '../../../test/fixtures'
 
 const api = vi.hoisted(() => ({
   getFlaggedPraxes: vi.fn(),
@@ -22,7 +23,7 @@ const api = vi.hoisted(() => ({
   removeFlaggedPraxes: vi.fn(),
 }))
 vi.mock('../../../api/admin', () => api)
-vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: { is_owner: false } }) }))
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: { is_admin: true, is_owner: false, permissions: ALL_PERMISSIONS } }) }))
 vi.mock('../AdminRosterSection', () => ({ default: () => 'ROSTER' }))
 
 import Admin from '../../Admin'
