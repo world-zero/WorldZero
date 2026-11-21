@@ -39,8 +39,8 @@ class CharacterStats(Base):
     votes_spent_this_era: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
     )
-    # Level when the level-jump allowance was last spent (#811); available iff
-    # != `level`. Only via services.level_jump.
+    # High-water level at which the level-jump allowance was spent (#811);
+    # available iff NULL or `level` > this. Only via services.level_jump.
     level_jump_used_at_level: Mapped[int | None] = mapped_column(
         Integer, nullable=True
     )
