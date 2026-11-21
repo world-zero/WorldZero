@@ -219,3 +219,83 @@ async def test_account_comment_flag_uniqueness_and_non_sibling_still_allowed(
         headers=ns_headers,
     )
     assert ns_flag.status_code == 200, ns_flag.text
+
+
+@pytest.mark.asyncio
+async def test_keep_closes_flags_and_flagger_can_report_again(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """#3726: a ruling closes open flags: out of the queue and the per-account check."""
+    from tests.integration.factories import make_admin
+
+    pid = await _submit_solo(client, active_task, auth_headers2)
+    await _set_level(db_session, character, era, FLAG_LEVEL)
+    await make_admin(db_session, account)
+    flag = {"reason": "spam"}
+    first = await client.post(f"/praxes/{pid}/flag", json=flag, headers=auth_headers)
+    assert first.status_code == 200
+    kept = await client.patch(
+        f"/admin/praxes/{pid}/moderate",
+        json={"status": "visible"},
+        headers=auth_headers,
+    )
+    assert kept.status_code == 200
+    emptied = await client.get("/admin/praxes/flagged", headers=auth_headers)
+    assert emptied.json() == []
+
+    again = await client.post(
+        f"/praxes/{pid}/flag", json={"reason": "harassment"}, headers=auth_headers
+    )
+    assert again.status_code == 200
+    queue = (await client.get("/admin/praxes/flagged", headers=auth_headers)).json()
+    assert [f["reason"] for f in queue[0]["flags"]] == ["harassment"]
+    repeat = await client.post(f"/praxes/{pid}/flag", json=flag, headers=auth_headers)
+    assert repeat.status_code == 409
+    overview = await client.get("/admin/overview", headers=auth_headers)
+    assert overview.json()["flagged_praxis"] == len(queue)
+
+
+@pytest.mark.asyncio
+async def test_keep_closes_comment_flags_and_flagger_can_report_again(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    era: Era,
+    some_faction: Faction,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """#3726: Keep on a comment closes its flags; the threshold counts only new ones."""
+    from tests.integration.factories import make_admin
+
+    comment_id = await _post_comment(client, praxis_solo.id, auth_headers2)
+    await _set_level(db_session, character, era, FLAG_LEVEL)
+    await make_admin(db_session, account)
+    url = f"/comments/{comment_id}/flag"
+    first = await client.post(url, json={"reason": "spam"}, headers=auth_headers)
+    assert first.status_code == 200
+    kept = await client.patch(
+        f"/admin/comments/{comment_id}/moderate",
+        json={"status": "visible"},
+        headers=auth_headers,
+    )
+    assert kept.status_code == 200, kept.text
+    queue = await client.get("/admin/comments/flagged", headers=auth_headers)
+    assert queue.json() == []
+
+    again = await client.post(url, json={"reason": "harassment"}, headers=auth_headers)
+    assert again.status_code == 200
+    queue = (await client.get("/admin/comments/flagged", headers=auth_headers)).json()
+    assert [f["reason"] for f in queue[0]["flags"]] == ["harassment"]

@@ -252,7 +252,7 @@ async def flags_for_praxes(
     result = await session.execute(
         select(Flag, Character.display_name)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(Flag.praxis_id.in_(praxis_ids))
+        .where(Flag.praxis_id.in_(praxis_ids), Flag.resolved_at.is_(None))
         .order_by(Flag.created_at.desc())
     )
     flags_by_praxis: dict[int, list[FlagOut]] = {}
@@ -272,7 +272,7 @@ async def flags_for_comments(
     result = await session.execute(
         select(Flag, Character.display_name)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(Flag.comment_id.in_(comment_ids))
+        .where(Flag.comment_id.in_(comment_ids), Flag.resolved_at.is_(None))
         .order_by(Flag.created_at.desc())
     )
     flags_by_comment: dict[int, list[FlagOut]] = {}

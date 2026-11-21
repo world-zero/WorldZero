@@ -9,7 +9,7 @@ from enum import Enum
 from typing import List, Optional
 
 from fastapi import HTTPException, UploadFile
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -935,7 +935,7 @@ async def account_already_flagged(
     result = await session.execute(
         select(Flag.id)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(target, Character.account_id == account_id)
+        .where(target, Flag.resolved_at.is_(None), Character.account_id == account_id)
         .limit(1)
     )
     return result.scalar_one_or_none() is not None
@@ -1415,6 +1415,15 @@ async def submit_praxis(
     return await get_praxis_settling_consensus(praxis_id, session, era)
 
 
+async def resolve_flags(session: AsyncSession, target) -> None:
+    """Close the open flags on a target; a ruling keeps them as history."""
+    await session.execute(
+        update(Flag)
+        .where(target, Flag.resolved_at.is_(None))
+        .values(resolved_at=datetime.now(timezone.utc))
+    )
+
+
 async def moderate_praxis(
     praxis_id: int,
     new_status: str,
@@ -1440,6 +1449,8 @@ async def moderate_praxis(
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
     praxis.moderation_status = mod_enum
+    if mod_enum != ModerationStatus.flagged:
+        await resolve_flags(session, Flag.praxis_id == praxis_id)
     if log:
         await log_mod_action(
             session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id,
