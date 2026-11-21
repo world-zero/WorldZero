@@ -185,51 +185,57 @@ async def settle_lapsed_duels(
     A pending challenge lapses to declined (unanswered for
     ``duel_challenge_lapse_days``, or no longer acceptable); an accepted duel
     whose opponent hasn't cast in ``duel_cast_lapse_days`` is their forfeit.
-    Rows lock in ascending id order (#3877). Returns whether it loaded live duels
-    (that refreshes the praxes they join, so callers reload).
+    Candidates are picked lock-free; only those lock, in ascending id order (#3877),
+    and are re-checked. Returns whether any row was re-read (callers reload).
 
     ponytail: scans every live duel per call; add a deadline-column index or a
     sweep job if the live-duel count ever stops being small.
     """
+    now = datetime.now(timezone.utc)
+
+    async def lapse(duel: Duel) -> Optional[str]:
+        if duel.status == DuelStatus.pending:
+            deadline = duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
+            if now >= deadline or await _challenge_unanswerable(duel, session, era):
+                return "decline"
+        elif (
+            duel.status == DuelStatus.active
+            and duel.forfeited_by_character_id is None
+            and duel.accepted_at is not None
+            and now >= duel.accepted_at + timedelta(days=era.duel_cast_lapse_days)
+            and (duel.opponent_praxis is None
+                 or duel.opponent_praxis.status != PraxisStatus.submitted)
+        ):
+            return "forfeit"
+        return None
+
     live = (await session.execute(
-        select(Duel.id).where(
-            Duel.status.in_([DuelStatus.pending, DuelStatus.active])
-        )
+        select(Duel).where(Duel.status.in_([DuelStatus.pending, DuelStatus.active]))
     )).scalars().all()
-    if not live:
+    candidate_ids = [duel.id for duel in live if await lapse(duel)]
+    if not candidate_ids:
         return False
     duels = (await session.execute(
         select(Duel)
-        .where(Duel.id.in_(live))
+        .where(Duel.id.in_(candidate_ids))
         .order_by(Duel.id)
         .with_for_update()
         .execution_options(populate_existing=True)
     )).scalars().all()
 
-    now = datetime.now(timezone.utc)
     forfeits: list[tuple[Duel, int]] = []
     for duel in duels:
-        if duel.status == DuelStatus.pending:
-            deadline = duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
-            lapsed = now >= deadline
-            if lapsed or await _challenge_unanswerable(duel, session, era):
-                duel.status = DuelStatus.declined
-                duel.declined_at = now
-        elif duel.status == DuelStatus.active:
-            opponent_praxis = duel.opponent_praxis
-            if (
-                duel.forfeited_by_character_id is None
-                and duel.accepted_at is not None
-                and now >= duel.accepted_at + timedelta(days=era.duel_cast_lapse_days)
-                and (opponent_praxis is None
-                     or opponent_praxis.status != PraxisStatus.submitted)
-            ):
-                forfeits.append((duel, duel.opponent_character_id))
+        verdict = await lapse(duel)
+        if verdict == "decline":
+            duel.status = DuelStatus.declined
+            duel.declined_at = now
+        elif verdict == "forfeit":
+            forfeits.append((duel, duel.opponent_character_id))
     await _rescore(
         await _apply_forfeits(forfeits, session), session, era, emit_taunts=False
     )
     await session.flush()
-    return True
+    return bool(duels)
 
 
 async def get_duel(duel_id: int, session: AsyncSession, lock: bool = False) -> Duel:
