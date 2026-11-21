@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { installPlatform } from '../../utils/installAsk'
-import { heldInstallPrompt, isStandalone, subscribeInstallPrompt } from '../../utils/installPrompt'
+import { heldInstallPrompt, isStandalone, promptInstall, subscribeInstallPrompt } from '../../utils/installPrompt'
 import InstallAndroidSteps from './InstallAndroidSteps'
 import './installCopy'
 import './installAsk.css'
@@ -18,7 +18,7 @@ export default function InstallSettingsRow() {
         type="button"
         className="btn-outline"
         aria-expanded={held ? undefined : open}
-        onClick={() => (held ? void held.prompt().catch(() => setOpen(true)) : setOpen((v) => !v))}
+        onClick={() => (held ? void promptInstall().catch(() => setOpen(true)) : setOpen((v) => !v))}
       >
         {t(held ? 'settings.install' : 'settings.action')}
       </button>

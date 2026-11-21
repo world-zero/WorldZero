@@ -122,7 +122,7 @@
 .wzi-stage--window .wzi-say { left: 214px; max-width: 140px; }
 
 /* ── full-screen steps (iPhone: the wisp points down at Safari's bar; Android: up at the ⋮) ── */
-.wzi-overlay { position: fixed; inset: 0; z-index: 1000; overflow: hidden; background: color-mix(in srgb, var(--color-bg-page) 94%, transparent); font-family: var(--font-body); }
+.wzi-overlay { position: fixed; inset: 0; z-index: 1000; overflow: hidden; background: var(--color-bg-page); font-family: var(--font-body); }
 .wzi-overlay .wzi-card { position: absolute; left: 20px; right: 20px; top: min(196px, 22vh); }
 .wzi-overlay--manual .wzi-card { top: min(320px, 38vh); }
 .wzi-share-wisp { left: 50%; translate: -50% 0; bottom: 96px; }

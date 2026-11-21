@@ -27,6 +27,15 @@ export function subscribeInstallPrompt(l: () => void): () => void {
 
 export const heldInstallPrompt = (): InstallPromptEvent | null => held
 
+/** Chrome lets a held event prompt once, accepted or not; spend it here so callers fall back to the ⋮ steps. */
+export function promptInstall(): Promise<void> {
+  const e = held
+  if (!e) return Promise.reject(new Error('no install prompt held'))
+  held = null
+  listeners.forEach((l) => l())
+  return e.prompt()
+}
+
 export function isStandalone(): boolean {
   return (
     typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches === true ||

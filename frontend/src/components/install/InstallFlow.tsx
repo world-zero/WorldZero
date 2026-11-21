@@ -1,6 +1,6 @@
 import { useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { heldInstallPrompt, subscribeInstallPrompt } from '../../utils/installPrompt'
+import { heldInstallPrompt, promptInstall, subscribeInstallPrompt } from '../../utils/installPrompt'
 import type { InstallPlatform } from '../../utils/installAsk'
 import InstallDialog from './InstallDialog'
 import InstallWisp from './InstallWisp'
@@ -41,7 +41,7 @@ export default function InstallFlow({ platform, reask = false, onAnswered, onClo
     if (iphone) return setPhase('share')
     if (!held) return setPhase('steps')
     try {
-      await held.prompt()
+      await promptInstall()
     } catch {
       return setPhase('steps')
     }

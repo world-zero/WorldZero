@@ -73,3 +73,22 @@ describe('install ask gating (#4052)', () => {
     vi.restoreAllMocks()
   })
 })
+
+describe('install prompt is single-use (#4052)', () => {
+  it('clears the held event and notifies once prompt() is spent', async () => {
+    vi.resetModules()
+    const m = await import('../installPrompt')
+    m.captureInstallPrompt()
+    const prompt = vi.fn().mockResolvedValue(undefined)
+    const e = Object.assign(new Event('beforeinstallprompt', { cancelable: true }), { prompt })
+    window.dispatchEvent(e)
+    const seen = vi.fn()
+    m.subscribeInstallPrompt(seen)
+    expect(m.heldInstallPrompt()).not.toBeNull()
+    await m.promptInstall()
+    expect(prompt).toHaveBeenCalledTimes(1)
+    expect(m.heldInstallPrompt()).toBeNull()
+    expect(seen).toHaveBeenCalled()
+    await expect(m.promptInstall()).rejects.toThrow()
+  })
+})

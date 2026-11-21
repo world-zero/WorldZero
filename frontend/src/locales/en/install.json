@@ -74,7 +74,7 @@
   "iconLabel": "World Zero",
   "later": {
     "title": "No rush.",
-    "body": "It waits in <b>Settings › Notifications</b>, under Home screen, whenever you want it.",
+    "body": "It waits in <b>Settings › Notifications</b>, whenever you want it.",
     "say": "okay. i'll be around.",
     "close": "Got it"
   },
@@ -89,7 +89,7 @@
     "stop": "Stop asking",
     "foot": "Last time I'll ask. Promise.",
     "stopTitle": "Got it. I won't ask again.",
-    "stopBody": "The door stays in <b>Settings › Notifications</b>, under Home screen.",
+    "stopBody": "The door stays in <b>Settings › Notifications</b>.",
     "stopSay": "okay. no more knocking.",
     "close": "Close"
   },

@@ -5,7 +5,7 @@
  */
 import { join } from "node:path";
 import { surfaceMap } from "../../../factions";
-import { describe, it, expect, vi } from "vitest";
+import { beforeAll, describe, it, expect, vi } from "vitest";
 import { readStripped, sourceFiles, SRC_DIR, toRelative } from "../../../test/sourceScan";
 import i18n from "../../../i18n";
 import DefaultPraxisDetail from "../archetypes/DefaultPraxisDetail";
@@ -20,6 +20,7 @@ vi.mock("../../../hooks/useFormFactor", () => ({
 }));
 
 vi.mock("../../../components/push/PushAsk", () => ({ default: () => "PUSH_ASK_SLOT" }));
+vi.mock("../../../components/install/InstallSheet", () => ({ default: () => "INSTALL_SHEET_SLOT" }));
 
 // `text` is tag-stripped: some archetypes split the finding across spans.
 const render = markup;
@@ -364,6 +365,24 @@ describe("push ask placement (#3704)", () => {
       expect(text.indexOf("PUSH_ASK_SLOT"), "mounted").toBeGreaterThan(-1);
       expect(text.indexOf("PUSH_ASK_SLOT"), "before the comments").toBeLessThan(text.indexOf(COMMENTS_HEAD));
       expect(render(<Archetype state={state()} />).text, "and not for a reader").not.toContain("PUSH_ASK_SLOT");
+    });
+  }
+});
+
+describe("install sheet replaces the push ask on phones (#4052)", () => {
+  // The first render of a lazy mount only suspends; let it resolve before asserting.
+  beforeAll(async () => {
+    const owned = aPraxisDetailState({ praxis: PRAXIS, isOwner: true, user: anOwner() });
+    rendered(<DefaultPraxisDetail state={owned} />, "mobile");
+    await new Promise((r) => setTimeout(r, 50));
+  });
+  for (const [slug, Archetype] of Object.entries(archetypes)) {
+    it(`${slug}: phone owner gets no PushAsk, desktop owner does`, () => {
+      const owned = aPraxisDetailState({ praxis: PRAXIS, isOwner: true, user: anOwner() });
+      const phone = rendered(<Archetype state={owned} />, "mobile").text;
+      expect(phone).toContain("INSTALL_SHEET_SLOT");
+      expect(phone).not.toContain("PUSH_ASK_SLOT");
+      expect(rendered(<Archetype state={owned} />, "desktop").text).toContain("PUSH_ASK_SLOT");
     });
   }
 });
