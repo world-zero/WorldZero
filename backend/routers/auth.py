@@ -464,6 +464,7 @@ async def dev_login(
         stats = await get_or_create_stats(session, character.id, era_row.id)
         thresholds = CURRENT_ERA.level_thresholds
         stats.level = level
+        stats.era_peak_level = max(stats.era_peak_level, level)
         record_level_reached(character, level)
         stats.score = thresholds[level] if level < len(thresholds) else thresholds[-1]
         character.all_time_score = max(character.all_time_score, stats.score)

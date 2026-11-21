@@ -166,6 +166,10 @@ ERA_N = EraConfig(
     backdoor_hint_stage_days=(30, 60),  # console hint gets plainer (#3848)
 
     duel_level_required=2,
+
+    duel_challenge_lapse_days=7,
+
+    duel_cast_lapse_days=7,
     collaboration_level_required=1,
     collab_auto_submit_days=10,          # pending-publish silence-is-consent window (ADR-0012)
     metatask_apply_level=7,

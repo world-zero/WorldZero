@@ -16,6 +16,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import { formatPoints } from '../../utils/points'
 
 /**
@@ -264,6 +265,7 @@ export function useDuelSealCopy(
 ): DuelSealCopy {
   const { t } = useTranslation('praxis')
   const { me, foe } = duelSides(duel, viewerCharacterId)
+  const lapseDays = useGameConfig()?.duel_challenge_lapse_days
   // Unconditional: hooks may not sit behind the mode branch.
   const stakes = duelStakes(me, taskPointValue)
 
@@ -289,7 +291,10 @@ export function useDuelSealCopy(
     heading: t('duelSeal.heading'),
     body:
       duel.status === 'pending'
-        ? t('duelSeal.bodyPending', { name: foe.display_name })
+        ? t('duelSeal.bodyPending', {
+            name: foe.display_name,
+            days: lapseDays ?? '',
+          })
         : t('duelSeal.bodyActive', { name: foe.display_name }),
     // Until the foe casts nothing is stuck; only once live.
     note:

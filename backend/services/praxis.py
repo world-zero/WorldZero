@@ -28,6 +28,7 @@ from models.character_stats import CharacterStats
 from models.duel import DuelStatus
 from models.flag import Flag, FlagReason
 from models.praxis import (
+    UNSCORED_MODERATION_STATUSES,
     MediaItem,
     ModerationStatus,
     Praxis,
@@ -58,6 +59,7 @@ from services.era import (
 )
 from services.era_gates import may_create_collab_praxis
 from services.faction_service import faction_permits
+from services.habit_bonus import restamp_after_moderation
 from services.level_jump import consume_level_jump
 from services.media import (
     media_item_out,
@@ -111,7 +113,10 @@ def _require_member(praxis: Praxis, character_id: int, action: str) -> None:
 
 
 async def get_praxis(
-    praxis_id: int, session: AsyncSession, lock: bool = False
+    praxis_id: int,
+    session: AsyncSession,
+    lock: bool = False,
+    refresh: bool = False,
 ) -> Praxis:
     """Get a praxis by id with detail-view relationships eager-loaded. **A read.**
 
@@ -134,6 +139,7 @@ async def get_praxis(
     )
     if lock:
         await _lock_praxis(praxis_id, session)
+    if lock or refresh:
         query = query.execution_options(populate_existing=True)
     result = await session.execute(query)
     praxis = result.scalar_one_or_none()
@@ -141,6 +147,12 @@ async def get_praxis(
         # Coded (#2875): clients branch on it.
         raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     return praxis
+
+
+async def _settle_lapsed_duels(session: AsyncSession, era: EraConfig) -> bool:
+    from services.duel import settle_lapsed_duels  # duel imports this module
+
+    return await settle_lapsed_duels(session, era)
 
 
 async def get_praxis_settling_consensus(
@@ -155,8 +167,11 @@ async def get_praxis_settling_consensus(
     ``list_praxes``). Use where the answer depends on real published-ness. Call
     **once** per request, at the head; the seal makes repeats no-ops.
     """
+    # #3655: praxis lock (0x5A1B) before any Duel FOR UPDATE; sweep last, reload.
     praxis = await get_praxis(praxis_id, session, lock=lock)
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
+    if await _settle_lapsed_duels(session, era):
+        praxis = await get_praxis(praxis_id, session, lock=lock, refresh=True)
     return praxis
 
 
@@ -422,6 +437,12 @@ async def list_praxes(
     # Ascending id: opposite-sorted lists must take the 0x5A1B locks in one order.
     for praxis in sorted(praxes, key=lambda p: p.id):
         await collab_consensus.settle_if_window_lapsed(praxis, session, era)
+    if await _settle_lapsed_duels(session, era):
+        # Visibility may have moved and eager loads were dropped: read the page again.
+        result = await session.execute(
+            query.execution_options(populate_existing=True)
+        )
+        praxes = list(result.scalars().all())
     return praxes
 
 
@@ -1385,6 +1406,8 @@ async def submit_praxis(
     praxis = await get_praxis_for_member(
         praxis_id, character_id, "submit", session, lock=True
     )
+    # Praxis lock held, duel rows next: the #3655 order. A late cast stays a forfeit.
+    await _settle_lapsed_duels(session, era)
 
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
     # No doc_state: the loaded room may still hold edits inside the flush window.
@@ -1412,7 +1435,10 @@ async def submit_praxis(
         # Before the recalc: the outcome feeds the duel multiplier.
         await maybe_settle_duel(praxis_id, session)
         await recalculate_members_stats(praxis, session, era)
-    return await get_praxis_settling_consensus(praxis_id, session, era)
+    # Seal without a second duel sweep: the stats lock is held (#3655).
+    praxis = await get_praxis(praxis_id, session, refresh=True)
+    await collab_consensus.settle_if_window_lapsed(praxis, session, era)
+    return praxis
 
 
 async def resolve_flags(session: AsyncSession, target) -> None:
@@ -1448,6 +1474,7 @@ async def moderate_praxis(
     except ValueError:
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
+    was_unscored = praxis.moderation_status in UNSCORED_MODERATION_STATUSES
     praxis.moderation_status = mod_enum
     if mod_enum != ModerationStatus.flagged:
         await resolve_flags(session, Flag.praxis_id == praxis_id)
@@ -1466,6 +1493,8 @@ async def moderate_praxis(
 
     await session.flush()
     await _apply_media_publication(praxis, session)
+    if was_unscored != (mod_enum in UNSCORED_MODERATION_STATUSES):
+        await restamp_after_moderation(praxis, session, era)
     await recalculate_members_stats(praxis, session, era, emit_taunts=False)
     return await get_praxis(praxis_id, session)
 

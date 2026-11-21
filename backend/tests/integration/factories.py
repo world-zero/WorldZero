@@ -10,6 +10,7 @@ enforces it.
 
 from typing import Optional
 
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import real_faction_slugs
@@ -131,6 +132,7 @@ async def make_task(
             faction_slug if task_type == TaskType.metatask else None
         ),
     )
+    task.set_status(status)
     session.add(task)
     if commit:
         await session.commit()
@@ -189,6 +191,15 @@ async def cast_vote(session: AsyncSession, praxis: Praxis, voter: Character, val
         )
     )
     await session.flush()
+
+
+async def raise_to_duel_level(session: AsyncSession, character_id: int) -> None:
+    """Below the duel floor a pending challenge declines on read (#3875)."""
+    await session.execute(
+        update(CharacterStats)
+        .where(CharacterStats.character_id == character_id)
+        .values(level=CURRENT_ERA.duel_level_required)
+    )
 
 
 async def make_duel(

@@ -6,6 +6,7 @@ Load-bearing: the activity-feed fan-out runs once, not once per panel.
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.activity_feed as activity_feed_service
@@ -26,7 +27,11 @@ from models.praxis import (
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import REQUEST_ITEM_TYPES
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import (
+    DEFAULT_FACTION_SLUG,
+    make_task,
+    raise_to_duel_level,
+)
 from tests.integration.query_capture import capture_selects
 
 #: Any live faction other than the fixtures' default; derived, never named (#2708).
@@ -83,6 +88,10 @@ async def test_sidebar_returns_all_three_panels(
     data = response.json()
 
     assert data["pending_requests_count"] == 1
+    counts = await activity_feed_service.pending_requests_counts(
+        [character.id], db_session
+    )
+    assert counts[character.id] == data["pending_requests_count"]
     # Membership, not equality: the panel also carries the era announcement.
     assert "global_task" in [item["type"] for item in data["global_activity"]]
     assert [praxis["id"] for praxis in data["active_praxes"]] == [mine.id]
@@ -92,7 +101,9 @@ async def test_sidebar_returns_all_three_panels(
 #: more fan-out, or a badge count the rail never draws, breaks the exact pin.
 #: +3 (#3456): collab, duel and letter now also fetch their answered rows.
 #: +1 (#3766): duel_forfeited.
-SIDEBAR_SELECT_BUDGET = 26
+#: +1 (#3875): the lapsed-duel sweep.
+#: +1 (#3776): the sibling-lives list; counts only run when a sibling exists.
+SIDEBAR_SELECT_BUDGET = 28
 
 
 @pytest.mark.asyncio
@@ -132,6 +143,7 @@ async def test_sidebar_without_a_character_is_empty(
     assert response.status_code == 200
     assert response.json() == {
         "pending_requests_count": 0,
+        "other_lives_pending": [],
         "global_activity": [],
         "global_activity_count": 0,
         "active_praxes": [],
@@ -157,6 +169,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             point_value=10,
             level_required=0,
             status=TaskStatus.active,
+            activated_at=func.now(),
             created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
@@ -257,6 +270,8 @@ async def four_request_types(
     # Creator's member row too: an obligation needs another party (#1980).
     my_turn = praxis(character2.id, PraxisType.collab, "My turn")
     already_filed = praxis(character2.id, PraxisType.collab, "Already filed")
+    await raise_to_duel_level(db_session, character.id)
+    other_task = await make_task(db_session, character2)
     db_session.add_all([
         open_collab, answered_collab, shut_collab, open_duel_praxis,
         answered_duel_praxis, answered_duel_reply, my_turn, already_filed,
@@ -283,7 +298,8 @@ async def four_request_types(
             status=PraxisInviteStatus.pending,
         ),
         Duel(
-            task_id=active_task.id,
+            # Another task: `character` is already on active_task via the reply.
+            task_id=other_task.id,
             challenger_praxis_id=open_duel_praxis.id,
             opponent_character_id=character.id,
             status=DuelStatus.pending,

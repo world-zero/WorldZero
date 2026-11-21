@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
+import type { RosterCharacter } from '../api/me'
 import { factionName } from '../utils/factions'
 import FactionAvatar from './avatar/FactionAvatar'
 import BottomSheet from './ui/BottomSheet'
@@ -33,7 +34,7 @@ export default function CharacterSwitcherSheet({
   const { t } = useTranslation('common')
   const { user, applyUser } = useAuth()
   const navigate = useNavigate()
-  const [lives, setLives] = useState<CharacterOut[]>([])
+  const [lives, setLives] = useState<RosterCharacter[]>([])
   const [switching, setSwitching] = useState<number | null>(null)
 
   useEffect(() => {
@@ -91,7 +92,7 @@ export function CharacterSwitcherRows({
   onSelect,
   switching = null,
 }: {
-  lives: CharacterOut[]
+  lives: (CharacterOut & { pending_requests_count?: number })[]
   activeCharacterId: number
   onSelect: (id: number) => void
   switching?: number | null
@@ -124,6 +125,15 @@ export function CharacterSwitcherRows({
                 })}
               </span>
             </span>
+            {!!life.pending_requests_count && (
+              <span
+                className="switcher-sheet__waiting"
+                data-testid={`switcher-waiting-${life.id}`}
+                aria-label={t('fieldDesk.home.switcher.waiting', { count: life.pending_requests_count })}
+              >
+                {life.pending_requests_count}
+              </span>
+            )}
             {isActive ? (
               <span aria-hidden style={{
                 color: 'var(--faction-default-card-muted)', flex: 'none',

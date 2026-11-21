@@ -131,7 +131,7 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
     await session.flush()
     await apply_era_reset(characters, new_era_row, session, era=opening)
     for task in to_reactivate:
-        task.status = TaskStatus.active
+        task.set_status(TaskStatus.active)
     await sync_era_tasks(session, opening, operator.id)
     await commit_and_bind_live_era(session, opening)
     print(f"\nEra {new_era_row.id} is open; {len(characters)} character(s) reset.")
