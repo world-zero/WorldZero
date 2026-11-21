@@ -2,6 +2,7 @@
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -51,7 +52,7 @@ from services.character_stats import (
     recalculate_for_account_votes,
 )
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
-from services.duel import forfeit_settled_duels_for_character
+from services.duel import forfeit_duels_for_character
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.era import (
@@ -377,8 +378,8 @@ async def apply_ban(
 ) -> None:
     """Ban or un-ban a character on behalf of a moderator (#1577).
 
-    Banning forfeits settled duels (ADR-0011 §Forfeit), via the same function
-    as self-delete. Un-banning does not un-forfeit: the forfeit is sticky.
+    Banning forfeits the character's duels (ADR-0011 §Forfeit), via the same
+    function as self-delete and suspension. Un-banning does not un-forfeit.
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
@@ -395,7 +396,7 @@ async def apply_ban(
 
     if banned:
         character.status = CharacterStatus.banned
-        await forfeit_settled_duels_for_character(character.id, session, era)
+        await forfeit_duels_for_character(character.id, session, era)
     else:
         character.status = CharacterStatus.active
 
@@ -584,6 +585,12 @@ async def suspend_account(
         raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    if suspended:
+        # Same as a ban; lifting the suspension does not undo it (#3766).
+        for character_id in (await session.scalars(
+            select(Character.id).where(Character.account_id == account_id)
+        )).all():
+            await forfeit_duels_for_character(character_id, session, era)
     await log_mod_action(
         session,
         actor_id,
@@ -629,17 +636,29 @@ async def list_pending_tasks_with_proposer(
     return list(result.all())
 
 
+def _check_backdoor_window(opens: datetime, closes: Optional[datetime]) -> None:
+    if closes is not None and closes <= opens:
+        raise_coded(
+            422,
+            ErrorCode.backdoor_window_invalid,
+            "A backdoor must close after it opens.",
+        )
+
+
 async def update_task_status(
     task_id: int,
     new_status: TaskStatus,
     session: AsyncSession,
     *,
     actor_id: int,
+    backdoor_opens_at: Optional[datetime] = None,
+    backdoor_closes_at: Optional[datetime] = None,
 ) -> Task:
     """Admin task status change.
 
     Any transition is allowed; same-state 422s. Leaving ``deleted`` is the undo
-    for Delete (#3305); entering it runs Delete's eligibility check.
+    for Delete (#3305); entering it runs Delete's eligibility check. Entering
+    ``backdoor`` stamps its window (#3848); leaving it clears the window.
     """
     task = await session.get(Task, task_id)
     if task is None:
@@ -654,6 +673,11 @@ async def update_task_status(
     if new_status == TaskStatus.deleted:
         await _refuse_if_undeletable(task, session)
 
+    task.backdoor_opens_at = task.backdoor_closes_at = None
+    if new_status == TaskStatus.backdoor:
+        opens = backdoor_opens_at or datetime.now(timezone.utc)
+        _check_backdoor_window(opens, backdoor_closes_at)
+        task.backdoor_opens_at, task.backdoor_closes_at = opens, backdoor_closes_at
     task.status = new_status
     await session.flush()
     await log_mod_action(
@@ -698,6 +722,11 @@ async def admin_edit_task(
         task.point_value = data.point_value
     if data.level_required is not None:
         task.level_required = data.level_required
+    if task.status == TaskStatus.backdoor:
+        opens = data.backdoor_opens_at or task.backdoor_opens_at
+        closes = data.backdoor_closes_at or task.backdoor_closes_at
+        _check_backdoor_window(opens, closes)
+        task.backdoor_opens_at, task.backdoor_closes_at = opens, closes
     await session.flush()
     if before != (task.point_value, task.primary_faction_slug):
         # Scoring reads these live; stored stats would split from them.

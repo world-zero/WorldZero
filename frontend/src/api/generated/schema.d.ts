@@ -2071,6 +2071,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tasks/backdoor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Backdoors */
+        get: operations["list_backdoors_tasks_backdoor_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tasks/{task_id}": {
         parameters: {
             query?: never;
@@ -2184,7 +2201,7 @@ export interface components {
         ActivityFeedResponse: {
             counts: components["schemas"]["FeedCounts"];
             /** Items */
-            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -2209,6 +2226,10 @@ export interface components {
         };
         /** AdminTaskPatch */
         AdminTaskPatch: {
+            /** Backdoor Closes At */
+            backdoor_closes_at?: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at?: string | null;
             /** Description */
             description?: string | null;
             /** Level Required */
@@ -2268,6 +2289,25 @@ export interface components {
             task_point_value: number;
             /** Task Title */
             task_title: string;
+        };
+        /**
+         * BackdoorOut
+         * @description One open door, as the Array's console hints at it (#3848): task fields only.
+         */
+        BackdoorOut: {
+            /**
+             * Backdoor Opens At
+             * Format: date-time
+             */
+            backdoor_opens_at: string;
+            /** Id */
+            id: number;
+            /** Level Required */
+            level_required: number;
+            /** Point Value */
+            point_value: number;
+            /** Title */
+            title: string;
         };
         /**
          * BadgeOut
@@ -3052,6 +3092,49 @@ export interface components {
             /** Winner Character Id */
             winner_character_id: number | null;
         };
+        /** DuelForfeitedItem */
+        DuelForfeitedItem: {
+            /** Actor Avatar Url */
+            actor_avatar_url: string | null;
+            /** Actor Display Name */
+            actor_display_name: string | null;
+            /** Actor Faction Slug */
+            actor_faction_slug: string | null;
+            /**
+             * Context Faction Slug
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
+             *
+             *     ``getattr`` because only some payloads carry a task.
+             */
+            readonly context_faction_slug: string | null;
+            /** Item Key */
+            item_key: string;
+            payload: components["schemas"]["DuelForfeitedPayload"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "duel_forfeited";
+        };
+        /**
+         * DuelForfeitedPayload
+         * @description The viewer's duel ended because the other player was locked out (#3766).
+         */
+        DuelForfeitedPayload: {
+            /** Duel Id */
+            duel_id: number;
+            /** Praxis Id */
+            praxis_id: number | null;
+            /** Task Faction Slug */
+            task_faction_slug: string;
+            /** Task Title */
+            task_title: string;
+        };
         /** DuelOut */
         DuelOut: {
             /** Challenger Praxis Id */
@@ -3765,6 +3848,8 @@ export interface components {
         };
         /** GameConfigOut */
         GameConfigOut: {
+            /** Backdoor Hint Stage Days */
+            backdoor_hint_stage_days: number[];
             /** Collab Auto Submit Days */
             collab_auto_submit_days: number;
             /** Duel Level Required */
@@ -4251,6 +4336,10 @@ export interface components {
              * @default []
              */
             allowed_modes: string[];
+            /** Backdoor Closes At */
+            backdoor_closes_at: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at: string | null;
             /**
              * Can Sign Up
              * @default false
@@ -4924,7 +5013,7 @@ export interface components {
             /** Active Praxes */
             active_praxes: components["schemas"]["PraxisCardOut"][];
             /** Global Activity */
-            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Global Activity Count */
             global_activity_count: number;
             /** Pending Requests Count */
@@ -5003,6 +5092,10 @@ export interface components {
              * @default []
              */
             allowed_modes: string[];
+            /** Backdoor Closes At */
+            backdoor_closes_at: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at: string | null;
             /**
              * Can Sign Up
              * @default false
@@ -5119,14 +5212,18 @@ export interface components {
          * TaskStatus
          * @enum {string}
          */
-        TaskStatus: "pending" | "active" | "retired" | "deleted";
+        TaskStatus: "pending" | "active" | "retired" | "deleted" | "backdoor";
         /** TaskStatusAction */
         TaskStatusAction: {
+            /** Backdoor Closes At */
+            backdoor_closes_at?: string | null;
+            /** Backdoor Opens At */
+            backdoor_opens_at?: string | null;
             /**
              * Status
              * @enum {string}
              */
-            status: "pending" | "active" | "retired" | "deleted";
+            status: "pending" | "active" | "retired" | "deleted" | "backdoor";
         };
         /**
          * TaskType
@@ -9224,6 +9321,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_backdoors_tasks_backdoor_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackdoorOut"][];
                 };
             };
             /** @description Validation Error */

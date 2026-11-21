@@ -30,6 +30,7 @@
                   "comment_mention": "#/components/schemas/CommentMentionItem",
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
+                  "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -75,6 +76,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/DuelChallengeItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelForfeitedItem"
                 },
                 {
                   "$ref": "#/components/schemas/FriendSignupItem"
@@ -164,6 +168,30 @@
       },
       "AdminTaskPatch": {
         "properties": {
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "description": {
             "anyOf": [
               {
@@ -351,6 +379,41 @@
           "task_level_required"
         ],
         "title": "AwaitingSubmissionPayload",
+        "type": "object"
+      },
+      "BackdoorOut": {
+        "description": "One open door, as the Array's console hints at it (#3848): task fields only.",
+        "properties": {
+          "backdoor_opens_at": {
+            "format": "date-time",
+            "title": "Backdoor Opens At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "level_required": {
+            "title": "Level Required",
+            "type": "integer"
+          },
+          "point_value": {
+            "title": "Point Value",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "point_value",
+          "level_required",
+          "backdoor_opens_at"
+        ],
+        "title": "BackdoorOut",
         "type": "object"
       },
       "BadgeOut": {
@@ -2191,6 +2254,122 @@
         "title": "DuelDetailOut",
         "type": "object"
       },
+      "DuelForfeitedItem": {
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DuelForfeitedPayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "duel_forfeited",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "DuelForfeitedItem",
+        "type": "object"
+      },
+      "DuelForfeitedPayload": {
+        "additionalProperties": false,
+        "description": "The viewer's duel ended because the other player was locked out (#3766).",
+        "properties": {
+          "duel_id": {
+            "title": "Duel Id",
+            "type": "integer"
+          },
+          "praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Praxis Id"
+          },
+          "task_faction_slug": {
+            "title": "Task Faction Slug",
+            "type": "string"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "duel_id",
+          "praxis_id",
+          "task_title",
+          "task_faction_slug"
+        ],
+        "title": "DuelForfeitedPayload",
+        "type": "object"
+      },
       "DuelOut": {
         "properties": {
           "challenger_praxis_id": {
@@ -3865,6 +4044,13 @@
       },
       "GameConfigOut": {
         "properties": {
+          "backdoor_hint_stage_days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Backdoor Hint Stage Days",
+            "type": "array"
+          },
           "collab_auto_submit_days": {
             "title": "Collab Auto Submit Days",
             "type": "integer"
@@ -3927,6 +4113,7 @@
           "duel_level_required",
           "collab_auto_submit_days",
           "pending_task_admin_review_hours",
+          "backdoor_hint_stage_days",
           "level_to_see_pending_tasks",
           "max_task_signups",
           "factions",
@@ -5041,6 +5228,30 @@
             "title": "Allowed Modes",
             "type": "array"
           },
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "can_sign_up": {
             "default": false,
             "title": "Can Sign Up",
@@ -5198,6 +5409,8 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "backdoor_opens_at",
+          "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -6631,6 +6844,7 @@
                   "comment_mention": "#/components/schemas/CommentMentionItem",
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
+                  "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -6676,6 +6890,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/DuelChallengeItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelForfeitedItem"
                 },
                 {
                   "$ref": "#/components/schemas/FriendSignupItem"
@@ -6908,6 +7125,30 @@
             "title": "Allowed Modes",
             "type": "array"
           },
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "can_sign_up": {
             "default": false,
             "title": "Can Sign Up",
@@ -7055,6 +7296,8 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "backdoor_opens_at",
+          "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -7122,19 +7365,45 @@
           "pending",
           "active",
           "retired",
-          "deleted"
+          "deleted",
+          "backdoor"
         ],
         "title": "TaskStatus",
         "type": "string"
       },
       "TaskStatusAction": {
         "properties": {
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "status": {
             "enum": [
               "pending",
               "active",
               "retired",
-              "deleted"
+              "deleted",
+              "backdoor"
             ],
             "title": "Status",
             "type": "string"
@@ -15603,6 +15872,64 @@
           }
         ],
         "summary": "Propose Task Route",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/backdoor": {
+      "get": {
+        "operationId": "list_backdoors_tasks_backdoor_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackdoorOut"
+                  },
+                  "title": "Response List Backdoors Tasks Backdoor Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Backdoors",
         "tags": [
           "tasks"
         ]

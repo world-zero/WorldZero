@@ -44,6 +44,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
+from services.backdoor import may_use_door, settle_closed_backdoors
 from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
@@ -72,6 +73,7 @@ from services.praxis_duel import (
     maybe_settle_duel,
 )
 from services.praxis_room import (
+    absorb_room_on_commit,
     close_member_sockets,
     loaded_room_values,
     merge_client_state,
@@ -481,12 +483,25 @@ async def _check_create_preconditions(
     Returns the task and the stats row the gates judged, so the caller needn't
     re-read (#2873).
     """
+    await settle_closed_backdoors(session)
     task = await session.get(Task, task_id)
-    # Deleted tasks (#3305) look nonexistent.
-    if task is None or task.status == TaskStatus.deleted:
-        raise HTTPException(status_code=404, detail="Task not found.")
-
     character = await session.get(Character, character_id)
+    # Deleted tasks (#3305) look nonexistent, and so does a backdoor closed to
+    # this character: a refusal that named it would give it away (#3848).
+    hidden = task is not None and (
+        task.status == TaskStatus.deleted
+        or (
+            task.status == TaskStatus.backdoor
+            and (
+                character is None
+                or not may_use_door(task, character.faction_slug, era)
+            )
+        )
+    )
+    if hidden:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found.")
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
 
@@ -1384,6 +1399,8 @@ async def submit_praxis(
         # Text the other members never saw: a live proposal or published collab
         # falls back, and this submit proposes the merged text afresh (ADR-0079).
         await collab_consensus.on_member_edit(praxis, session, era)
+    if merged:
+        absorb_room_on_commit(praxis_id, merged, session)
 
     went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
     if went_live:

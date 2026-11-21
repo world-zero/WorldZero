@@ -26,6 +26,7 @@ from models.praxis import (
 )
 from models.task import Task, TaskStatus
 from schemas.duel import DuelDetailOut, DuelSideOut
+from services.backdoor import settle_closed_backdoors
 from services.character import is_playable
 from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
@@ -34,7 +35,7 @@ from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_create_duel
 from services.praxis import _lock_signups_for_character, get_praxis
-from services.praxis_duel import get_duel_for_praxis
+from services.praxis_duel import get_duel_for_praxis, maybe_settle_duel
 from services.push import notify_duel_challenge
 from services.signup_eligibility import (
     count_in_progress_praxes,
@@ -65,20 +66,24 @@ async def _characters_share_account(
     return first.account_id == second.account_id
 
 
-async def forfeit_settled_duels_for_character(
+async def forfeit_duels_for_character(
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
 ) -> None:
-    """Forfeit every settled duel this character is a side of (ADR-0011).
+    """End every duel this character can no longer play (ADR-0011, #3766).
 
-    Sticky: the first forfeit stands. Only winners are re-scored. Shared by
-    soft-delete and ``admin_service.apply_ban`` so it cannot drift (#1577).
+    Shared by ban, suspension and self-delete. Settled and active duels are
+    forfeited (an active one settles once the honest side submits); pending
+    challenges are declined. Sticky: the first forfeit stands. When any duel
+    is newly forfeited, the forfeiter and every winner are re-scored.
     """
     own_praxis_ids = select(Praxis.id).where(Praxis.created_by_id == character_id)
     duels = (await session.execute(
         select(Duel).where(
-            Duel.status == DuelStatus.settled,
+            Duel.status.in_(
+                [DuelStatus.pending, DuelStatus.active, DuelStatus.settled]
+            ),
             Duel.forfeited_by_character_id.is_(None),
             or_(
                 Duel.opponent_character_id == character_id,
@@ -87,9 +92,17 @@ async def forfeit_settled_duels_for_character(
         )
     )).scalars().all()
 
+    now = datetime.now(timezone.utc)
     winner_ids: set[int] = set()
+    rescore = False
     for duel in duels:
         duel.forfeited_by_character_id = character_id
+        duel.forfeited_at = now
+        if duel.status == DuelStatus.pending:
+            duel.status = DuelStatus.declined
+            duel.declined_at = now
+            continue
+        rescore = True
         challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
         challenger_character_id = (
             challenger_praxis.created_by_id if challenger_praxis else None
@@ -101,12 +114,17 @@ async def forfeit_settled_duels_for_character(
         )
         if winner_id is not None:
             winner_ids.add(winner_id)
+        if duel.status == DuelStatus.active:
+            await maybe_settle_duel(duel.challenger_praxis_id, session)
     await session.flush()
 
-    if winner_ids:
+    if rescore:
         era_row = await get_current_era_row(session)
-        for winner_id in winner_ids:
-            await recalculate_character_stats(winner_id, session, era, era_row=era_row)
+        # Ascending: votes lock stats in id order; another order can deadlock.
+        for rescored_id in sorted(winner_ids | {character_id}):
+            await recalculate_character_stats(
+                rescored_id, session, era, era_row=era_row
+            )
         await session.flush()
 
 
@@ -365,8 +383,12 @@ async def respond_to_duel_challenge(
     ):
         raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
+    await settle_closed_backdoors(session)
     task = await session.get(Task, duel.task_id)
     if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
+    # Same 404 a deleted task gets: a refusal must not name the backdoor (#3848).
+    if task.status == TaskStatus.backdoor and task_status_closed(task, opponent, era):
         raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
 
     # The challenge may outlive the task's status (era close, mod action). Level
