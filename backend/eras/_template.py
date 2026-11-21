@@ -170,6 +170,8 @@ ERA_N = EraConfig(
     duel_challenge_lapse_days=7,
 
     duel_cast_lapse_days=7,
+
+    rival_duel_bonus=5,  # flat, after multipliers, to a mutual-foe duel's winner
     collaboration_level_required=1,
     collab_auto_submit_days=10,          # pending-publish silence-is-consent window (ADR-0012)
     metatask_apply_level=7,

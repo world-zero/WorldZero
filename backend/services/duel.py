@@ -28,6 +28,7 @@ from models.task import Task, TaskStatus
 from schemas.duel import DuelDetailOut, DuelSideOut
 from services.backdoor import settle_closed_backdoors
 from services.character import is_playable
+from services.relationship_service import are_rivals
 from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at, nudge_again_at
@@ -569,6 +570,10 @@ async def respond_to_duel_challenge(
     duel.opponent_praxis_id = opponent_praxis.id
     duel.status = DuelStatus.active
     duel.accepted_at = now
+    # Snapshot, never re-read (ADR-0100); a Block doesn't void it (ADR-0077).
+    duel.rival_bonus = challenger_praxis is not None and await are_rivals(
+        challenger_praxis.created_by_id, character_id, session
+    )
     await session.flush()
 
     loaded_praxis = await get_praxis(opponent_praxis.id, session)
