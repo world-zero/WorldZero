@@ -19,9 +19,9 @@ from models.relationship import Relationship, RelationshipType
 from services import push
 from services.activity_feed import (
     FEED_ITEM_TYPE_DUEL_LIVE,
-    FeedCursor,
     FILTER_FOES,
     FILTER_FRIENDS,
+    FeedCursor,
     get_activity_feed,
 )
 from services.praxis_duel import maybe_settle_duel

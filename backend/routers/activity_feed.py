@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from errors import ErrorCode, raise_coded
 from dependencies import get_current_character
+from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.character import Character
 from schemas.activity_feed import (
