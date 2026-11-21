@@ -977,6 +977,7 @@ class FlagDenialReason(str, Enum):
     """Why a viewer may not flag a praxis (#328). One rule each."""
 
     hidden = "hidden"
+    not_visible = "not_visible"
     failed = "failed"
     own_praxis = "own_praxis"
     already_flagged = "already_flagged"
@@ -997,6 +998,9 @@ async def _flag_denial(
     # #3257: flagging hidden content would put it back on the public list.
     if praxis.moderation_status == ModerationStatus.hidden:
         return FlagDenialReason.hidden
+    # Drafts and unsealed duel sides: refuse before any other rule can leak them.
+    if not await can_view_praxis(viewer, praxis, session):
+        return FlagDenialReason.not_visible
     # A flag would overwrite the moderator's "Not met" and score the praxis again.
     if praxis.moderation_status == ModerationStatus.failed:
         return FlagDenialReason.failed
@@ -1041,7 +1045,7 @@ async def flag_praxis(
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
     denial = await _flag_denial(flagged_by, praxis, session, era)
-    if denial is FlagDenialReason.hidden:
+    if denial in (FlagDenialReason.hidden, FlagDenialReason.not_visible):
         raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
     if denial is FlagDenialReason.failed:
         raise_coded(

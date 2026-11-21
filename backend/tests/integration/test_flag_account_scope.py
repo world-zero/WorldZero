@@ -8,9 +8,10 @@ from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
+from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG
@@ -344,3 +345,88 @@ async def test_comment_threshold_counts_only_unresolved_flags(
     comment = await db_session.get(Comment, comment_id)
     await db_session.refresh(comment)
     assert comment.moderation_status != ModerationStatus.flagged
+
+
+@pytest.mark.asyncio
+async def test_stranger_cannot_flag_a_draft(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    create = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "PRIVATE"},
+        headers=auth_headers,
+    )
+    praxis_id = create.json()["id"]
+    await _set_level(db_session, character2, era, FLAG_LEVEL)
+
+    resp = await client.post(
+        f"/praxes/{praxis_id}/flag", json={"reason": "spam"}, headers=auth_headers2
+    )
+    assert resp.status_code == 404
+    assert "PRIVATE" not in resp.text
+    praxis = await db_session.get(Praxis, praxis_id)
+    await db_session.refresh(praxis)
+    assert praxis.moderation_status.value == "visible"
+    assert praxis.flagged_at is None
+
+
+@pytest.mark.asyncio
+async def test_stranger_cannot_flag_an_unsealed_duel_side(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    era: Era,
+    auth_headers3: dict,
+):
+    side = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.submitted,
+        title="Side",
+    )
+    other = Praxis(
+        task_id=active_task.id,
+        created_by_id=character2.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Other",
+    )
+    db_session.add_all([side, other])
+    await db_session.flush()
+    db_session.add_all(
+        [
+            PraxisMember(
+                praxis_id=side.id, character_id=character.id, has_approved=True
+            ),
+            PraxisMember(
+                praxis_id=other.id, character_id=character2.id, has_approved=False
+            ),
+        ]
+    )
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=side.id,
+            opponent_praxis_id=other.id,
+            opponent_character_id=character2.id,
+            status=DuelStatus.active,
+        )
+    )
+    await db_session.commit()
+    await _set_level(db_session, character3, era, FLAG_LEVEL)
+
+    resp = await client.post(
+        f"/praxes/{side.id}/flag", json={"reason": "spam"}, headers=auth_headers3
+    )
+    assert resp.status_code == 404
