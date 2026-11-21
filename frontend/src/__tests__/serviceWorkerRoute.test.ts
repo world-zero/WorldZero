@@ -109,4 +109,10 @@ describe('focusOrOpen', () => {
     await focusOrOpen(refuse, '/b')
     expect(refuse.openWindow).toHaveBeenCalledWith('/b')
   })
+  it('never opens a second window when focus is refused after navigate worked', async () => {
+    const c = { focus: () => Promise.reject(new Error('x')), navigate: vi.fn() }
+    const clients = { matchAll: async () => [c], openWindow: vi.fn() }
+    await focusOrOpen(clients, '/c')
+    expect(clients.openWindow).not.toHaveBeenCalled()
+  })
 })

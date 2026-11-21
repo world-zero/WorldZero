@@ -529,6 +529,7 @@
       "eyebrow": "Blocked",
       "lead": "Blocked players can't taunt you, and you won't see them in your friends-and-foes feed. They aren't told.",
       "empty": "You haven't blocked anyone. Block someone from their profile and they'll be listed here.",
+      "loadFailed": "Could not load your block list. Try again later.",
       "blockedOn": "Blocked {{date}}",
       "unblock": "Unblock",
       "unblockFailed": "Could not unblock {{name}}. Try again."
