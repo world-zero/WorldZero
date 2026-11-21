@@ -19,7 +19,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("ALTER TABLE praxis_member ADD COLUMN IF NOT EXISTS faction_slug VARCHAR")
+    op.execute(
+        "ALTER TABLE praxis_member ADD COLUMN IF NOT EXISTS faction_slug VARCHAR"
+    )
     op.execute(
         "UPDATE praxis_member pm SET faction_slug = c.faction_slug "
         "FROM character c WHERE c.id = pm.character_id"
