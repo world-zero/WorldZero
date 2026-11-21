@@ -13,6 +13,7 @@ from dependencies import (
 )
 from models.account import Account
 from models.character import Character
+from schemas.params import Id, Int32, Page
 from schemas.task import BackdoorOut, ProposalOut, TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
 from services.backdoor import list_open_backdoors
@@ -43,15 +44,14 @@ async def list_tasks(
     can_sign_up: bool = False,
     # Repeated ``?faction=`` is a union (#1364).
     faction: Optional[list[str]] = Query(None),
-    min_points: Optional[int] = None,
-    max_points: Optional[int] = None,
-    exclude_character_id: Optional[int] = None,
-    created_by: Optional[int] = None,
+    min_points: Optional[Int32] = None,
+    max_points: Optional[Int32] = None,
+    exclude_character_id: Optional[Id] = None,
+    created_by: Optional[Id] = None,
     task_type: Optional[str] = None,
     q: Optional[str] = None,
     sort: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0,
+    page: Page = Depends(),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
@@ -80,8 +80,8 @@ async def list_tasks(
         task_type=task_type,
         q=q,
         sort=task_sort,
-        limit=limit,
-        offset=offset,
+        limit=page.limit,
+        offset=page.offset,
         viewer=viewer,
         viewer_account=account,
         skip_level_check=is_admin,
@@ -125,7 +125,7 @@ async def list_backdoors(
 
 @router.get("/{task_id}/signups", response_model=list[TaskSignupOut])
 async def list_task_signups(
-    task_id: int,
+    task_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[TaskSignupOut]:
     """List characters currently working on a task via praxis membership."""
@@ -135,7 +135,7 @@ async def list_task_signups(
 
 @router.get("/{task_id}", response_model=TaskOut)
 async def get_task(
-    task_id: int,
+    task_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
@@ -164,7 +164,7 @@ async def propose_task_route(
 
 @router.get("/{task_id}/proposal", response_model=ProposalOut)
 async def get_own_proposal_route(
-    task_id: int,
+    task_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -173,7 +173,7 @@ async def get_own_proposal_route(
 
 @router.put("/{task_id}", response_model=TaskOut)
 async def edit_proposal_route(
-    task_id: int,
+    task_id: Id,
     data: TaskCreate,
     character: Character = Depends(get_current_character),
     account: Account = Depends(get_current_account),
@@ -188,7 +188,7 @@ async def edit_proposal_route(
 
 @router.delete("/{task_id}", status_code=204)
 async def withdraw_proposal_route(
-    task_id: int,
+    task_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):

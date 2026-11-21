@@ -8,6 +8,7 @@ from db import get_db
 from dependencies import get_current_character, get_current_character_optional
 from models.character import Character
 from schemas.comment import CommentIn, CommentOut, FlagIn
+from schemas.params import Id
 from services.comment import (
     build_comment_out,
     create_comment,
@@ -23,7 +24,7 @@ router = APIRouter()
 
 @router.get("/praxes/{praxis_id}/comments", response_model=list[CommentOut])
 async def list_praxis_comments(
-    praxis_id: int,
+    praxis_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
@@ -41,7 +42,7 @@ async def list_praxis_comments(
     "/praxes/{praxis_id}/comments", response_model=CommentOut, status_code=201
 )
 async def create_praxis_comment(
-    praxis_id: int,
+    praxis_id: Id,
     data: CommentIn,
     author: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -54,7 +55,7 @@ async def create_praxis_comment(
 
 @router.get("/tasks/{task_id}/comments", response_model=list[CommentOut])
 async def list_task_comments(
-    task_id: int,
+    task_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
@@ -65,7 +66,7 @@ async def list_task_comments(
 
 @router.post("/tasks/{task_id}/comments", response_model=CommentOut, status_code=201)
 async def create_task_comment(
-    task_id: int,
+    task_id: Id,
     data: CommentIn,
     author: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -78,7 +79,7 @@ async def create_task_comment(
 
 @router.patch("/comments/{comment_id}", response_model=CommentOut)
 async def edit_comment_route(
-    comment_id: int,
+    comment_id: Id,
     data: CommentIn,
     author: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -89,7 +90,7 @@ async def edit_comment_route(
 
 @router.delete("/comments/{comment_id}", status_code=204)
 async def withdraw_comment_route(
-    comment_id: int,
+    comment_id: Id,
     author: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -98,7 +99,7 @@ async def withdraw_comment_route(
 
 @router.post("/comments/{comment_id}/flag", response_model=CommentOut)
 async def flag_comment_route(
-    comment_id: int,
+    comment_id: Id,
     data: FlagIn,
     flagged_by: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),

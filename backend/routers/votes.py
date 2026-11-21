@@ -5,6 +5,7 @@ from db import get_db
 from dependencies import get_current_character_optional
 from models.character import Character
 from models.praxis import Praxis
+from schemas.params import Id
 from schemas.vote import VoterDetail
 from services.praxis import can_view_praxis
 from services.vote_tally import counted_voters
@@ -17,7 +18,7 @@ router = APIRouter()
 
 @router.get("/praxes/{praxis_id}/voters", response_model=list[VoterDetail])
 async def list_voters(
-    praxis_id: int,
+    praxis_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Character | None = Depends(get_current_character_optional),
 ):

@@ -114,9 +114,23 @@ async def _validate_proposal(
             {"max": era.proposed_task_points_max},
         )
 
+    top_level = len(era.level_thresholds) - 1
+    if data.level_required > top_level:
+        raise_coded(
+            422,
+            ErrorCode.task_level_too_high,
+            f"level_required can be at most {top_level}.",
+            {"max": top_level},
+        )
     await refuse_hidden_faction(
         session, data.primary_faction_slug, data.metatask_faction_slug
     )
+    # Config owns factions (ADR-0042); hidden ones live only in the DB.
+    for slug in (data.primary_faction_slug, data.metatask_faction_slug):
+        if slug is not None and slug not in era.factions:
+            raise_coded(
+                422, ErrorCode.task_faction_unknown, f"Unknown faction: {slug}."
+            )
     return task_type
 
 

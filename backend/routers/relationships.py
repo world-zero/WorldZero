@@ -9,7 +9,12 @@ from dependencies import get_current_character
 from models.character import Character
 from models.relationship import RelationshipType
 from schemas.block import BlockCreate, BlockListItem
-from schemas.relationship import RelationshipCreate, RelationshipListItem
+from schemas.params import Id
+from schemas.relationship import (
+    RelationshipCreate,
+    RelationshipListItem,
+    RelationshipTypeEnum,
+)
 from services.block_service import block_character, list_blocks, unblock_character
 from services.relationship_service import (
     build_relationship_item,
@@ -48,7 +53,7 @@ async def block_character_route(
 
 @router.delete("/blocks/{character_id}", status_code=204)
 async def unblock_character_route(
-    character_id: int,
+    character_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
@@ -62,7 +67,7 @@ async def unblock_character_route(
 
 @router.get("", response_model=list[RelationshipListItem])
 async def list_my_relationships(
-    type: Optional[str] = None,
+    type: Optional[RelationshipTypeEnum] = None,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[RelationshipListItem]:
@@ -70,7 +75,7 @@ async def list_my_relationships(
     return await list_relationships(
         character_id=character.id,
         session=session,
-        type_filter=type,
+        type_filter=type.value if type else None,
     )
 
 
@@ -92,7 +97,7 @@ async def create_relationship_route(
 
 @router.delete("/{relationship_id}", status_code=204)
 async def delete_relationship(
-    relationship_id: int,
+    relationship_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:

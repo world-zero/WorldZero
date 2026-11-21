@@ -20,7 +20,7 @@ export interface RelationshipListItem {
 }
 
 interface RelationshipFilters {
-  type?: string
+  type?: 'friend' | 'foe'
 }
 
 export async function listRelationships(filters?: RelationshipFilters): Promise<RelationshipListItem[]> {
