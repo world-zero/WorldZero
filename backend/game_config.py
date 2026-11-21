@@ -196,7 +196,7 @@ class EraConfig:
     # Enforced in services/praxis.py
     duel_level_required: int
     duel_challenge_lapse_days: int        # unanswered challenge → declined (#3875)
-    duel_cast_lapse_days: int             # accepted, opponent never cast → forfeit (#3875)
+    duel_cast_lapse_days: int             # accepted, never cast → forfeit (#3875)
     collaboration_level_required: int
     collab_auto_submit_days: int          # silence-is-consent days (ADR-0012)
     metatask_apply_level: int             # non-Albescent

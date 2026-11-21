@@ -182,7 +182,8 @@ async def settle_lapsed_duels(
     forfeits: list[tuple[Duel, int]] = []
     for duel in duels:
         if duel.status == DuelStatus.pending:
-            lapsed = now >= duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
+            deadline = duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
+            lapsed = now >= deadline
             if lapsed or await _challenge_unanswerable(duel, session, era):
                 duel.status = DuelStatus.declined
                 duel.declined_at = now
