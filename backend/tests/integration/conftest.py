@@ -35,13 +35,12 @@ from models.vote import Vote
 from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG, attach_proof
 
-
 _stamping = {"on": True}
 
 
 @pytest.fixture(autouse=True)
 def stamp_sealed_praxes(request):
-    """Tests marked ``unstamped_praxis`` see the production seal path, not the stamps."""
+    """``unstamped_praxis`` tests see the production seal path, not the stamps."""
     _stamping["on"] = request.node.get_closest_marker("unstamped_praxis") is None
     yield
     _stamping["on"] = True
