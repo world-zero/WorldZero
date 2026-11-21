@@ -259,6 +259,29 @@ async def test_rolling_into_era_2_moves_the_live_ruleset(
     assert era_config_for_key("era_2") is era_2
 
 
+async def test_rolling_out_of_an_unregistered_live_era_succeeds_with_a_warning(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    era: Era,
+    character: Character,
+    caplog: pytest.LogCaptureFixture,
+):
+    """The roll is the documented way out of this state (scripts/era_reset.py)."""
+    await make_admin(db_session, account)
+    db_session.add(Era(name="gone", config_key="era_99", started_by_id=account.id))
+    await db_session.commit()
+
+    with caplog.at_level("WARNING", logger="services.era"):
+        resp = await client.put(
+            "/admin/eras/live", json={"config_key": "era_2"}, headers=auth_headers
+        )
+
+    assert resp.status_code == 200
+    assert "unregistered config_key 'era_99'" in caplog.text
+
+
 async def test_the_rollover_appends_a_row_stamped_with_the_operator(
     client: AsyncClient,
     db_session: AsyncSession,
