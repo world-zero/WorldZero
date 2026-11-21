@@ -68,7 +68,6 @@ _FLUSH_DEBOUNCE_SECONDS = 2.0
 _MAX_CLIENT_UPDATE_BYTES = 2 * 1024 * 1024
 _INVALID_DRAFT = "That draft is not a valid document."
 _OVERSIZED_UPDATE = "That draft is too large to send."
-_OVERSIZED_PARAMS = {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX}
 _OVERSIZED_DRAFT = (
     f"That post is too long: keep the title under {PRAXIS_TITLE_MAX} and the body "
     f"under {PRAXIS_BODY_MAX} characters."
@@ -573,7 +572,7 @@ class PraxisRoomServer(WebsocketServer):
                     413,
                     ErrorCode.praxis_doc_update_invalid,
                     _OVERSIZED_DRAFT,
-                    _OVERSIZED_PARAMS,
+                    {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
                 )
             flusher = self._flushers.pop(name, None)
             if flusher is not None:
@@ -610,7 +609,7 @@ class PraxisRoomServer(WebsocketServer):
                 422,
                 ErrorCode.praxis_doc_update_invalid,
                 _INVALID_DRAFT,
-                _OVERSIZED_PARAMS,
+                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
             )
         # The caller cancels on a difference; this text is the new proposal.
         values = _document_values(room.ydoc)
@@ -619,7 +618,7 @@ class PraxisRoomServer(WebsocketServer):
                 413,
                 ErrorCode.praxis_doc_update_invalid,
                 _OVERSIZED_DRAFT,
-                _OVERSIZED_PARAMS,
+                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
             )
         return values
 
@@ -797,7 +796,7 @@ async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
             422,
             ErrorCode.praxis_doc_update_invalid,
             _INVALID_DRAFT,
-            _OVERSIZED_PARAMS,
+            {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
         )
     if len(update) > _MAX_CLIENT_UPDATE_BYTES:
         raise_coded(413, ErrorCode.praxis_doc_update_too_large, _OVERSIZED_UPDATE)
