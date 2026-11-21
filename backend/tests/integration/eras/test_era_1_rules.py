@@ -259,6 +259,38 @@ async def test_only_task_vision_reaches_a_retired_task(
     assert eligibility.allowed is expected
 
 
+# Ephemerists: allow_praxis_on_pending_task_factions + pending_task_praxis_points_below
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "faction_slug,points,expected",
+    [("ephemerists", 29, True), ("ephemerists", 30, False), ("coven", 29, False)],
+)
+async def test_pending_perk_reaches_only_tasks_below_the_ceiling(
+    db_session: AsyncSession,
+    era: Era,
+    faction_slug: str,
+    points: int,
+    expected: bool,
+):
+    assert "ephemerists" in ERA_1.allow_praxis_on_pending_task_factions
+    await _seed_factions(db_session)
+    member = await make_character(
+        db_session, era, username=f"{faction_slug}{points}", faction_slug=faction_slug
+    )
+    task = await make_task(
+        db_session,
+        member,
+        title="Soon",
+        point_value=points,
+        status=TaskStatus.pending,
+        faction_slug=faction_slug,
+    )
+
+    eligibility = await evaluate_signup(member, task, db_session, ERA_1)
+    assert eligibility.allowed is expected
+
+
 # Snide: duel_win_modifier / duel_loss_modifier
 
 @pytest.mark.asyncio
