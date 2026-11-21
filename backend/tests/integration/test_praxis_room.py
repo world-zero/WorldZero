@@ -288,6 +288,17 @@ class _Rooms:
             lambda: socket.accepted.is_set() or socket.closed.is_set(),
             "handshake to settle",
         )
+        if socket.accepted.is_set():
+            # Accept goes out before the room loads. A submit that raced it would
+            # hold the shared session while the load waits for it under the open
+            # lock, and the submit waits for that lock: a deadlock production,
+            # with a session per store call, cannot have.
+            name = room_name_for(praxis_id)
+            await _wait_for(
+                lambda: (room := self.server.rooms.get(name)) is not None
+                and room.ready,
+                "the room to load",
+            )
         return socket
 
     async def submit(
@@ -1922,6 +1933,13 @@ async def test_a_submit_on_an_unopened_room_stores_its_text(
         offline.get(ROOM_BODY_KEY, type=Text).insert(0, "PROPOSED ")
         state = base64.b64encode(offline.get_update()).decode()
         if socket_holds_room:
+            real = praxis_room.PostgresYStore.apply_updates
+
+            async def slow(self, doc):  # widens the open-vs-submit race
+                await asyncio.sleep(0.3)
+                return await real(self, doc)
+
+            monkeypatch.setattr(praxis_room.PostgresYStore, "apply_updates", slow)
             await rooms.open(collab.id, account.id)
 
         await rooms.submit(collab.id, character.id, doc_state=state)
@@ -1949,3 +1967,23 @@ async def test_a_submit_on_an_unopened_room_stores_its_text(
             character3.id: False,
         }
         assert (await _proposal(rooms, collab.id))[1] == proposed_at
+
+
+async def test_a_room_that_never_observes_is_evicted_with_a_coded_error(
+    db_session, collab, monkeypatch
+) -> None:
+    async def never(awaitable, timeout):
+        awaitable.close()
+        raise TimeoutError
+
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        name = room_name_for(collab.id)
+        with monkeypatch.context() as patch:
+            patch.setattr(praxis_room.asyncio, "wait_for", never)
+            with pytest.raises(HTTPException) as refused:
+                await rooms.server.get_room(name)
+        assert refused.value.status_code == 503
+        assert refused.value.detail["code"] == "PRAXIS_ROOM_UNAVAILABLE"
+        assert name not in rooms.server.rooms
+
+        assert (await rooms.server.get_room(name)).ready

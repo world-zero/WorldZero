@@ -82,6 +82,8 @@ class ErrorCode(str, enum.Enum):
     praxis_doc_update_too_large = "PRAXIS_DOC_UPDATE_TOO_LARGE"
     #: 409: a submit carried a draft for a praxis that is already published.
     praxis_already_live = "PRAXIS_ALREADY_LIVE"
+    #: 503: the shared draft's room did not come up in time; try again.
+    praxis_room_unavailable = "PRAXIS_ROOM_UNAVAILABLE"
     #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).
     praxis_post_cooldown = "PRAXIS_POST_COOLDOWN"
 
