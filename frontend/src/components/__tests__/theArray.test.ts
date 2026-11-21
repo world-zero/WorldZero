@@ -58,6 +58,7 @@ function makeConfig(overrides: Partial<GameConfigOut> = {}): GameConfigOut {
     rules_revision: 0,
     level_thresholds: [0, 10, 25],
     duel_level_required: 3,
+    vote_requires_received_vote: true,
     collab_auto_submit_days: 7,
     duel_challenge_lapse_days: 7,
     duel_cast_lapse_days: 7,

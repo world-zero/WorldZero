@@ -322,3 +322,13 @@ async def test_a_raising_delivery_leaves_the_flip_standing(
         "invitation"
     ]
     assert (await read_dial_sides(db_session))["invitation"] == "small"
+
+
+@pytest.mark.asyncio
+async def test_game_config_follows_the_vote_gate_dial(client, db_session):
+    await overlay(db_session)
+    small = (await client.get("/game-config")).json()
+    assert small["vote_requires_received_vote"] is False
+    apply_dial_sides(CURRENT_ERA, {"vote_requires_received_vote": "full"})
+    full = (await client.get("/game-config")).json()
+    assert full["vote_requires_received_vote"] is True

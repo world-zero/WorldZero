@@ -3984,6 +3984,8 @@ export interface components {
             pending_task_admin_review_hours: number;
             /** Rules Revision */
             rules_revision: number;
+            /** Vote Requires Received Vote */
+            vote_requires_received_vote: boolean;
         };
         /** GlobalTaskItem */
         GlobalTaskItem: {

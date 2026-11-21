@@ -36,6 +36,8 @@ export interface GameConfigOut {
   rules_revision: number
   level_thresholds: number[]
   duel_level_required: number
+  /** Dialed (#4056): false while the small-world dial has voting open. */
+  vote_requires_received_vote: boolean
   collab_auto_submit_days: number
   /** Days an unanswered duel challenge waits before it lapses (#3875). */
   duel_challenge_lapse_days: number | null // null = waits for the era close

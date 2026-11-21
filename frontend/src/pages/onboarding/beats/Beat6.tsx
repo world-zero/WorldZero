@@ -79,9 +79,11 @@ export default function Beat6(_props: BeatProps) {
             {tp('popup.nowUnlocked')}: {names.join(', ')}
           </p>
         )}
-        <p className="b6-lines boing" style={delay(B6.unlock + 0.4)}>
-          {tv('chrome.receivedVoteGate')}
-        </p>
+        {config?.vote_requires_received_vote === true && (
+          <p className="b6-lines boing" style={delay(B6.unlock + 0.4)}>
+            {tv('chrome.receivedVoteGate')}
+          </p>
+        )}
       </div>
     </div>
   )

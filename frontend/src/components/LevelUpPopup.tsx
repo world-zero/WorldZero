@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { LevelUnlock } from '../api/gameConfig'
 import { useFormFactor } from '../hooks/useFormFactor'
+import { useGameConfig } from '../hooks/useGameConfig'
 
 // Rank/unlock keys are server-supplied, so relax t()'s compile-time key check.
 function tKey(t: TFunction<'progression'>, key: string): string {
@@ -145,7 +146,8 @@ function AbilityRow({ ability, color }: { ability: LevelUnlock; color: string })
   const isSense = ability.kind === 'sense'
   const name = tKey(t, `unlocks.${ability.key}.name`)
   // Some unlocks are name-only (#2770); a missing key would throw in dev.
-  const descKey = `unlocks.${ability.key}.desc`
+  const gated = useGameConfig()?.vote_requires_received_vote !== false
+  const descKey = `unlocks.${ability.key}.${ability.key === 'vote' && !gated ? 'descOpen' : 'desc'}`
   const desc = i18n.exists(`progression:${descKey}`) ? tKey(t, descKey) : ''
   return (
     <div style={{ display: 'flex', gap: 'var(--space-md)', textAlign: 'left', alignItems: 'flex-start', marginBottom: 'var(--space-lg)' }}>

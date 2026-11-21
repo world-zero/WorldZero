@@ -13,7 +13,10 @@ const profiles = vi.hoisted(() => ({
     { rank_key: 'trailhead', unlocks: [{ kind: 'ability', key: 'vote' }, { kind: 'sense', key: 'worn_paths' }] },
   ],
 }))
-vi.mock('../../hooks/useGameConfig', () => ({ useGameConfig: () => ({ level_profiles: profiles.value }) }))
+const gate = vi.hoisted(() => ({ value: true as boolean | undefined }))
+vi.mock('../../hooks/useGameConfig', () => ({
+  useGameConfig: () => ({ level_profiles: profiles.value, vote_requires_received_vote: gate.value }),
+}))
 
 import Beat6 from '../onboarding/beats/Beat6'
 
@@ -23,6 +26,15 @@ describe('Beat 6', () => {
     expect(m).toContain('<span>1</span><span>2</span>')
     expect(m).toContain(progression.unlocks.vote.name)
     expect(m).not.toContain(progression.unlocks.worn_paths.name)
-    expect(m).toContain(votes.chrome.receivedVoteGate)
+  })
+
+  it('states the received-vote lock only while the era has it on', () => {
+    const lock = votes.chrome.receivedVoteGate
+    gate.value = true
+    expect(renderToStaticMarkup(<Beat6 confidence={0.7} />)).toContain(lock)
+    gate.value = false
+    expect(renderToStaticMarkup(<Beat6 confidence={0.7} />)).not.toContain(lock)
+    gate.value = undefined
+    expect(renderToStaticMarkup(<Beat6 confidence={0.7} />)).not.toContain(lock)
   })
 })
