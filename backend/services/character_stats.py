@@ -149,7 +149,7 @@ async def deliver_earned_invitations(
         session.add(
             InvitationLetter(character_id=character.id, faction_slug=slug, era_id=era_row.id)
         )
-        await notify_invitation_letter(session, character)
+        await notify_invitation_letter(session, character, slug)
 
 
 async def deliver_invitations_to_all(

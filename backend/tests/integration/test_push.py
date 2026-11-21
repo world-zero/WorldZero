@@ -182,9 +182,26 @@ async def test_a_rating_queues_a_keys_only_payload(
         "actor": "Other Character",
         "task": "Feed a stranger",
         "count": None,
+        "faction": None,
     }
     assert len(targets) == 1
     assert "@" not in json.dumps(payload)
+
+
+@pytest.mark.asyncio
+async def test_an_invitation_letter_names_its_faction_by_slug(
+    db_session: AsyncSession, account: Account, character: Character, keys_on
+):
+    await _subscribe(db_session, account)
+    account.notification_prefs = {"invitation_letter": {"by_push": True}}
+    await push.notify_invitation_letter(db_session, character, "coven")
+    await push.notify_invitation_letter(db_session, character, "snide")
+    queued = [p for p, _ in _queued(db_session)]
+    assert [p["faction"] for p in queued] == ["coven", "snide"]
+    assert [p["tag"] for p in queued] == [
+        f"invitation_letter:{character.id}:coven",
+        f"invitation_letter:{character.id}:snide",
+    ]
 
 
 @pytest.mark.asyncio
@@ -291,12 +308,15 @@ async def test_comment_tags_name_the_target_type(
     db_session, character, character2, comment_world
 ):
     task, praxis = comment_world
-    await db_session.execute(  # next praxis id == task.id, so a swapped tag fails
-        text("select setval(pg_get_serial_sequence('praxis', 'id'), :n, false)"),
-        {"n": task.id},
-    )
+    top = max(task.id, praxis.id) + 1  # never lower a sequence below a used id
+    for table in ("task", "praxis"):
+        await db_session.execute(
+            text("select setval(pg_get_serial_sequence(:t, 'id'), :n, false)"),
+            {"t": table, "n": top},
+        )
+    task = await make_task(db_session, character, title="Feed a stranger")
     praxis = await make_solo_praxis(db_session, task, character)
-    assert praxis.id == task.id
+    assert praxis.id == task.id  # equal ids, so a swapped tag fails
     on_praxis = await _comment(
         db_session, character2, praxis=praxis, mention=character
     )

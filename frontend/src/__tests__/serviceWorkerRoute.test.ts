@@ -39,7 +39,7 @@ describe('shellUrls', () => {
   })
 })
 
-const S = { ...push, origin: O }
+const S = { ...push, factions: { coven: 'Cozy Coven' }, origin: O }
 
 describe('pushMessage', () => {
   it('heads with the character and collapses ratings under one tag', () => {
@@ -62,6 +62,16 @@ describe('pushMessage', () => {
     const m = pushMessage({ kind: 'nope', url: '/', character: 'X', actor: null, task: null, count: null }, S)
     expect(m.options.body).toBe('Something happened\nOpen World Zero to see.')
     expect(pushMessage({ kind: 'comment_mention', character: 'X' }, S).options.body).toContain('Someone mentioned you')
+  })
+})
+
+describe('invitation_letter', () => {
+  const body = (faction?: string | null) => pushMessage({ kind: 'invitation_letter', character: 'X', faction }, S).options.body
+  it('names the faction, never Someone', () => {
+    expect(body('coven')).toContain('Cozy Coven invited you')
+    expect(body('nope')).toContain('A faction invited you')
+    expect(body(null)).toContain('A faction invited you')
+    expect(body()).not.toContain('Someone')
   })
 })
 
