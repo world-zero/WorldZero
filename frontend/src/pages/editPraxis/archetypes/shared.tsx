@@ -107,7 +107,7 @@ interface ComposerSizes {
 /**
  * The design's SIZES table (ADR-0065 §2) lives in `09-component-shared.css` as
  * `--composer-*` vars under the phone media query, so first paint needs no JS.
- * Head floor = Ephemerists' sky band (84/68) + 12 cornice; round UP. Only
+ * Desktop floor = 84 sky band + 12 cornice (96px); phone has no floor. Only
  * `isMobile` (conditional ornament) still reads the hook.
  */
 export function useComposerSizes(): ComposerSizes {
