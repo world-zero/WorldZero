@@ -1165,8 +1165,6 @@ async def test_a_flush_between_the_rollback_and_its_hook_still_cancels(
         db_session, monkeypatch, flush_debounce_seconds=30
     ) as rooms:
         socket = await rooms.open(praxis_id, account.id)
-        flusher = rooms.server._flushers[room_name_for(praxis_id)]
-        flusher._debounce_seconds = 1.0  # the edit's own flush lands after the checks
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "the editor")
             await rooms.submit(praxis_id, other_id)  # B proposes
@@ -1175,6 +1173,7 @@ async def test_a_flush_between_the_rollback_and_its_hook_still_cancels(
                 rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
             )
             state = base64.b64encode(doc.get_update()).decode()
+            flusher = rooms.server._flushers[room_name_for(praxis_id)]
             hook = flusher.forget
             monkeypatch.setattr(flusher, "forget", lambda: None)
 
@@ -1190,11 +1189,8 @@ async def test_a_flush_between_the_rollback_and_its_hook_still_cancels(
             await flusher.write()  # the window: rolled back, hook not yet run
             assert (await _proposal(rooms, praxis_id))[1] is not None
             hook()
-            for _ in range(100):
-                if (await _proposal(rooms, praxis_id))[1] is None:
-                    break
-                await asyncio.sleep(0.05)
-            assert (await _proposal(rooms, praxis_id))[1] is None
+    # the closing flush runs only if forget() left the document marked changed
+    assert (await _proposal(rooms, praxis_id))[1] is None
 
 
 async def test_a_cooldown_refused_submit_absorbs_nothing(
