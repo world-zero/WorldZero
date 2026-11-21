@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FlaggedPraxisOut } from "../../api/admin";
 import ModerateConfirm from "./ModerateConfirm";
+import { useCan } from "../../auth/permissions";
 
 export type AuthorAction = "ban" | "suspend" | "removeAll";
 
@@ -24,6 +25,7 @@ export default function AuthorRow({
   onViewAccount,
 }: AuthorRowProps) {
   const { t } = useTranslation("admin");
+  const canBan = useCan()("banSuspend");
   const banned = praxis.author_status === "banned";
   const suspended = praxis.author_account_status === "suspended";
   const name = praxis.created_by_display_name;
@@ -33,28 +35,34 @@ export default function AuthorRow({
     <div className="rp-author">
       <div className="adm-btns">
         <span className="rp-muted">{t("console.reports.author.label", { name })}</span>
-        <button type="button" className="rp-btn" onClick={() => onViewAccount(praxis.author_username)}>
-          {t("console.reports.author.openPeople")}
-        </button>
+        {canBan && (
+          <button type="button" className="rp-btn" onClick={() => onViewAccount(praxis.author_username)}>
+            {t("console.reports.author.openPeople")}
+          </button>
+        )}
         <button type="button" className="rp-btn" onClick={() => onAsk("removeAll")}>
           {t("console.reports.author.removeAll", { count })}
         </button>
         {banned && <span className="rp-tag">{t("console.reports.author.banned")}</span>}
-        <button
-          type="button"
-          className={banned ? "rp-btn" : "rp-btn rp-btn-dng"}
-          onClick={() => (banned ? undo("ban") : onAsk("ban"))}
-        >
-          {banned ? t("console.reports.author.unban") : t("console.reports.author.ban")}
-        </button>
+        {canBan && (
+          <button
+            type="button"
+            className={banned ? "rp-btn" : "rp-btn rp-btn-dng"}
+            onClick={() => (banned ? undo("ban") : onAsk("ban"))}
+          >
+            {banned ? t("console.reports.author.unban") : t("console.reports.author.ban")}
+          </button>
+        )}
         {suspended && <span className="rp-tag">{t("console.reports.author.suspended")}</span>}
-        <button
-          type="button"
-          className={suspended ? "rp-btn" : "rp-btn rp-btn-dng"}
-          onClick={() => (suspended ? undo("suspend") : onAsk("suspend"))}
-        >
-          {suspended ? t("console.reports.author.unsuspend") : t("console.reports.author.suspend")}
-        </button>
+        {canBan && (
+          <button
+            type="button"
+            className={suspended ? "rp-btn" : "rp-btn rp-btn-dng"}
+            onClick={() => (suspended ? undo("suspend") : onAsk("suspend"))}
+          >
+            {suspended ? t("console.reports.author.unsuspend") : t("console.reports.author.suspend")}
+          </button>
+        )}
       </div>
       {confirming && (
         <AuthorConfirm praxis={praxis} kind={confirming} onModerate={onModerate} onCancel={onCancel} />

@@ -20,6 +20,7 @@ import { getDuelDetail, type DuelDetailOut } from "../../api/duel";
 import { listComments, type CommentOut } from "../../api/comments";
 import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
+import { useCan } from "../../auth/permissions";
 import { extractError } from "../../utils/errors";
 import { useCastTally } from "../../components/vote/castTallies";
 import {
@@ -101,6 +102,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const { t } = useTranslation("praxis");
   const { user, refetch } = useAuth();
   const { adminMode } = useAdminMode();
+  const can = useCan();
 
   const [praxis, setPraxis] = useState<PraxisOut | null>(null);
   const [voters, setVoters] = useState<VoterDetail[]>([]);
@@ -123,7 +125,7 @@ export function usePraxisDetail(idParam: string | undefined): PraxisDetailState 
   const [flagError, setFlagError] = useState<string | null>(null);
   const [flagSubmitted, setFlagSubmitted] = useState(false);
 
-  const showAdminBar = !!(user?.is_admin && adminMode && praxis);
+  const showAdminBar = !!(adminMode && praxis && can("moderate"));
 
   // `api/admin` loads when a moderator acts, not on render (#1141).
   const handleModerate = async (status: PraxisModerationStatus, note?: string) => {

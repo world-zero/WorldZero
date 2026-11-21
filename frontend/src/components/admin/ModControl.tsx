@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAdminMode } from '../../auth/AdminModeContext'
-import { useAdminCounts } from '../../pages/admin/useAdminCounts'
+import { modTotal, useAdminCounts } from '../../pages/admin/useAdminCounts'
+import { useCan } from '../../auth/permissions'
 import './modMode.css'
 
 /** The one MOD control in the top bar (#3666). NavBar lazy-loads it for admins only (the phone's twin is the You sheet's ModGroup), so players never fetch this chunk or the counts. */
@@ -14,7 +15,8 @@ export default function ModControl() {
   const button = useRef<HTMLButtonElement>(null)
   // Re-read each time the menu opens: these are obligations, not a cache.
   const counts = useAdminCounts(String(open))
-  const total = (counts.reports ?? 0) + (counts.messages ?? 0) + (counts.proposals ?? 0)
+  const total = modTotal(counts)
+  const can = useCan()
 
   const close = (refocus = true) => {
     setOpen(false)
@@ -43,11 +45,13 @@ export default function ModControl() {
     items[(at + step + items.length) % items.length]?.focus()
   }
 
-  const rows = [
-    ['reports', t('nav.mod.reports'), counts.reports],
-    ['messages', t('nav.mod.messages'), counts.messages],
-    ['proposals', t('nav.mod.proposals'), counts.proposals],
-  ] as const
+  const rows = (
+    [
+      ['reports', t('nav.mod.reports'), counts.reports],
+      ['messages', t('nav.mod.messages'), counts.messages],
+      ['proposals', t('nav.mod.proposals'), counts.proposals],
+    ] as const
+  ).filter(([key]) => can(key))
 
   return (
     <div ref={wrap} className="mod-wrap" data-modal-free onKeyDown={onKeyDown}>

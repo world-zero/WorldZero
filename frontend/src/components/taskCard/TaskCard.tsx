@@ -6,6 +6,7 @@ import type { TaskOut } from '../../api/tasks'
 import type { AdminTaskStatus } from '../../api/admin'
 import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
+import { taskStatusNeed, useCan } from '../../auth/permissions'
 import StartHereMark from '../StartHereMark'
 import TaskStatusControl from '../admin/TaskStatusControl'
 import type { BackdoorWindow } from '../admin/backdoorWindow'
@@ -56,6 +57,7 @@ export default function TaskCard({
   const { t } = useTranslation('admin')
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
+  const can = useCan()
   const showAdminControls = user?.is_admin && adminMode
 
   /**
@@ -163,26 +165,30 @@ export default function TaskCard({
             gap: 'var(--space-xs)', marginTop: 'var(--space-xs)',
           }}
         >
-          <Link
-            to={`/admin/tasks?task=${shown.id}`}
-            className="label-caption"
-            style={{
-              padding: 'var(--space-xs) var(--space-sm)',
-              border: '1px solid var(--color-border-strong)',
-              color: 'var(--color-text-primary)',
-              background: 'var(--color-surface-scrim)',
-              textDecoration: 'none',
-            }}
-          >
-            {t('tasks.actions.openInAdmin')} {'\u2197\uFE0E'}
-          </Link>
-          <TaskStatusControl
-            status={shown.status}
-            variant="strip"
-            opensAt={shown.backdoor_opens_at}
-            closesAt={shown.backdoor_closes_at}
-            onChange={handleStatusChange}
-          />
+          {can('tasks') && (
+            <Link
+              to={`/admin/tasks?task=${shown.id}`}
+              className="label-caption"
+              style={{
+                padding: 'var(--space-xs) var(--space-sm)',
+                border: '1px solid var(--color-border-strong)',
+                color: 'var(--color-text-primary)',
+                background: 'var(--color-surface-scrim)',
+                textDecoration: 'none',
+              }}
+            >
+              {t('tasks.actions.openInAdmin')} {'\u2197\uFE0E'}
+            </Link>
+          )}
+          {can(taskStatusNeed(shown.status)) && (
+            <TaskStatusControl
+              status={shown.status}
+              variant="strip"
+              opensAt={shown.backdoor_opens_at}
+              closesAt={shown.backdoor_closes_at}
+              onChange={handleStatusChange}
+            />
+          )}
         </div>
       )}
     </div>

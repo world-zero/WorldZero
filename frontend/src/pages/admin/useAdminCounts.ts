@@ -7,6 +7,7 @@ import {
   getOverview,
   getPendingTasks,
 } from '../../api/admin'
+import { useCan, type Need } from '../../auth/permissions'
 
 /** `null` = not loaded, or that endpoint failed: the rail then shows no number rather than a wrong one. */
 export interface AdminCounts {
@@ -18,7 +19,10 @@ export interface AdminCounts {
   people: number | null
 }
 
-export const modTotal = (c: AdminCounts): number => (c.reports ?? 0) + (c.messages ?? 0) + (c.proposals ?? 0)
+/** The MOD button's queues; a queue the caller holds no permission for stays `null`, so it is never fetched or summed. */
+export const MOD_QUEUES = ['reports', 'messages', 'proposals'] as const satisfies readonly (keyof AdminCounts & Need)[]
+
+export const modTotal = (c: AdminCounts): number => MOD_QUEUES.reduce((sum, key) => sum + (c[key] ?? 0), 0)
 
 const NONE: AdminCounts = { reports: null, messages: null, proposals: null, praxis: null, tasks: null, people: null }
 
@@ -33,14 +37,19 @@ const ok = <T,>(r: PromiseSettledResult<T>): T | null => (r.status === 'fulfille
 export function useAdminCounts(refreshKey = ''): AdminCounts & { reload: () => void } {
   const [counts, setCounts] = useState<AdminCounts>(NONE)
   const [bump, setBump] = useState(0)
+  const can = useCan()
+  const held = MOD_QUEUES.map(can)
+  const [reports, messages, proposals] = held
 
   useEffect(() => {
     let cancelled = false
+    const skip = Promise.reject<never>()
+    skip.catch(() => {})
     void Promise.allSettled([
-      getFlaggedPraxes(),
-      getFlaggedComments(),
-      getMessages(false),
-      getPendingTasks(),
+      reports ? getFlaggedPraxes() : skip,
+      reports ? getFlaggedComments() : skip,
+      messages ? getMessages(false) : skip,
+      proposals ? getPendingTasks() : skip,
       getOverview(),
     ]).then(([praxes, comments, messages, proposals, overview]) => {
       if (cancelled) return
@@ -59,7 +68,7 @@ export function useAdminCounts(refreshKey = ''): AdminCounts & { reload: () => v
     return () => {
       cancelled = true
     }
-  }, [refreshKey, bump])
+  }, [refreshKey, bump, held.join()])
 
   return { ...counts, reload: () => setBump((n) => n + 1) }
 }
