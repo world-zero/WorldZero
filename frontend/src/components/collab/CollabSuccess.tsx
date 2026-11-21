@@ -40,15 +40,14 @@ export function CollabSuccess({
       role="dialog"
       aria-modal="true"
       aria-label={collabCopy(factionSlug, 'successHeading')}
-      className="fixed inset-0 z-50 flex justify-center overflow-y-auto p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
         background: 'var(--takeover-bg, var(--color-overlay-strong))',
         paddingBottom: 'max(var(--space-lg), env(safe-area-inset-bottom))',
       }}
     >
       <div
-        // my-auto, not items-center on the overlay: that clips the top of a short screen (#3937).
-        className="flex flex-col items-center justify-center gap-4 p-6 my-auto"
+        className="flex flex-col items-center justify-center gap-4 p-6"
         style={{
           background: 'var(--color-bg-page)',
           width: 'var(--sheet-full, min(420px, 100%))',
