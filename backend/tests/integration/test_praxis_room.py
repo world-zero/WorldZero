@@ -23,6 +23,7 @@ from pycrdt import (
     Text,
     YMessageType,
     create_awareness_message,
+    create_update_message,
     read_message,
 )
 from sqlalchemy import delete, func, select
@@ -51,6 +52,7 @@ from services.auth import create_jwt
 from services.character import soft_delete_character
 from services.character_stats import recalculate_character_stats
 from services.praxis import (
+    delete_praxis,
     kick_member,
     leave_praxis,
     submit_praxis,
@@ -1705,24 +1707,24 @@ async def test_a_live_praxis_refuses_the_room_handshake(
 async def test_an_over_cap_room_document_is_not_flushed(
     db_session, collab, account, monkeypatch
 ) -> None:
-    pad = "x" * (PRAXIS_BODY_MAX - len(SEED_BODY))
-    flush = {"flush_debounce_seconds": 0.05}
-    async with running_rooms(db_session, monkeypatch, **flush) as rooms:
+    """Over-cap text can only be in the store (a restart, an old row); never flushed."""
+    db_session.add(
+        PraxisRoomUpdate(praxis_id=collab.id, update=_over_cap_doc().get_update())
+    )
+    await db_session.commit()
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=0.05
+    ) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
-            await _wait_for_body(doc, SEED_BODY, "the first client")
-            body = doc.get(ROOM_BODY_KEY, type=Text)
-            body.insert(0, pad + "y")
-            await asyncio.sleep(0.4)
-            assert await _record(rooms, collab.id) == ("Collab Praxis", SEED_BODY)
-            del body[len(pad) : len(pad) + 1]
-            await _wait_for_record(
-                rooms, collab.id, "the at-cap flush", body_text=pad + SEED_BODY
+            await _wait_for(
+                lambda: len(str(doc.get(ROOM_BODY_KEY, type=Text))) > PRAXIS_BODY_MAX,
+                "the over-cap document",
             )
             long_title = "t" * (PRAXIS_TITLE_MAX + 1)
             doc.get(ROOM_META_KEY, type=Map)[ROOM_TITLE_KEY] = long_title
             await asyncio.sleep(0.4)
-            assert (await _record(rooms, collab.id))[0] == "Collab Praxis"
+            assert await _record(rooms, collab.id) == ("Collab Praxis", SEED_BODY)
 
 
 async def _over_cap_solo(db_session, active_task, character) -> Praxis:
@@ -1762,26 +1764,64 @@ async def test_a_submit_with_an_over_cap_draft_is_refused_and_changes_nothing(
         assert (await db_session.get(Praxis, solo.id)).status != PraxisStatus.submitted
 
 
-async def test_publishing_an_over_cap_document_is_refused_and_keeps_it(
+async def test_an_over_cap_submit_stores_nothing_and_strands_no_room(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    solo = await _over_cap_solo(db_session, active_task, character)
+    state = base64.b64encode(_over_cap_doc().get_update()).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        # Straight at the server: a cold open under the harness's lock deadlocks.
+        with pytest.raises(HTTPException) as refused:
+            await praxis_room.merge_client_state(solo.id, state)
+        assert refused.value.status_code == 413
+        assert room_name_for(solo.id) not in rooms.server.rooms
+        before = await _stored_updates(rooms, solo.id)
+
+        await rooms.server.get_room(room_name_for(solo.id))
+        stored = await _stored_updates(rooms, solo.id)
+        with pytest.raises(HTTPException):
+            await praxis_room.merge_client_state(solo.id, state)
+        body = rooms.room_doc(solo.id).get(ROOM_BODY_KEY, type=Text)
+        assert str(body) == SEED_BODY
+        assert await _stored_updates(rooms, solo.id) == stored
+        assert len(stored) >= len(before)
+
+
+async def test_a_socket_update_over_the_cap_is_dropped_before_it_is_stored(
+    db_session, collab, account, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        name = room_name_for(collab.id)
+        # Registered is not seeded: ready flips only after the seed is stored.
+        await _wait_for(
+            lambda: name in rooms.server.rooms and rooms.server.rooms[name].ready,
+            "the seeded room",
+        )
+        doc = rooms.room_doc(collab.id)
+        stored = await _stored_updates(rooms, collab.id)
+        await socket.send_bytes(create_update_message(_over_cap_doc().get_update()))
+        await _wait_for(socket.closed.is_set, "the socket to be refused")
+        assert socket.close_code == 1008
+        assert await _stored_updates(rooms, collab.id) == stored
+        assert len(str(doc.get(ROOM_BODY_KEY, type=Text))) <= PRAXIS_BODY_MAX
+
+
+async def test_deleting_a_praxis_evicts_its_room_and_sockets(
     db_session, active_task, character, account, monkeypatch
 ) -> None:
     solo = await _over_cap_solo(db_session, active_task, character)
-    slow = {"flush_debounce_seconds": 30.0}
-    async with running_rooms(db_session, monkeypatch, **slow) as rooms:
+    name = room_name_for(solo.id)
+    async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(solo.id, account.id)
-        async with client_doc(socket) as doc:
-            await _wait_for_body(doc, SEED_BODY, "the solo author")
-            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "x" * PRAXIS_BODY_MAX)
-            await _wait_for(
-                lambda: len(str(rooms.room_doc(solo.id).get(ROOM_BODY_KEY, type=Text)))
-                > PRAXIS_BODY_MAX,
-                "the over-cap text in the room",
-            )
-            with pytest.raises(HTTPException) as refused:
-                await rooms.submit(solo.id, character.id)
-        assert refused.value.status_code == 413
-        assert await _record(rooms, solo.id) == ("Solo Praxis", SEED_BODY)
-        assert await _stored_updates(rooms, solo.id) != []
+        await _wait_for(lambda: name in rooms.server._flushers, "the flusher")
+        async with rooms.sessions() as session:
+            await delete_praxis(solo.id, character.id, session)
+            await session.commit()
+        await _wait_for(socket.closed.is_set, "the socket to be revoked")
+        assert socket.close_code == 1008
+        assert name not in rooms.server.rooms
+        assert name not in rooms.server._flushers
 
 
 async def test_publishing_after_a_restart_cannot_drop_an_over_cap_document(
