@@ -18,6 +18,8 @@ interface ShellContentProps {
   /** Held by `Layout`: tests call `ShellContent` as a plain function (no hooks). */
   readonly sidebarCollapsed: boolean
   readonly onToggleSidebar: () => void
+  /** The phone flow (#3835): no side/bottom padding, so the flow's own edge is the screen's. */
+  readonly bleed?: boolean
   readonly children: ReactNode
 }
 
@@ -30,6 +32,8 @@ const MOBILE_REGION = 'flex-1 relative px-4 pb-4'
 const DESKTOP_REGION = 'flex-1 relative max-w-[var(--shell-max-width)] mx-auto w-full pt-8 px-10 pb-[72px]'
 
 // No top bar on the phone (#3761): the region clears the status bar, unless the mod strip already did (modMode.css zeroes the var).
+const BLEED_REGION = 'flex-1 relative ob-bleed'
+const BLEED_REGION_STYLE: CSSProperties = { zIndex: 5 }
 const MOBILE_REGION_STYLE: CSSProperties = {
   zIndex: 5,
   paddingTop: 'calc(var(--space-lg) + var(--region-inset-top, env(safe-area-inset-top)))',
@@ -47,6 +51,7 @@ export default function ShellContent({
   isMobile,
   sidebarCollapsed,
   onToggleSidebar,
+  bleed = false,
   children,
 }: ShellContentProps) {
   const { user } = useAuth()
@@ -55,8 +60,8 @@ export default function ShellContent({
 
   return (
     <div
-      className={isMobile ? MOBILE_REGION : DESKTOP_REGION}
-      style={isMobile ? MOBILE_REGION_STYLE : DESKTOP_REGION_STYLE}
+      className={bleed ? BLEED_REGION : isMobile ? MOBILE_REGION : DESKTOP_REGION}
+      style={bleed ? BLEED_REGION_STYLE : isMobile ? MOBILE_REGION_STYLE : DESKTOP_REGION_STYLE}
     >
       <div
         className={

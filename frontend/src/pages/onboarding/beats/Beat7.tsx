@@ -60,7 +60,7 @@ export default function Beat7({ confidence }: BeatProps) {
         } as CSSProperties
         return (
           <span key={slug}>
-            <span className={`bpos ${i % 2 ? 'r2' : 'r1'}`} style={{ left: `${x}%` }}>
+            <span className={`bpos ${i % 2 ? 'r2' : 'r1'}`} style={{ left: `${x}%`, '--hx': `${x}%` } as CSSProperties}>
               <span
                 className="bub boing"
                 data-faction={slug}
