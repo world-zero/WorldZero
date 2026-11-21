@@ -1,6 +1,6 @@
 import { Trans, useTranslation } from 'react-i18next'
 import './installCopy'
-import './installNudge.css'
+import './installSteps.css'
 
 /** Chrome's menu path, for when it offers no install prompt. Settings shows it beside the iPhone steps. */
 export default function InstallAndroidSteps() {

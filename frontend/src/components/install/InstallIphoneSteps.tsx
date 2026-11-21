@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import './installCopy'
-import './installNudge.css'
+import './installSteps.css'
 
 const ICON = {
   width: 26,
@@ -13,7 +13,7 @@ const ICON = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
   'aria-hidden': true,
-  className: 'install-nudge-icon',
+  className: 'install-step-icon',
 }
 
 const ICONS: ReactNode[] = [
