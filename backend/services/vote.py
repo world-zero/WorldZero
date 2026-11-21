@@ -2,8 +2,9 @@ import dataclasses
 from typing import Optional
 
 from fastapi import HTTPException
-from sqlalchemy import exists, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from dependencies import account_has_admin_role
 from errors import ErrorCode, raise_coded
@@ -28,7 +29,7 @@ from services.era_gates import vote_lock_reason
 from services.praxis_duel import get_duel_for_praxis
 from services.push import notify_vote
 from services.scoring import compute_votes_available
-from services.vote_tally import VoteTally, tally_votes
+from services.vote_tally import VoteTally, counted_votes, tally_votes
 
 #: Advisory-lock namespace; must differ from the signup and era-rollover keys.
 _VOTE_LOCK_NAMESPACE = 0x5A1A
@@ -193,20 +194,19 @@ async def account_has_received_vote(account_id: int, session: AsyncSession) -> b
     Self-votes are impossible (rule A), so any vote on a praxis one of the
     account's characters is a member of came from someone else.
     """
-    return bool(
-        await session.scalar(
-            select(
-                exists().where(
-                    Vote.praxis_id == PraxisMember.praxis_id,
-                    PraxisMember.character_id == Character.id,
-                    Character.account_id == account_id,
-                    Praxis.id == Vote.praxis_id,
-                    Praxis.moderation_status.not_in(UNSCORED_MODERATION_STATUSES),
-                    Praxis.status == PraxisStatus.submitted,
-                )
-            )
+    recipient = aliased(Character)
+    counted = (
+        counted_votes(select(Vote.id))
+        .join(PraxisMember, PraxisMember.praxis_id == Vote.praxis_id)
+        .join(recipient, recipient.id == PraxisMember.character_id)
+        .join(Praxis, Praxis.id == Vote.praxis_id)
+        .where(
+            recipient.account_id == account_id,
+            Praxis.moderation_status.not_in(UNSCORED_MODERATION_STATUSES),
+            Praxis.status == PraxisStatus.submitted,
         )
     )
+    return bool(await session.scalar(select(counted.exists())))
 
 
 async def refund_vote_budget(vote: Vote, session: AsyncSession) -> None:

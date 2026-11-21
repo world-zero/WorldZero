@@ -1,15 +1,22 @@
 """Voting needs a vote received from another account (#3475), on top of the level."""
+from datetime import datetime, timezone
+
 import pytest
 from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
-from models.account import Account
+from models.account import Account, AccountStatus
+from models.character import CharacterStatus
 from models.era import Era
 from models.praxis import ModerationStatus
 from services.auth import create_jwt
-from services.vote import cast_vote_on_praxis, void_account_vote_on_join
+from services.vote import (
+    account_has_received_vote,
+    cast_vote_on_praxis,
+    void_account_vote_on_join,
+)
 from tests.integration.factories import (
     cast_vote,
     make_admin,
@@ -124,3 +131,47 @@ async def test_admin_skips_this_rule_but_not_the_level(
     with pytest.raises(HTTPException) as refusal:
         await cast_vote_on_praxis(low, target.id, 4, db_session)
     assert refusal.value.detail["code"] == ErrorCode.vote_level_too_low.value
+
+
+async def _rated_by_one(db_session: AsyncSession, era: Era):
+    rated, rated_praxis = await _voter_with_praxis(db_session, era, "rv_rated")
+    rater = await make_character(db_session, era, username="rv_only", level=5)
+    await cast_vote(db_session, rated_praxis, rater, 4)
+    assert await account_has_received_vote(rated.account_id, db_session)
+    return rated, rater
+
+
+@pytest.mark.asyncio
+async def test_a_mod_banned_voters_vote_stops_unlocking_until_lifted(
+    db_session: AsyncSession, era: Era
+):
+    rated, rater = await _rated_by_one(db_session, era)
+    rater.status = CharacterStatus.banned
+    await db_session.flush()
+    assert not await account_has_received_vote(rated.account_id, db_session)
+
+    rater.status = CharacterStatus.active
+    await db_session.flush()
+    assert await account_has_received_vote(rated.account_id, db_session)
+
+
+@pytest.mark.asyncio
+async def test_a_suspended_voters_vote_stops_unlocking(
+    db_session: AsyncSession, era: Era
+):
+    rated, rater = await _rated_by_one(db_session, era)
+    account = await db_session.get(Account, rater.account_id)
+    account.status = AccountStatus.suspended
+    await db_session.flush()
+    assert not await account_has_received_vote(rated.account_id, db_session)
+
+
+@pytest.mark.asyncio
+async def test_a_self_deleted_voters_vote_still_unlocks(
+    db_session: AsyncSession, era: Era
+):
+    rated, rater = await _rated_by_one(db_session, era)
+    rater.status = CharacterStatus.banned
+    rater.departed_at = datetime.now(timezone.utc)
+    await db_session.flush()
+    assert await account_has_received_vote(rated.account_id, db_session)
