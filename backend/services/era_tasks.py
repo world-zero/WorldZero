@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -48,6 +48,7 @@ async def sync_era_tasks(
             point_value=task_def.point_value,
             level_required=task_def.level_required,
             status=TaskStatus.active,
+            activated_at=func.now(),
             created_by_id=created_by_id,
             primary_faction_slug=task_def.faction_slug,
         ))

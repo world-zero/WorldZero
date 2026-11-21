@@ -471,7 +471,7 @@ def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
 def _global_tasks_query(ctx: FeedContext) -> Select:
     """Recently activated tasks (global events) — the ones newer than the reader.
 
-    Tasks created before the character are not news (#2225); per character,
+    Tasks that went live before the character are not news (#2225); per character,
     not account. ``>=`` because ``now()`` is the transaction timestamp. A
     correlated subquery so it rides the badge COUNT without a round trip.
 
@@ -489,23 +489,23 @@ def _global_tasks_query(ctx: FeedContext) -> Select:
         Task.point_value,
         Task.level_required,
         Task.primary_faction_slug,
-        Task.created_at,
+        Task.activated_at,
     ).where(
         Task.status == TaskStatus.active,
-        Task.created_at >= character_born,
+        Task.activated_at >= character_born,
     )
     if not ctx.sees_metatasks:
         query = query.where(Task.task_type != TaskType.metatask)
     if ctx.before is not None:
-        query = query.where(Task.created_at < ctx.before)
-    return query.order_by(Task.created_at.desc()).limit(SUB_QUERY_LIMIT)
+        query = query.where(Task.activated_at < ctx.before)
+    return query.order_by(Task.activated_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
 def _global_task_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_GLOBAL_TASK,
         item_key=build_item_key(FEED_ITEM_TYPE_GLOBAL_TASK, row.id),
-        timestamp=row.created_at,
+        timestamp=row.activated_at,
         actor_display_name=ADMIN_ACTOR_NAME,
         actor_faction_slug=None,
         actor_avatar_url=None,

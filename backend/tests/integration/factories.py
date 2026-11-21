@@ -131,6 +131,7 @@ async def make_task(
             faction_slug if task_type == TaskType.metatask else None
         ),
     )
+    task.set_status(status)
     session.add(task)
     if commit:
         await session.commit()

@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Identity, Integer, String, Text
@@ -83,6 +83,17 @@ class Task(TimestampMixin, Base):
     backdoor_closes_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+    # First move into ``active``; set once, never cleared (#3775). NULL = never live.
+    activated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    def set_status(self, status: "TaskStatus") -> None:
+        """Every status move routes here so the first going-live is stamped once."""
+        self.status = status
+        if status == TaskStatus.active and self.activated_at is None:
+            self.activated_at = datetime.now(timezone.utc)
 
     praxes: Mapped[List["Praxis"]] = relationship(
         "Praxis", back_populates="task", lazy="raise"

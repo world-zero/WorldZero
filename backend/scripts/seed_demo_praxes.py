@@ -264,6 +264,7 @@ async def get_or_create_metatask(
         # still gated by era.metatask_apply_level.
         level_required=0,
         status=TaskStatus.active,
+        activated_at=func.now(),
         task_type=TaskType.metatask,
         created_by_id=created_by.id,
         primary_faction_slug=faction_slug,
