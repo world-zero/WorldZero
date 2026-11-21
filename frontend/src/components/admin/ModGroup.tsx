@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAdminMode } from '../../auth/AdminModeContext'
-import { useAdminCounts } from '../../pages/admin/useAdminCounts'
+import { modTotal, useAdminCounts } from '../../pages/admin/useAdminCounts'
 import './modMode.css'
 
 /** The You sheet's Moderation group (#3761): the phone's home for what ModControl does on desktop. Lazy, so players never fetch it or the counts. */
@@ -9,7 +9,7 @@ export default function ModGroup({ onNavigate }: { onNavigate: () => void }) {
   const { t } = useTranslation('admin')
   const { adminMode, toggleAdminMode } = useAdminMode()
   const counts = useAdminCounts('you-sheet')
-  const total = (counts.reports ?? 0) + (counts.messages ?? 0) + (counts.proposals ?? 0)
+  const total = modTotal(counts)
 
   return (
     <>

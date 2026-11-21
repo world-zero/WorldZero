@@ -10,6 +10,7 @@ import { communityHref } from '../../pages/communitySide'
 import './tabBar.css'
 
 const YouSheet = lazy(() => import('./YouSheet'))
+const ModTotal = lazy(() => import('../admin/ModTotal'))
 const SignInSheet = lazy(() => import('../SignInOptions').then((m) => ({ default: m.SignInSheet })))
 
 type TabKey = 'nav.home' | 'nav.tasks' | 'nav.praxis' | 'nav.community'
@@ -38,8 +39,22 @@ export default function MobileTabBar() {
   const { pending_requests_count: pending } = useSidebarPanels()
   const [youOpen, setYouOpen] = useState(false)
   const [signIn, setSignIn] = useState(false)
+  const [mod, setMod] = useState(0)
   const active = activeTab(pathname, youOpen)
   const character = user?.character ?? null
+  const isAdmin = Boolean(user?.is_admin)
+  const modCount = isAdmin ? mod : 0
+  const badge = pending + modCount
+  const youAria =
+    badge === 0
+      ? undefined
+      : modCount === 0
+        ? t('nav.youWithPending', { count: pending })
+        : t('nav.youAdminLabel', {
+            parts: [pending > 0 && t('nav.youPartRequests', { count: pending }), t('nav.youPartMod', { count: modCount })]
+              .filter(Boolean)
+              .join(', '),
+          })
 
   const youLabel = t('nav.you')
   const youClass = 'tabbar__tab'
@@ -47,7 +62,7 @@ export default function MobileTabBar() {
     <>
       <span className="tabbar__you">
         {character ? <FactionAvatar character={character} size={24} badge={false} /> : <span className="tabbar__guest" />}
-        <PendingBadge count={pending} className="tabbar__badge" />
+        <PendingBadge count={badge} className="tabbar__badge" />
       </span>
       {youLabel}
     </>
@@ -97,7 +112,7 @@ export default function MobileTabBar() {
             data-on={youOpen ? '' : undefined}
             aria-haspopup="dialog"
             aria-expanded={youOpen}
-            aria-label={pending > 0 ? t('nav.youWithPending', { count: pending }) : undefined}
+            aria-label={youAria}
             onClick={() => setYouOpen((o) => !o)}
           >
             {youInner}
@@ -106,7 +121,12 @@ export default function MobileTabBar() {
       </nav>
       {youOpen && character && (
         <Suspense fallback={null}>
-          <YouSheet character={character} pending={pending} isAdmin={Boolean(user?.is_admin)} onClose={() => setYouOpen(false)} />
+          <YouSheet character={character} pending={pending} isAdmin={isAdmin} onClose={() => setYouOpen(false)} />
+        </Suspense>
+      )}
+      {isAdmin && character && (
+        <Suspense fallback={null}>
+          <ModTotal onTotal={setMod} />
         </Suspense>
       )}
       {signIn && (
