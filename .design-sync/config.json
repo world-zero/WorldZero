@@ -98,7 +98,7 @@
     "DefaultTaskDetail": "src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
     "DefaultVote": "src/components/vote/DefaultVote.tsx",
     "DeleteAccountCard": "src/pages/settings/DeleteAccountCard.tsx",
-    "DesktopPlayers": "src/pages/players/DesktopPlayers.tsx",
+    "PlayersDirectory": "src/pages/players/PlayersDirectory.tsx",
     "DuelCard": "src/pages/praxisDetail/DuelCard.tsx",
     "DuelSealConfirm": "src/components/duel/DuelSealConfirm.tsx",
     "DuelSealSheet": "src/components/duel/DuelSealSheet.tsx",
@@ -192,7 +192,6 @@
     "MetataskRemoveConfirm": "src/components/metataskSeal/MetataskRemoveConfirm.tsx",
     "MetataskSeal": "src/components/metataskSeal/MetataskSeal.tsx",
     "MetataskSealStack": "src/components/metataskSeal/MetataskSealStack.tsx",
-    "MobilePlayers": "src/pages/players/MobilePlayers.tsx",
     "MobileStickyBar": "src/pages/factionDetail/MobileStickyBar.tsx",
     "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
     "NavBar": "src/components/NavBar.tsx",
@@ -487,7 +486,7 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "DesktopPlayers": {
+    "PlayersDirectory": {
       "cardMode": "single",
       "viewport": "1200x900"
     },
@@ -619,10 +618,6 @@
     "MetataskRemoveConfirm": {
       "cardMode": "single",
       "viewport": "560x520"
-    },
-    "MobilePlayers": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "MobileStickyBar": {
       "cardMode": "column"

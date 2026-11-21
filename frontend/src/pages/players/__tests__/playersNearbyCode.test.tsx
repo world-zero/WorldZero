@@ -14,9 +14,10 @@ import type { CharacterOut } from '../../../api/auth'
 vi.mock('../../../hooks/useFactions', () => ({ useFactions: () => [] }))
 vi.mock('../../../hooks/useTheme', () => ({ useTheme: () => ({ theme: 'dark', toggle: () => {} }) }))
 
-import DesktopPlayers from '../DesktopPlayers'
-import MobilePlayers from '../MobilePlayers'
+import { DesktopPlayers, MobilePlayers } from './playersAt'
 import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../playersData'
+
+vi.mock('../../../hooks/useFormFactor', async () => (await import('./formFactorMock')).mockModule)
 
 function player(id: number, display_name: string, location: string, score: number): CharacterOut {
   return {
@@ -55,10 +56,12 @@ afterEach(cleanup)
 describe.each([
   ['desktop', DesktopPlayers],
   ['mobile', MobilePlayers],
-])('%s roster row', (_name, Surface) => {
+])('%s roster row', (name, Surface) => {
   it('prints the player code under Nearby and not under Everyone', () => {
     render(<MemoryRouter><Surface {...props} /></MemoryRouter>)
     expect(screen.queryByText('PDX')).toBeNull()
+    // The phone's filter bar starts folded.
+    if (name === 'mobile') fireEvent.click(screen.getByText('Filters'))
     fireEvent.click(screen.getByText('Nearby'))
     expect(screen.getByText('PDX')).toBeTruthy()
     fireEvent.click(screen.getByText('Everyone'))

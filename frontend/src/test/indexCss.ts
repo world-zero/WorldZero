@@ -23,7 +23,12 @@ export function indexCssParts(): string[] {
 }
 
 /** Rules split out of the entry sheet into a lazy chunk (#3754); guards still read them. */
-const LAZY_PARTS = [join(SRC_DIR, 'components/ui/FilterBar/filterBar.css')]
+const LAZY_PARTS = [
+  'components/ui/FilterBar/filterBar.css',
+  'components/ui/bottomSheet.css',
+  'components/characterSwitcherSheet.css',
+  'components/admin/modMode.css',
+].map((part) => join(SRC_DIR, part))
 
 /** All parts as one string, cascade order, lazy sheets last. */
 export function readIndexCss(): string {

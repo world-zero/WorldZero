@@ -48,8 +48,8 @@
 # that had already reached for --color-overlay-strong AS a shadow moved too —
 # they were the same defect laundered through a token, invisible to this rule.
 # The seven modal scrims flattened to `var(--color-overlay-strong)` outright,
-# per the ruling `.filter-factions__scrim` already carries in index.css: "one
-# scrim for every overlay". Three non-elevation strays went with them —
+# as ui/bottomSheet.css's `.sheet-scrim` does (one
+# scrim for every overlay). Three non-elevation strays went with them —
 # CollabRoster's warn veil now mixes the banner's OWN faction ink instead of a
 # global amber-500, FieldDesk's dot field mixes `--color-text-primary` so it
 # survives dark mode, and FeedCardEraAnnouncement mixes `--badge-admin-text`.

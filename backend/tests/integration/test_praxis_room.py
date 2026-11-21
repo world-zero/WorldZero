@@ -1226,6 +1226,7 @@ async def test_a_cooldown_refused_submit_absorbs_nothing(
 
             flusher = rooms.server._flushers[room_name_for(praxis_id)]
             assert flusher._absorbed is None
+            assert flusher._expected is None
 
 
 async def test_a_submit_that_changes_nothing_still_approves(

@@ -23,7 +23,7 @@ from models.praxis import (
 from models.vote import Vote
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
-from services.era_gates import may_vote, vote_lock_reason
+from services.era_gates import vote_lock_reason
 from services.praxis_duel import get_duel_for_praxis
 from services.push import notify_vote
 from services.scoring import compute_votes_available
@@ -100,17 +100,7 @@ async def cast_or_update_vote(
     # the UI reads ``can_vote`` on ``/auth/me``, which calls ``may_vote``.
     received = await account_has_received_vote(voter.account_id, session)
     is_admin = await account_has_admin_role(voter.account_id, session)
-    lock = (
-        None
-        if may_vote(
-            voter.peak_level,
-            voter.faction_slug,
-            is_admin,
-            era,
-            has_received_vote=received,
-        )
-        else vote_lock_reason(voter.peak_level, received, is_admin, era)
-    )
+    lock = vote_lock_reason(voter.peak_level, received, is_admin, era)
     if lock == "level":
         raise_coded(
             403,
