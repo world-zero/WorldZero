@@ -239,30 +239,6 @@ async def test_admin_list_flagged_comments_includes_flags(
 
 
 @pytest.mark.asyncio
-async def test_admin_patch_character_stats(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    await make_admin(db_session, account)
-
-    resp = await client.patch(
-        f"/admin/characters/{character.id}/stats",
-        json={"score": 999, "level": 7, "votes_available": 50},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["score"] == 999
-    assert data["level"] == 7
-    assert data["votes_available"] == 50
-
-
-
-
-@pytest.mark.asyncio
 async def test_admin_ban_deletes_no_media(
     client: AsyncClient,
     account: Account,

@@ -218,6 +218,16 @@ class ErrorCode(str, enum.Enum):
     #: The owner cannot be demoted from the page.
     admin_cannot_revoke_owner = "ADMIN_CANNOT_REVOKE_OWNER"
 
+    # -- Admin permissions + admin-on-admin guard (#3847, #3821) ------------
+    #: 403: an admin on a route whose permission they do not hold.
+    admin_permission_required = "ADMIN_PERMISSION_REQUIRED"
+    #: 409: ban or suspend aimed at an owner account, by anyone.
+    admin_cannot_target_owner = "ADMIN_CANNOT_TARGET_OWNER"
+    #: 409: ban or suspend aimed at your own account.
+    admin_cannot_target_self = "ADMIN_CANNOT_TARGET_SELF"
+    #: 403: a non-owner banning or suspending another admin.
+    admin_target_needs_owner = "ADMIN_TARGET_NEEDS_OWNER"
+
 
 #: The keys of a coded ``detail`` body.
 DETAIL_CODE_KEY = "code"

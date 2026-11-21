@@ -9,7 +9,6 @@ from errors import ErrorCode
 from models.account import Account
 from models.era import Era
 from models.praxis import ModerationStatus
-from models.roles import AccountRole, Role
 from services.auth import create_jwt
 from services.vote import cast_vote_on_praxis, void_account_vote_on_join
 from tests.integration.factories import (
@@ -121,14 +120,7 @@ async def test_admin_skips_this_rule_but_not_the_level(
     assert (await cast_vote_on_praxis(admin, target.id, 4, db_session)).vote.value == 4
 
     low = await make_character(db_session, era, username="rv_admin_low", level=0)
-    # make_admin creates the role row; a second admin only needs the link.
-    role = await db_session.scalar(select(Role).where(Role.name == "admin"))
-    db_session.add(
-        AccountRole(
-            account_id=low.account_id, role_id=role.id, granted_by_id=low.account_id
-        )
-    )
-    await db_session.flush()
+    await make_admin(db_session, await db_session.get(Account, low.account_id), commit=False)
     with pytest.raises(HTTPException) as refusal:
         await cast_vote_on_praxis(low, target.id, 4, db_session)
     assert refusal.value.detail["code"] == ErrorCode.vote_level_too_low.value
