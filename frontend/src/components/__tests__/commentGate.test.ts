@@ -21,7 +21,7 @@ describe('comment gate copy', () => {
     const gated = normalizeFeedItem(mention, 2)!.actions[0]
     expect(open.label).toBe('Reply')
     expect(gated.label).toBe('Reach level 2 to reply')
-    expect(gated.href).toBe('/praxis/12')
+    expect(gated.href).toBe('/praxis/12#comment-1')
   })
 
   it('reads the level from the rung that unlocks the comment ability', () => {

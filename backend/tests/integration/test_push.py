@@ -267,6 +267,7 @@ async def _comment(db_session, author, *, praxis=None, task=None, mention=None):
     await push.notify_comment(
         db_session,
         author,
+        comment_id=c.id,
         praxis_id=c.praxis_id,
         task_id=c.task_id,
         mentioned=[mention] if mention else [],
@@ -296,9 +297,16 @@ async def test_comment_tags_name_the_target_type(
     )
     praxis = await make_solo_praxis(db_session, task, character)
     assert praxis.id == task.id
-    await _comment(db_session, character2, praxis=praxis, mention=character)
-    await _comment(db_session, character2, task=task, mention=character)
-    tags = [p["tag"] for p, _ in _queued(db_session)]
+    on_praxis = await _comment(
+        db_session, character2, praxis=praxis, mention=character
+    )
+    on_task = await _comment(db_session, character2, task=task, mention=character)
+    queued = [p for p, _ in _queued(db_session)]
+    assert [p["url"] for p in queued] == [
+        f"/praxis/{praxis.id}#comment-{on_praxis.id}",
+        f"/tasks/{task.id}#comment-{on_task.id}",
+    ]
+    tags = [p["tag"] for p in queued]
     assert tags == [
         f"comment_mention:praxis:{praxis.id}",
         f"comment_mention:task:{task.id}",
