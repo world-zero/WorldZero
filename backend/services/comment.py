@@ -22,7 +22,7 @@ from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_comment
 from services.mod_log import log_mod_action
-from services.praxis import account_already_flagged, can_view_praxis
+from services.praxis import account_already_flagged, can_view_praxis, resolve_flags
 from services.push import notify_comment
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.
@@ -310,7 +310,9 @@ async def flag_comment(
     await session.flush()
 
     count_result = await session.execute(
-        select(func.count()).select_from(Flag).where(Flag.comment_id == comment.id)
+        select(func.count())
+        .select_from(Flag)
+        .where(Flag.comment_id == comment.id, Flag.resolved_at.is_(None))
     )
     if count_result.scalar_one() >= era.comment_flag_review_threshold:
         comment.moderation_status = ModerationStatus.flagged
@@ -341,6 +343,8 @@ async def moderate_comment(
             "That comment was already deleted. Nothing was changed.",
         )
     comment.moderation_status = status
+    if status != ModerationStatus.flagged:
+        await resolve_flags(session, Flag.comment_id == comment_id)
     removed = comment.moderation_status in (
         ModerationStatus.hidden,
         ModerationStatus.deleted,

@@ -1,7 +1,9 @@
 import enum
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import BigInteger, CheckConstraint, ForeignKey, Identity, Index, Text
+from datetime import datetime
+
+from sqlalchemy import DateTime,  BigInteger, CheckConstraint, ForeignKey, Identity, Index, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
@@ -50,6 +52,10 @@ class Flag(CreatedAtMixin, Base):
     )
     reason: Mapped[str] = mapped_column(Text, nullable=False, server_default="other")
     reason_detail: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Set when a mod rules on the target; resolved flags are history, not open reports.
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     praxis: Mapped[Optional["Praxis"]] = relationship(
         "Praxis", back_populates="flags", lazy="raise"
