@@ -32,7 +32,7 @@ class CharacterStats(Base):
     )
     score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     level: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    # Highest level held this era; only the recalc raises it. Gates the level-up push.
+    # Highest level held this era. Gates the level-up push.
     era_peak_level: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
     )
