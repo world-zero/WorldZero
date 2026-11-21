@@ -391,3 +391,27 @@ async def test_the_blocker_cannot_invite_challenge_or_nudge_whom_they_blocked(
     crew = await client.post(f"/praxes/{praxis_collab.id}/nudge", headers=auth_headers)
     assert crew.status_code == 200, crew.text
     assert [row["to_character_id"] for row in crew.json()] == [character3.id]
+
+
+@pytest.mark.asyncio
+async def test_a_blocked_comment_on_my_praxis_is_censored_in_the_feed(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    auth_headers: dict,
+):
+    db_session.add(
+        Comment(
+            praxis_id=praxis_solo.id,
+            created_by_id=character2.id,
+            body_text="secret words",
+        )
+    )
+    await _block(db_session, character, character2)
+
+    feed = (await client.get("/activity-feed", headers=auth_headers)).json()["items"]
+    [item] = [item for item in feed if item["type"] == "comment_on_mine"]
+    assert item["payload"]["excerpt"] == ""
+    assert item["payload"]["is_censored"] is True
