@@ -308,7 +308,7 @@ const BUDGETS = {
  * reading that counts only depth-0 rules — but that reading FAILS OPEN: wrapping a
  * new `.alb` rule in `@media (min-width: …)` would hide it from the count without
  * removing a single selector from the sheet. Under the transparent reading the same
- * commit measures 47 of 319. Today's numbers are 47 of 215 narrow, 50 of 330 here.
+ * commit measures 47 of 319.
  *
  * ONE MORE THING THIS GUARD MUST NOT DO: pass by reading nothing. That is the exact
  * failure `src/test/indexCss.ts` was written to prevent and it applies twice over
