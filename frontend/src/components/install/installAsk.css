@@ -115,10 +115,10 @@
 .wzi-window::after { content: ""; position: absolute; top: 46%; left: 0; right: 0; border-top: 3px solid var(--faction-default-card-text); }
 
 /* ── inline stage: the wisp peeks over the card's top edge ── */
-.wzi-stage .wzi-poke { left: 24px; bottom: calc(100% - 22px); }
+.wzi-stage .wzi-poke { left: 20px; bottom: calc(100% - 22px); }
 .wzi-stage .wzi-say { left: 140px; bottom: calc(100% + 30px); }
 .wzi-stage--window .wzi-window { position: absolute; left: 20px; bottom: calc(100% - 20px); z-index: 0; }
-.wzi-stage--window .wzi-poke { left: 112px; }
+.wzi-stage--window .wzi-poke { left: 118px; bottom: calc(100% - 4px); }
 .wzi-stage--window .wzi-say { left: 214px; max-width: 140px; }
 
 /* ── full-screen steps (iPhone: the wisp points down at Safari's bar; Android: up at the ⋮) ── */
@@ -133,18 +133,18 @@
 .wzi-share-crumbs span:nth-child(4) { left: calc(50% + 2px); bottom: 22px; }
 .wzi-share-crumbs span:nth-child(5) { left: 50%; bottom: 4px; }
 .wzi-shelf { position: absolute; left: 28px; right: 120px; top: min(500px, 58vh); }
-.wzi-add-wisp { right: 28px; top: min(452px, 53vh); }
+.wzi-add-wisp { right: 34px; top: min(482px, 57vh); }
 .wzi-add-say { left: 92px; top: min(610px, 72vh); }
 .wzi-add-crumbs span:nth-child(1) { right: 94px; top: min(528px, 62vh); }
 .wzi-add-crumbs span:nth-child(2) { right: 102px; top: min(524px, 61.5vh); }
 .wzi-center-icon { position: absolute; left: 50%; translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: 8px; top: min(500px, 58vh); }
 .wzi-center-icon--done { top: min(640px, 76vh); }
-.wzi-center-icon .wzi-poke { left: 12px; top: -26px; }
+.wzi-center-icon .wzi-poke { left: 14px; top: -6px; }
 .wzi-center-icon .wzi-icon-word { position: relative; z-index: 2; margin-top: 26px; pointer-events: none; }
 .wzi-tap-say { right: 24px; top: min(456px, 54vh); }
-.wzi-done-wisp { left: 50%; translate: -50% 0; top: min(512px, 61vh); }
+.wzi-done-wisp { left: 50%; translate: -50% 0; top: min(545px, 64vh); }
 .wzi-done-confetti { left: 50%; top: min(560px, 66vh); }
-.wzi-up-wisp { right: 62px; top: 150px; }
+.wzi-up-wisp { right: 97px; top: 181px; }
 .wzi-up-say { left: 24px; top: 196px; }
 .wzi-up-crumbs span:nth-child(1) { right: 90px; top: 150px; }
 .wzi-up-crumbs span:nth-child(2) { right: 72px; top: 118px; }
@@ -155,7 +155,7 @@
 /* ── first open from the home screen ── */
 .wzi-welcome { position: fixed; inset: 0; z-index: 1000; overflow: hidden; background: var(--color-bg-page); }
 .wzi-welcome .wzi-icon { position: absolute; left: 50%; translate: -50% 0; top: min(250px, 30vh); box-shadow: 0 10px 30px color-mix(in srgb, var(--color-text-primary) 25%, transparent); }
-.wzi-welcome .wzi-poke { left: 50%; translate: -50% 0; top: min(96px, 11vh); }
+.wzi-welcome .wzi-poke { left: 50%; translate: -50% 0; top: min(140px, 16vh); }
 .wzi-welcome .wzi-confetti { left: 50%; top: min(250px, 30vh); }
 .wzi-welcome .wzi-sheet { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 26px 26px 0 0; }
 

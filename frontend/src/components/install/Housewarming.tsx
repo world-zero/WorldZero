@@ -43,7 +43,6 @@ export default function Housewarming({ vapidKey, name, platform, onAnswered, onC
       <div className={`wzi-icon wzi-icon--big ${platform === 'android' ? 'wzi-icon--round' : ''}`}>
         <span className="wzi-icon-word">{'WØ'}</span>
       </div>
-      <InstallWisp pose={POSE[step]} confidence={0.95} size={94} hat="teacup" className="" />
       <section className="wzi-sheet wzi-pop" key={step}>
         <div className="wzi-band" />
         {step === 'hello' ? (
@@ -75,6 +74,7 @@ export default function Housewarming({ vapidKey, name, platform, onAnswered, onC
           </>
         )}
       </section>
+      <InstallWisp pose={POSE[step]} confidence={0.95} size={94} hat="teacup" className="" />
     </InstallDialog>
   )
 }
