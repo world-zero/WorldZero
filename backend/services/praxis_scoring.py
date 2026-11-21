@@ -138,8 +138,9 @@ async def compute_owner_contributions(
 
     # Habit bonus as stamped at seal (#1617), never derived: the two callers hold
     # different praxis sets and would disagree (see services.habit_bonus). Each
-    # praxis owner's row only (owner_by_praxis). A query, not ``praxis.members``: in-session praxes
-    # have unloaded collections (lazy load raises ``MissingGreenlet``).
+    # praxis owner's row only (owner_by_praxis). A query, not ``praxis.members``:
+    # in-session praxes have unloaded collections (lazy load raises
+    # ``MissingGreenlet``).
     habit_result = await session.execute(
         select(
             PraxisMember.praxis_id,

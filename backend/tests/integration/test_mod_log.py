@@ -151,7 +151,7 @@ async def test_role_grant_and_revoke_log_once_and_noops_do_not(
 
 @pytest.mark.asyncio
 async def test_log_is_admin_only_newest_first_and_filterable(
-    client, account, account2, auth_headers, auth_headers2, db_session
+    client, account, account2, account3, auth_headers, auth_headers2, db_session
 ):
     denied = await client.get("/admin/mod-log", headers=auth_headers2)
     assert denied.status_code == 403
@@ -169,6 +169,12 @@ async def test_log_is_admin_only_newest_first_and_filterable(
         "/admin/mod-log?target_type=account&target_id=999999", headers=auth_headers
     )
     assert other.json()["items"] == []
+    await assign_or_revoke_role(account3.id, "admin", "grant", account.id, db_session)
+    mine = await client.get(
+        f"/admin/mod-log?target_type=account&target_id={account2.id}",
+        headers=auth_headers,
+    )
+    assert [i["action"] for i in mine.json()["items"]] == ["unsuspend", "suspend"]
 
 
 @pytest.mark.asyncio
