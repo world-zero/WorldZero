@@ -56,6 +56,8 @@ COPY backend/requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
 
 COPY backend/ .
+# The mail wording (services/email.py reads it at this same path relative to backend/).
+COPY frontend/src/locales/en/email.json /frontend/src/locales/en/email.json
 RUN chmod +x start.sh
 
 EXPOSE 8000

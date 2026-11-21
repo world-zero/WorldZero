@@ -96,6 +96,7 @@
     "RELATIONSHIP_NOT_FOUND": "Relationship not found.",
     "RELATIONSHIP_NOT_DECLARER": "Only the declaring party can delete a relationship.",
     "BLOCK_SELF": "You cannot block your own character.",
+    "EMAIL_UNSUBSCRIBE_BAD_TOKEN": "That unsubscribe link is not valid. Open Settings to change your emails.",
     "CONTACT_BLOCKED": "You blocked this player, so you can't reach them.",
     "CONTACT_RATE_LIMITED": "Too many messages from your network. Try again later.",
 

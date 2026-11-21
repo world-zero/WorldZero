@@ -71,6 +71,7 @@ const Disclaimer = lazy(() => withAppCopy(import('./pages/Disclaimer')))
 const Attributions = lazy(() => withAppCopy(import('./pages/Attributions')))
 const Donate = lazy(() => withAppCopy(import('./pages/Donate')))
 const AccountDeleted = lazy(importAccountDeleted)
+const Unsubscribe = lazy(() => withAppCopy(import('./pages/Unsubscribe')))
 const Onboarding = lazy(importOnboarding)
 const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/ReturningCard')))
 const ModStrip = lazy(() => withAppCopy(import('./components/admin/ModStrip')))
@@ -238,6 +239,8 @@ function PlayerRoutes() {
           {/* Post-deletion landing (#2161): unguarded, the session is already
               gone. The delete flow awaits its loader before signing out (#3134). */}
           <Route path="/goodbye" element={<AccountDeleted />} />
+          {/* Footer link of a notification mail (#2164): public, the signed token is the key. */}
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/attributions" element={<Attributions />} />
           <Route path="/donate" element={<Donate />} />

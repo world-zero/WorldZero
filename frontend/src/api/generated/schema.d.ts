@@ -1187,6 +1187,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/email/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unsubscribe Page
+         * @description A mail client without one-click opens the List-Unsubscribe URL with GET.
+         */
+        get: operations["unsubscribe_page_email_unsubscribe_get"];
+        put?: never;
+        /**
+         * Unsubscribe
+         * @description Turn off email for the one event that sent the mail. Idempotent; also the
+         *     target of the one-click ``List-Unsubscribe-Post``.
+         */
+        post: operations["unsubscribe_email_unsubscribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/email/unsubscribe-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unsubscribe All
+         * @description The "turn them all off" button: every row's email, not only this one.
+         */
+        post: operations["unsubscribe_all_email_unsubscribe_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/factions": {
         parameters: {
             query?: never;
@@ -1457,8 +1502,8 @@ export interface paths {
          * My Notification Prefs
          * @description This account's notification switches, resolved, every row (#1047).
          *
-         *     Per account, not character. ``by_email`` is stored intent only (no email is
-         *     sent yet, #2164); ``on_updates`` is live.
+         *     Per account, not character. All three switches are live; ``email_available``
+         *     says whether this server can send mail at all (#2164).
          */
         get: operations["my_notification_prefs_me_notification_prefs_get"];
         /**
@@ -4272,6 +4317,8 @@ export interface components {
          * @description Every row, keyed by event, defaults filled in.
          */
         NotificationPrefsOut: {
+            /** Email Available */
+            email_available: boolean;
             /** Events */
             events: {
                 [key: string]: components["schemas"]["NotificationPrefOut"];
@@ -5389,6 +5436,14 @@ export interface components {
             accepted_at: string;
             /** Version */
             version: string;
+        };
+        /**
+         * UnsubscribeOut
+         * @description The event key whose email was turned off (the page names it).
+         */
+        UnsubscribeOut: {
+            /** Event */
+            event: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -7708,6 +7763,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DuelOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_page_email_unsubscribe_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_email_unsubscribe_post: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_all_email_unsubscribe_all_post: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeOut"];
                 };
             };
             /** @description Validation Error */

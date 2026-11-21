@@ -2,7 +2,7 @@
  * #1047 — the Notifications section. Rules live in `../notificationPrefs.ts` as
  * pure functions so they are assertable without effects. Guards: row keys vs the
  * Python registry, the request locks (owner rule 2026-08-19), the master row, and
- * the email-pending line (#1263).
+ * the email-pending line (#1263; its two states are in `notificationsEmailPending.test.tsx`).
  */
 import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -169,15 +169,12 @@ describe('the card at rest', () => {
   // #3108. No effect runs, so this is the card before its fetch lands.
   const html = renderToStaticMarkup(<NotificationsSection sectionId="sec-notifications" />)
 
-  it('says email is pending, in the catalog wording', () => {
-    expect(html).toContain('data-testid="settings-notifications-email-pending"')
-    expect(html).toContain(
-      i18n.t('common:settings.notifications.emailPending').replaceAll("'", '&#x27;'),
-    )
+  it('does not claim email is pending before the server has said so (#2164)', () => {
+    expect(html).not.toContain('settings-notifications-email-pending')
   })
 
-  it('has no lead — the pending line is the first thing under the title', () => {
-    expect(html).toMatch(/<\/h2><p[^>]*data-testid="settings-notifications-email-pending"/)
+  it('has no lead — the loading line is the first thing under the title', () => {
+    expect(html).toMatch(/<\/h2><p[^>]*data-testid="settings-notifications-status"/)
     // The removed key is guarded by the #1911 literal sweep; never name it here.
   })
 })

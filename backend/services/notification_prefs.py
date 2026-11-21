@@ -2,8 +2,8 @@
 
 Each row has three switches. ``on_updates`` is honoured
 (:func:`muted_feed_types` → ``activity_feed._visible_types``). ``by_push`` is read by
-``services.push.notify``. ``by_email`` is **stored intent only**: nothing sends
-email yet (#2164). Do NOT add an email sender here.
+``services.push.notify``, which also reads ``by_email`` and queues the mail
+(``services.email``, #2164). Do NOT add a sender here.
 
 One JSONB column (no cross-account queries); unset keys resolve to defaults
 here, so adding an event needs no migration.

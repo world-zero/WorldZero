@@ -16,12 +16,16 @@ PUBLIC_NON_GET = {
     # Identity is the signed OAuth session cookie, not a bearer token.
     ("POST", "/auth/returning-player"),
     ("POST", "/contact"),
+    # Read in a mail client, signed out: the signed token is the credential (#2164).
+    ("POST", "/email/unsubscribe"),
+    ("POST", "/email/unsubscribe-all"),
     # Gated by the X-Admin-Cli-Secret header, not a bearer token.
     ("POST", "/admin/cli-token"),
 }
 
 # GET is outside the no-token walk; listed so a rename fails the staleness check.
 PUBLIC_GET = {
+    ("GET", "/email/unsubscribe"),
     ("GET", "/auth/google"),
     ("GET", "/auth/google/callback"),
     ("GET", "/auth/discord"),

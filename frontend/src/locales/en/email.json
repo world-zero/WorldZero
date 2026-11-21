@@ -1,0 +1,53 @@
+{
+  "someone": "Someone",
+  "aTask": "a task",
+  "aFaction": "A faction",
+  "open": "Open it on World Zero",
+  "footer": {
+    "why": "You are getting this because \"{{setting}}\" is switched on for your World Zero account.",
+    "stop": "Stop emails like this one",
+    "settings": "Change what we email you"
+  },
+  "kinds": {
+    "vote_on_mine": {
+      "setting": "Ratings on my praxis",
+      "subject": "{{actor}} rated your praxis",
+      "body": "{{actor}} rated your praxis for {{task}}."
+    },
+    "comment_on_mine": {
+      "setting": "Comments on my praxis",
+      "subject": "{{actor}} commented on your praxis",
+      "body": "{{actor}} commented on your praxis for {{task}}."
+    },
+    "comment_mention": {
+      "setting": "Mentions",
+      "subject": "{{actor}} mentioned you",
+      "body": "{{actor}} mentioned you in a comment on {{task}}."
+    },
+    "duel_challenge": {
+      "setting": "Duel challenges",
+      "subject": "{{actor}} challenged you to a duel",
+      "body": "{{actor}} challenged you to a duel over {{task}}. Answer it from Updates."
+    },
+    "duel_live": {
+      "setting": "Duels I could judge",
+      "subject": "{{actor}} picked a fight",
+      "body": "The duel over {{task}} is open for votes. Somebody has to lose. Go pick who."
+    },
+    "collab_invite": {
+      "setting": "Collaboration invites",
+      "subject": "{{actor}} wants to collaborate",
+      "body": "{{actor}} invited you to join their praxis for {{task}}."
+    },
+    "invitation_letter": {
+      "setting": "Faction invitations",
+      "subject": "{{faction}} invited you",
+      "body": "A letter from {{faction}} is waiting in Updates."
+    },
+    "level_up": {
+      "setting": "Leveling up",
+      "subject": "You levelled up",
+      "body": "You reached a new level. Open World Zero to see what you unlocked."
+    }
+  }
+}

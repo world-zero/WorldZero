@@ -21,3 +21,4 @@ pycrdt-websocket==0.16.9
 
 # Web push encryption + VAPID signing (#3678).
 pywebpush
+cryptography>=50.0.2

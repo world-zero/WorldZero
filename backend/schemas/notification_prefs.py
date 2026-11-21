@@ -13,7 +13,7 @@ class NotificationPrefOut(WireModel):
 
     #: Live; see ``muted_feed_types``.
     on_updates: bool
-    #: Stored intent only; no email sender exists (#2164).
+    #: Live: mailed when Resend is configured (#2164).
     by_email: bool
     #: Defaults to the email default; sent only to a device the player subscribed.
     by_push: bool
@@ -27,6 +27,8 @@ class NotificationPrefsOut(WireModel):
     events: dict[str, NotificationPrefOut]
     #: False when the server has no VAPID keys: Settings must say so.
     push_available: bool
+    #: False when the server has no Resend key: Settings says email is not switched on.
+    email_available: bool
     #: What the browser subscribes against; None exactly when push is unavailable.
     vapid_public_key: str | None
 
