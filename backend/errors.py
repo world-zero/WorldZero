@@ -37,6 +37,7 @@ class ErrorCode(str, enum.Enum):
     collaboration_level_too_low = "COLLABORATION_LEVEL_TOO_LOW"
     duel_level_too_low = "DUEL_LEVEL_TOO_LOW"
     flag_level_too_low = "FLAG_LEVEL_TOO_LOW"
+    praxis_already_ruled = "PRAXIS_ALREADY_RULED"
     comment_level_too_low = "COMMENT_LEVEL_TOO_LOW"
     task_proposal_level_too_low = "TASK_PROPOSAL_LEVEL_TOO_LOW"
     metatask_proposal_level_too_low = "METATASK_PROPOSAL_LEVEL_TOO_LOW"
@@ -99,6 +100,10 @@ class ErrorCode(str, enum.Enum):
     task_faction_unknown = "TASK_FACTION_UNKNOWN"
     #: #3379. A ``hidden`` system faction can't be filed under; 422 like unknown.
     task_faction_hidden = "TASK_FACTION_HIDDEN"
+    #: #3771. Edit/withdraw is for the proposing character only.
+    task_not_yours = "TASK_NOT_YOURS"
+    #: #3771. 409: only a pending proposal can be edited or withdrawn.
+    task_not_pending = "TASK_NOT_PENDING"
     #: #3062. Delete is for import junk with no references; else retire.
     task_has_history = "TASK_HAS_HISTORY"
     #: #3062. A ``seed_key`` row would come back on the next deploy.

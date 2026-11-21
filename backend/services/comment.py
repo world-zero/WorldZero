@@ -192,7 +192,12 @@ async def create_comment(
     await _reconcile_mentions(comment, mentioned, session)
     await session.flush()
     await notify_comment(
-        session, author, praxis_id=praxis_id, task_id=task_id, mentioned=mentioned
+        session,
+        author,
+        comment_id=comment.id,
+        praxis_id=praxis_id,
+        task_id=task_id,
+        mentioned=mentioned,
     )
     return await get_comment(comment.id, session)
 
