@@ -28,6 +28,7 @@ from models.character_stats import CharacterStats
 from models.duel import DuelStatus
 from models.flag import Flag, FlagReason
 from models.praxis import (
+    UNSCORED_MODERATION_STATUSES,
     MediaItem,
     ModerationStatus,
     Praxis,
@@ -58,6 +59,7 @@ from services.era import (
 )
 from services.era_gates import may_create_collab_praxis
 from services.faction_service import faction_permits
+from services.habit_bonus import restamp_after_moderation
 from services.level_jump import consume_level_jump
 from services.media import (
     media_item_out,
@@ -1448,6 +1450,7 @@ async def moderate_praxis(
     except ValueError:
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
+    was_unscored = praxis.moderation_status in UNSCORED_MODERATION_STATUSES
     praxis.moderation_status = mod_enum
     if mod_enum != ModerationStatus.flagged:
         await resolve_flags(session, Flag.praxis_id == praxis_id)
@@ -1466,6 +1469,8 @@ async def moderate_praxis(
 
     await session.flush()
     await _apply_media_publication(praxis, session)
+    if was_unscored != (mod_enum in UNSCORED_MODERATION_STATUSES):
+        await restamp_after_moderation(praxis, session, era)
     await recalculate_members_stats(praxis, session, era, emit_taunts=False)
     return await get_praxis(praxis_id, session)
 
