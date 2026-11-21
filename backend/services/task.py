@@ -859,7 +859,9 @@ async def list_tasks(
         query = query.order_by(Task.created_at.asc(), Task.id.asc())
     else:
         # TaskSort.level or absent; unknown values 422 in the router (#1443).
-        query = query.order_by(Task.level_required.asc(), Task.point_value.desc())
+        query = query.order_by(
+            Task.level_required.asc(), Task.point_value.desc(), Task.id.asc()
+        )
     query = query.limit(limit).offset(offset)
     result = await session.execute(query)
     return list(result.scalars().all())

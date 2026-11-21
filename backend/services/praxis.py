@@ -424,12 +424,14 @@ async def list_praxes(
                 if sort == PraxisSort.most_voted
                 else vote_count.asc(),
                 Praxis.submitted_at.desc(),
+                Praxis.id.desc(),
             )
         else:
             order = (
                 Praxis.submitted_at.asc()
                 if sort == PraxisSort.oldest
                 else Praxis.submitted_at.desc(),
+                Praxis.id.desc(),
             )
     else:
         # id tiebreak keeps pages disjoint on created_at ties (#3061).
