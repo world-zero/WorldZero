@@ -9,10 +9,10 @@ import { factionFill, factionName } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import {
   actionColumnSize,
   detailSignupCta,
-  ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
   TaskDetailComments,

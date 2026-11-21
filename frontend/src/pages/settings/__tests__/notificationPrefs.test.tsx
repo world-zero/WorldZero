@@ -210,7 +210,7 @@ describe('the rendered card', () => {
     }
   })
 
-  it.each(['keys', 'ios', 'denied'] as const)('%s: every Push switch is disabled and points at the reason', (state) => {
+  it.each(['keys', 'ios', 'denied', 'unsupported'] as const)('%s: every Push switch is disabled and points at the reason', (state) => {
     const blocked = renderToStaticMarkup(
       <NotificationRows prefs={DEFAULTS} push={state} onToggle={() => {}} onToggleAll={() => {}} />,
     )

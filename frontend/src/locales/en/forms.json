@@ -139,7 +139,6 @@
       "confirm": "Add it on",
       "removeTitle": "Peel off the metatask?",
       "removeBody": "This removes the {{faction}} metatask and its +{{points}} pts bonus.",
-      "removeCancel": "Keep it",
       "removeConfirm": "Peel it off"
     },
     "invite": {

@@ -78,6 +78,13 @@ describe('BlockedSection', () => {
     expect(h.listBlocks).not.toHaveBeenCalled()
   })
 
+  it('says it could not load, not "no blocks", when listBlocks rejects', async () => {
+    h.listBlocks.mockRejectedValue(new Error('boom'))
+    mount()
+    expect((await screen.findByRole('alert')).textContent).toBe(common.settings.blocked.loadFailed)
+    expect(screen.queryByText(common.settings.blocked.empty)).toBeNull()
+  })
+
   it('keeps the row and says so when Unblock fails', async () => {
     h.listBlocks.mockResolvedValue([ROW(7, 'Reza')])
     h.unblockCharacter.mockRejectedValue(new Error('boom'))
