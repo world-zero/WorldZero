@@ -188,20 +188,20 @@ function AdminRoster() {
           )}
         </ul>
       )}
-      <form onSubmit={(event) => void handleGrant(event)} className="flex gap-2 flex-wrap">
+      <form onSubmit={(event) => void handleGrant(event)} className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_auto] gap-2">
         <input
           type="text"
           aria-label={t("admins.grantLabel")}
           placeholder={t("admins.grantPlaceholder")}
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink flex-1"
+          className="adm-input"
         />
         <select
           aria-label={t("admins.grantPermissionLabel")}
           value={firstPermission}
           onChange={(event) => setFirstPermission(event.target.value as Permission)}
-          className="border-2 border-border bg-card px-3 py-2 font-body content-text focus:outline-hidden focus:border-ink"
+          className="adm-input"
         >
           {PERMISSIONS.map((permission) => (
             <option key={permission} value={permission}>
