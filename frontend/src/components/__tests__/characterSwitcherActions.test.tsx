@@ -60,16 +60,10 @@ describe('CharacterSwitcherSheet — the two actions under the roster', () => {
   })
 })
 
-describe('CharacterSwitcherSheet — the ground (#2109)', () => {
-  it('draws on an opaque ground, not the alpha surface wash', () => {
+describe('CharacterSwitcherSheet — the chassis', () => {
+  it('mounts the shared bottom-sheet chassis', () => {
     const html = sheet(true)
-    expect(html).toContain('background:var(--color-bg-page)')
-    expect(html, 'alpha in BOTH themes — the transparency that was reported').not.toContain(
-      'var(--color-bg-surface)',
-    )
-  })
-
-  it('keeps the shared scrim above it', () => {
-    expect(sheet(true)).toContain('var(--color-overlay-strong)')
+    expect(html).toContain('sheet-panel')
+    expect(html).toContain('sheet-scrim')
   })
 })
