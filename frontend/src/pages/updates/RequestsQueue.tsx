@@ -64,17 +64,25 @@ export default function RequestsQueue() {
       <section id={REQUESTS_QUEUE_ANCHOR} style={{ marginBottom: 'var(--space-lg)' }}>
         {!loading && <p className="label-caption">{t('queue.doneTitle')}</p>}
         {!loading &&
-          otherLives.map((life) => (
-            <button
-              key={life.character_id}
-              type="button"
-              className="label-caption"
-              data-testid={`other-life-${life.character_id}`}
-              onClick={async () => applyUser(await setActiveCharacter(life.character_id))}
-            >
-              {t('queue.otherLife', { count: life.pending_requests_count, name: life.display_name })}
-            </button>
-          ))}
+          otherLives.map((life) => {
+            const label = t('queue.otherLife', {
+              count: life.pending_requests_count,
+              name: life.display_name,
+            })
+            return (
+              <div key={life.character_id}>
+                <button
+                  type="button"
+                  className="label-caption hit-box underline hover:no-underline"
+                  data-testid={`other-life-${life.character_id}`}
+                  aria-label={label}
+                  onClick={async () => applyUser(await setActiveCharacter(life.character_id))}
+                >
+                  {label}
+                </button>
+              </div>
+            )
+          })}
       </section>
     )
   }
