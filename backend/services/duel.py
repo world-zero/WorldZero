@@ -429,7 +429,9 @@ async def respond_to_duel_challenge(
             403, ErrorCode.duel_challenge_not_yours, "This challenge is not for you."
         )
 
-    if duel.status != DuelStatus.pending:
+    # No sweep here (signup lock came first, #3655): a lapsed one reads as resolved.
+    lapsed = duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
+    if duel.status != DuelStatus.pending or datetime.now(timezone.utc) >= lapsed:
         raise_coded(
             400,
             ErrorCode.duel_challenge_already_resolved,

@@ -1388,6 +1388,8 @@ async def submit_praxis(
     praxis = await get_praxis_for_member(
         praxis_id, character_id, "submit", session, lock=True
     )
+    # Praxis lock held, duel rows next: the #3655 order. A late cast stays a forfeit.
+    await _settle_lapsed_duels(session, era)
 
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
     # No doc_state: the loaded room may still hold edits inside the flush window.

@@ -5,9 +5,11 @@ Seam: ``settle_lapsed_duels`` and the public praxis visibility it unblocks.
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from httpx import AsyncClient
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, detail_code
 from game_config import CURRENT_ERA
 from models.character_stats import CharacterStats
 from models.duel import DuelStatus
@@ -15,6 +17,7 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus
+from services.auth import create_jwt
 from services.duel import settle_lapsed_duels
 from services.praxis_visibility import duel_side_hidden_condition
 from tests.integration.factories import make_duel
@@ -157,3 +160,44 @@ async def test_challenge_the_opponent_cannot_accept_declines_at_once(
     assert retired.status == DuelStatus.declined
     assert low.status == DuelStatus.declined
     assert fine.status == DuelStatus.pending
+
+
+def _bearer(character) -> dict:
+    return {"Authorization": f"Bearer {create_jwt(character.account_id)}"}
+
+
+@pytest.mark.asyncio
+async def test_a_lapsed_challenge_cannot_be_accepted(
+    client: AsyncClient, db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, _, opponent = await _duel(
+        db_session, era, "lp7", status=DuelStatus.pending, age_days=DAYS + 1
+    )
+
+    resp = await client.post(
+        f"/duels/{duel.id}/respond", json={"accept": True}, headers=_bearer(opponent)
+    )
+
+    assert resp.status_code == 400, resp.text
+    assert (
+        detail_code(resp.json()["detail"])
+        == ErrorCode.duel_challenge_already_resolved.value
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_cast_past_the_window_is_still_the_opponents_forfeit(
+    client: AsyncClient, db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, _, opponent = await _duel(
+        db_session, era, "lp8", status=DuelStatus.active,
+        age_days=CURRENT_ERA.duel_cast_lapse_days + 1,
+    )
+
+    resp = await client.post(
+        f"/praxes/{duel.opponent_praxis_id}/submit", headers=_bearer(opponent)
+    )
+
+    assert resp.status_code == 200, resp.text
+    await db_session.refresh(duel)
+    assert duel.forfeited_by_character_id == opponent.id
