@@ -31,6 +31,8 @@ DELETED_OPERATIONS: frozenset[tuple[str, str]] = frozenset(
         ("put", "/relationships/{relationship_id}"),
         ("post", "/relationships/{relationship_id}/unblock"),
         ("post", "/admin/characters"),
+        # #3847: no one hand-edits a score; recalculation fixes a wrong one
+        ("patch", "/admin/characters/{character_id}/stats"),
         ("post", "/admin/tasks"),
         ("post", "/admin/factions"),
         ("get", "/characters/{character_id}/praxes"),
@@ -64,7 +66,6 @@ SURVIVING_REPLACEMENTS: frozenset[tuple[str, str]] = frozenset(
 #: Unreachable but kept by owner ruling; a dead-endpoint sweep should skip them.
 KEPT_THOUGH_UNREACHABLE: frozenset[tuple[str, str]] = frozenset(
     {
-        ("patch", "/admin/characters/{character_id}/stats"),
         # #1262/#1386: a plausible future surface; the client's getTaskSignups
         # stays too.
         ("get", "/tasks/{task_id}/signups"),

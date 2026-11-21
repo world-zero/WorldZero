@@ -26,7 +26,7 @@ from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
-from models.roles import AccountRole, Role
+from models.roles import OWNER_ROLE_NAME, AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
 from services.era_tasks import sync_era_tasks
 
@@ -125,10 +125,15 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     session.add(era_row)
     await session.flush()
 
-    print("  >Admin role -> pixie")
-    admin_role = Role(name="admin", description="Full administrative access")
-    session.add(admin_role)
-    await session.flush()
+    print("  >Owner role -> pixie")
+    # The migration inserted the role row; a fresh DB had no account to grant it to.
+    admin_role = (
+        await session.execute(select(Role).where(Role.name == OWNER_ROLE_NAME))
+    ).scalar_one_or_none()
+    if admin_role is None:
+        admin_role = Role(name=OWNER_ROLE_NAME, description="Holds every permission")
+        session.add(admin_role)
+        await session.flush()
 
     session.add(AccountRole(
         account_id=pixie_acc.id,

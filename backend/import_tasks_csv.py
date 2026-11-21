@@ -10,12 +10,11 @@ import asyncio
 import sys
 from pathlib import Path
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from models.account import Account, AccountStatus
-from models.roles import AccountRole, Role
+from models.account import Account
 from script_utils import add_env_argument, get_settings
+from services.admin_service import find_admin_accounts
 from services.task_import import TaskImportError, import_tasks_from_csv
 
 DEFAULT_CSV_PATH = Path.home() / "Downloads" / "W0 tasks - Unsorted.csv"
@@ -23,14 +22,8 @@ DEFAULT_CSV_PATH = Path.home() / "Downloads" / "W0 tasks - Unsorted.csv"
 
 async def _first_admin_account(session) -> Account | None:
     """The CLI has no signed-in user to credit."""
-    result = await session.execute(
-        select(Account)
-        .join(AccountRole, AccountRole.account_id == Account.id)
-        .join(Role, Role.id == AccountRole.role_id)
-        .where(Role.name == "admin", Account.status == AccountStatus.active)
-        .limit(1)
-    )
-    return result.scalar_one_or_none()
+    admins = await find_admin_accounts(session)
+    return admins[0] if admins else None
 
 
 async def run(csv_path: Path, dry_run: bool, env: str) -> int:

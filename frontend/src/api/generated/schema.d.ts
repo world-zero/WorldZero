@@ -250,23 +250,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/characters/{character_id}/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Admin Patch Character Stats */
-        patch: operations["admin_patch_character_stats_admin_characters__character_id__stats_patch"];
-        trace?: never;
-    };
     "/admin/cli-token": {
         parameters: {
             query?: never;
@@ -2453,37 +2436,6 @@ export interface components {
             tagline: string;
             /** Username */
             username: string;
-        };
-        /** CharacterStatsOut */
-        CharacterStatsOut: {
-            /** All Time Score */
-            all_time_score: number;
-            /** Character Id */
-            character_id: number;
-            /** Era Id */
-            era_id: number;
-            /** Id */
-            id: number;
-            /** Level */
-            level: number;
-            /** Score */
-            score: number;
-            /** Votes Available */
-            votes_available: number;
-        };
-        /**
-         * CharacterStatsPatch
-         * @description Only supplied fields are updated.
-         */
-        CharacterStatsPatch: {
-            /** All Time Score */
-            all_time_score?: number | null;
-            /** Level */
-            level?: number | null;
-            /** Score */
-            score?: number | null;
-            /** Votes Available */
-            votes_available?: number | null;
         };
         /**
          * CharacterStatus
@@ -6039,43 +5991,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RemoveFlaggedOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_patch_character_stats_admin_characters__character_id__stats_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CharacterStatsPatch"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterStatsOut"];
                 };
             };
             /** @description Validation Error */

@@ -13,8 +13,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.invitation_letter import InvitationLetter
-from models.roles import AccountRole, Role
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
 from tests.integration.query_capture import capture_selects
 
 
@@ -28,12 +27,7 @@ async def dressed_viewer(
     """Every /auth/me branch live, so the deepest path is counted."""
     account.active_character_id = character.id
 
-    role = Role(name="admin")
-    db_session.add(role)
-    await db_session.flush()
-    db_session.add(
-        AccountRole(account_id=account.id, role_id=role.id, granted_by_id=account.id)
-    )
+    await make_admin(db_session, account, commit=False)
 
     stats = await db_session.scalar(
         select(CharacterStats).where(

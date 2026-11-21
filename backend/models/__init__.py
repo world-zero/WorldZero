@@ -2,7 +2,7 @@
 from models.faction import Faction
 from models.account import Account, AccountTombstone, OAuthProvider
 from models.account_secret_faction import AccountSecretFaction
-from models.roles import Role, AccountRole
+from models.roles import Role, AccountRole, AccountPermission, Permission
 from models.character import Character
 from models.era import Era
 from models.character_stats import CharacterStats
@@ -46,6 +46,8 @@ __all__ = [
     "OAuthProvider",
     "Role",
     "AccountRole",
+    "AccountPermission",
+    "Permission",
     "Character",
     "Era",
     "CharacterStats",

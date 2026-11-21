@@ -8,7 +8,7 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.roles import AccountRole, Role
+from tests.integration.factories import make_admin
 
 
 async def _set_character_level(
@@ -29,13 +29,7 @@ async def _set_character_level(
 
 
 async def _grant_admin(db_session: AsyncSession, account_id: int) -> None:
-    role = Role(name="admin", description="Administrator")
-    db_session.add(role)
-    await db_session.flush()
-    db_session.add(
-        AccountRole(account_id=account_id, role_id=role.id, granted_by_id=account_id)
-    )
-    await db_session.commit()
+    await make_admin(db_session, await db_session.get(Account, account_id))
 
 
 @pytest.mark.asyncio
