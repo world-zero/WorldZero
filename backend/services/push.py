@@ -216,6 +216,7 @@ async def notify_comment(
     session: AsyncSession,
     author: Character,
     *,
+    comment_id: int,
     praxis_id: Optional[int],
     task_id: Optional[int],
     mentioned: list[Character],
@@ -223,7 +224,8 @@ async def notify_comment(
     """Mentions get the mention row; a praxis's own people get comment-on-mine, once."""
     praxis = await session.get(Praxis, praxis_id) if praxis_id else None
     title = await _task_title(session, praxis.task_id if praxis else task_id)
-    url = f"/praxis/{praxis_id}" if praxis_id else f"/tasks/{task_id}"
+    page = f"/praxis/{praxis_id}" if praxis_id else f"/tasks/{task_id}"
+    url = f"{page}#comment-{comment_id}"
     target = f"praxis:{praxis_id}" if praxis_id else f"task:{task_id}"
     since = datetime.now(timezone.utc) - RATING_COLLAPSE_WINDOW
     on_target = (
