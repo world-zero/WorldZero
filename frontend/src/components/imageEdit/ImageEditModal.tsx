@@ -302,7 +302,9 @@ export default function ImageEditModal({
   // Drawn at the root (#2244) so the mobile chrome can't paint over it. See `drawAtRoot`.
   return drawAtRoot(
     <div onClick={onCancel} style={overlayStyle}>
-      <div onClick={(event) => event.stopPropagation()}>{card}</div>
+      <div onClick={(event) => event.stopPropagation()} style={cardShellStyle}>
+        {card}
+      </div>
     </div>,
   )
 }
@@ -311,12 +313,14 @@ const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
   display: 'flex',
-  alignItems: 'center',
   justifyContent: 'center',
+  // Scrolls, card centred by auto margins: align-items centring clips the top of a landscape phone (#3937).
+  overflowY: 'auto',
   padding: 'var(--space-xl)',
   zIndex: 1000,
   background: 'var(--color-overlay-strong)',
 }
+const cardShellStyle: CSSProperties = { margin: 'auto', maxWidth: '100%' }
 const cardStyle: CSSProperties = {
   width: 420,
   maxWidth: '100%',
