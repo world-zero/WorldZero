@@ -64,9 +64,8 @@ export default function ConfirmDialog({
       onClick={(event) => {
         if (event.target === event.currentTarget) onDismiss()
       }}
-      className="fixed inset-0 z-50 flex justify-center"
+      className="fixed inset-0 z-50 flex overflow-y-auto overscroll-contain"
       style={{
-        alignItems: 'var(--sheet-align, center)',
         padding: 'var(--sheet-pad, var(--space-lg))',
         background: 'var(--color-overlay-strong)',
       }}
@@ -82,6 +81,8 @@ export default function ConfirmDialog({
         aria-describedby={bodyId}
         className="flex flex-col"
         style={{
+          // Auto margins, not align-items: a tall sheet overflowing the top is unreachable (#3993).
+          margin: 'var(--sheet-margin, auto)',
           gap: 'var(--space-md)',
           padding: 'var(--space-lg) var(--space-lg) calc(var(--space-lg) + env(safe-area-inset-bottom))',
           width: 'var(--sheet-full, min(440px, 100%))',

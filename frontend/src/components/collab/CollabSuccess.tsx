@@ -40,18 +40,20 @@ export function CollabSuccess({
       role="dialog"
       aria-modal="true"
       aria-label={collabCopy(factionSlug, 'successHeading')}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      // Scrolls with the top reachable on a short screen (#3993): auto margins, not align-items.
+      className="fixed inset-0 z-50 flex overflow-y-auto overscroll-contain p-4"
       style={{
         background: 'var(--takeover-bg, var(--color-overlay-strong))',
         paddingBottom: 'max(var(--space-lg), env(safe-area-inset-bottom))',
       }}
     >
       <div
-        className="flex flex-col items-center justify-center gap-4 p-6"
+        className="m-auto flex flex-col items-center justify-center gap-4 p-6"
         style={{
           background: 'var(--color-bg-page)',
           width: 'var(--sheet-full, min(420px, 100%))',
-          height: 'var(--takeover-height, auto)',
+          // min, not fixed: a long crew grows past the phone takeover (#3993).
+          minHeight: 'var(--takeover-height, auto)',
           border: `var(--sheet-border, 2px solid ${accent})`,
           borderRadius: 'var(--takeover-radius, 8px)',
         }}

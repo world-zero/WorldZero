@@ -38,7 +38,7 @@ describe('phone breakpoint', () => {
 
   it('the composer size vars use MOBILE_QUERY verbatim', () => {
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --composer-max-width`)
-    expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --sheet-align`)
+    expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --sheet-margin`)
     expect(detailCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --detail-row-align`)
     expect(praxisCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --praxis-section-gap`)
     expect(layoutCss).toContain(`@media ${MOBILE_QUERY} {\n  .wz-settings-title {`)
@@ -63,8 +63,8 @@ describe('phone vars the components read', () => {
   })
 
   it('dialog block is exactly these vars', () => {
-    expect(vars(phoneBlock('--sheet-align'))).toEqual({
-      '--sheet-align': 'flex-end',
+    expect(vars(phoneBlock('--sheet-margin'))).toEqual({
+      '--sheet-margin': 'auto 0 0',
       '--sheet-pad': '0',
       '--sheet-full': '100%',
       '--sheet-border': 'none',

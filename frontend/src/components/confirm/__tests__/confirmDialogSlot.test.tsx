@@ -75,3 +75,12 @@ describe('the content slot', () => {
     expect(bare).not.toContain('This ends')
   })
 })
+
+describe('a tall sheet scrolls to its title (#3993)', () => {
+  it('scrolls the overlay and anchors by auto margin, not align-items', () => {
+    const html = markup()
+    expect(html).toContain('fixed inset-0 z-50 flex overflow-y-auto overscroll-contain')
+    expect(html).not.toContain('align-items')
+    expect(html).toContain('margin:var(--sheet-margin, auto)')
+  })
+})

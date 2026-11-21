@@ -210,7 +210,7 @@
    so each dialog keeps its own card width, border and radius. ══ */
 @media (max-width: 767px) and (pointer: coarse) {
   :root {
-    --sheet-align: flex-end;
+    --sheet-margin: auto 0 0;
     --sheet-pad: 0;
     --sheet-full: 100%;
     --sheet-border: none;
