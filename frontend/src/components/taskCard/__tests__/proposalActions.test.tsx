@@ -41,6 +41,8 @@ function pendingTask(slug: string): TaskOut {
     eligible_for_current_user: false,
     start_here: false,
     viewer_faction_multiplier: 1,
+    backdoor_opens_at: null,
+    backdoor_closes_at: null,
   }
 }
 
