@@ -38,7 +38,8 @@
 .b7 .bpos.r1{top:calc(var(--gy) + 52px);--th:50px}
 .b7 .bpos.r2{top:calc(var(--gy) + 114px);--th:112px}
 .b7{animation:b7-shake 7.8s linear infinite;position:relative;width:min(100%,820px);height:360px;--gy:150px;--ay:56px}
-@media (max-width:500px){.b7{height:452px}.b7 .bub{max-width:82px}.b7 .bpos.r2{top:calc(var(--gy) + 158px);--th:156px}}
+@media (max-width:500px){.b7{height:452px}.b7 .bub{max-width:70px;padding-inline:5px;overflow-wrap:anywhere;hyphens:auto}.b7 .bpos{left:clamp(31px,var(--hx),calc(100% - 31px))!important}.b7 .bpos.r2{top:calc(var(--gy) + 158px);--th:156px}}
+@media (max-width:360px){.b7 .bub{max-width:60px;font-size:10px}.b7 .bpos{left:clamp(26px,var(--hx),calc(100% - 26px))!important}}
 .b7 .fb{--s:clamp(28px,calc(4.4cqi + var(--ob-m)*.044),40px)!important}
 .b7 .bub{font-family:var(--bf,var(--bcf))}
 .b7 .bub[data-faction="everymen"]{--bf:var(--font-faction-typewriter)}
