@@ -71,24 +71,12 @@ export function FactionsDirectory({ state }: { state: FactionsDirectoryState }) 
 
       {unaffiliated && (
         <section
-          className="sidebar-card mb-4"
-          style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', padding: 'var(--space-md) var(--space-lg)' }}
+          className="sidebar-card unaffiliated-banner mb-4"
         >
-          <span
-            aria-hidden="true"
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: '50%',
-              flex: 'none',
-              background: 'var(--color-bg-surface-alt)',
-              border: '1px solid var(--color-border)',
-            }}
-          />
+          <span aria-hidden="true" className="unaffiliated-banner-disc" />
           <div>
             <div
-              className="font-display italic"
-              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}
+              className="font-display italic unaffiliated-banner-title"
             >
               {t('mobile.unaffiliatedTitle')}
             </div>
@@ -96,8 +84,7 @@ export function FactionsDirectory({ state }: { state: FactionsDirectoryState }) 
                 faction (ADR-0022); the threshold is unnamed because it lives in
                 EraConfig; delivery is passive. One voice with `index.loggedOutHint`. */}
             <p
-              className="font-body"
-              style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-secondary)', marginTop: 'var(--space-xs)', lineHeight: 1.4 }}
+              className="font-body unaffiliated-banner-body"
             >
               {t('mobile.unaffiliatedBody')}
             </p>
@@ -109,17 +96,13 @@ export function FactionsDirectory({ state }: { state: FactionsDirectoryState }) 
           height and the calls line up along the bottom. */}
       <div
         data-testid="faction-tile-row"
-        className="justify-center md:justify-start"
-        style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2xl)', alignItems: 'stretch' }}
+        className="faction-tile-row justify-center md:justify-start"
       >
         {sortedFactions.map((f) => (
           <div
             key={f.slug}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              opacity: statusFor(f.slug) === STATUS_DEFECTED ? 0.5 : 1,
-            }}
+            className="faction-tile"
+            style={{ opacity: statusFor(f.slug) === STATUS_DEFECTED ? 0.5 : 1 }}
           >
             <FactionSelectCard
               faction={f.slug}

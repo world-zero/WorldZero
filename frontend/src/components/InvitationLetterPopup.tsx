@@ -94,7 +94,7 @@ export default function InvitationLetterPopup({
         alignItems: 'flex-start',
         justifyContent: 'center',
         // Full-bleed on a phone (#3294).
-        padding: mobile ? 0 : 'var(--space-xl)',
+        padding: mobile ? '0 0 env(safe-area-inset-bottom)' : 'var(--space-xl)',
         overflowY: 'auto',
         overscrollBehavior: 'contain',
         zIndex: 1000,

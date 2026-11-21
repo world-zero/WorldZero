@@ -168,7 +168,6 @@ src/pages/AlbescentSecretPlaceholder.tsx
 src/pages/CharacterProfile.tsx
 src/pages/Contact.tsx
 src/pages/EditPraxis.tsx
-src/pages/Factions.tsx
 src/pages/FieldDesk.tsx
 src/pages/Praxes.tsx
 src/pages/ProposeTask.tsx

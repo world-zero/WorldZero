@@ -5,6 +5,7 @@ Parity is over the unfiltered browse's rows, not every ``Task``. Gate 5 reuses
 ``active_member_task_ids_subquery``, which honours Double Dipper (#1359).
 """
 from dataclasses import replace
+from datetime import datetime, timedelta, timezone
 
 import pytest
 import pytest_asyncio
@@ -419,3 +420,35 @@ async def test_route_faction_task_list_is_the_same_for_every_viewer(
 
     assert active_task.id in holder
     assert holder == stranger == anonymous
+
+
+@pytest.mark.asyncio
+async def test_pending_perk_ceiling_is_strictly_below_and_visible_at_level_zero(
+    db_session: AsyncSession, character: Character, era: Era, some_faction: Faction
+):
+    perk_era = replace(
+        CURRENT_ERA,
+        allow_praxis_on_pending_task_factions=frozenset({character.faction_slug}),
+        pending_task_praxis_points_below=30,
+    )
+    assert perk_era.level_to_see_pending_tasks > 0
+    await _set_level(db_session, character, era, level=0)
+    ripe = datetime.now(timezone.utc) - timedelta(
+        hours=perk_era.pending_task_admin_review_hours + 1
+    )
+    cheap = await _make_task(
+        db_session, character, title="29", status=TaskStatus.pending
+    )
+    edge = await _make_task(
+        db_session, character, title="30", status=TaskStatus.pending
+    )
+    cheap.point_value, edge.point_value = 29, 30
+    cheap.created_at = edge.created_at = ripe
+    await db_session.commit()
+
+    eligible = await _assert_parity(db_session, character, perk_era)
+    assert cheap.id in eligible
+    assert edge.id not in eligible
+
+    other = replace(perk_era, allow_praxis_on_pending_task_factions=frozenset())
+    assert cheap.id not in await _assert_parity(db_session, character, other)

@@ -142,7 +142,7 @@ describe('the faction race', () => {
     }
     // Glimpsed but unrevealed: the lane exists and shows the mark (#2409).
     expect(text, 'albescent has a lane').toContain(REDACTED)
-    expect(text, 'and it does not name the society').not.toContain('Albescent')
+    expect(text, 'and it does not name the society').not.toContain('Chromagencia')
     // `na` is a state, not a faction.
     expect(text, 'no unaffiliated lane').not.toContain(factionName(null))
   })

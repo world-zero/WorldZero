@@ -13,7 +13,7 @@ import { REDACTED, setAlbescentRevealed } from "../../../utils/factions";
 
 /** Every authored slot on the tile, in the catalogue's own words. */
 const REAL_COPY = [
-  "Albescent",
+  "Chromagencia",
   "Secrets secrets",
   "Request an audience",
 ];

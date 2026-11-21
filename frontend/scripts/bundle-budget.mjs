@@ -317,7 +317,8 @@ const BUDGETS = {
  * share being capped, and `src/__tests__/albescentCssAllowance.test.ts` asserts
  * that this file's reading of the sheet and `readIndexCss()`'s agree.
  */
-const ALBESCENT_ALLOWANCE = 50
+// 52: +2 for the directory tile name stepping down to its column (#3908).
+const ALBESCENT_ALLOWANCE = 52
 
 /**
  * Below this many top-level class selectors the sheet did not assemble and the

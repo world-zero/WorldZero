@@ -25,7 +25,7 @@ from pycrdt import (
     create_awareness_message,
     read_message,
 )
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.collab_consensus as collab_consensus
@@ -1127,6 +1127,107 @@ async def test_a_refused_submit_absorbs_nothing(
         assert (await _proposal(rooms, praxis_id))[1] is None
 
 
+async def test_a_flush_between_the_commit_and_its_hook_keeps_the_proposal(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """A flush that lands after the row lock drops but before after_commit runs."""
+    praxis_id, character_id, other_id = collab.id, character.id, character2.id
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(praxis_id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(praxis_id, other_id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+            flusher = rooms.server._flushers[room_name_for(praxis_id)]
+            hook = flusher.absorb
+            held: list[dict[str, str]] = []
+            monkeypatch.setattr(flusher, "absorb", held.append)
+
+            await rooms.submit(praxis_id, character_id, doc_state=state)
+            await flusher.write()  # the window: committed, hook not yet run
+            assert (await _proposal(rooms, praxis_id))[1] is not None
+            hook(held[0])
+
+
+async def test_a_flush_between_the_rollback_and_its_hook_still_cancels(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """The flush skips on_room_edit while the submit is in flight; once the
+    submit rolls back, the unseen text must still cancel the proposal."""
+    praxis_id, character_id, other_id = collab.id, character.id, character2.id
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(praxis_id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(praxis_id, other_id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+            flusher = rooms.server._flushers[room_name_for(praxis_id)]
+            hook = flusher.forget
+            monkeypatch.setattr(flusher, "forget", lambda: None)
+
+            async def no_proof(*_args: Any) -> bool:
+                return False
+
+            with monkeypatch.context() as patch:
+                patch.setattr(collab_consensus, "_has_proof", no_proof)
+                with pytest.raises(HTTPException):
+                    await rooms.submit(praxis_id, character_id, doc_state=state)
+            async with rooms.sessions() as session:
+                await session.rollback()
+            await flusher.write()  # the window: rolled back, hook not yet run
+            assert (await _proposal(rooms, praxis_id))[1] is not None
+            hook()
+    # the closing flush runs only if forget() left the document marked changed
+    assert (await _proposal(rooms, praxis_id))[1] is None
+
+
+async def test_a_cooldown_refused_submit_absorbs_nothing(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """429 takes the same post-merge refusal path as the 422 above. It needs the
+    submitter to complete the praxis, so a lone member: an edit with others
+    present clears their approvals first and the cooldown never applies."""
+    praxis_id, character_id = collab.id, character.id
+    await db_session.execute(
+        delete(PraxisMember).where(PraxisMember.character_id == character2.id)
+    )
+    object.__setattr__(CURRENT_ERA, "praxis_post_cooldown_hours", 24)
+    account.last_praxis_posted_at = datetime.now(timezone.utc)
+    await db_session.commit()
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(praxis_id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+
+            with pytest.raises(HTTPException) as refused:
+                await rooms.submit(praxis_id, character_id, doc_state=state)
+            assert refused.value.status_code == 429
+            async with rooms.sessions() as session:
+                await session.rollback()  # get_db's answer to the raise
+
+            flusher = rooms.server._flushers[room_name_for(praxis_id)]
+            assert flusher._absorbed is None
+
+
 async def test_a_submit_that_changes_nothing_still_approves(
     db_session, collab, account2, character, character2, monkeypatch
 ) -> None:
@@ -1340,11 +1441,16 @@ async def test_an_oversized_or_garbled_doc_state_is_refused(
     async with running_rooms(db_session, monkeypatch) as rooms:
         # Opened outside the harness's session lock; a cold open would deadlock.
         await rooms.server.get_room(room_name_for(solo.id))
-        for state, status in ((big, 413), ("not base64!", 422), ("AAEC", 422)):
+        cases = (
+            (big, 413, "PRAXIS_DOC_UPDATE_TOO_LARGE"),
+            ("not base64!", 422, "PRAXIS_DOC_UPDATE_INVALID"),
+            ("AAEC", 422, "PRAXIS_DOC_UPDATE_INVALID"),
+        )
+        for state, status, code in cases:
             with pytest.raises(HTTPException) as refused:
                 await rooms.submit(solo.id, character.id, doc_state=state)
             assert refused.value.status_code == status
-            assert refused.value.detail["code"] == "PRAXIS_DOC_UPDATE_INVALID"
+            assert refused.value.detail["code"] == code
 
 
 async def test_a_solo_seal_flattens_the_live_room_into_the_record(

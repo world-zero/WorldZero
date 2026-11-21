@@ -9,7 +9,7 @@ from enum import Enum
 from typing import List, Optional
 
 from fastapi import HTTPException, UploadFile
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -44,7 +44,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
-from services.backdoor import may_use_door, settle_closed_backdoors
+from services.backdoor import may_use_door
 from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
@@ -95,6 +95,7 @@ from services.signup_eligibility import (
     is_active_member_of_task,
     meets_task_level,
 )
+from services.task import get_task_for_viewer
 from services.vote import void_account_vote_on_join
 from services.vote_tally import counted_votes
 
@@ -483,9 +484,13 @@ async def _check_create_preconditions(
     Returns the task and the stats row the gates judged, so the caller needn't
     re-read (#2873).
     """
-    await settle_closed_backdoors(session)
-    task = await session.get(Task, task_id)
     character = await session.get(Character, character_id)
+    # One visibility rule for reads and writes: a task withheld from this
+    # character (deleted, closed backdoor, pending inside the #1695 window)
+    # looks nonexistent, so a refusal never leaks its title.
+    task = await get_task_for_viewer(session, task_id, character, era=era)
+    if task is None and await session.get(Task, task_id) is not None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     # Deleted tasks (#3305) look nonexistent, and so does a backdoor closed to
     # this character: a refusal that named it would give it away (#3848).
     hidden = task is not None and (
@@ -930,7 +935,7 @@ async def account_already_flagged(
     result = await session.execute(
         select(Flag.id)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(target, Character.account_id == account_id)
+        .where(target, Flag.resolved_at.is_(None), Character.account_id == account_id)
         .limit(1)
     )
     return result.scalar_one_or_none() is not None
@@ -1410,6 +1415,15 @@ async def submit_praxis(
     return await get_praxis_settling_consensus(praxis_id, session, era)
 
 
+async def resolve_flags(session: AsyncSession, target) -> None:
+    """Close the open flags on a target; a ruling keeps them as history."""
+    await session.execute(
+        update(Flag)
+        .where(target, Flag.resolved_at.is_(None))
+        .values(resolved_at=datetime.now(timezone.utc))
+    )
+
+
 async def moderate_praxis(
     praxis_id: int,
     new_status: str,
@@ -1435,6 +1449,8 @@ async def moderate_praxis(
         raise HTTPException(status_code=422, detail=f"Invalid moderation status: {new_status}")
 
     praxis.moderation_status = mod_enum
+    if mod_enum != ModerationStatus.flagged:
+        await resolve_flags(session, Flag.praxis_id == praxis_id)
     if log:
         await log_mod_action(
             session, actor_id, f"praxis_{mod_enum.value}", "praxis", praxis_id,
@@ -1450,7 +1466,7 @@ async def moderate_praxis(
 
     await session.flush()
     await _apply_media_publication(praxis, session)
-    await recalculate_members_stats(praxis, session, era)
+    await recalculate_members_stats(praxis, session, era, emit_taunts=False)
     return await get_praxis(praxis_id, session)
 
 
