@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -116,6 +117,7 @@ export default function EverymenTaskDetail({
   );
   const primaryBar: CSSProperties = {
     display: "block",
+    boxSizing: "border-box",
     width: "100%",
     cursor: "pointer",
     textAlign: "center",
@@ -492,6 +494,8 @@ export default function EverymenTaskDetail({
               display: "block",
               width: "100%",
               marginTop: "var(--space-sm)",
+              ...CARD_CTA,
+              minWidth: 44,
               padding: 0,
               background: "none",
               border: "none",

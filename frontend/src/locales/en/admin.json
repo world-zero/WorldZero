@@ -182,6 +182,17 @@
   "nav": {
     "mod": {
       "label": "Mod",
+      "group": "Moderation",
+      "modeLabel": "Mod mode",
+      "queue": "Mod queue",
+      "queueWithCount_one": "Mod queue, {{count}} waiting",
+      "queueWithCount_other": "Mod queue, {{count}} waiting",
+      "queueReports_one": "{{count}} report",
+      "queueReports_other": "{{count}} reports",
+      "queueMessages_one": "{{count}} message",
+      "queueMessages_other": "{{count}} messages",
+      "queueProposals_one": "{{count}} proposal",
+      "queueProposals_other": "{{count}} proposals",
       "buttonWithCount_one": "Mod, {{count}} waiting",
       "buttonWithCount_other": "Mod, {{count}} waiting",
       "edit": "Edit on the page",
@@ -207,6 +218,19 @@
     "intro": "The popup a player sees on reaching each level, all of them on one page: the rank and everything it unlocks. Press “edit copy” and click any wording to change it.",
     "level": "Level {{level}}"
   },
+  "tauntSheet": {
+    "title": "Taunt copy sheet",
+    "intro": "Every taunt a player can be sent, as it reads in their feed: one section per faction, a row per trigger, every variant. Press “edit copy” and click any wording to change it. The editor will not save a taunt that drops a name.",
+    "default": "Default (any faction without its own)",
+    "from": "Ada",
+    "to": "Bo",
+    "fallback": "(no taunts of its own: players get the default)",
+    "trigger": {
+      "score_overtake": "Passed on the leaderboard",
+      "level_up": "Leveled up",
+      "praxis_complete": "Completed a praxis"
+    }
+  },
   "console": {
     "rail": {
       "label": "Admin",
@@ -231,6 +255,7 @@
         "people": "People",
         "factionCopy": "Faction copy",
         "levelCopy": "Level-up copy",
+        "tauntCopy": "Taunt copy",
         "era": "Roll into a new era…",
         "smallWorld": "Small world",
         "modLog": "Mod log"
@@ -337,6 +362,7 @@
           "comment_flagged": "flagged",
           "task_status": "changed status of",
           "task_delete": "deleted",
+          "task_withdraw": "withdrew",
           "stats_edit": "edited the stats of",
           "role_grant": "granted a role to",
           "role_revoke": "revoked a role from"
@@ -524,6 +550,7 @@
         "task_status": "changed status of",
         "task_edit": "edited",
         "task_delete": "deleted",
+        "task_withdraw": "withdrew",
         "stats_edit": "edited the stats of",
         "role_grant": "made admin",
         "role_revoke": "removed admin",

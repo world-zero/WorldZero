@@ -1658,12 +1658,19 @@ async def _build_fetch_context(
     my_task_ids = tuple(await _get_my_task_ids(character_id, session))
     era_row = await get_current_era_row(session)
     # No stats row this era = level 0.
-    viewer_level = await session.scalar(
-        select(CharacterStats.level).where(
-            CharacterStats.character_id == character_id,
-            CharacterStats.era_id == era_row.id,
+    # One round trip: level (outer-joined, NULL = no stats row) + faction.
+    viewer_level, viewer_faction = (
+        await session.execute(
+            select(CharacterStats.level, Character.faction_slug)
+            .select_from(Character)
+            .outerjoin(
+                CharacterStats,
+                (CharacterStats.character_id == Character.id)
+                & (CharacterStats.era_id == era_row.id),
+            )
+            .where(Character.id == character_id)
         )
-    )
+    ).one()
 
     return (
         FeedContext(
@@ -1675,7 +1682,9 @@ async def _build_fetch_context(
             before=before_cursor,
             unanswered_requests_only=not archived,
             sees_metatasks=character_sees_metatasks(
-                viewer_level or 0, era_config_for_key(era_row.config_key)
+                viewer_level or 0,
+                viewer_faction,
+                era_config_for_key(era_row.config_key),
             ),
         ),
         archive_view,
@@ -1905,7 +1914,8 @@ async def dismiss_feed_items_for_filter(
     """Archive everything the given filter would currently return. One call.
 
     Re-runs the visible feed so scope matches the tab. Non-archivable rows are
-    skipped, not refused.
+    skipped, not refused; so are pending requests, which ignore the archive.
+    Only the queue tabs hold pending ones: the stream tabs show answered ones.
     """
     feed = await get_activity_feed(
         character_id=character_id,
@@ -1913,8 +1923,12 @@ async def dismiss_feed_items_for_filter(
         feed_filter=feed_filter,
         limit=ARCHIVE_ALL_LIMIT,
     )
+    in_stream = _normalise_filter(feed_filter) in STREAM_FILTERS
     item_keys = [
-        item.item_key for item in feed.items if item.type in ARCHIVABLE_ITEM_TYPES
+        item.item_key
+        for item in feed.items
+        if item.type in ARCHIVABLE_ITEM_TYPES
+        and (in_stream or item.type not in ARCHIVE_PROOF_WHEN_UNANSWERED)
     ]
     return await _insert_dismissals(character_id, item_keys, session)
 

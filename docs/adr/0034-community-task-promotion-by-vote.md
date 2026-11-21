@@ -28,8 +28,8 @@ A proposed task lands `pending` (`services/task.py::propose_task`, gated at
 `era.level_to_propose_task` = L3) and only an **admin** can flip it to `active`
 (`routers/admin.py::approve_task` *[2026-11-18, #3425: now `PUT /admin/tasks/{task_id}/status`]*). Approval is therefore a single-gatekeeper
 bottleneck. The level table has long promised a L5 unlock — "Vote to promote
-level-0 tasks" — but it was never built (at the time the L5 `voyager` `LevelProfile` was
-whimsy-only; *[2026-11-19, #3556: it now unlocks `see_metatasks`, `propose_metatask` and `apply_metatasks`, gated by `era.level_to_propose_metatask`]*).
+level-0 tasks" — but it was never built (the L5 `voyager` `LevelProfile` is
+~~whimsy-only, and `test_level_5_has_no_hard_gate_sense_only` asserts exactly that~~ *[2026-11-18, #3425: that test no longer exists]* *[2026-11-19, #3556: it now unlocks `see_metatasks`, `propose_metatask` and `apply_metatasks`, gated by `era.level_to_propose_metatask`]*).
 
 "Level-0 task" and "promote" were undefined. This ADR pins them.
 
@@ -55,7 +55,7 @@ approve/retire stay untouched as the override / safety valve.
 - **Scope — any `pending` task, standard *or* metatask.** "Level-0" in the spec is
   descriptive (proposed tasks default to `level_required = 0`), not a gate: a task's own
   `level_required` is irrelevant to whether it can be promoted. This deliberately lets
-  the L5+ crowd promote pending *metatasks* too (*[2026-11-19, #3556: L5 can propose them as well, `era.level_to_propose_metatask`]*) — an
+  the L5+ crowd promote pending *metatasks* too (~~which only L6+ can propose~~ *[2026-11-19, #3556: L5 can propose them as well, `era.level_to_propose_metatask`]*) — an
   intentional widening, accepted.
 
 - **Threshold — proportional to the eligible pool, with a floor.**

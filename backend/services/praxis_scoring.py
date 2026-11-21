@@ -137,9 +137,10 @@ async def compute_owner_contributions(
     meta_points = await get_meta_task_points_bulk(praxis_ids, session=session)
 
     # Habit bonus as stamped at seal (#1617), never derived: the two callers hold
-    # different praxis sets and would disagree (see services.habit_bonus). This
-    # character's rows only. A query, not ``praxis.members``: in-session praxes
-    # have unloaded collections (lazy load raises ``MissingGreenlet``).
+    # different praxis sets and would disagree (see services.habit_bonus). Each
+    # praxis owner's row only (owner_by_praxis). A query, not ``praxis.members``:
+    # in-session praxes have unloaded collections (lazy load raises
+    # ``MissingGreenlet``).
     habit_result = await session.execute(
         select(
             PraxisMember.praxis_id,

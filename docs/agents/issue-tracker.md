@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and PRDs for this repo live as GitHub issues on `pixieofhugs/WorldZeroPlayground`. Use the `gh` CLI for all operations.
+Issues and PRDs for this repo live as GitHub issues on `world-zero/WorldZero`. Use the `gh` CLI for all operations.
 
 ## Conventions
 
@@ -36,17 +36,17 @@ already expresses both relationships natively — the same mechanism the `needs-
 - **Map**: one issue labelled `wayfinder:map`, holding the Destination / Notes / Decisions-so-far /
   Not-yet-specified / Out-of-scope body. `gh issue create --label wayfinder:map`.
 - **Child ticket**: a native GitHub sub-issue of the map —
-  `gh api --method POST repos/pixieofhugs/WorldZeroPlayground/issues/<map>/sub_issues -F sub_issue_id=<child-db-id>`.
+  `gh api --method POST repos/world-zero/WorldZero/issues/<map>/sub_issues -F sub_issue_id=<child-db-id>`.
   Labels: `wayfinder:<type>` (`research` / `prototype` / `grilling` / `task`).
 - **Blocking**: native issue dependencies —
-  `gh api --method POST repos/pixieofhugs/WorldZeroPlayground/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`.
-  Both endpoints take the numeric **database id** (`gh api repos/pixieofhugs/WorldZeroPlayground/issues/<n> --jq .id`),
+  `gh api --method POST repos/world-zero/WorldZero/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`.
+  Both endpoints take the numeric **database id** (`gh api repos/world-zero/WorldZero/issues/<n> --jq .id`),
   not the `#number` or `node_id`, and **must** use `-F` — `-f` sends a string and 422s.
 - **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write. The assignee *is* the
   claim; an open unassigned child is unclaimed.
 - **Frontier query**: the map's open children, minus any with an open blocker or an assignee; first
   in map order wins. Read both relationships back with the **GET** side of the same two endpoints —
-  `gh api repos/pixieofhugs/WorldZeroPlayground/issues/<map>/sub_issues` returns the children as
+  `gh api repos/world-zero/WorldZero/issues/<map>/sub_issues` returns the children as
   full issue objects (`state`, `assignee`), and `.../issues/<n>/dependencies/blocked_by` returns the
   blockers, so "open blocker" is a `state` check on that list. Do **not** reach for the
   `issue_dependencies_summary` / `sub_issues_summary` fields some GitHub docs describe: this repo's

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import push from '../locales/en/push.json'
 // @ts-expect-error classic-script worker with no types; vite-node supplies the `module` its guard exports to.
-import { route, isShell, shellUrls, pushMessage, safeUrl, focusOrOpen } from '../../public/sw.js'
+import { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen } from '../../public/sw.js'
 
 const O = 'https://worldzero.org'
 
@@ -39,7 +39,7 @@ describe('shellUrls', () => {
   })
 })
 
-const S = { ...push, origin: O }
+const S = { ...push, factions: { coven: 'Cozy Coven' }, origin: O }
 
 describe('pushMessage', () => {
   it('heads with the character and collapses ratings under one tag', () => {
@@ -53,10 +53,33 @@ describe('pushMessage', () => {
     expect(m.options.data.url).toBe('/praxis/7')
     expect(m.options.body).not.toMatch(/vote/i)
   })
+  it('collapses several mentions', () => {
+    const m = pushMessage({ kind: 'comment_mention', character: 'X', actor: 'Juniper', task: 'Find a Cool Stick', count: 3 }, S)
+    expect(m.options.body).toContain('3 new mentions')
+    expect(m.options.body).toContain('Juniper and 2 more mentioned you on Find a Cool Stick.')
+  })
   it('falls back for a missing actor, task or unknown kind', () => {
     const m = pushMessage({ kind: 'nope', url: '/', character: 'X', actor: null, task: null, count: null }, S)
     expect(m.options.body).toBe('Something happened\nOpen World Zero to see.')
     expect(pushMessage({ kind: 'comment_mention', character: 'X' }, S).options.body).toContain('Someone mentioned you')
+  })
+})
+
+describe('invitation_letter', () => {
+  const body = (faction?: string | null) => pushMessage({ kind: 'invitation_letter', character: 'X', faction }, S).options.body
+  it('names the faction, never Someone', () => {
+    expect(body('coven')).toContain('Cozy Coven invited you')
+    expect(body('nope')).toContain('A faction invited you')
+    expect(body(null)).toContain('A faction invited you')
+    expect(body()).not.toContain('Someone')
+  })
+})
+
+describe('pushMessageSafe', () => {
+  it('still shows a line when the strings are missing', () => {
+    const m = pushMessageSafe({ kind: 'vote_on_mine', character: 'X' }, { origin: O })
+    expect(m.title).toBe('World Zero')
+    expect(m.options.data.url).toBe('/')
   })
 })
 
@@ -75,6 +98,7 @@ describe('focusOrOpen', () => {
     const clients = { matchAll: async () => [c], openWindow: vi.fn() }
     await focusOrOpen(clients, '/tasks')
     expect(c.navigate).toHaveBeenCalledWith('/tasks')
+    expect(c.navigate.mock.invocationCallOrder[0]).toBeLessThan(c.focus.mock.invocationCallOrder[0])
     expect(clients.openWindow).not.toHaveBeenCalled()
   })
   it('opens a window when none is open or navigate is refused', async () => {

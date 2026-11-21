@@ -34,6 +34,7 @@
     "addFoe": "Foe"
   },
   "profile": {
+    "loadError": "Couldn't load this character.",
     "praxisHeading": "Praxis",
     "praxisEyebrow": "Submitted by {{name}}",
     "praxisEmptyTitle": "No praxis submitted yet.",
@@ -42,7 +43,7 @@
     "proposedTasksHeading": "Proposed tasks",
     "proposedTasksTotal": "{{count}} total",
     "proposedTasksEmpty": "No proposed tasks yet.",
-    "handleJoined": "@{{username}} · joined {{joined}}",
+    "joined": "joined {{joined}}",
     "lvl": "Level",
     "ptsThisLevel": "{{current}} / {{span}} pts this level",
     "nextLevel": "next · lvl {{level}}",
@@ -74,8 +75,7 @@
       "heading": "Faction Points",
       "share": "{{share}}%",
       "more_one": "{{count}} more faction",
-      "more_other": "{{count}} more factions",
-      "fewer": "Show fewer"
+      "more_other": "{{count}} more factions"
     },
     "roster": {
       "heading": "Players",
@@ -213,9 +213,21 @@
     "updates": "Updates",
     "updatesWithPending_one": "Updates — {{count}} pending request",
     "updatesWithPending_other": "Updates — {{count}} pending requests",
-    "bell": "Requests — nothing waiting on you",
-    "bellWithPending_one": "Requests — {{count}} waiting on you",
-    "bellWithPending_other": "Requests — {{count}} waiting on you",
+    "primary": "Main",
+    "community": "Community",
+    "you": "You",
+    "youWithPending_one": "You — {{count}} request waiting on you",
+    "youWithPending_other": "You — {{count}} requests waiting on you",
+    "youAdminLabel": "You: {{parts}}",
+    "youPartRequests_one": "{{count}} request",
+    "youPartRequests_other": "{{count}} requests",
+    "youPartMod_one": "{{count}} moderation item",
+    "youPartMod_other": "{{count}} moderation items",
+    "youRequests_one": "{{count}} request waiting on you",
+    "youRequests_other": "{{count}} requests waiting on you",
+    "youMeta": "Level {{level}} · {{faction}}",
+    "youProfile": "Your profile",
+    "youClose": "Close",
     "createCharacter": "create character",
     "login": "Login"
   },
@@ -417,8 +429,7 @@
       },
       "push": {
         "title": "Push to this phone",
-        "unsupported": "This browser can’t receive push notifications. Try your browser proper, or add World Zero to your home screen.",
-        "failed": "Couldn’t turn on push for this phone. Give it a moment and try again.",
+                "failed": "Couldn’t turn on push for this phone. Give it a moment and try again.",
         "ios": {
           "when": "IPHONE, NOT ON THE HOME SCREEN",
           "note": "iPhones only deliver notifications to the home-screen app. Put World Zero there first, then open it from the icon.",
@@ -429,6 +440,11 @@
           "when": "YOU SAID NO TO THE BROWSER",
           "note": "Your browser is blocking World Zero. Unblock notifications in this site’s settings, then come back. We can’t ask twice; browsers don’t let us.",
           "label": "Push to this phone — notifications are blocked in your browser settings"
+        },
+        "unsupported": {
+          "when": "THIS BROWSER CAN’T DO PUSH",
+          "note": "This browser can’t receive push notifications. Try your browser proper, or add World Zero to your home screen.",
+          "label": "Push to this phone — this browser can’t receive push notifications"
         },
         "keys": {
           "when": "NO PUSH KEYS ON THIS SERVER",
@@ -476,6 +492,7 @@
         "sessionHint": "A yes-or-no note that you were signed in last visit, so the likely page can start loading sooner. Never used to decide what you are shown.",
         "adminMode": "Whether a moderator left the admin view switched on.",
         "sidebarCollapsed": "Whether the side rail is folded away.",
+        "communitySide": "Whether the phone's Community tab opens Players or Factions.",
         "sidebarPanels": "The order of the side rail's panels and which are folded. One entry for each account signed in on this browser.",
         "factionSections": "Which galleries on a faction page you left folded. One entry for each account signed in on this browser.",
         "profileSections": "Which galleries on a character profile you left folded. One entry for each account signed in on this browser.",
@@ -507,6 +524,14 @@
       "requestSending": "Sending…",
       "requestSent": "Thanks — we'll let you know if enough players ask for the same one.",
       "requestError": "That did not send. Try again in a moment."
+    },
+    "blocked": {
+      "eyebrow": "Blocked",
+      "lead": "Blocked players can't taunt you, and you won't see them in your friends-and-foes feed. They aren't told.",
+      "empty": "You haven't blocked anyone. Block someone from their profile and they'll be listed here.",
+      "blockedOn": "Blocked {{date}}",
+      "unblock": "Unblock",
+      "unblockFailed": "Could not unblock {{name}}. Try again."
     },
     "data": {
       "eyebrow": "Your data",

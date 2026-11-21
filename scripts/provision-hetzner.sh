@@ -728,7 +728,7 @@ stage "Create the 'production' environment"
 say "This is the human approval gate. Without it, a stray v* tag push ships to"
 say "production unreviewed."
 printf '\n'
-open_url "https://github.com/pixieofhugs/WorldZeroPlayground/settings/environments"
+open_url "https://github.com/world-zero/WorldZero/settings/environments"
 step "New environment -> name it exactly: production"
 step "Tick 'Required reviewers' and add yourself."
 step "Under 'Deployment branches and tags', add a rule for: v*"

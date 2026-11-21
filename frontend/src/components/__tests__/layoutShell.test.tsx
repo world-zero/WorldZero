@@ -22,7 +22,6 @@ vi.mock('../backdrop/FactionBackdrop', () => ({ default: () => null }))
 vi.mock('../LevelUpWatcher', () => ({ default: () => null }))
 vi.mock('../InvitationWatcher', () => ({ default: () => null }))
 vi.mock('../NavBar', () => ({ default: () => <nav data-test="navbar" /> }))
-vi.mock('../layout/MobileHeader', () => ({ default: () => <header data-test="mobile-header" /> }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => <nav data-test="tabbar" /> }))
 // The fold-away handle borrows `panelStyle` (#1191).
 vi.mock('../layout/Sidebar', () => ({
@@ -77,7 +76,7 @@ describe('Layout shell', () => {
 
   it('swaps only the chrome on a phone', () => {
     const html = render('mobile')
-    expect(html).toContain('data-test="mobile-header"')
+    expect(html).not.toContain('<header')
     expect(html).toContain('data-test="tabbar"')
     expect(html).not.toContain('data-test="navbar"')
     expect(html).not.toContain('data-test="sidebar"')
@@ -89,7 +88,7 @@ describe('Layout shell', () => {
     expect(hrefs.filter((h) => h !== '/tasks')).toEqual(
       expect.arrayContaining(['/about', '/contact', '/disclaimer', '/attributions', '/donate']),
     )
-    expect(html).toContain('padding-bottom:calc(var(--space-md) + var(--tab-bar-clearance))')
+    expect(html).toContain('padding-bottom:calc(var(--space-md) + var(--tab-bar-clearance) + (44px - 1lh) / 2)')
     expect(html.indexOf('<footer')).toBeGreaterThan(html.indexOf(PAGE_MARKER))
   })
 
@@ -100,6 +99,5 @@ describe('Layout shell', () => {
     expect(html).not.toContain('--tab-bar-clearance')
     expect(html).toContain('data-test="sidebar"')
     expect(html).not.toContain('data-test="tabbar"')
-    expect(html).not.toContain('data-test="mobile-header"')
   })
 })

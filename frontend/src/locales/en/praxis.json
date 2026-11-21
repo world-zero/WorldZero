@@ -6,6 +6,7 @@
   "listPage": {
     "title": "Praxis",
     "loading": "Loading praxis…",
+    "loadError": "Couldn't load praxis.",
     "empty": "No praxis yet. Be the first.",
     "emptyFiltered": "Nothing filed under those terms. Clear the search or pick a different faction.",
     "emptyCaughtUp": "All caught up",
@@ -19,7 +20,7 @@
     },
     "filter": {
       "showLabel": "Show",
-      "searchPlaceholder": "Search proof, task, or player…",
+      "searchPlaceholder": "Proof, task or player…",
       "searchLabel": "Search praxis",
       "all": "Every praxis",
       "needsMyVote": "Needs my vote",
@@ -183,6 +184,13 @@
     "editError": "Could not save the edit.",
     "withdrawError": "Could not withdraw the comment.",
     "time": {
+      "compact": {
+        "days": "{{count}}d ago",
+        "hours": "{{count}}h ago",
+        "minutes": "{{count}}m ago",
+        "months": "{{count}}mo ago",
+        "now": "just now"
+      },
       "default": {
         "days_one": "{{count}} day ago",
         "days_other": "{{count}} days ago",

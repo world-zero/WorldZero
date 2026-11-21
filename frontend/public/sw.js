@@ -2,7 +2,7 @@
 // No skipWaiting: a new worker activates the next time the app is opened, never mid-session.
 const CACHE = 'wz-shell-v1'
 const SHELL = '/index.html'
-// vite.config.ts swaps this null for src/locales/en/push.json at build (ADR-0031: one source for the wording).
+// vite.config.ts swaps this null for src/locales/en/push.json plus factions.json names at build (ADR-0031: one source for the wording).
 const PUSH_STRINGS = null
 
 // 'nav' = network-first page load, 'asset' = cache-first hashed file, null = leave to the network.
@@ -28,11 +28,20 @@ const fill = (tpl, v) => tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => v[k])
 function pushMessage(p, S) {
   const k = (S.kinds && (S.kinds[p.kind] || S.kinds.default)) || { title: '', body: '' }
   const many = p.count > 1 && k.titleMany
-  const v = { actor: p.actor || S.someone, task: p.task || S.aTask, count: p.count, others: p.count - 1 }
+  const v = { actor: p.actor || S.someone, task: p.task || S.aTask, faction: (S.factions && S.factions[p.faction]) || S.aFaction, count: p.count, others: p.count - 1 }
   const board = `${fill(many ? k.titleMany : k.title, v)}\n${fill(many ? k.bodyMany : k.body, v)}`
   return {
     title: p.character ? fill(S.heading, { character: p.character }) : S.headingAnon,
     options: { body: board, tag: p.tag || p.kind, data: { url: safeUrl(p.url, S.origin) }, icon: '/icon-192.png' },
+  }
+}
+
+// Chrome on Android drops a push that shows nothing, so a throw while building the text still shows a line.
+function pushMessageSafe(p, S) {
+  try {
+    return pushMessage(p, S)
+  } catch {
+    return { title: 'World Zero', options: { tag: 'wz', data: { url: '/' }, icon: '/icon-192.png' } }
   }
 }
 
@@ -50,8 +59,9 @@ async function focusOrOpen(clients, url) {
   const open = (await clients.matchAll({ type: 'window', includeUncontrolled: true })).find((c) => 'focus' in c)
   if (open) {
     try {
-      await open.focus()
+      // Navigate first: on an uncontrolled client focus() spends the one window interaction.
       await open.navigate(url)
+      await open.focus()
       return
     } catch {
       // navigate refused (uncontrolled client): fall through to a new window
@@ -60,7 +70,7 @@ async function focusOrOpen(clients, url) {
   await clients.openWindow(url)
 }
 
-if (typeof module !== 'undefined') module.exports = { route, isShell, shellUrls, pushMessage, safeUrl, focusOrOpen }
+if (typeof module !== 'undefined') module.exports = { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen }
 
 if (typeof self !== 'undefined' && self.addEventListener) {
   // Precache so a first visit works offline. No clients.claim: the next navigation is controlled by the
@@ -97,7 +107,7 @@ if (typeof self !== 'undefined' && self.addEventListener) {
     } catch {
       // A push must still show something: the default kind is the generic line.
     }
-    const m = pushMessage(p, { ...PUSH_STRINGS, origin: self.location.origin })
+    const m = pushMessageSafe(p, { ...PUSH_STRINGS, origin: self.location.origin })
     event.waitUntil(self.registration.showNotification(m.title, m.options))
   })
 

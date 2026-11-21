@@ -7,16 +7,19 @@ event real.
 """
 
 import asyncio
+import base64
 import json
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from functools import partial
+from functools import cache, partial
 from typing import Awaitable, Callable, Optional
 
 import requests
+from cryptography.hazmat.primitives import serialization
+from py_vapid import Vapid
 from pywebpush import WebPushException, webpush
-from sqlalchemy import delete, event, func, select
+from sqlalchemy import delete, distinct, event, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
@@ -49,6 +52,8 @@ logger = logging.getLogger(__name__)
 GONE_STATUSES = frozenset({404, 410})
 #: How long a push service holds a push for an offline device.
 PUSH_TTL_SECONDS = 86400
+#: A stalled push service must not hold the serial batch behind it.
+PUSH_TIMEOUT_SECONDS = 10
 #: Ratings on one praxis inside this window collapse into one "N new ratings".
 RATING_COLLAPSE_WINDOW = timedelta(hours=24)
 
@@ -56,12 +61,42 @@ _OUTBOX = "push_outbox"
 _in_flight: set[asyncio.Task] = set()
 
 
+@cache
+def _vapid_problem(public: str, private: str, contact: str) -> Optional[str]:
+    """What is wrong with the VAPID config, or None. Cached: logs once per config."""
+    if not (public and private and contact):
+        return "VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_CONTACT must all be set"
+    if not contact.startswith(("mailto:", "https:")):
+        return "VAPID_CONTACT must start with mailto: or https:"
+    try:
+        derived = Vapid.from_string(private).public_key.public_bytes(
+            serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint
+        )
+    except Exception as error:
+        return f"VAPID_PRIVATE_KEY does not parse ({type(error).__name__})"
+    if base64.urlsafe_b64encode(derived).rstrip(b"=").decode() != public.rstrip("="):
+        return "VAPID_PUBLIC_KEY is not the public half of VAPID_PRIVATE_KEY"
+    return None
+
+
 def push_available() -> bool:
-    return bool(
-        settings.VAPID_PUBLIC_KEY
-        and settings.VAPID_PRIVATE_KEY
-        and settings.VAPID_CONTACT
+    """On only when the keys are all set and consistent; a broken set logs an ERROR."""
+    cfg = (
+        settings.VAPID_PUBLIC_KEY,
+        settings.VAPID_PRIVATE_KEY,
+        settings.VAPID_CONTACT,
     )
+    if not (cfg[0] or cfg[1]):  # keys blank on purpose: push is simply off
+        return False
+    problem = _vapid_problem(*cfg)
+    if problem:
+        _log_vapid_once(problem)
+    return problem is None
+
+
+@cache
+def _log_vapid_once(problem: str) -> None:
+    logger.error("Web push is OFF: %s", problem)
 
 
 @dataclass(frozen=True)
@@ -70,6 +105,35 @@ class Target:
     endpoint: str
     p256dh: str
     auth: str
+
+
+
+async def subscribe_device(
+    session: AsyncSession, account_id: int, endpoint: str, p256dh: str, auth: str
+) -> None:
+    """Idempotent on endpoint. A device belongs to whoever subscribed last: a browser
+    holds one subscription per origin, so a shared phone must not keep pushing the
+    previous account's events."""
+    existing = await session.scalar(
+        select(PushSubscription).where(PushSubscription.endpoint == endpoint)
+    )
+    if existing is None:
+        existing = PushSubscription(endpoint=endpoint)
+        session.add(existing)
+    existing.account_id = account_id
+    existing.p256dh = p256dh
+    existing.auth = auth
+
+
+async def unsubscribe_device(
+    session: AsyncSession, account_id: int, endpoint: str
+) -> None:
+    await session.execute(
+        delete(PushSubscription).where(
+            PushSubscription.endpoint == endpoint,
+            PushSubscription.account_id == account_id,
+        )
+    )
 
 
 def _send_one(target: Target, body: str) -> None:
@@ -87,6 +151,7 @@ def _send_one(target: Target, body: str) -> None:
         # A fresh dict each call: pywebpush writes the audience into it.
         vapid_claims={"sub": settings.VAPID_CONTACT},
         ttl=PUSH_TTL_SECONDS,
+        timeout=PUSH_TIMEOUT_SECONDS,
     )
 
 
@@ -106,8 +171,11 @@ async def deliver(
                 if status in GONE_STATUSES:
                     gone.append(target.id)
                 else:
-                    logger.warning(
-                        "push to subscription %s failed: %s", target.id, error
+                    logger.error(
+                        "push to subscription %s rejected: status=%s reason=%s",
+                        target.id,
+                        status,
+                        (getattr(error.response, "text", "") or str(error))[:200],
                     )
             except Exception:
                 logger.exception("push to subscription %s crashed", target.id)
@@ -143,6 +211,7 @@ async def notify(
     actor: Optional[Character] = None,
     task_title: Optional[str] = None,
     count: Optional[int] = None,
+    faction: Optional[str] = None,
 ) -> None:
     """Queue a push for a character's account if it is on, wanted and has a device."""
     if not push_available():
@@ -174,6 +243,7 @@ async def notify(
         "actor": actor.display_name if actor else None,
         "task": task_title,
         "count": count,
+        "faction": faction,
     }
     targets = [Target(s.id, s.endpoint, s.p256dh, s.auth) for s in subscriptions]
     session.sync_session.info.setdefault(_OUTBOX, []).append((payload, targets))
@@ -216,6 +286,7 @@ async def notify_comment(
     session: AsyncSession,
     author: Character,
     *,
+    comment_id: int,
     praxis_id: Optional[int],
     task_id: Optional[int],
     mentioned: list[Character],
@@ -223,7 +294,8 @@ async def notify_comment(
     """Mentions get the mention row; a praxis's own people get comment-on-mine, once."""
     praxis = await session.get(Praxis, praxis_id) if praxis_id else None
     title = await _task_title(session, praxis.task_id if praxis else task_id)
-    url = f"/praxis/{praxis_id}" if praxis_id else f"/tasks/{task_id}"
+    page = f"/praxis/{praxis_id}" if praxis_id else f"/tasks/{task_id}"
+    url = f"{page}#comment-{comment_id}"
     target = f"praxis:{praxis_id}" if praxis_id else f"task:{task_id}"
     since = datetime.now(timezone.utc) - RATING_COLLAPSE_WINDOW
     on_target = (
@@ -242,14 +314,14 @@ async def notify_comment(
     for recipient_id, kind in recipients.items():
         if kind == FEED_ITEM_TYPE_COMMENT_MENTION:
             recent = await session.scalar(
-                select(func.count())
+                select(func.count(distinct(Comment.created_by_id)))
                 .select_from(CommentMention)
                 .join(Comment, Comment.id == CommentMention.comment_id)
                 .where(CommentMention.mentioned_character_id == recipient_id, *live)
             )
         else:
             recent = await session.scalar(
-                select(func.count())
+                select(func.count(distinct(Comment.created_by_id)))
                 .select_from(Comment)
                 .where(Comment.created_by_id != recipient_id, *live)
             )
@@ -295,13 +367,16 @@ async def notify_duel_challenge(
     )
 
 
-async def notify_invitation_letter(session: AsyncSession, character: Character) -> None:
+async def notify_invitation_letter(
+    session: AsyncSession, character: Character, faction_slug: str
+) -> None:
     await notify(
         session,
         kind=FEED_ITEM_TYPE_INVITATION_LETTER,
         recipient_id=character.id,
-        tag=f"{FEED_ITEM_TYPE_INVITATION_LETTER}:{character.id}",
+        tag=f"{FEED_ITEM_TYPE_INVITATION_LETTER}:{character.id}:{faction_slug}",
         url="/updates",
+        faction=faction_slug,
     )
 
 
