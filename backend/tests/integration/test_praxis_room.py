@@ -33,7 +33,6 @@ import services.praxis_room as praxis_room
 from config import settings
 from game_config import CURRENT_ERA
 from main import app as fastapi_app
-from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
@@ -1404,11 +1403,16 @@ async def test_an_oversized_or_garbled_doc_state_is_refused(
     async with running_rooms(db_session, monkeypatch) as rooms:
         # Opened outside the harness's session lock; a cold open would deadlock.
         await rooms.server.get_room(room_name_for(solo.id))
-        for state, status in ((big, 413), ("not base64!", 422), ("AAEC", 422)):
+        cases = (
+            (big, 413, "PRAXIS_DOC_UPDATE_TOO_LARGE"),
+            ("not base64!", 422, "PRAXIS_DOC_UPDATE_INVALID"),
+            ("AAEC", 422, "PRAXIS_DOC_UPDATE_INVALID"),
+        )
+        for state, status, code in cases:
             with pytest.raises(HTTPException) as refused:
                 await rooms.submit(solo.id, character.id, doc_state=state)
             assert refused.value.status_code == status
-            assert refused.value.detail["code"] == "PRAXIS_DOC_UPDATE_INVALID"
+            assert refused.value.detail["code"] == code
 
 
 async def test_a_solo_seal_flattens_the_live_room_into_the_record(
