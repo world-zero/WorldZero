@@ -68,9 +68,10 @@ describe.each([
     expect(screen.getByText('Dov')).toBeTruthy()
   })
 
-  it('shows the empty state but no button when the defaults are on', () => {
+  it('shows the podium line, not the filter empty state, when the defaults are on', () => {
     mount(PODIUM_ONLY)
-    expect(document.querySelector('.filter-empty')).not.toBeNull()
-    expect(action()).toBeNull()
+    expect(document.querySelector('.filter-empty')).toBeNull()
+    expect(screen.getByText("Everyone's on the podium so far.")).toBeTruthy()
+    expect(screen.getByText('3 players')).toBeTruthy()
   })
 })

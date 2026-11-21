@@ -258,3 +258,33 @@ describe('rosterView — "show me my row"', () => {
     expect(rosterView(filtered, 8, null).total).toBe(2)
   })
 })
+
+describe('rosterView — header count vs roster size', () => {
+  const field = (n: number) =>
+    rankPlayers(Array.from({ length: n }, (_, i) => player({ id: i + 1, display_name: `P${i + 1}` })), 'era')
+
+  it.each([
+    [2, 0],
+    [3, 0],
+    [4, 1],
+    [20, 17],
+  ])('%i ranked at rest: header counts all, roster has %i rows', (n, rows) => {
+    const ranked = field(n)
+    const roster = selectRoster(ranked, filters(), NOBODY)
+    const view = rosterView(roster, 50, null, ranked.length)
+    expect(view.count).toBe(n)
+    expect(view.rows).toHaveLength(rows)
+  })
+
+  it('a filter matching nothing counts 0', () => {
+    const roster = selectRoster(field(5), filters({ query: 'zzz' }), NOBODY)
+    expect(rosterView(roster, 50, null).count).toBe(0)
+  })
+
+  it('load-more still counts from the roster, not the header', () => {
+    const ranked = field(40)
+    const roster = selectRoster(ranked, filters(), NOBODY)
+    const view = rosterView(roster, 10, null, ranked.length)
+    expect(view.total - view.rows.length).toBe(27)
+  })
+})
