@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from models.account import Account, AccountStatus
-from models.character import Character, CharacterStatus
+from models.character import CharacterStatus
 from models.character_block import CharacterBlock
 from services import push
 from services.email import unsubscribe_token
@@ -81,9 +81,7 @@ async def test_a_rollback_drops_the_mail(
 
 
 @pytest.mark.asyncio
-async def test_no_key_queues_no_mail(
-    db_session, character, character2, monkeypatch
-):
+async def test_no_key_queues_no_mail(db_session, character, character2, monkeypatch):
     monkeypatch.setattr(settings, "RESEND_API_KEY", "")
     await _comment_on_mine(db_session, character, character2)
     assert _queued(db_session) == []
@@ -178,7 +176,8 @@ async def test_all_off_turns_off_every_row(
     client: AsyncClient, db_session: AsyncSession, account: Account
 ):
     token = unsubscribe_token(account.id, "comment_on_mine")
-    assert (await client.post(f"/email/unsubscribe-all?token={token}")).status_code == 200
+    resp = await client.post(f"/email/unsubscribe-all?token={token}")
+    assert resp.status_code == 200
     await db_session.refresh(account)
     prefs = resolve_prefs(account.notification_prefs)
     assert [e.key for e in NOTIFICATION_EVENTS if prefs[e.key].by_email] == []

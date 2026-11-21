@@ -49,8 +49,8 @@ from services.activity_feed import (
 )
 from services.block_service import blocked_counterpart_ids
 from services.email import (
-    catalog,
     build_message,
+    catalog,
     email_available,
     send_email,
     unsubscribe_token,
@@ -201,7 +201,7 @@ async def deliver(
 
 
 async def deliver_email(batch: list[tuple[str, str, dict]]) -> None:
-    """Send each queued ``(kind, to, message)``. A failure is logged and lost, never retried."""
+    """Send each queued ``(kind, to, message)``; a failure is logged, not retried."""
     for kind, to, message in batch:
         try:
             await send_email(to, **message)

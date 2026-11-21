@@ -34,10 +34,10 @@ from services.character import (
 from services.current_user import build_current_user
 from services.data_export import build_account_export
 from services.data_export import stream as export_stream
+from services.email import email_available
 from services.notification_prefs import apply_update, muted_feed_types, resolve_prefs
 from services.praxis import list_praxes
 from services.praxis_out import build_praxis_cards
-from services.email import email_available
 from services.push import push_available
 
 router = APIRouter()
