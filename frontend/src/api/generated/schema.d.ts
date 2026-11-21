@@ -2947,6 +2947,11 @@ export interface components {
              */
             level_jump_reach: number;
             /**
+             * Permissions
+             * @default []
+             */
+            permissions: components["schemas"]["Permission"][];
+            /**
              * Provider
              * @default
              */

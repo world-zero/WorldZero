@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { useAdminMode } from '../../auth/AdminModeContext'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import CopyEditor from './CopyEditor'
+import { useCan } from '../../auth/permissions'
 import './modMode.css'
 
 /** The status strip (and, in mod mode, the accent frame); the copy editor lives in the strip. Mounted by `App.tsx` for admins in mod mode, and on the copy sheets always, where mod mode off shows a bare "Copy editor" strip. */
 export default function ModStrip() {
   const { t } = useTranslation('admin')
   const { adminMode, toggleAdminMode } = useAdminMode()
+  const canCopy = useCan()('copy')
 
   // The strip is fixed; publish its height so the page and the sticky nav clear it.
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function ModStrip() {
             {t('nav.mod.turnOff')}
           </button>
         )}
-        <CopyEditor />
+        {canCopy && <CopyEditor />}
       </div>
     </>,
   )

@@ -4,11 +4,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '../../../i18n'
-import { aTask } from '../../../test/fixtures'
+import { ALL_PERMISSIONS, aTask } from '../../../test/fixtures'
 
 const updateTaskStatus = vi.hoisted(() => vi.fn(async (_id: number, status: string) => ({ status })))
 vi.mock('../../../api/admin', () => ({ updateTaskStatus }))
-vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: { is_admin: true } }) }))
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: { is_admin: true, permissions: ALL_PERMISSIONS } }) }))
 vi.mock('../../../auth/AdminModeContext', () => ({ useAdminMode: () => ({ adminMode: true }) }))
 
 import TaskStatusControl from '../TaskStatusControl'

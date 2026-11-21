@@ -3,6 +3,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ALL_PERMISSIONS } from '../../../test/fixtures'
 
 import App from '../../../App'
 
@@ -15,7 +16,7 @@ const api = vi.hoisted(() => ({
 }))
 vi.mock('../../../api/admin', () => api)
 vi.mock('../../../auth/AuthContext', () => ({
-  useAuth: () => ({ user: { is_admin: true }, loading: false }),
+  useAuth: () => ({ user: { is_admin: true, permissions: ALL_PERMISSIONS }, loading: false }),
   hadSessionLastVisit: () => true,
 }))
 vi.mock('../../../auth/AdminModeContext', () => ({ useAdminMode: () => ({ adminMode: false }) }))

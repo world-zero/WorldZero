@@ -1821,6 +1821,14 @@
             "title": "Level Jump Reach",
             "type": "integer"
           },
+          "permissions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
           "provider": {
             "default": "",
             "title": "Provider",
@@ -1869,6 +1877,7 @@
           "character",
           "is_admin",
           "is_owner",
+          "permissions",
           "has_accepted_terms",
           "can_create_additional_character",
           "can_start_as_albescent",
