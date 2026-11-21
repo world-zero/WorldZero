@@ -16,11 +16,6 @@ import { factionName, UNAFFILIATED_FACTION_SLUG } from "../../../utils/factions"
 import type { TaskOut } from "../../../api/tasks";
 import type { TaskDetailState } from "../useTaskDetail";
 
-interface ErrorBannerProps {
-  message: string | null;
-  style?: CSSProperties;
-}
-
 /**
  * Marks a task claimable only via the level-jump allowance (#816). Config-driven:
  * renders only when `state.levelJumpSignup` (useTaskDetail), no slug comparison.
@@ -196,22 +191,3 @@ export function headerFactionName(task: TaskOut): string | null {
   return name;
 }
 
-export function ErrorBanner({ message, style }: ErrorBannerProps) {
-  if (!message) return null;
-  return (
-    <div
-      className="font-body"
-      style={{
-        fontSize: "var(--text-md)",
-        color: "var(--color-danger)",
-        marginTop: "var(--space-sm)",
-        padding: "var(--space-sm) var(--space-md)",
-        background: "var(--color-danger-veil)",
-        border: "1px solid var(--color-danger-edge)",
-        ...style,
-      }}
-    >
-      {message}
-    </div>
-  );
-}

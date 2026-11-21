@@ -8,10 +8,10 @@ import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import {
   actionColumnSize,
   detailSignupCta,
-  ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
   TaskDetailComments,
