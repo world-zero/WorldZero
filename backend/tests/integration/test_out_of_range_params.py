@@ -46,6 +46,8 @@ async def test_public_list_has_a_ceiling_but_leaderboard_keeps_500(client):
     assert (await client.get("/characters?limit=201")).status_code == 422
     assert (await client.get("/leaderboard?limit=201")).status_code == 200
     assert (await client.get("/leaderboard?limit=500")).status_code == 200
+    # The admin console's task table asks the public /tasks for 500.
+    assert (await client.get("/tasks?limit=500")).status_code == 200
 
 
 @pytest.mark.asyncio

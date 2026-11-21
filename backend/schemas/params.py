@@ -11,7 +11,7 @@ Id = Annotated[int, Ge(1), Le(2**63 - 1)]
 Int32 = Annotated[int, Ge(0), Le(INT32_MAX)]
 
 PAGE_MAX = 200
-LEADERBOARD_PAGE_MAX = 500
+WIDE_PAGE_MAX = 500
 
 
 class Page:
@@ -25,10 +25,10 @@ class Page:
         self.limit, self.offset = limit, offset
 
 
-class LeaderboardPage(Page):
+class WidePage(Page):
     def __init__(
         self,
-        limit: Annotated[int, Query(ge=1, le=LEADERBOARD_PAGE_MAX)] = 50,
+        limit: Annotated[int, Query(ge=1, le=WIDE_PAGE_MAX)] = 50,
         offset: Annotated[int, Query(ge=0, le=INT32_MAX)] = 0,
     ):
         super().__init__(limit, offset)

@@ -61,7 +61,7 @@ async def test_admin_sees_a_deleted_task_in_status_all(
 
     detail = await client.get(f"/tasks/{gone.id}", headers=auth_headers)
     assert detail.status_code == 200
-    assert gone.id in await _ids(client, "?status=all&limit=200", auth_headers)
+    assert gone.id in await _ids(client, "?status=all&limit=500", auth_headers)
 
 
 @pytest.mark.asyncio
@@ -94,7 +94,7 @@ async def test_no_faction_allowance_reopens_a_deleted_task(
             viewer=character,
             can_sign_up=True,
             era=permissive,
-            limit=200,
+            limit=500,
         )
     }
     assert retired.id in ids

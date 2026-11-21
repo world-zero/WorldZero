@@ -13,7 +13,7 @@ from dependencies import (
 )
 from models.account import Account
 from models.character import Character
-from schemas.params import Id, Int32, Page
+from schemas.params import Id, Int32, WidePage
 from schemas.task import BackdoorOut, ProposalOut, TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
 from services.backdoor import list_open_backdoors
@@ -51,7 +51,7 @@ async def list_tasks(
     task_type: Optional[str] = None,
     q: Optional[str] = None,
     sort: Optional[str] = None,
-    page: Page = Depends(),
+    page: WidePage = Depends(),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
