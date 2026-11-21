@@ -9,6 +9,8 @@ from game_config import (
     COMPILE_TIME_ERA_CONFIG_KEY,
     CURRENT_ERA,
     EraConfig,
+    LevelProfile,
+    LevelUnlockKind,
     bind_live_era,
     era_config_for_key,
 )
@@ -53,6 +55,46 @@ async def read_dial_sides(session: AsyncSession) -> dict[str, str]:
     return dict(rows.all())
 
 
+#: Gate field -> the ability key the level ladder announces it under.
+_GATE_ABILITY_KEYS = {
+    "comment_level_required": "comment",
+    "duel_level_required": "duels",
+    "flag_level_required": "flag_praxis",
+}
+
+
+def _move_ability_unlocks(live: EraConfig) -> None:
+    """Re-seat each gate's ability on the rung of its live value (#3734).
+
+    Rebuilds the frozen ``level_profiles`` tuple; idempotent, so safe on an era
+    that is already live.
+    """
+    target = {
+        key: getattr(live, field) for field, key in _GATE_ABILITY_KEYS.items()
+    }
+    ability = LevelUnlockKind.ability
+    moved = {
+        unlock.key: unlock
+        for profile in live.level_profiles
+        for unlock in profile.unlocks
+        if unlock.kind == ability and unlock.key in target
+    }
+    live_profiles = tuple(
+        LevelProfile(
+            profile.rank_key,
+            tuple(
+                unlock for unlock in profile.unlocks
+                if not (unlock.kind == ability and unlock.key in moved)
+            )
+            + tuple(
+                unlock for key, unlock in moved.items() if target[key] == rung
+            ),
+        )
+        for rung, profile in enumerate(live.level_profiles)
+    )
+    object.__setattr__(live, "level_profiles", live_profiles)
+
+
 def apply_dial_sides(live: EraConfig, sides: dict[str, str]) -> None:
     """Write each dial's side onto the live era, a field at a time (#3656).
 
@@ -63,6 +105,7 @@ def apply_dial_sides(live: EraConfig, sides: dict[str, str]) -> None:
     for key, dial in live.dials.items():
         for name, value in getattr(dial, sides.get(key, dial.default)).items():
             object.__setattr__(live, name, value)
+    _move_ability_unlocks(live)
 
 
 async def rebind_live_era(session: AsyncSession) -> EraConfig:
@@ -394,7 +437,8 @@ async def apply_era_reset(
         if closing_era is None:
             raise RuntimeError(
                 f"Era {closing_era_row.id} names unregistered config_key "
-                f"{closing_era_row.config_key!r}; cannot re-score its duels"
+                f"{closing_era_row.config_key!r}; "
+                "cannot seal its collabs or re-score its duels"
             )
 
         # Lapsed collabs belong to the closing era, not to whoever reads them first.
@@ -414,7 +458,7 @@ async def apply_era_reset(
             participants |= {d.opponent_character_id for d in duels} | set(
                 challenger_ids
             )
-        for character_id in participants:
+        for character_id in sorted(participants):
             await recalculate_character_stats(
                 character_id,
                 session,

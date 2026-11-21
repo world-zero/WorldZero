@@ -37,6 +37,7 @@ class ErrorCode(str, enum.Enum):
     collaboration_level_too_low = "COLLABORATION_LEVEL_TOO_LOW"
     duel_level_too_low = "DUEL_LEVEL_TOO_LOW"
     flag_level_too_low = "FLAG_LEVEL_TOO_LOW"
+    praxis_already_ruled = "PRAXIS_ALREADY_RULED"
     comment_level_too_low = "COMMENT_LEVEL_TOO_LOW"
     task_proposal_level_too_low = "TASK_PROPOSAL_LEVEL_TOO_LOW"
     metatask_proposal_level_too_low = "METATASK_PROPOSAL_LEVEL_TOO_LOW"
@@ -77,6 +78,8 @@ class ErrorCode(str, enum.Enum):
     praxis_needs_proof = "PRAXIS_NEEDS_PROOF"
     #: 413 too big, 422 not a Yjs update: the draft the browser sent with a submit.
     praxis_doc_update_invalid = "PRAXIS_DOC_UPDATE_INVALID"
+    #: 409: a submit carried a draft for a praxis that is already published.
+    praxis_already_live = "PRAXIS_ALREADY_LIVE"
     #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).
     praxis_post_cooldown = "PRAXIS_POST_COOLDOWN"
 
@@ -97,6 +100,10 @@ class ErrorCode(str, enum.Enum):
     task_faction_unknown = "TASK_FACTION_UNKNOWN"
     #: #3379. A ``hidden`` system faction can't be filed under; 422 like unknown.
     task_faction_hidden = "TASK_FACTION_HIDDEN"
+    #: #3771. Edit/withdraw is for the proposing character only.
+    task_not_yours = "TASK_NOT_YOURS"
+    #: #3771. 409: only a pending proposal can be edited or withdrawn.
+    task_not_pending = "TASK_NOT_PENDING"
     #: #3062. Delete is for import junk with no references; else retire.
     task_has_history = "TASK_HAS_HISTORY"
     #: #3062. A ``seed_key`` row would come back on the next deploy.
@@ -127,6 +134,8 @@ class ErrorCode(str, enum.Enum):
     task_not_open_for_comments = "TASK_NOT_OPEN_FOR_COMMENTS"
     #: Exactly-one-target guard; unreachable from today's routes.
     comment_target_ambiguous = "COMMENT_TARGET_AMBIGUOUS"
+    #: 409: a deleted comment is a terminal tombstone (ADR-0006).
+    comment_already_deleted = "COMMENT_ALREADY_DELETED"
     #: One flag per ACCOUNT per comment (#2184).
     comment_already_flagged = "COMMENT_ALREADY_FLAGGED"
 

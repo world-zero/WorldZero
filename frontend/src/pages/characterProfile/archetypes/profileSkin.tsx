@@ -31,6 +31,7 @@ import {
   useSectionDisclosures,
 } from '../../factionDetail/sectionDisclosure'
 import type { ProfileBodyProps } from '../FactionProfileBody'
+import { formatDate } from '../../../utils/dates'
 
 /** The costume knobs a faction fills in: CSS var references only, no hex. */
 interface ProfileKit {
@@ -348,10 +349,7 @@ export function ProfileSkin({
   const headerMuted = kit.headerMuted ?? kit.muted
   const { character, submissions, proposedTasks, progression, identityActions, onSignup } = props
   const badges = character.badges ?? []
-  const joined = new Date(character.created_at).toLocaleDateString(undefined, {
-    month: 'short',
-    year: 'numeric',
-  })
+  const joined = formatDate(character.created_at, { month: 'short', year: 'numeric' })
 
   // ⑤ FDL laurel target: highest full `score` (the number the card shows), not base+vote.
   const topScore = submissions.reduce((max, p) => Math.max(max, p.score ?? 0), 0)
@@ -517,6 +515,7 @@ export function ProfileSkin({
 
   return (
     <div
+      className="profile-frame"
       data-theme={kit.dataTheme}
       style={{
         ...kit.pageVars,
@@ -542,7 +541,7 @@ export function ProfileSkin({
       <div style={{ position: 'relative', zIndex: 1 }}>
         {/* ① Identity + progression */}
         {frameIdentity(
-        <header style={{ ...kit.headerStyle, position: 'relative', overflow: 'hidden' }}>
+        <header className="profile-header" style={{ ...kit.headerStyle, position: 'relative', overflow: 'hidden' }}>
           {kit.headerDecoration}
           <div
             style={{
@@ -574,11 +573,11 @@ export function ProfileSkin({
                   marginTop: 'var(--space-md)',
                 }}
               >
-                {t('profile.handleJoined', { username: character.username, joined })}
+                {t('profile.joined', { joined })}
               </div>
 
               {progression && (
-                <div style={kit.progressionStyle}>
+                <div className="profile-level" style={kit.progressionStyle}>
                   {/* Level readout as text, DELIBERATELY not a ring (#2213): a
                       ring would plot the same percentage as the bar. Do not
                       restore it. */}

@@ -89,7 +89,6 @@ export { default as DefaultSelectCard } from "../src/components/selectCard/Defau
 export { default as DefaultSigil } from "../src/components/sigil/DefaultSigil";
 export { default as DefaultTaskCard } from "../src/components/taskCard/DefaultTaskCard";
 export { default as DefaultTaskDetail } from "../src/pages/taskDetail/archetypes/DefaultTaskDetail";
-export { default as DefaultTasks } from "../src/pages/tasks/mobileArchetypes/DefaultTasks";
 export { default as DefaultVote } from "../src/components/vote/DefaultVote";
 export { default as DeleteAccountCard } from "../src/pages/settings/DeleteAccountCard";
 export { default as DesktopPlayers } from "../src/pages/players/DesktopPlayers";
@@ -188,9 +187,7 @@ export { default as MetataskPicker } from "../src/components/metataskSeal/Metata
 export { default as MetataskRemoveConfirm } from "../src/components/metataskSeal/MetataskRemoveConfirm";
 export { default as MetataskSeal } from "../src/components/metataskSeal/MetataskSeal";
 export { MetataskSealStack } from "../src/components/metataskSeal/MetataskSealStack";
-export { default as MobileHeader } from "../src/components/layout/MobileHeader";
 export { default as MobilePlayers } from "../src/pages/players/MobilePlayers";
-export { default as MobilePraxisFeed } from "../src/pages/praxes/MobilePraxisFeed";
 export { MobileStickyBar } from "../src/pages/factionDetail/MobileStickyBar";
 export { default as MobileTabBar } from "../src/components/layout/MobileTabBar";
 export { default as NavBar } from "../src/components/NavBar";

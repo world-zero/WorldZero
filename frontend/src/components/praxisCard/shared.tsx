@@ -10,6 +10,7 @@ import { isDuelPraxis } from "../../utils/praxis";
 import { mediaUrl } from "../../utils/media";
 import FactionAvatar from "../avatar/FactionAvatar";
 import VoteUI from "../vote/VoteUI";
+import { formatDate } from "../../utils/dates";
 
 /**
  * Praxis-card content slots. Each faction owns its FRAME; the slots below
@@ -95,7 +96,7 @@ export function PraxisTitle({
   return (
     <Link to={`/praxis/${praxis.id}`}>
       <h2
-        className="content-title font-display font-semibold leading-tight hover:underline"
+        className="content-title card-title font-display font-semibold leading-tight hover:underline"
         style={{
           marginBottom: "var(--space-sm)",
           fontFamily: fonts?.display,
@@ -319,7 +320,7 @@ export function PraxisStats({
   const { t } = useTranslation("praxis");
   const collaborators = praxis.member_count - 1;
   const submittedDate = praxis.submitted_at
-    ? new Date(praxis.submitted_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    ? formatDate(praxis.submitted_at, { month: "short", day: "numeric", year: "numeric" })
     : null;
   return (
     <div

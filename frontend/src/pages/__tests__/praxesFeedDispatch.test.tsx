@@ -1,14 +1,10 @@
-/**
- * Praxis-feed form-factor dispatch (#499): phone → mobile stream
- * (`data-feed="mobile"`), desktop → the card list. SSR leaves the feed loading,
- * which is enough to see which surface was picked.
- */
+/** The praxis feed has no phone twin: both widths mount the shared `PageTitle`. */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import '../../i18n'
 
-const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop' }))
+const mocks = vi.hoisted(() => ({ formFactor: 'desktop' as 'mobile' | 'desktop', failed: false }))
 
 vi.mock('../../hooks/useFormFactor', () => ({
   useFormFactor: () => mocks.formFactor,
@@ -17,6 +13,12 @@ vi.mock('../../api/praxis', () => ({
   listPraxes: async () => [],
 }))
 
+vi.mock('../praxes/usePraxes', async (orig) => {
+  const real = await orig<typeof import('../praxes/usePraxes')>()
+  return { ...real, usePraxes: () => ({ ...real.usePraxes(), ...(mocks.failed && { error: new Error('boom'), loading: false }) }) }
+})
+
+import i18n from '../../i18n'
 import Praxes from '../Praxes'
 
 function render(): string {
@@ -27,17 +29,18 @@ function render(): string {
   )
 }
 
-describe('praxis-feed form-factor dispatch', () => {
-  it('renders the mobile proof stream on mobile', () => {
-    mocks.formFactor = 'mobile'
-    expect(render()).toContain('data-feed="mobile"')
+describe('praxis feed is one page at every width', () => {
+  it.each(['mobile', 'desktop'] as const)('draws the shared PageTitle on %s', (formFactor) => {
+    mocks.formFactor = formFactor
+    expect(render()).toContain('border-bottom:4px solid var(--faction-default-stop-1)')
   })
 
-  it('renders the desktop card list on desktop (untouched)', () => {
-    mocks.formFactor = 'desktop'
-    const html = render()
-    expect(html).not.toContain('data-feed="mobile"')
-    // `PageTitle`'s underline: only the desktop page draws it.
-    expect(html).toContain('border-bottom:4px solid var(--faction-default-stop-1)')
+  it.each(['mobile', 'desktop'] as const)('load error says try refreshing on %s', (formFactor) => {
+    mocks.formFactor = formFactor
+    mocks.failed = true
+    const out = render().replace('&#x27;', "'")
+    mocks.failed = false
+    expect(out).toContain(i18n.t('praxis:listPage.loadError'))
+    expect(out).toContain(i18n.t('common:states.tryRefreshing'))
   })
 })

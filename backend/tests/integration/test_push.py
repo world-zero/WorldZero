@@ -4,17 +4,24 @@ Seam: ``services.push.notify`` queues on the session; ``deliver`` is the only th
 that talks to ``pywebpush`` (``_send_one`` is patched, no network).
 """
 
+import asyncio
+import base64
 import json
+import logging
 
 import pytest
+from cryptography.hazmat.primitives import serialization
 from httpx import AsyncClient
+from py_vapid import Vapid
 from pywebpush import WebPushException
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from config import settings
 from models.account import Account
 from models.character import Character
+from models.comment import Comment, CommentMention
+from models.praxis import ModerationStatus
 from models.push_subscription import PushSubscription
 from services import push
 from services.notification_prefs import apply_update
@@ -26,10 +33,24 @@ SUBSCRIPTION = {
 }
 
 
+def _vapid_pair() -> tuple[str, str]:
+    vapid = Vapid()
+    vapid.generate_keys()
+    b64 = lambda raw: base64.urlsafe_b64encode(raw).rstrip(b"=").decode()  # noqa: E731
+    pub = vapid.public_key.public_bytes(
+        serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint
+    )
+    priv = vapid.private_key.private_numbers().private_value.to_bytes(32, "big")
+    return b64(pub), b64(priv)
+
+
+PUBLIC, PRIVATE = _vapid_pair()
+
+
 @pytest.fixture
 def keys_on(monkeypatch):
-    monkeypatch.setattr(settings, "VAPID_PUBLIC_KEY", "pub")
-    monkeypatch.setattr(settings, "VAPID_PRIVATE_KEY", "priv")
+    monkeypatch.setattr(settings, "VAPID_PUBLIC_KEY", PUBLIC)
+    monkeypatch.setattr(settings, "VAPID_PRIVATE_KEY", PRIVATE)
     monkeypatch.setattr(settings, "VAPID_CONTACT", "mailto:hi@worldzero.org")
 
 
@@ -47,7 +68,7 @@ async def test_prefs_hand_over_the_public_key_when_configured(
     client: AsyncClient, auth_headers: dict, keys_on
 ):
     body = (await client.get("/me/notification-prefs", headers=auth_headers)).json()
-    assert (body["push_available"], body["vapid_public_key"]) == (True, "pub")
+    assert (body["push_available"], body["vapid_public_key"]) == (True, PUBLIC)
 
 
 @pytest.mark.asyncio
@@ -161,9 +182,26 @@ async def test_a_rating_queues_a_keys_only_payload(
         "actor": "Other Character",
         "task": "Feed a stranger",
         "count": None,
+        "faction": None,
     }
     assert len(targets) == 1
     assert "@" not in json.dumps(payload)
+
+
+@pytest.mark.asyncio
+async def test_an_invitation_letter_names_its_faction_by_slug(
+    db_session: AsyncSession, account: Account, character: Character, keys_on
+):
+    await _subscribe(db_session, account)
+    account.notification_prefs = {"invitation_letter": {"by_push": True}}
+    await push.notify_invitation_letter(db_session, character, "coven")
+    await push.notify_invitation_letter(db_session, character, "snide")
+    queued = [p for p, _ in _queued(db_session)]
+    assert [p["faction"] for p in queued] == ["coven", "snide"]
+    assert [p["tag"] for p in queued] == [
+        f"invitation_letter:{character.id}:coven",
+        f"invitation_letter:{character.id}:snide",
+    ]
 
 
 @pytest.mark.asyncio
@@ -226,3 +264,175 @@ def test_sender_refuses_redirects(monkeypatch):
     monkeypatch.setattr(push, "webpush", lambda **kw: seen.update(kw))
     push._send_one(push.Target(1, "https://fcm.googleapis.com/x", "k", "a"), "{}")
     assert seen["requests_session"].max_redirects == 0
+    assert seen["timeout"] == push.PUSH_TIMEOUT_SECONDS
+
+
+async def _comment(db_session, author, *, praxis=None, task=None, mention=None):
+    c = Comment(
+        praxis_id=praxis.id if praxis else None,
+        task_id=task.id if task else None,
+        created_by_id=author.id,
+        body_text="hi",
+    )
+    db_session.add(c)
+    await db_session.flush()
+    if mention:
+        db_session.add(
+            CommentMention(comment_id=c.id, mentioned_character_id=mention.id)
+        )
+        await db_session.flush()
+    await push.notify_comment(
+        db_session,
+        author,
+        comment_id=c.id,
+        praxis_id=c.praxis_id,
+        task_id=c.task_id,
+        mentioned=[mention] if mention else [],
+    )
+    return c
+
+
+@pytest.fixture
+async def comment_world(db_session, account, character, keys_on):
+    await _subscribe(db_session, account)
+    account.notification_prefs = {
+        "comment_on_mine": {"by_push": True},
+        "comment_mention": {"by_push": True},
+    }
+    task = await make_task(db_session, character, title="Feed a stranger")
+    return task, await make_solo_praxis(db_session, task, character)
+
+
+@pytest.mark.asyncio
+async def test_comment_tags_name_the_target_type(
+    db_session, character, character2, comment_world
+):
+    task, praxis = comment_world
+    top = max(task.id, praxis.id) + 1  # never lower a sequence below a used id
+    for table in ("task", "praxis"):
+        await db_session.execute(
+            text("select setval(pg_get_serial_sequence(:t, 'id'), :n, false)"),
+            {"t": table, "n": top},
+        )
+    task = await make_task(db_session, character, title="Feed a stranger")
+    praxis = await make_solo_praxis(db_session, task, character)
+    assert praxis.id == task.id  # equal ids, so a swapped tag fails
+    on_praxis = await _comment(
+        db_session, character2, praxis=praxis, mention=character
+    )
+    on_task = await _comment(db_session, character2, task=task, mention=character)
+    queued = [p for p, _ in _queued(db_session)]
+    assert [p["url"] for p in queued] == [
+        f"/praxis/{praxis.id}#comment-{on_praxis.id}",
+        f"/tasks/{task.id}#comment-{on_task.id}",
+    ]
+    tags = [p["tag"] for p in queued]
+    assert tags == [
+        f"comment_mention:praxis:{praxis.id}",
+        f"comment_mention:task:{task.id}",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_second_comment_on_mine_collapses_with_a_count(
+    db_session, character, character2, character3, comment_world
+):
+    _, praxis = comment_world
+    await _comment(db_session, character2, praxis=praxis)
+    await _comment(db_session, character3, praxis=praxis)
+    first, second = (p for p, _ in _queued(db_session))
+    assert first["count"] is None and second["count"] == 2
+    assert first["tag"] == second["tag"]
+
+
+@pytest.mark.asyncio
+async def test_second_mention_collapses_with_a_count(
+    db_session, character, character2, character3, comment_world
+):
+    _, praxis = comment_world
+    await _comment(db_session, character2, praxis=praxis, mention=character)
+    await _comment(db_session, character3, praxis=praxis, mention=character)
+    first, second = (p for p, _ in _queued(db_session))
+    assert first["count"] is None and second["count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_count_is_distinct_people_not_comments(
+    db_session, character, character2, character3, comment_world
+):
+    _, praxis = comment_world
+    for author in (character2, character2, character3):
+        await _comment(db_session, author, praxis=praxis)
+    assert [p["count"] for p, _ in _queued(db_session)] == [None, None, 2]
+
+
+@pytest.mark.asyncio
+async def test_withdrawn_and_removed_comments_are_not_counted(
+    db_session, character, character2, character3, comment_world
+):
+    _, praxis = comment_world
+    gone = await _comment(db_session, character2, praxis=praxis)
+    gone.is_withdrawn = True
+    removed = await _comment(db_session, character2, praxis=praxis)
+    removed.moderation_status = ModerationStatus.deleted
+    await db_session.flush()
+    await _comment(db_session, character3, praxis=praxis)
+    assert [p["count"] for p, _ in _queued(db_session)][-1] is None
+
+
+@pytest.mark.parametrize(
+    "field, value, words",
+    [
+        ("VAPID_CONTACT", "hello@worldzero.org", "mailto:"),
+        ("VAPID_PRIVATE_KEY", "not-a-key", "does not parse"),
+        ("VAPID_PUBLIC_KEY", _vapid_pair()[0], "public half"),
+    ],
+)
+def test_a_malformed_vapid_config_turns_push_off_and_says_why(
+    monkeypatch, caplog, keys_on, field, value, words
+):
+    monkeypatch.setattr(settings, field, value)
+    with caplog.at_level(logging.ERROR, logger="services.push"):
+        assert push.push_available() is False
+    assert words in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_a_push_service_rejection_is_logged_with_status_and_reason(
+    monkeypatch, caplog
+):
+    class Response:
+        status_code = 403
+        text = "VapidPkHashMismatch"
+
+    def reject(target, body):
+        raise WebPushException("nope", response=Response())
+
+    monkeypatch.setattr(push, "_send_one", reject)
+    batch = [({"kind": "level_up"}, [push.Target(7, "https://x", "k", "a")])]
+    with caplog.at_level(logging.ERROR, logger="services.push"):
+        await push.deliver(batch)
+    assert "status=403 reason=VapidPkHashMismatch" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_the_commit_sends_what_notify_queued(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    keys_on,
+    monkeypatch,
+):
+    sent = []
+
+    async def deliver(batch):
+        sent.append(batch)
+
+    monkeypatch.setattr(push, "deliver", deliver)
+    await _subscribe(db_session, account)
+    account.notification_prefs = {"level_up": {"by_push": True}}
+    await push.notify_level_up(db_session, character)
+    assert sent == []
+    await db_session.commit()
+    await asyncio.gather(*push._in_flight)
+    assert len(sent) == 1

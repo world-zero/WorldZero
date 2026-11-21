@@ -2283,6 +2283,18 @@
             "title": "Loss Multiplier",
             "type": "number"
           },
+          "nudge_again_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nudge Again At"
+          },
           "nudged_at": {
             "anyOf": [
               {
@@ -2330,6 +2342,7 @@
           "points_from_votes",
           "is_submitted",
           "nudged_at",
+          "nudge_again_at",
           "win_multiplier",
           "loss_multiplier",
           "tie_multiplier"
@@ -3201,6 +3214,10 @@
             "title": "Points From Votes",
             "type": "integer"
           },
+          "room_generation": {
+            "title": "Room Generation",
+            "type": "integer"
+          },
           "score": {
             "title": "Score",
             "type": "number"
@@ -3309,6 +3326,7 @@
           "flagged_at",
           "submitted_at",
           "submit_proposed_at",
+          "room_generation",
           "created_by_id",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -5655,6 +5673,7 @@
           "body_text": {
             "anyOf": [
               {
+                "maxLength": 20000,
                 "type": "string"
               },
               {
@@ -5670,6 +5689,7 @@
           "title": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -5827,6 +5847,18 @@
             "title": "Joined At",
             "type": "string"
           },
+          "nudge_again_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nudge Again At"
+          },
           "nudged_at": {
             "anyOf": [
               {
@@ -5854,7 +5886,8 @@
           "is_done",
           "approved_at",
           "joined_at",
-          "nudged_at"
+          "nudged_at",
+          "nudge_again_at"
         ],
         "title": "PraxisMemberOut",
         "type": "object"
@@ -5987,6 +6020,10 @@
             "title": "Points From Votes",
             "type": "integer"
           },
+          "room_generation": {
+            "title": "Room Generation",
+            "type": "integer"
+          },
           "score": {
             "title": "Score",
             "type": "number"
@@ -6095,6 +6132,7 @@
           "flagged_at",
           "submitted_at",
           "submit_proposed_at",
+          "room_generation",
           "created_by_id",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -6162,6 +6200,61 @@
           "value"
         ],
         "title": "PraxisVoteIn",
+        "type": "object"
+      },
+      "ProposalOut": {
+        "description": "A proposer's own form fields; ``notes`` is private, so it is not on TaskOut.",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "level_required": {
+            "title": "Level Required",
+            "type": "integer"
+          },
+          "metatask_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metatask Faction Slug"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "point_value": {
+            "title": "Point Value",
+            "type": "integer"
+          },
+          "primary_faction_slug": {
+            "title": "Primary Faction Slug",
+            "type": "string"
+          },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "notes",
+          "point_value",
+          "level_required",
+          "primary_faction_slug",
+          "task_type",
+          "metatask_faction_slug"
+        ],
+        "title": "ProposalOut",
         "type": "object"
       },
       "PushKeysIn": {
@@ -6340,16 +6433,16 @@
         "type": "object"
       },
       "ReturningPlayerOut": {
-        "description": "What the consent gate may know (``GET /auth/returning-player``).\n\nThe caller is authenticated as nobody, so keep this to one field. A date, not\na timestamp: truncated in ``ReturningPlayerConsentRequired``.",
+        "description": "What the consent gate may know (``GET /auth/returning-player``).\n\nThe caller is authenticated as nobody, so keep this to one field. The hour is\nsent (owner ruling on #3630): the reader formats the day in their own zone.",
         "properties": {
-          "deleted_on": {
-            "format": "date",
-            "title": "Deleted On",
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
             "type": "string"
           }
         },
         "required": [
-          "deleted_on"
+          "deleted_at"
         ],
         "title": "ReturningPlayerOut",
         "type": "object"
@@ -10748,7 +10841,7 @@
     },
     "/auth/returning-player": {
       "get": {
-        "description": "What the consent gate says (#2162): a date, and nothing else.\n\nRead from the parked sign-in rather than the tombstone, so this route makes\nno lookup keyed on anything the caller supplied — there is nothing to\nsupply. The identity is in the signed session or the gate does not exist.",
+        "description": "What the consent gate says (#2162): the deletion time, and nothing else.\n\nRead from the parked sign-in rather than the tombstone, so this route makes\nno lookup keyed on anything the caller supplied — there is nothing to\nsupply. The identity is in the signed session or the gate does not exist.",
         "operationId": "returning_player_gate_auth_returning_player_get",
         "responses": {
           "200": {
@@ -14789,7 +14882,6 @@
         ]
       },
       "post": {
-        "description": "Idempotent on endpoint. A device belongs to whoever subscribed last: a browser\nholds one subscription per origin, so a shared phone must not keep pushing the\nprevious account's events.",
         "operationId": "subscribe_push_subscriptions_post",
         "parameters": [
           {
@@ -15517,6 +15609,60 @@
       }
     },
     "/tasks/{task_id}": {
+      "delete": {
+        "operationId": "withdraw_proposal_route_tasks__task_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw Proposal Route",
+        "tags": [
+          "tasks"
+        ]
+      },
       "get": {
         "operationId": "get_task_tasks__task_id__get",
         "parameters": [
@@ -15574,6 +15720,77 @@
           }
         ],
         "summary": "Get Task",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "put": {
+        "operationId": "edit_proposal_route_tasks__task_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edit Proposal Route",
         "tags": [
           "tasks"
         ]
@@ -15714,6 +15931,69 @@
         "summary": "Create Task Comment",
         "tags": [
           "comments"
+        ]
+      }
+    },
+    "/tasks/{task_id}/proposal": {
+      "get": {
+        "operationId": "get_own_proposal_route_tasks__task_id__proposal_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Own Proposal Route",
+        "tags": [
+          "tasks"
         ]
       }
     },

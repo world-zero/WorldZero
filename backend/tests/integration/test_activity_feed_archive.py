@@ -553,8 +553,11 @@ async def test_bad_item_keys_are_told_apart_by_code(
 
 
 @pytest.mark.asyncio
-async def test_dismiss_all_skips_awaiting_submission(
-    client: AsyncClient, full_feed: dict, auth_headers: dict
+async def test_dismiss_all_skips_awaiting_submission_and_pending_requests(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
 ):
     response = await client.post(
         "/activity-feed/dismiss-all",
@@ -562,13 +565,60 @@ async def test_dismiss_all_skips_awaiting_submission(
         headers=auth_headers,
     )
     assert response.status_code == 200, response.text
-    assert response.json() == {"count": 3, "archived": True}
+    # Pending invite and duel ignore the archive (ADR-0070): only the one other
+    # request left, and the count says so.
+    assert response.json() == {"count": 1, "archived": True}
+    assert (
+        await db_session.scalar(select(func.count()).select_from(FeedDismissal)) == 1
+    )
 
     after = await _feed(client, auth_headers, REQUESTS_FILTER)
-    assert [item["type"] for item in after["items"]] == [
-        FEED_ITEM_TYPE_AWAITING_SUBMISSION
-    ]
-    assert after["counts"]["requests"] == 1
+    assert {item["type"] for item in after["items"]} == {
+        FEED_ITEM_TYPE_AWAITING_SUBMISSION,
+        FEED_ITEM_TYPE_COLLAB_INVITE,
+        FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    }
+    assert after["counts"]["requests"] == 3
+
+
+@pytest.mark.asyncio
+async def test_dismiss_all_on_stream_archives_answered_invite_and_duel(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """Requests holds the pending ones (kept); All shows answered ones (archived)."""
+    pending = await client.post(
+        "/activity-feed/dismiss-all",
+        json={"filter": REQUESTS_FILTER},
+        headers=auth_headers,
+    )
+    assert pending.json()["count"] == 1  # invite + duel stayed
+
+    await db_session.execute(
+        update(PraxisInvite)
+        .where(PraxisInvite.id == full_feed["collab_invite_id"])
+        .values(status=PraxisInviteStatus.declined)
+    )
+    await db_session.execute(
+        update(Duel).values(
+            status=DuelStatus.declined, declined_at=datetime.now(timezone.utc)
+        )
+    )
+    await db_session.flush()
+    before = await _feed(client, auth_headers, ALL_FILTER)
+    types = {item["type"] for item in before["items"]}
+    assert {FEED_ITEM_TYPE_COLLAB_INVITE, FEED_ITEM_TYPE_DUEL_CHALLENGE} <= types
+
+    await client.post(
+        "/activity-feed/dismiss-all", json={"filter": ALL_FILTER}, headers=auth_headers
+    )
+    after = await _feed(client, auth_headers, ALL_FILTER)
+    assert not {
+        FEED_ITEM_TYPE_COLLAB_INVITE,
+        FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    } & {item["type"] for item in after["items"]}
 
 
 @pytest.mark.asyncio
@@ -916,6 +966,30 @@ async def test_an_archived_request_stays_archived_after_it_is_answered(
     archived_keys = [item["item_key"] for item in archived["items"]]
     assert invite_key in archived_keys
     assert duel_key in archived_keys
+
+
+@pytest.mark.asyncio
+async def test_archiving_a_pending_invite_or_duel_never_empties_the_queue(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    """ADR-0070: archiving is a view state, and the queue is the one count."""
+    before = await _feed(client, auth_headers, REQUESTS_FILTER)
+    keys = [
+        _key_of(before, FEED_ITEM_TYPE_COLLAB_INVITE),
+        _key_of(before, FEED_ITEM_TYPE_DUEL_CHALLENGE),
+    ]
+    for key in keys:
+        response = await client.post(
+            "/activity-feed/dismiss", json={"item_key": key}, headers=auth_headers
+        )
+        assert response.status_code == 200, response.text
+
+    after = await _feed(client, auth_headers, REQUESTS_FILTER)
+    keys_of = lambda feed: {i["item_key"] for i in feed["items"]}  # noqa: E731
+    assert keys_of(after) == keys_of(before)
+    assert after["counts"]["requests"] == before["counts"]["requests"]
+    archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
+    assert set(keys) <= {i["item_key"] for i in archived["items"]}
 
 
 # --- 7. Unanswered obligations live in the queue, not the stream (ADR-0070) ---

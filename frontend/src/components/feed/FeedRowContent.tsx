@@ -181,13 +181,13 @@ export default function FeedRowContent({
               <Link
                 to={row.headlineHref}
                 className="font-body"
-                style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', lineHeight: 1.3, ...liftUnless('headline') }}
+                style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', textDecoration: 'none', display: 'block', overflowWrap: 'anywhere', lineHeight: 1.3, ...liftUnless('headline') }}
               >
                 {row.headline}
                 {stretch === 'headline' && <FeedBodyOverlay />}
               </Link>
             ) : (
-              <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', lineHeight: 1.3 }}>
+              <span className="font-body" style={{ fontSize: 'var(--text-content)', fontWeight: 700, color: 'var(--color-text-primary)', display: 'block', overflowWrap: 'anywhere', lineHeight: 1.3 }}>
                 {row.headline}
               </span>
             )}
@@ -233,13 +233,16 @@ function QuotedHeadline({
   /** True when this quote is the anchor that owns the whole body (#1893). */
   stretched: boolean
 }) {
-  const quoted = i18n.t('feed:row.quotedHeadline', { headline })
+  // No postProcess: recording the wrapper would make a click on the quote open
+  // it instead of the taunt wording inside it.
+  const quoted = i18n.t('feed:row.quotedHeadline', { headline, postProcess: [] })
   const style: React.CSSProperties = {
     margin: 0,
     fontSize: 'var(--text-content)',
     fontStyle: 'italic',
     color: 'var(--color-text-primary)',
     lineHeight: 1.4,
+    overflowWrap: 'anywhere',
   }
   if (!href) {
     return (

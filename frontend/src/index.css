@@ -1,7 +1,8 @@
 /* Import map (#2891): @import lines only. ORDER IS THE CASCADE; reordering
    repaints the site. `src/test/__tests__/indexCss.test.ts` checks this list
    against `src/css/`. The three FACTION CHROME parts are deliberate (the run is
-   split by the filter-bar layout block). Never add a rule here: @import must
+   split where the filter-bar layout block used to sit; it now lives in
+   `components/ui/FilterBar/filterBar.css`). Never add a rule here: @import must
    precede all rules. Tests read the sheet via `readIndexCss()`
    (`src/test/indexCss.ts`), never this path, which holds no rules. */
 
@@ -12,7 +13,6 @@
 @import './css/04-component-layer-base.css';
 @import './css/05-component-layer-components.css';
 @import './css/06-faction-chrome-2.css';
-@import './css/07-layout-filter-bar.css';
 @import './css/08-faction-chrome-2-resumed.css';
 @import './css/09-component-shared.css';
 @import './css/10-layout-settings-inventory.css';

@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import FactionSigil, { factionSigilRing } from './sigil/FactionSigil'
 import { factionName, isKnownFaction } from '../utils/factions'
+import type { CharacterOut } from '../api/auth'
+import FactionAvatar from './avatar/FactionAvatar'
 
 /**
  * Faction credential card (#271): one structure, re-skinned via
@@ -15,6 +17,8 @@ export interface CredentialCardProps {
   level: number
   score: number
   avatarUrl?: string | null
+  /** A real character draws its face through FactionAvatar (monogram when portrait-less); `avatarUrl` is for the creation preview. */
+  character?: CharacterOut
   /** Card width in px (default 266 per mock). */
   size?: number
   /** Slight tilt for the FieldDesk roster (degrees). */
@@ -68,6 +72,7 @@ export default function CredentialCard({
   level,
   score,
   avatarUrl,
+  character,
   size = 266,
   rotation = 0,
   stillRing = false,
@@ -151,7 +156,9 @@ export default function CredentialCard({
                 background: 'var(--fc-bg)',
               }}
             >
-              {avatarUrl ? (
+              {character ? (
+                <FactionAvatar character={character} size={128} badge={false} />
+              ) : avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={name}

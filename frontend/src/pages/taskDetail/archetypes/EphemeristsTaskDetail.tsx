@@ -516,10 +516,21 @@ export default function EphemeristsTaskDetail({
             <span style={{ ...quietItalic, color: BRASS_LIGHT }}>{t("detail.inProgress.text")}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", flexWrap: "wrap" }}>
-            <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: 1, width: "auto" }}>
+            <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: "1 1 8rem", width: "auto", minWidth: 0, padding: "var(--space-md) var(--space-xs)", overflowWrap: "anywhere" }}>
               {t("detail.inProgress.continue")}
             </Link>
-            <button onClick={handleDrop} style={quietButton}>
+            <button
+              onClick={handleDrop}
+              style={{
+                ...quietButton,
+                minHeight: 44,
+                minWidth: 44,
+                justifyContent: "center",
+                borderBottom: "none",
+                textDecoration: "underline",
+                textDecorationColor: LINE,
+              }}
+            >
               {t("detail.inProgress.drop")}
             </button>
           </div>

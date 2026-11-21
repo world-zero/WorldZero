@@ -7,10 +7,13 @@ import { SEEN_INVITES_KEY_PREFIX } from '../../../components/InvitationWatcher'
 import { LAST_SEEN_LEVEL_KEY_PREFIX } from '../../../components/LevelUpWatcher'
 import { MOTION_STORAGE_KEY } from '../../../hooks/useMotion'
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapsed'
+import { COMMUNITY_SIDE_KEY } from '../../communitySide'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
 import { INSTALL_DISMISSED_KEY } from '../../../utils/installPrompt'
+import { PUSH_ASK_DISMISSED_KEY } from '../../../utils/pushAskDismissed'
+import { CHUNK_RELOAD_KEY } from '../../../components/ErrorBoundary'
 import { HELD_TERMS_KEY, ONBOARDING_HANDOFF_KEY, TITLE_SEEN_KEY } from '../../../utils/onboardingResume'
 import type { SettingsSectionProps } from '../../Settings'
 import SettingsCard from '../SettingsCard'
@@ -84,6 +87,11 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
     whereKey: BROWSER_WHERE,
   },
   {
+    name: COMMUNITY_SIDE_KEY,
+    purposeKey: 'settings.cookies.entries.communitySide',
+    whereKey: BROWSER_WHERE,
+  },
+  {
     name: SIDEBAR_PANEL_LAYOUT_STORAGE_KEY,
     family: 'account',
     purposeKey: 'settings.cookies.entries.sidebarPanels',
@@ -134,6 +142,16 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
     name: INSTALL_DISMISSED_KEY,
     purposeKey: 'settings.cookies.entries.installDismissed',
     whereKey: BROWSER_WHERE,
+  },
+  {
+    name: PUSH_ASK_DISMISSED_KEY,
+    purposeKey: 'settings.cookies.entries.pushAskDismissed',
+    whereKey: BROWSER_WHERE,
+  },
+  {
+    name: CHUNK_RELOAD_KEY,
+    purposeKey: 'settings.cookies.entries.chunkReload',
+    whereKey: TAB_WHERE,
   },
 ]
 

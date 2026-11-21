@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from errors import ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
@@ -34,7 +35,7 @@ from services.character_stats import (
 )
 from services.era import get_current_era_row
 from services.habit_bonus import stamp_habit_bonus
-from services.praxis_room import discard_room_document
+from services.praxis_room import discard_room_document, document_over_cap
 from services.taunt_service import fan_out_taunt
 
 
@@ -131,15 +132,27 @@ async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) ->
     """Seal a collab to Live and recalc members. Used by timeout and leave.
 
     No one completes these seals, so the daily cap neither gates nor charges them.
-    A collab with no proof stays unsealed (a read path must not raise).
+    A collab with no proof or an over-cap draft stays unsealed (reads must not raise).
     ``ponytail:`` timeout seals dodge the cap; charge the proposer if that is abused.
     """
     member_ids = [member.character_id for member in praxis.members]
     if not await _has_proof(praxis, member_ids, session):
         return
+    if await document_over_cap(praxis.id):
+        return
     await _apply_seal(praxis, session, era)
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
+
+
+_PRAXIS_LOCK_NAMESPACE = 0x5A1B
+
+
+async def _lock_praxis(praxis_id: int, session: AsyncSession) -> None:
+    """Order: character signup lock, then this, then any duel row lock."""
+    await session.execute(
+        select(func.pg_advisory_xact_lock(_PRAXIS_LOCK_NAMESPACE, praxis_id))
+    )
 
 
 async def settle_if_window_lapsed(
@@ -162,6 +175,20 @@ async def settle_if_window_lapsed(
     deadline = praxis.submit_proposed_at + timedelta(days=era.collab_auto_submit_days)
     if datetime.now(timezone.utc) < deadline:
         return
+    await _lock_praxis(praxis.id, session)
+    await session.execute(
+        select(Praxis)
+        .options(selectinload(Praxis.invites), selectinload(Praxis.media_items))
+        .where(Praxis.id == praxis.id)
+        .execution_options(populate_existing=True)
+    )
+    if (
+        praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending)
+        or praxis.submit_proposed_at is None
+        or datetime.now(timezone.utc)
+        < praxis.submit_proposed_at + timedelta(days=era.collab_auto_submit_days)
+    ):
+        return
     await seal_to_live(praxis, session, era)
 
 
@@ -171,7 +198,7 @@ async def seal_lapsed_at_era_close(
     """Seal every lapsed collab window into the closing era, stamped at its deadline.
 
     Returns the sealed members' character ids; the caller re-scores them in the
-    closing era. A collab with no proof stays unsealed, as on the lazy path.
+    closing era. A collab with no proof or an over-cap draft stays unsealed, as lazily.
     """
     window = timedelta(days=closing_era.collab_auto_submit_days)
     lapsed = (
@@ -188,6 +215,8 @@ async def seal_lapsed_at_era_close(
     for praxis in lapsed:
         member_ids = [m.character_id for m in praxis.members]
         if not await _has_proof(praxis, member_ids, session):
+            continue
+        if await document_over_cap(praxis.id):
             continue
         deadline = praxis.submit_proposed_at + window
         await _apply_seal(

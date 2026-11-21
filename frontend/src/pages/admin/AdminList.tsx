@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import './adminList.css'
@@ -32,7 +33,7 @@ export function ListToolbar({
   children?: ReactNode
 }) {
   return (
-    <div className="adm-toolbar" role="toolbar" aria-label={label}>
+    <div className="adm-btns" role="toolbar" aria-label={label}>
       <label className="adm-search">
         <span className="adm-sr">{search.label}</span>
         <input
@@ -149,6 +150,9 @@ export function ListTable<T>({
   )
 }
 
+/** The row button that opened the panel; SidePanel takes it, since focus has moved by the time it mounts. */
+let opener: HTMLElement | null = null
+
 export function SidePanel({
   label,
   badge,
@@ -164,13 +168,25 @@ export function SidePanel({
   children: ReactNode
 }) {
   const { t } = useTranslation('admin')
-  // Wrapped under the table on phone, the panel opens off-screen.
+  // On phone the panel is a full-screen sheet: focus goes in, Esc closes, focus returns to the row.
   const ref = useRef<HTMLElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
   useEffect(() => {
-    ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' })
+    const from = opener?.isConnected ? opener : (document.activeElement as HTMLElement | null)
+    opener = null
+    ref.current?.focus({ preventScroll: true })
+    // Esc in a field would drop TaskPanel's unsaved edits.
+    const esc = (e: KeyboardEvent) =>
+      e.key === 'Escape' && !(e.target as Element).closest?.('input,textarea,select,[contenteditable]') && close.current()
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('keydown', esc)
+      if (from?.isConnected) from.focus({ preventScroll: true })
+    }
   }, [])
   return (
-    <aside ref={ref} aria-label={label} className="adm-card adm-split-side">
+    <aside ref={ref} tabIndex={-1} aria-label={label} className="adm-card adm-split-side">
       <div className="adm-panel-top">
         {badge}
         <span className="adm-btns">
@@ -183,4 +199,23 @@ export function SidePanel({
       {children}
     </aside>
   )
+}
+
+/**
+ * A `?param=id` selection. Opening from the bare list pushes an entry (so phone Back closes the
+ * sheet); switching rows replaces; closing pops the entry it pushed, or replaces on a deep link.
+ */
+export function useSelection(param: string) {
+  const [params, setParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { state } = useLocation()
+  const id = Number(params.get(param)) || null
+  const open = (next: number | null) => {
+    // Switching rows remounts the panel after the old one's cleanup moved focus back to the first row.
+    if (next && next !== id) opener = document.activeElement as HTMLElement | null
+    if (next) setParams({ [param]: String(next) }, { replace: id !== null, state: { sheet: id !== null ? state?.sheet : true } })
+    else if (state?.sheet) navigate(-1)
+    else setParams({}, { replace: true })
+  }
+  return [id, open] as const
 }

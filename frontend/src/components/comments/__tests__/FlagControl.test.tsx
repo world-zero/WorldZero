@@ -1,5 +1,7 @@
+// @vitest-environment jsdom
 /** Comment flag control (#575): eligibility, the request body, and presence. */
 import { renderToStaticMarkup } from 'react-dom/server'
+import { render, fireEvent, screen } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import '../../../i18n'
 import type { CommentOut } from '../../../api/comments'
@@ -90,6 +92,23 @@ describe('CommentFlagControl — affordance presence (#575)', () => {
     authState.user = { character: { id: 42 } }
     const html = renderToStaticMarkup(<CommentFlagControl comment={COMMENT} />)
     expect(html).toBe('')
+  })
+  it('clears the phone tap floor (#3755)', () => {
+    authState.user = { character: { id: 99 } }
+    const html = renderToStaticMarkup(<CommentFlagControl comment={COMMENT} />)
+    expect(html).toMatch(/min-height:\s*44px/)
+    expect(html).toMatch(/min-width:\s*44px/)
+  })
+  it('keeps the floor on reason, submit and cancel once opened (#3755)', () => {
+    authState.user = { character: { id: 99 } }
+    render(<CommentFlagControl comment={COMMENT} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Flag' }))
+    fireEvent.click(screen.getAllByRole('radio')[0])
+    const controls = [...screen.getAllByRole('radio'), screen.getByRole('button', { name: 'Submit flag' }), screen.getByRole('button', { name: 'Cancel' })]
+    for (const control of controls) {
+      expect(control.style.minHeight).toBe('44px')
+      expect(control.style.minWidth).toBe('44px')
+    }
   })
 })
 

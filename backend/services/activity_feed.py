@@ -14,6 +14,7 @@ from sqlalchemy import (
     Select,
     String,
     and_,
+    case,
     delete,
     exists,
     func,
@@ -142,6 +143,10 @@ def build_item_key(item_type: str, source_id: int) -> str:
 # would silence a standing obligation (#1192).
 NON_ARCHIVABLE_ITEM_TYPES: frozenset[str] = frozenset({FEED_ITEM_TYPE_AWAITING_SUBMISSION})
 
+ARCHIVE_PROOF_WHEN_UNANSWERED: frozenset[str] = frozenset(
+    {FEED_ITEM_TYPE_COLLAB_INVITE, FEED_ITEM_TYPE_DUEL_CHALLENGE}
+)
+
 FILTER_ALL = "all"
 FILTER_FRIENDS = "friends"
 FILTER_FOES = "foes"
@@ -261,6 +266,19 @@ async def _get_my_task_ids(
 _VOTE_WAS_CHANGED = Vote.updated_at > Vote.created_at
 
 
+def _owns_praxis(character_id: int):
+    """Creator OR member. EXISTS, not a join, so multi-member praxes give one row."""
+    return or_(
+        Praxis.created_by_id == character_id,
+        exists().where(
+            and_(
+                PraxisMember.praxis_id == Praxis.id,
+                PraxisMember.character_id == character_id,
+            )
+        ),
+    )
+
+
 def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
     """Build the cast-vote or changed-vote query — they differ only in time.
 
@@ -288,7 +306,7 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
             .join(Task, Praxis.task_id == Task.id)
             .join(voter_char, Vote.voter_character_id == voter_char.c.id)
             .where(
-                Praxis.created_by_id == ctx.character_id,
+                _owns_praxis(ctx.character_id),
                 _VOTE_WAS_CHANGED if changed else ~_VOTE_WAS_CHANGED,
             )
         )
@@ -333,12 +351,22 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
     """Build a completions query reading its character-id list from ``ctx.<attr>``."""
     def build(ctx: FeedContext) -> Select:
         character_ids = getattr(ctx, character_ids_attr)
+        # The creator if they qualify, else the lowest-id qualifying member.
+        actor_id = case(
+            (Praxis.created_by_id.in_(character_ids), Praxis.created_by_id),
+            else_=select(func.min(PraxisMember.character_id))
+            .where(
+                PraxisMember.praxis_id == Praxis.id,
+                PraxisMember.character_id.in_(character_ids),
+            )
+            .scalar_subquery(),
+        )
         query = (
             select(
                 Praxis.id,
                 Praxis.title,
                 Praxis.created_at,
-                Praxis.created_by_id.label("character_id"),
+                actor_id.label("character_id"),
                 Task.title.label("task_title"),
                 Task.point_value.label("task_point_value"),
                 Task.primary_faction_slug.label("task_faction_slug"),
@@ -347,9 +375,17 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
                 Character.avatar_url.label("author_avatar_url"),
             )
             .join(Task, Praxis.task_id == Task.id)
-            .join(Character, Praxis.created_by_id == Character.id)
+            .join(Character, actor_id == Character.id)
             .where(
-                Praxis.created_by_id.in_(character_ids),
+                or_(
+                    Praxis.created_by_id.in_(character_ids),
+                    exists().where(
+                        and_(
+                            PraxisMember.praxis_id == Praxis.id,
+                            PraxisMember.character_id.in_(character_ids),
+                        )
+                    ),
+                ),
                 Praxis.status == PraxisStatus.submitted,
                 # Anyone can declare you a foe and read this source, so apply the
                 # same visibility as every other door: moderation `hidden`, and
@@ -874,15 +910,7 @@ def _comments_on_mine_query(ctx: FeedContext) -> Select:
         .join(Character, Comment.created_by_id == Character.id)
         .where(
             Comment.created_by_id != ctx.character_id,
-            or_(
-                Praxis.created_by_id == ctx.character_id,
-                exists().where(
-                    and_(
-                        PraxisMember.praxis_id == Praxis.id,
-                        PraxisMember.character_id == ctx.character_id,
-                    )
-                ),
-            ),
+            _owns_praxis(ctx.character_id),
             ~_mentions_the_viewer(ctx),
             Comment.is_withdrawn.is_(False),
             Comment.moderation_status == ModerationStatus.visible,
@@ -1397,6 +1425,11 @@ def _scoped_query(
         if not dismissed_ids:
             return None
         return query.where(source.source_id_column.in_(dismissed_ids))
+    # ADR-0070: archiving is a view state, never a decision, and there is exactly one
+    # count of what is outstanding. An unanswered invite/challenge ignores the archive.
+    unanswered = ctx.unanswered_requests_only
+    if unanswered and source.item_type in ARCHIVE_PROOF_WHEN_UNANSWERED:
+        return query
     if not dismissed_ids:
         return query
     return query.where(source.source_id_column.notin_(dismissed_ids))
@@ -1625,12 +1658,19 @@ async def _build_fetch_context(
     my_task_ids = tuple(await _get_my_task_ids(character_id, session))
     era_row = await get_current_era_row(session)
     # No stats row this era = level 0.
-    viewer_level = await session.scalar(
-        select(CharacterStats.level).where(
-            CharacterStats.character_id == character_id,
-            CharacterStats.era_id == era_row.id,
+    # One round trip: level (outer-joined, NULL = no stats row) + faction.
+    viewer_level, viewer_faction = (
+        await session.execute(
+            select(CharacterStats.level, Character.faction_slug)
+            .select_from(Character)
+            .outerjoin(
+                CharacterStats,
+                (CharacterStats.character_id == Character.id)
+                & (CharacterStats.era_id == era_row.id),
+            )
+            .where(Character.id == character_id)
         )
-    )
+    ).one()
 
     return (
         FeedContext(
@@ -1642,7 +1682,9 @@ async def _build_fetch_context(
             before=before_cursor,
             unanswered_requests_only=not archived,
             sees_metatasks=character_sees_metatasks(
-                viewer_level or 0, era_config_for_key(era_row.config_key)
+                viewer_level or 0,
+                viewer_faction,
+                era_config_for_key(era_row.config_key),
             ),
         ),
         archive_view,
@@ -1872,7 +1914,8 @@ async def dismiss_feed_items_for_filter(
     """Archive everything the given filter would currently return. One call.
 
     Re-runs the visible feed so scope matches the tab. Non-archivable rows are
-    skipped, not refused.
+    skipped, not refused; so are pending requests, which ignore the archive.
+    Only the queue tabs hold pending ones: the stream tabs show answered ones.
     """
     feed = await get_activity_feed(
         character_id=character_id,
@@ -1880,8 +1923,12 @@ async def dismiss_feed_items_for_filter(
         feed_filter=feed_filter,
         limit=ARCHIVE_ALL_LIMIT,
     )
+    in_stream = _normalise_filter(feed_filter) in STREAM_FILTERS
     item_keys = [
-        item.item_key for item in feed.items if item.type in ARCHIVABLE_ITEM_TYPES
+        item.item_key
+        for item in feed.items
+        if item.type in ARCHIVABLE_ITEM_TYPES
+        and (in_stream or item.type not in ARCHIVE_PROOF_WHEN_UNANSWERED)
     ]
     return await _insert_dismissals(character_id, item_keys, session)
 

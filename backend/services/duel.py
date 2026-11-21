@@ -9,6 +9,7 @@ from typing import Optional
 
 from fastapi import HTTPException
 from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
@@ -23,21 +24,22 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
-from models.task import Task
+from models.task import Task, TaskStatus
 from schemas.duel import DuelDetailOut, DuelSideOut
 from services.character import is_playable
 from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
-from services.nudge import latest_nudge_at
+from services.nudge import latest_nudge_at, nudge_again_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_create_duel
-from services.praxis import get_praxis
+from services.praxis import _lock_signups_for_character, get_praxis
 from services.praxis_duel import get_duel_for_praxis
 from services.push import notify_duel_challenge
 from services.signup_eligibility import (
     count_in_progress_praxes,
     is_active_member_of_task,
+    task_status_closed,
 )
 
 
@@ -108,8 +110,12 @@ async def forfeit_settled_duels_for_character(
         await session.flush()
 
 
-async def get_duel(duel_id: int, session: AsyncSession) -> Duel:
-    duel = await session.get(Duel, duel_id)
+async def get_duel(duel_id: int, session: AsyncSession, lock: bool = False) -> Duel:
+    """``lock``: a concurrent transition waits, then sees this one's result."""
+    query = select(Duel).where(Duel.id == duel_id)
+    if lock:
+        query = query.with_for_update().execution_options(populate_existing=True)
+    duel = await session.scalar(query)
     if duel is None:
         raise HTTPException(status_code=404, detail="Duel not found.")
     return duel
@@ -189,6 +195,7 @@ async def get_duel_detail(
             ),
             is_submitted=praxis is not None and praxis.status == PraxisStatus.submitted,
             nudged_at=nudged_at,
+            nudge_again_at=nudge_again_at(nudged_at),
             win_multiplier=_multiplier(True, False),
             loss_multiplier=_multiplier(False, False),
             tie_multiplier=_multiplier(False, True),
@@ -233,6 +240,10 @@ async def issue_duel_challenge(
     ):
         raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
+    # Serialize bursts from one praxis; the lock is released on commit.
+    await session.execute(
+        select(Praxis.id).where(Praxis.id == challenger_praxis_id).with_for_update()
+    )
     # Plain read (#2874): only solo passes, and only collabs have a window.
     challenger_praxis = await get_praxis(challenger_praxis_id, session)
     if challenger_praxis.created_by_id != challenger_character_id:
@@ -290,7 +301,12 @@ async def issue_duel_challenge(
         status=DuelStatus.pending,
     )
     session.add(duel)
-    await session.flush()
+    try:
+        await session.flush()
+    except IntegrityError:
+        raise_coded(
+            409, ErrorCode.duel_already_exists, "This praxis is already part of a duel."
+        )
     await notify_duel_challenge(
         session, duel.id, challenger_praxis, opponent_character_id
     )
@@ -307,7 +323,15 @@ async def respond_to_duel_challenge(
 ) -> tuple[Optional[Praxis], Duel]:
     """Accept (create opponent praxis, → active) or decline (→ declined).
     Returns (opponent_praxis_or_None, duel)."""
-    duel = await get_duel(duel_id, session)
+    # Signup lock before the duel row lock (#3655): peek unlocked, lock, reload.
+    peek = await get_duel(duel_id, session)
+    if (
+        accept
+        and peek.opponent_character_id == character_id
+        and peek.status == DuelStatus.pending
+    ):
+        await _lock_signups_for_character(character_id, session)
+    duel = await get_duel(duel_id, session, lock=True)
 
     if duel.opponent_character_id != character_id:
         raise_coded(
@@ -344,6 +368,19 @@ async def respond_to_duel_challenge(
     task = await session.get(Task, duel.task_id)
     if task is None:
         raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
+
+    # The challenge may outlive the task's status (era close, mod action). Level
+    # stays exempt below (#292).
+    if task_status_closed(task, opponent, era):
+        status = task.status.value
+        deleted = task.status == TaskStatus.deleted
+        context = {} if deleted else {DETAIL_CONTEXT_PARAM: status}
+        raise_coded(
+            403,
+            ErrorCode.task_not_open_for_signup,
+            f"This task is {status} and is not open for new praxis.",
+            context,
+        )
 
     # May have signed up since the challenge; `era` as above (#1511).
     if await is_active_member_of_task(opponent, task, session, era):
@@ -413,7 +450,7 @@ async def cancel_duel_challenge(
 
     Both sides stay plain solo praxes, no penalty.
     """
-    duel = await get_duel(duel_id, session)
+    duel = await get_duel(duel_id, session, lock=True)
 
     if duel.status not in (DuelStatus.pending, DuelStatus.active):
         raise HTTPException(status_code=400, detail="Duel has already been resolved.")
@@ -431,7 +468,8 @@ async def cancel_duel_challenge(
 
     # A side may already be scored with the duel multiplier; revert both.
     era_row = await get_current_era_row(session)
-    for participant_id in {challenger_character_id, duel.opponent_character_id}:
+    participant_ids = {challenger_character_id, duel.opponent_character_id} - {None}
+    for participant_id in sorted(participant_ids):
         if participant_id is not None:
             await recalculate_character_stats(
                 participant_id, session, era, era_row=era_row

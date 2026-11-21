@@ -18,7 +18,7 @@ by ``uncoded_error_scan.py``.
 from __future__ import annotations
 
 #: Duplicated on purpose: the one number a reviewer reads; the test checks it.
-UNCODED_RAISE_TOTAL = 107
+UNCODED_RAISE_TOTAL = 106
 
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "dependencies.py::get_current_character": 1,
@@ -89,7 +89,7 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "services/praxis.py::kick_member": 3,
     "services/praxis.py::leave_praxis": 1,
     "services/praxis.py::moderate_praxis": 1,
-    "services/praxis.py::respond_to_invite": 4,
+    "services/praxis.py::respond_to_invite": 3,
     "services/praxis.py::unsubmit_praxis": 1,
 
     "services/praxis_metatask.py::apply_metatask": 8,
@@ -100,7 +100,7 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
 
     "services/task.py::list_signups_for_task": 1,
     "services/task.py::list_tasks": 2,
-    "services/task.py::propose_task": 2,
+    "services/task.py::_validate_proposal": 2,
 
     "services/vote.py::cast_or_update_vote": 3,
     "services/vote.py::cast_vote_on_praxis": 1,

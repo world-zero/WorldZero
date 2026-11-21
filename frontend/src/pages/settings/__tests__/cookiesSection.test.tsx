@@ -27,6 +27,7 @@ import { SEEN_INVITES_KEY_PREFIX } from '../../../components/InvitationWatcher'
 import { LAST_SEEN_LEVEL_KEY_PREFIX } from '../../../components/LevelUpWatcher'
 import { MOTION_STORAGE_KEY } from '../../../hooks/useMotion'
 import { SIDEBAR_COLLAPSED_STORAGE_KEY } from '../../../hooks/useSidebarCollapsed'
+import { COMMUNITY_SIDE_KEY } from '../../communitySide'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
@@ -66,14 +67,17 @@ describe('the section reaches the page', () => {
 const KNOWN_WRITERS = [
   'auth/AdminModeContext.tsx',
   'auth/AuthContext.tsx',
+  'components/ErrorBoundary.tsx',
   'components/InvitationWatcher.tsx',
   'components/LevelUpWatcher.tsx',
   'hooks/useMotion.tsx',
   'hooks/useSidebarCollapsed.ts',
+  'pages/communitySide.ts',
   'hooks/useSidebarPanelLayout.ts',
   'hooks/useTheme.tsx',
   'pages/factionDetail/sectionDisclosure.tsx',
   'utils/installPrompt.ts',
+  'utils/pushAskDismissed.ts',
   'utils/onboardingResume.ts',
 ]
 
@@ -167,8 +171,8 @@ describe('no writer holds a key the card does not disclose', () => {
 })
 
 describe('the inventory is pinned to the keys the app really writes', () => {
-  it('discloses all fourteen storage entries and the one cookie', () => {
-    expect(names).toHaveLength(15)
+  it('discloses all seventeen storage entries and the one cookie', () => {
+    expect(names).toHaveLength(18)
   })
 
   it.each([
@@ -177,6 +181,7 @@ describe('the inventory is pinned to the keys the app really writes', () => {
     ['session hint', SESSION_HINT_KEY],
     ['admin mode', ADMIN_MODE_STORAGE_KEY],
     ['sidebar collapse', SIDEBAR_COLLAPSED_STORAGE_KEY],
+    ['community side', COMMUNITY_SIDE_KEY],
     ['sidebar panels', SIDEBAR_PANEL_LAYOUT_STORAGE_KEY],
     ['faction sections', FACTION_SECTIONS.storageKey],
     // #2958: shares a writer with the line above, so the census misses it.
