@@ -126,7 +126,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     await session.flush()
 
     print("  >Owner role -> pixie")
-    # The migration already inserted the role row; a fresh DB has no account to grant it to.
+    # The migration inserted the role row; a fresh DB had no account to grant it to.
     admin_role = (
         await session.execute(select(Role).where(Role.name == OWNER_ROLE_NAME))
     ).scalar_one_or_none()

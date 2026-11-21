@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
+from sqlalchemy import String, cast, select, union_all
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
@@ -120,26 +120,35 @@ async def get_viewer_is_admin(
     return await account_has_admin_role(account.id, session)
 
 
-async def account_is_owner(account_id: int, session: AsyncSession) -> bool:
-    """Holds the ``owner`` role (set only from the CLI or the DB, ADR-0101)."""
-    result = await session.execute(
-        select(AccountRole.id)
-        .join(Role, AccountRole.role_id == Role.id)
+async def account_grants(
+    account_id: int, session: AsyncSession
+) -> tuple[bool, frozenset[Permission]]:
+    """(holds the owner role, the permissions it may use); one query.
+
+    The owner role is set only from the CLI or the DB (ADR-0101) and holds all nine.
+    """
+    owner_names = (
+        select(Role.name)
+        .join(AccountRole, AccountRole.role_id == Role.id)
         .where(AccountRole.account_id == account_id, Role.name == OWNER_ROLE_NAME)
     )
-    return result.first() is not None
-
-
-async def account_permissions(account_id: int, session: AsyncSession) -> frozenset[Permission]:
-    """What the account may do as an admin; the owner holds all nine."""
-    if await account_is_owner(account_id, session):
-        return frozenset(Permission)
-    rows = await session.scalars(
-        select(AccountPermission.permission).where(
-            AccountPermission.account_id == account_id
-        )
+    held = select(cast(AccountPermission.permission, String)).where(
+        AccountPermission.account_id == account_id
     )
-    return frozenset(rows)
+    names = set(await session.scalars(union_all(owner_names, held)))
+    if OWNER_ROLE_NAME in names:
+        return True, frozenset(Permission)
+    return False, frozenset(Permission[name] for name in names)
+
+
+async def account_is_owner(account_id: int, session: AsyncSession) -> bool:
+    return (await account_grants(account_id, session))[0]
+
+
+async def account_permissions(
+    account_id: int, session: AsyncSession
+) -> frozenset[Permission]:
+    return (await account_grants(account_id, session))[1]
 
 
 async def account_has_admin_role(account_id: int, session: AsyncSession) -> bool:
@@ -158,13 +167,14 @@ def require_permission(*permissions: Permission):
         account: Account = Depends(get_current_account),
         session: AsyncSession = Depends(get_db, scope="function"),
     ) -> Account:
-        if not (await account_permissions(account.id, session)).intersection(permissions):
+        held = await account_permissions(account.id, session)
+        if not held.intersection(permissions):
             raise_coded(
                 403, ErrorCode.admin_permission_required, "You lack that permission."
             )
         return account
 
-    dependency.required_permissions = frozenset(permissions)  # type: ignore[attr-defined]
+    dependency.required_permissions = frozenset(permissions)  # type: ignore
     return dependency
 
 

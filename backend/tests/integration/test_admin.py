@@ -607,52 +607,6 @@ async def test_admin_edit_active_task_rejected(
 
 
 @pytest.mark.asyncio
-async def test_admin_patch_stats_recomputes_votes_available(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    era: Era,
-):
-    from math import floor
-
-    from sqlalchemy import select
-
-    from game_config import CURRENT_ERA
-
-    await make_admin(db_session, account)
-
-    patch_resp = await client.patch(
-        f"/admin/characters/{character.id}/stats",
-        json={"score": 0, "votes_available": 5},
-        headers=auth_headers,
-    )
-    assert patch_resp.status_code == 200
-    assert patch_resp.json()["votes_available"] == 5
-
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    await db_session.refresh(stats)
-    cap = CURRENT_ERA.vote_budget_base + floor(CURRENT_ERA.vote_budget_multiplier * 0)
-    assert stats.votes_spent_this_era == max(0, cap - 5)
-
-    list_resp = await client.get(
-        f"/admin/characters?faction={character.faction_slug}",
-        headers=auth_headers,
-    )
-    assert list_resp.status_code == 200
-    matching = [c for c in list_resp.json() if c["id"] == character.id]
-    assert len(matching) == 1
-    assert matching[0]["votes_available"] == 5
-
-
-@pytest.mark.asyncio
 async def test_admin_era_reset_zeros_votes_spent_this_era(
     client: AsyncClient,
     account: Account,

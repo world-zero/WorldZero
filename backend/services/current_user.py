@@ -8,7 +8,7 @@ from dataclasses import asdict
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dependencies import account_has_admin_role, account_is_owner
+from dependencies import account_grants
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account, OAuthProvider
 from models.terms_acceptance import CURRENT_TERMS_VERSION, TermsAcceptance
@@ -52,7 +52,8 @@ async def build_current_user(
         character_level = stats.level if stats else 0
         level_jump_used_at_level = stats.level_jump_used_at_level if stats else None
 
-    is_admin = await account_has_admin_role(account.id, session)
+    is_owner, permissions = await account_grants(account.id, session)
+    is_admin = bool(permissions)
 
     # One FROM-less SELECT for both so /auth/me stays inside its query budget.
     # LIMIT 1: an account holds exactly one identity (ADR-0075).
@@ -95,7 +96,7 @@ async def build_current_user(
         provider=provider or "",
         character=char_out,
         is_admin=is_admin,
-        is_owner=is_admin and await account_is_owner(account.id, session),
+        is_owner=is_owner,
         has_accepted_terms=has_accepted_terms,
         can_create_additional_character=eligibility.can_create_additional_character,
         can_start_as_albescent=eligibility.can_start_as_albescent,

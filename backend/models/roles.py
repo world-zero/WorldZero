@@ -49,7 +49,7 @@ OWNER_ROLE_NAME = "owner"
 
 
 class Permission(enum.Enum):
-    """The nine admin checkboxes (ADR-0101). A new one widens the CHECK in a revision."""
+    """The nine admin checkboxes (ADR-0101); a tenth widens the CHECK."""
 
     handle_reports = "handle_reports"
     ban_suspend = "ban_suspend"

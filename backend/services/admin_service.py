@@ -51,7 +51,7 @@ from schemas.admin import (
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import factions_leaving_roster, upsert_era_factions
 from services.faction_service import refuse_hidden_faction
-from services.character import MOD_BANNED, record_level_reached
+from services.character import MOD_BANNED
 from services.character_stats import (
     recalculate_character_stats,
     recalculate_for_account_votes,
@@ -65,12 +65,11 @@ from services.era import (
     commit_and_bind_live_era,
     get_current_era_row,
     get_current_era_row_safe,
-    get_or_create_stats,
     DUELS_FROZEN_AT_ERA_CLOSE,
     lock_era_rollover,
     tasks_retired_at_era_close,
 )
-from services.scoring import compute_vote_budget, compute_votes_available
+from services.scoring import compute_votes_available
 
 logger = logging.getLogger(__name__)
 

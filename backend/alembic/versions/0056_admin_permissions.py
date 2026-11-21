@@ -57,7 +57,8 @@ def upgrade() -> None:
         "WHERE a.id = 1 AND r.name = 'owner' ON CONFLICT DO NOTHING"
     )
     op.execute(
-        "DELETE FROM account_role WHERE role_id IN (SELECT id FROM role WHERE name = 'admin')"
+        "DELETE FROM account_role "
+        "WHERE role_id IN (SELECT id FROM role WHERE name = 'admin')"
     )
     op.execute("DELETE FROM role WHERE name = 'admin'")
 
@@ -72,10 +73,12 @@ def downgrade() -> None:
         "SELECT DISTINCT x.account_id, r.id, x.account_id FROM "
         "(SELECT account_id FROM account_permission UNION "
         " SELECT ar.account_id FROM account_role ar JOIN role o ON o.id = ar.role_id "
-        " WHERE o.name = 'owner') x, role r WHERE r.name = 'admin' ON CONFLICT DO NOTHING"
+        " WHERE o.name = 'owner') x, role r "
+        "WHERE r.name = 'admin' ON CONFLICT DO NOTHING"
     )
     op.execute(
-        "DELETE FROM account_role WHERE role_id IN (SELECT id FROM role WHERE name = 'owner')"
+        "DELETE FROM account_role "
+        "WHERE role_id IN (SELECT id FROM role WHERE name = 'owner')"
     )
     op.execute("DELETE FROM role WHERE name = 'owner'")
     op.execute("DROP TABLE account_permission")

@@ -100,7 +100,7 @@
   "services/task.py::E501": 2,
   "services/vote.py::E501": 3,
   "tests/integration/conftest.py::E501": 4,
-  "tests/integration/factories.py::E501": 3,
+  "tests/integration/factories.py::E501": 2,
   "tests/integration/test_activity_feed.py::E501": 1,
   "tests/integration/test_activity_feed_archive.py::E501": 1,
   "tests/integration/test_activity_feed_global_task_backlog.py::E501": 2,

@@ -5,10 +5,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.account import Account
-from tests.integration.factories import make_admin
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
+from tests.integration.factories import make_admin
 
 
 async def _set_character_level(

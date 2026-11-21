@@ -28,7 +28,13 @@ from models.praxis import (
     PraxisStatus,
     PraxisType,
 )
-from models.roles import OWNER_ROLE_NAME, AccountPermission, AccountRole, Permission, Role
+from models.roles import (
+    OWNER_ROLE_NAME,
+    AccountPermission,
+    AccountRole,
+    Permission,
+    Role,
+)
 from models.task import Task, TaskStatus, TaskType
 from models.vote import Vote
 

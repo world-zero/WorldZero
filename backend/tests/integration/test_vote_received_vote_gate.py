@@ -2,7 +2,6 @@
 import pytest
 from fastapi import HTTPException
 from httpx import AsyncClient
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
@@ -120,7 +119,8 @@ async def test_admin_skips_this_rule_but_not_the_level(
     assert (await cast_vote_on_praxis(admin, target.id, 4, db_session)).vote.value == 4
 
     low = await make_character(db_session, era, username="rv_admin_low", level=0)
-    await make_admin(db_session, await db_session.get(Account, low.account_id), commit=False)
+    low_account = await db_session.get(Account, low.account_id)
+    await make_admin(db_session, low_account, commit=False)
     with pytest.raises(HTTPException) as refusal:
         await cast_vote_on_praxis(low, target.id, 4, db_session)
     assert refusal.value.detail["code"] == ErrorCode.vote_level_too_low.value
