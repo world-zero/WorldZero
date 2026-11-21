@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA, EraConfig
 from models.meta_task import PraxisMetaTask
-from models.task import Task, TaskType
+from models.task import Task, TaskStatus, TaskType
 
 
 def faction_bypasses_metatask_level(
@@ -58,7 +58,8 @@ async def get_meta_task_points_bulk(
 ) -> dict[int, int]:
     """``{praxis_id: flat bonus}`` from attached metatasks, in one query.
 
-    No level gate: who may attach is checked once, at apply time. Missing key = 0.
+    No level gate: who may attach is checked once, at apply time. Only
+    active/retired metatasks pay; pending or deleted ones add 0. Missing key = 0.
     """
     if not praxis_ids:
         return {}
@@ -66,7 +67,10 @@ async def get_meta_task_points_bulk(
     result = await session.execute(
         select(PraxisMetaTask.praxis_id, Task)
         .join(Task, Task.id == PraxisMetaTask.task_id)
-        .where(PraxisMetaTask.praxis_id.in_(praxis_ids))
+        .where(
+            PraxisMetaTask.praxis_id.in_(praxis_ids),
+            Task.status.in_((TaskStatus.active, TaskStatus.retired)),
+        )
     )
     totals: dict[int, int] = {}
     for praxis_id, task in result.all():
