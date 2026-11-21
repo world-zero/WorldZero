@@ -1813,7 +1813,11 @@ async def _count_requests(
     scopes: Sequence[tuple[int, FeedContext, FeedArchiveView]],
     session: AsyncSession,
 ) -> dict[int, int]:
-    """The one pending-request counter: all characters share ONE union round trip."""
+    """The one pending-request counter: one UNION round trip for all characters.
+
+    The caller's per-character ``_build_fetch_context`` pre-fetch (6 round trips
+    each) happens before this and is not batched.
+    """
     counts = {character_id: 0 for character_id, _, _ in scopes}
     branches = []
     for character_id, ctx, archive_view in scopes:
