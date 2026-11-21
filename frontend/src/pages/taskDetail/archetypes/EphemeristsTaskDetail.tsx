@@ -256,7 +256,7 @@ export default function EphemeristsTaskDetail({
   // The masthead: night band + engraved lockup. No glyph registers behind it —
   // the notation band is the faction's only ornament row (#2210).
   const masthead = (
-    <div style={{ marginBottom: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
+    <div style={{ marginBottom: "var(--detail-panel-space, var(--space-xl))" }}>
       <div
         style={{
           position: "relative",
@@ -419,7 +419,7 @@ export default function EphemeristsTaskDetail({
         style={{
           display: "flex",
           alignItems: "flex-end",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--detail-panel-space, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -582,7 +582,7 @@ export default function EphemeristsTaskDetail({
   // `isolation: isolate` makes the leaf a stacking context so the net's
   // `z-index: -1` sits above the fill and below the copy.
   const brief = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--detail-section-gap, var(--space-2xl))" }}>
       {sectionHead(t("detail.brief.heading"))}
       {task.description && (
         <div
@@ -646,7 +646,7 @@ export default function EphemeristsTaskDetail({
   );
 
   const gallery = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--detail-section-gap, var(--space-2xl))" }}>
       <div style={{ marginBottom: "var(--space-lg)" }}>
         <div
           style={{
@@ -722,18 +722,16 @@ export default function EphemeristsTaskDetail({
 
         <div
           style={{
-            padding: desktop
-              ? "0 var(--space-2xl) var(--space-2xl)"
-              : "0 var(--space-lg) var(--space-lg)",
+            padding: "0 var(--detail-pad, var(--space-2xl)) var(--detail-pad, var(--space-2xl))",
           }}
         >
           <div
             style={{
               display: "flex",
-              flexDirection: desktop ? "row" : "column",
-              alignItems: desktop ? "flex-start" : "stretch",
-              gap: desktop ? "var(--space-2xl)" : "var(--space-xl)",
-              marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+              flexDirection: "var(--detail-row-direction, row)" as "row",
+              alignItems: "var(--detail-row-align, flex-start)",
+              gap: "var(--detail-section-gap, var(--space-2xl))",
+              marginBottom: "var(--detail-section-gap, var(--space-2xl))",
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>

@@ -60,7 +60,7 @@ export default function AlbescentTaskDetail({
           <span
             style={{
               fontFamily: "var(--font-accent)",
-              fontSize: desktop ? "var(--text-title)" : "var(--text-content)",
+              fontSize: "var(--detail-lead-size, var(--text-title))",
               lineHeight: 1,
               color: "var(--faction-default-card-text)",
             }}
@@ -94,7 +94,7 @@ export default function AlbescentTaskDetail({
           <span
             style={{
               fontFamily: "var(--font-accent)",
-              fontSize: desktop ? "var(--text-heading)" : "var(--text-title)",
+              fontSize: "var(--detail-title-size, var(--text-heading))",
               lineHeight: 1,
               color: "var(--faction-default-card-text)",
             }}

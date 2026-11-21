@@ -179,8 +179,7 @@ function initialsOf(name: string): string {
 export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
   const formFactor = useFormFactor();
-  const desktop = formFactor !== "mobile";
-  const size = SIZES[desktop ? "desktop" : "mobile"];
+  const size = SIZES[formFactor];
   // Expands in place; deliberately no link out to `/praxis?task_id=N`.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -271,7 +270,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     background: "transparent",
     border: `2px solid ${GOLD}`,
     borderRadius: 7,
-    padding: desktop ? "var(--space-md) var(--space-lg)" : "var(--space-md)",
+    padding: "var(--detail-card-pad, var(--space-md) var(--space-lg))",
   };
 
   const quietNote: CSSProperties = {
@@ -378,7 +377,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           style={{
             ...innerBox,
             flex: hasAction ? "0 0 auto" : "1 1 auto",
-            minWidth: desktop ? 176 : 132,
+            minWidth: "var(--detail-worth-min-wow, 176px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -548,7 +547,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--detail-panel-space, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -712,7 +711,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           maxWidth: 1200,
           margin: "0 auto",
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--detail-pad, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -722,8 +721,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
+            flexDirection: "var(--detail-row-direction, row)" as "row",
+            alignItems: "var(--detail-row-align, flex-start)",
             gap: "var(--space-xl)",
             marginBottom: size.sectionGap,
           }}
@@ -736,7 +735,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           <div
             style={{
               ...actionColumnSize({ hasAction, width: size.plate }),
-              marginTop: desktop ? "var(--space-sm)" : 0,
+              marginTop: "var(--detail-action-top, var(--space-sm))",
             }}
           >
             {actionPlate}
