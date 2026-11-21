@@ -164,7 +164,7 @@ describe("Drop clears the phone tap floor even when a skin zeroes its padding (#
     const html = renderToStaticMarkup(
       <DropButton
         {...praxisState({ currentCharacterId: CREATOR_ID, type: "solo", memberIds: [CREATOR_ID] })}
-        skin={{ style: { padding: 0 } }}
+        skin={{ style: { minHeight: 0, minWidth: 0 } }}
       />,
     );
     expect(html).toMatch(/min-height:\s*44px/);
