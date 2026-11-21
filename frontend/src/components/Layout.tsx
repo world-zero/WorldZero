@@ -93,6 +93,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         isMobile={isMobile}
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={toggleSidebar}
+        bleed={flowOnPhone}
       >
         {children}
       </ShellContent>

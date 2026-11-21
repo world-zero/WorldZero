@@ -22,7 +22,7 @@ html:has(.ob-root){overflow-x:hidden}
 .ob-bk:hover,.ob-bk:focus-visible{animation:ob-bkj .4s ease-in-out}
 
 @keyframes ob-aurora{from{opacity:0}}
-.ob-aurora{position:absolute;inset:-10%;pointer-events:none;background-image:var(--faction-default-aurora);filter:var(--faction-default-aurora-filter,blur(48px) saturate(.8));mix-blend-mode:var(--faction-default-aurora-blend,screen);opacity:var(--faction-default-aurora-opacity,.22);animation:ob-aurora 3.5s ease-out backwards}
+.ob-aurora{position:absolute;inset:-10% 0;pointer-events:none;background-image:var(--faction-default-aurora);filter:var(--faction-default-aurora-filter,blur(48px) saturate(.8));mix-blend-mode:var(--faction-default-aurora-blend,screen);opacity:var(--faction-default-aurora-opacity,.22);animation:ob-aurora 3.5s ease-out backwards}
 
 @keyframes ob-caret{50%{opacity:0}}
 .ob-caret{display:inline-block;width:2px;height:1.05em;margin-left:.08em;vertical-align:-.16em;border-radius:1px;background:var(--faction-default-card-text);animation:ob-caret 1.06s step-end infinite}
@@ -164,4 +164,4 @@ html:has(.ob-root){overflow-x:hidden}
   .onboarding-arc :is(.ob-zz,.ob-sbub,.ob-bang){display:none}
   .onboarding-arc .ob-sig path{stroke-dashoffset:0}
 }
-@media (max-width:767px) and (pointer:coarse){.ob-root{--ob-m:32px}}
+@media (max-width:767px) and (pointer:coarse){.ob-root{--ob-m:32px;overflow-x:clip}.ob-bleed .ob-root{--ob-m:0px}}
