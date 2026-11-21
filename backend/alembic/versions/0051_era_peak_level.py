@@ -1,4 +1,4 @@
-"""character_stats.era_peak_level: per-era high-water mark for the level-up push (#3788).
+"""character_stats.era_peak_level: per-era peak gating the level-up push (#3788).
 
 ``IF NOT EXISTS`` because a fresh DB's root already built the column.
 

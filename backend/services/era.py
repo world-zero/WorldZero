@@ -483,12 +483,14 @@ async def apply_era_reset(
         )
         prev_stats = prev_result.scalar_one_or_none()
 
+        carried_level = prev_stats.level if prev_stats else 0
+        starting_level = 0 if era.reset_level else carried_level
         new_stats = CharacterStats(
             character_id=character.id,
             era_id=new_era_row.id,
             score=0 if era.reset_score else (prev_stats.score if prev_stats else 0),
-            level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
-            era_peak_level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
+            level=starting_level,
+            era_peak_level=starting_level,
             votes_spent_this_era=0 if era.reset_vote_budget else (
                 prev_stats.votes_spent_this_era if prev_stats else 0
             ),
