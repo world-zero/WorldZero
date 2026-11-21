@@ -10,8 +10,8 @@ from httpx import AsyncClient
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode, detail_code
 from eras.era_1 import ERA_1
+from errors import ErrorCode, detail_code
 from game_config import CURRENT_ERA
 from models.character_stats import CharacterStats
 from models.duel import DuelStatus

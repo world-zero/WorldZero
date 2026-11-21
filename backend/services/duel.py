@@ -400,7 +400,9 @@ async def get_duel_detail(
         id=duel.id,
         task_id=duel.task_id,
         status=duel.status,
-        cast_clock_started_at=clock[1] if clock and duel.forfeited_by_character_id is None else None,
+        cast_clock_started_at=(
+            clock[1] if clock and duel.forfeited_by_character_id is None else None
+        ),
         forfeited_by_character_id=duel.forfeited_by_character_id,
         challenger=_side(
             challenger_character,
