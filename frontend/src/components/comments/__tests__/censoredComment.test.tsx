@@ -8,6 +8,8 @@ import type { CommentOut } from '../../../api/comments'
 import FeedRowContent from '../../feed/FeedRowContent'
 import { normalizeFeedItem } from '../../feed/normalizeFeedItem'
 import { DefaultComment } from '../CommentThread'
+import { surfaceMap } from '../../../factions'
+import { resolvedArchetype } from '../../../factions/lazyArchetype'
 
 const LABEL = i18n.t('common:relationships.censoredComment')
 
@@ -33,6 +35,17 @@ describe('censored comment', () => {
       </MemoryRouter>,
     )
     expect(html).toContain('Adabel')
+    expect(html).toContain(LABEL)
+  })
+
+  it.each(Object.keys(surfaceMap('comment')))('%s voice shows the label for the body', (slug) => {
+    const Voice = resolvedArchetype(surfaceMap('comment')[slug as keyof ReturnType<typeof surfaceMap<'comment'>>])
+    if (!Voice) throw new Error(`no comment voice resolved for "${slug}"`)
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <Voice mode="row" comment={{ ...CENSORED, author: { ...CENSORED.author, faction_slug: slug } }} />
+      </MemoryRouter>,
+    )
     expect(html).toContain(LABEL)
   })
 
