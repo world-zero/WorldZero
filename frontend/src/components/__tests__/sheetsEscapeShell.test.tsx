@@ -4,7 +4,6 @@
  * `react-dom/server` refuses portals, so the throw is the proof. With no
  * `document` the tree stays inline, keeping other suites' markup intact.
  */
-import { readFileSync } from 'node:fs'
 import type { ReactElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -39,11 +38,9 @@ import YouSheet from '../layout/YouSheet'
 import type { CharacterOut } from '../../api/auth'
 import { ruleBodies, stripComments } from '../../utils/__tests__/cssVars'
 
-const sheetCss = (name: string) =>
-  stripComments(readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'))
-const chassisCss = sheetCss('ui/bottomSheet.css')
-const switcherCss = sheetCss('characterSwitcherSheet.css')
-const modCss = sheetCss('admin/modMode.css')
+import { readIndexCss } from '../../test/indexCss'
+
+const css = stripComments(readIndexCss())
 const body = (css: string, sel: string) => ruleBodies(css, sel).join('\n')
 
 const REACT_PORTAL = Symbol.for('react.portal')
@@ -129,24 +126,24 @@ describe('CharacterSwitcherSheet', () => {
 
 describe('sheet paint (rule bodies)', () => {
   it('takes its scrim and shadow from tokens, never a raw rgba', () => {
-    expect(body(chassisCss, ':where(.sheet-scrim)')).toMatch(/background:\s*var\(--color-overlay-strong\)/)
-    expect(body(chassisCss, ':where(.sheet-panel)')).toMatch(/box-shadow:[^;]*var\(--color-cast-shadow\)/)
-    expect(chassisCss + switcherCss).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i)
+    expect(body(css, ':where(.sheet-scrim)')).toMatch(/background:\s*var\(--color-overlay-strong\)/)
+    expect(body(css, ':where(.sheet-panel)')).toMatch(/box-shadow:[^;]*var\(--color-cast-shadow\)/)
+    expect(body(css, '.sheet-grab') + body(css, '.switcher-sheet')).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i)
   })
 
   it('clears the tab bar on the switcher through --switcher-bottom', () => {
-    expect(body(switcherCss, '.switcher-sheet')).toMatch(/padding-bottom:\s*var\(--switcher-bottom,/)
+    expect(body(css, '.switcher-sheet')).toMatch(/padding-bottom:\s*var\(--switcher-bottom,/)
   })
 
   it('pays the bottom inset once: the chassis does, an above-tab-bar panel does not', () => {
-    expect(body(chassisCss, ':where(.sheet-panel)')).toMatch(/padding:[^;]*env\(safe-area-inset-bottom\)/)
-    const above = body(chassisCss, '.sheet-above-tabs > .sheet-panel')
+    expect(body(css, ':where(.sheet-panel)')).toMatch(/padding:[^;]*env\(safe-area-inset-bottom\)/)
+    const above = body(css, '.sheet-above-tabs > .sheet-panel')
     expect(above).toMatch(/bottom:\s*var\(--tab-bar-clearance\)/)
     expect(above).toMatch(/padding-bottom:\s*var\(--space-sm\)/)
   })
 
   it('pays the top inset on the mod strip', () => {
-    expect(body(modCss, '.mod-strip')).toMatch(/padding:\s*calc\(var\(--space-xs\) \+ env\(safe-area-inset-top\)\)/)
+    expect(body(css, '.mod-strip')).toMatch(/padding:\s*calc\(var\(--space-xs\) \+ env\(safe-area-inset-top\)\)/)
   })
 })
 

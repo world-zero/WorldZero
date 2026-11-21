@@ -214,7 +214,6 @@
     --sheet-full: 100%;
     --sheet-border: none;
     --sheet-radius: 16px 16px 0 0;
-    --sheet-inset: env(safe-area-inset-bottom);
     --takeover-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
     --takeover-height: 100%;
     --takeover-radius: 0;
