@@ -188,7 +188,7 @@ async def test_submit_refuses_a_non_member_in_the_shared_wording(
 
 #: SELECTs one flag costs (measured). A rule evaluated twice re-reads the author
 #: and the flag history, which breaks the exact pin.
-FLAG_SELECT_BUDGET = 17
+FLAG_SELECT_BUDGET = 18  # +1 (#3875): the lapsed-duel sweep
 
 
 @pytest.mark.asyncio
