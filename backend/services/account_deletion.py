@@ -15,20 +15,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account, AccountStatus, AccountTombstone, OAuthProvider
+from models.account import (
+    TOMBSTONE_RETENTION_DAYS,
+    Account,
+    AccountStatus,
+    AccountTombstone,
+    OAuthProvider,
+)
 from models.character import Character
 from models.comment import Comment
 from models.praxis import MediaItem, Praxis
 from models.praxis_room import PraxisRoomUpdate
 from models.push_subscription import PushSubscription
-from services.character import soft_delete_character
+from services.character import has_mod_banned_life, soft_delete_character
 from services.media import delete_stored_media
 
-#: Retention of a deleted account's hashed OAuth identity for the returning-player
-#: gate (#2162), enforced purge-on-access in :func:`resolve_account_tombstone`.
-#: ponytail: an unvisited tombstone outlives 90 days; add a periodic DELETE with
-#: the same predicate once a job runner exists.
-TOMBSTONE_RETENTION_DAYS = 90
+# Retention is enforced purge-on-access in :func:`resolve_account_tombstone`.
+# ponytail: an unvisited tombstone outlives 90 days; add a periodic DELETE with
+# the same predicate once a job runner exists.
 
 #: Not an i18n key: it lands in a free-text column rendered verbatim (ADR-0031).
 REMOVED_BODY_MARKER = "[removed]"
@@ -54,6 +58,11 @@ def hash_provider_user_id(provider: str, provider_user_id: str) -> str:
     return hashlib.sha256(salted).hexdigest()
 
 
+def _is_live(tombstone: AccountTombstone) -> bool:
+    expiry = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
+    return tombstone.created_at > expiry
+
+
 async def resolve_account_tombstone(
     provider: str, provider_user_id: str, session: AsyncSession
 ) -> AccountTombstone | None:
@@ -74,12 +83,48 @@ async def resolve_account_tombstone(
     if tombstone is None:
         return None
 
-    expiry = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
-    if tombstone.created_at <= expiry:
+    if not _is_live(tombstone):
         await session.delete(tombstone)
         await session.flush()
         return None
     return tombstone
+
+
+async def consume_returning_tombstone(
+    provider: str, provider_user_id: str, session: AsyncSession
+) -> datetime | None:
+    """Clear this identity's tombstone; return its deletion time if it carried a ban."""
+    tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
+    if tombstone is None:
+        return None
+    ban_since = tombstone.created_at if tombstone.mod_banned else None
+    await session.delete(tombstone)
+    await session.flush()
+    return ban_since
+
+
+async def reapply_ban_tombstone(
+    account_id: int,
+    provider: str,
+    provider_user_id: str,
+    ban_since: datetime,
+    session: AsyncSession,
+) -> None:
+    """Re-write a carried ban against the new account.
+
+    Same deletion time, so the 90 days don't restart; sign-in finds the OAuth
+    row first, so this tombstone never re-triggers the gate (ADR-0081).
+    """
+    session.add(
+        AccountTombstone(
+            account_id=account_id,
+            provider=provider,
+            provider_user_hash=hash_provider_user_id(provider, provider_user_id),
+            mod_banned=True,
+            created_at=ban_since,
+        )
+    )
+    await session.flush()
 
 
 async def delete_account(
@@ -99,6 +144,8 @@ async def delete_account(
         )
     ).scalars().all()
     character_ids = [character.id for character in characters]
+    # Before soft_delete_character: the tombstone is what outlives these rows.
+    was_mod_banned = await has_mod_banned_life(account_id, session)
 
     # Read before deletion: the stored path is the only record of the bytes.
     doomed_media = await _uploaded_media(character_ids, session)
@@ -115,7 +162,9 @@ async def delete_account(
     if character_ids:
         await _blank_authored_content(character_ids, session)
 
-    await _replace_oauth_identity_with_a_tombstone(account, session)
+    await _replace_oauth_identity_with_a_tombstone(
+        account, session, was_mod_banned
+    )
 
     await session.execute(
         delete(PushSubscription).where(PushSubscription.account_id == account.id)
@@ -206,7 +255,7 @@ async def _blank_authored_content(
 
 
 async def _replace_oauth_identity_with_a_tombstone(
-    account: Account, session: AsyncSession
+    account: Account, session: AsyncSession, mod_banned: bool
 ) -> None:
     """Delete the OAuth rows; keep provider + a salted digest of each identifier."""
     providers = (
@@ -217,7 +266,6 @@ async def _replace_oauth_identity_with_a_tombstone(
 
     for row in providers:
         digest = hash_provider_user_id(row.provider, row.provider_user_id)
-        # Delete-rejoin-delete within retention: replace the unique pair.
         await session.execute(
             delete(AccountTombstone).where(
                 AccountTombstone.provider == row.provider,
@@ -229,6 +277,7 @@ async def _replace_oauth_identity_with_a_tombstone(
                 account_id=account.id,
                 provider=row.provider,
                 provider_user_hash=digest,
+                mod_banned=mod_banned,
             )
         )
     await session.flush()

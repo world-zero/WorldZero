@@ -23,7 +23,10 @@ from schemas.auth import (
     StartFreshOut,
 )
 from schemas.character import CharacterCreate
-from services.account_deletion import resolve_account_tombstone
+from services.account_deletion import (
+    consume_returning_tombstone,
+    reapply_ban_tombstone,
+)
 from services.auth import (
     ReturningPlayerConsentRequired,
     create_jwt,
@@ -323,10 +326,7 @@ async def confirm_returning_player(
     provider_user_id = pending["provider_user_id"]
 
     # Must go before create_or_get_account so it takes the stranger path.
-    tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
-    if tombstone is not None:
-        await session.delete(tombstone)
-        await session.flush()
+    ban_since = await consume_returning_tombstone(provider, provider_user_id, session)
 
     account = await create_or_get_account(
         provider=provider,
@@ -335,6 +335,11 @@ async def confirm_returning_player(
         email_verified=True,
         session=session,
     )
+
+    if ban_since is not None:
+        await reapply_ban_tombstone(
+            account.id, provider, provider_user_id, ban_since, session
+        )
 
     # The question has been answered; a second POST is an ordinary 404.
     del request.session[_PENDING_SIGNUP_KEY]

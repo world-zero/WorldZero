@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     DateTime,
     ForeignKey,
     Identity,
@@ -125,6 +126,11 @@ class OAuthProvider(TimestampMixin, Base):
     )
 
 
+#: Retention of a deleted account's hashed OAuth identity (ADR-0081); lives here
+#: so services.character can read it without importing account_deletion.
+TOMBSTONE_RETENTION_DAYS = 90
+
+
 class AccountTombstone(CreatedAtMixin, Base):
     """What survives the OAuth identity of a deleted account (ADR-0081).
 
@@ -147,3 +153,8 @@ class AccountTombstone(CreatedAtMixin, Base):
     provider: Mapped[str] = mapped_column(String, nullable=False)
     #: 64 hex chars; see ``services.account_deletion.hash_provider_user_id``.
     provider_user_hash: Mapped[str] = mapped_column(String, nullable=False)
+    # A moderator had banned a life of the account (ADR-0081). Survives sign-back-in
+    # by the row staying, re-pointed at the new account, until it expires.
+    mod_banned: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )

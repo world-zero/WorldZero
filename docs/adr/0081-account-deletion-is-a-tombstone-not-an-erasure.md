@@ -147,3 +147,15 @@ have to be dealt with first.
 ---
 
 *Footnote (2026-10-13, #3058): the "Render disk mount" above is retired (Render was replaced by the Hetzner box in 2026-09). The user media now lives on the `media` named volume declared in `deploy/docker-compose.yml`; the argument is unchanged.*
+
+## Amendment (2026-11-21, #3929): the tombstone carries one ban bit
+
+`account_tombstone.mod_banned` is set at deletion when any of the account's
+lives is under a moderator ban. No reason, date or character data comes with it.
+Without it, deleting the account and signing back in lifted the creation ban.
+
+The returning player still signs in. On confirm the tombstone is re-written
+against the new account with its original `created_at`, so the character-creation
+ban holds until the original 90 days run out; the bit then goes with the row.
+Refusing `DELETE /me/account` while banned was rejected: players keep the right
+to leave. A fresh Google identity still gets around it, which the owner accepts.
