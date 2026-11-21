@@ -1,8 +1,8 @@
-"""praxis_member.faction_slug: the faction held when the member joined (#3873).
+"""praxis_member.faction_slug: the faction held when the praxis sealed (#3873).
 
-Backfilled from each character's CURRENT faction: the best record we have, since
-nothing stored the faction at the time. Rows of members who defected earlier keep
-the wrong stamp; only new rows are exact.
+Backfilled from the defection history: the faction a character left after the
+praxis was submitted, else their current one. Unsealed rows get the current
+faction, which the seal overwrites.
 
 Revision ID: 0053_praxis_member_faction_slug
 Revises: 0052_task_activated_at
@@ -23,7 +23,11 @@ def upgrade() -> None:
         "ALTER TABLE praxis_member ADD COLUMN IF NOT EXISTS faction_slug VARCHAR"
     )
     op.execute(
-        "UPDATE praxis_member pm SET faction_slug = c.faction_slug "
+        "UPDATE praxis_member pm SET faction_slug = COALESCE(("
+        "SELECT d.faction_slug FROM faction_defection_history d "
+        "JOIN praxis p ON p.id = pm.praxis_id "
+        "WHERE d.character_id = pm.character_id AND d.defected_at > p.submitted_at "
+        "ORDER BY d.defected_at LIMIT 1), c.faction_slug) "
         "FROM character c WHERE c.id = pm.character_id"
     )
 

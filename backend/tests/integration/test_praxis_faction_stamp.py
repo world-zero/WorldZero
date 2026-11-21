@@ -1,5 +1,5 @@
 """A praxis scores under the faction each side held at submission (#3873)."""
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
@@ -8,7 +8,7 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction, FactionStatus
-from models.praxis import PraxisStatus
+from models.praxis import PraxisMember, PraxisStatus
 from services.character_stats import recalculate_character_stats
 from services.duel import respond_to_duel_challenge
 from tests.integration.factories import (
@@ -94,6 +94,11 @@ async def test_accepter_defecting_does_not_reprice_the_challenger(
         duel.id, snide.id, True, db_session
     )
     snide_praxis.status = PraxisStatus.submitted
+    await db_session.execute(  # the seal's stamp, which this test skips
+        update(PraxisMember)
+        .where(PraxisMember.praxis_id == snide_praxis.id)
+        .values(faction_slug="snide")
+    )
     await attach_proof(db_session, snide_praxis)
     await cast_vote(db_session, ua_praxis, voter, 3)
     await cast_vote(db_session, snide_praxis, voter, 3)
@@ -102,3 +107,33 @@ async def test_accepter_defecting_does_not_reprice_the_challenger(
     before = await _score(db_session, ua, era)
     await _defect(db_session, snide)
     assert await _score(db_session, ua, era) == before
+
+
+async def test_seal_stamps_the_faction_held_then(
+    client, db_session: AsyncSession, character: Character, active_task, era: Era,
+    auth_headers: dict,
+):
+    await _factions(db_session)
+    character.faction_slug = "ua"
+    await db_session.commit()
+    created = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Sealed"},
+        headers=auth_headers,
+    )
+    praxis_id = created.json()["id"]
+    await _defect(db_session, character)  # mid-praxis, before the seal
+    submit = await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
+    assert submit.status_code == 200
+
+    async def _stamp() -> str:
+        return (await db_session.execute(
+            select(PraxisMember.faction_slug).where(
+                PraxisMember.praxis_id == praxis_id
+            )
+        )).scalar_one()
+
+    assert await _stamp() == "everymen"
+    character.faction_slug = "snide"  # after the seal
+    await db_session.commit()
+    assert await _stamp() == "everymen"

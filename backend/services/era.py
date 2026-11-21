@@ -19,7 +19,7 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.population_dial import PopulationDial
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisMember
 from models.task import Task, TaskStatus
 # ``seed`` imports no service, so this costs no cycle; the seeder owns the key (#511).
 from seed import ONBOARDING_TASK_SEED_KEY
@@ -330,6 +330,23 @@ async def resolve_duels_at_era_close(
     faction_by_character: dict[int, str] = {
         character_id: (slug or "") for character_id, slug in faction_result.all()
     }
+    # The faction held at each side's seal wins over today's (#3873).
+    stamp_result = await session.execute(
+        select(
+            PraxisMember.praxis_id,
+            PraxisMember.character_id,
+            PraxisMember.faction_slug,
+        ).where(
+            PraxisMember.praxis_id.in_(praxes_by_id),
+            PraxisMember.faction_slug.isnot(None),
+        )
+    )
+    stamped = {(p, c): slug for p, c, slug in stamp_result.all()}
+
+    def faction_of(praxis_id, character_id):
+        return stamped.get(
+            (praxis_id, character_id), faction_by_character.get(character_id, "")
+        )
 
     for duel in duels:
         is_contest = duel.status == DuelStatus.settled
@@ -369,9 +386,9 @@ async def resolve_duels_at_era_close(
                 ),
                 forfeited_by_character_id=duel.forfeited_by_character_id,
                 tie_break_winner_id=sole_tie_taker_id(
-                    faction_by_character.get(challenger_character_id, ""),
+                    faction_of(duel.challenger_praxis_id, challenger_character_id),
                     challenger_character_id,
-                    faction_by_character.get(duel.opponent_character_id, ""),
+                    faction_of(duel.opponent_praxis_id, duel.opponent_character_id),
                     duel.opponent_character_id,
                     era,
                 ),

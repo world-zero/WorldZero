@@ -638,7 +638,6 @@ async def create_praxis(
         praxis_id=praxis.id,
         character_id=character_id,
         has_approved=False,
-        faction_slug=(await session.get(Character, character_id)).faction_slug,
     )
     session.add(member)
     await session.flush()
@@ -1245,7 +1244,6 @@ async def respond_to_invite(
         praxis_id=praxis.id,
         character_id=character_id,
         has_approved=False,
-        faction_slug=(await session.get(Character, character_id)).faction_slug,
     )
     session.add(member)
 

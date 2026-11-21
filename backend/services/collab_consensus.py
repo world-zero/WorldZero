@@ -78,6 +78,14 @@ async def _apply_seal(
         if not member.has_approved:
             member.approved_at = now
         member.has_approved = True
+    # The faction held at the seal prices the praxis from here on (#3873).
+    held = dict((await session.execute(
+        select(Character.id, Character.faction_slug).where(
+            Character.id.in_([m.character_id for m in praxis.members])
+        )
+    )).all())
+    for member in praxis.members:
+        member.faction_slug = held.get(member.character_id)
     # Same `now` as the seal, not a second clock read.
     await stamp_habit_bonus(praxis, now, session, era)
     # Second pass: the fan-out flushes, so the seal must be whole first.

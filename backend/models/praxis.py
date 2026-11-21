@@ -232,8 +232,8 @@ class PraxisMember(Base):
     habit_bonus_points: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )
-    # Faction held when this member's row was created (#3873): a praxis scores
-    # under it, so defecting never reprices the past. Null on rows predating it.
+    # Faction held when the praxis sealed (#3873): it scores under this, so
+    # defecting never reprices the past. Null until sealed.
     faction_slug: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     praxis: Mapped["Praxis"] = relationship(

@@ -157,8 +157,8 @@ async def compute_owner_contributions(
         if owner_by_praxis[pid].id == member_id
     }
 
-    # Faction each member held on joining (#3873): defection never reprices the
-    # past. Null stamps (rows predating it) fall back to the live faction.
+    # Faction each member held at the seal (#3873): defection never reprices the
+    # past. Null stamps (unsealed rows) fall back to the live faction.
     stamp_result = await session.execute(
         select(
             PraxisMember.praxis_id,

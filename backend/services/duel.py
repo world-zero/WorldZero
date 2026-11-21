@@ -568,7 +568,6 @@ async def respond_to_duel_challenge(
         praxis_id=opponent_praxis.id,
         character_id=character_id,
         has_approved=False,
-        faction_slug=(await session.get(Character, character_id)).faction_slug,
     )
     session.add(opponent_member)
     await session.flush()
