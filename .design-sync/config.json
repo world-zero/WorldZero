@@ -170,7 +170,6 @@
     "FeedCardRouter": "src/components/feed/FeedCardRouter.tsx",
     "FeedChassisBand": "src/components/feed/FeedChassisBand.tsx",
     "FeedDateDivider": "src/components/feed/FeedDateDivider.tsx",
-    "FeedEmptyState": "src/components/feed/FeedEmptyState.tsx",
     "FeedItemSlot": "src/components/feed/FeedItemSlot.tsx",
     "FeedRowActions": "src/components/feed/FeedRowActions.tsx",
     "FeedRowContent": "src/components/feed/FeedRowContent.tsx",
