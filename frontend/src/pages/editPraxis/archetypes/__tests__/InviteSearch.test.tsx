@@ -34,6 +34,7 @@ function duelSide(
     win_multiplier: 1,
     loss_multiplier: 1,
     tie_multiplier: 1,
+    rival_bonus: 0,
   };
 }
 

@@ -37,6 +37,7 @@ function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
     win_multiplier: 1,
     loss_multiplier: 1,
     tie_multiplier: 1,
+    rival_bonus: 0,
     points_from_votes: 7.4,
     praxis_id: 601,
     ...overrides,
@@ -172,6 +173,12 @@ describe('both widths carry the same information, in the same order', () => {
     const markup = render({}, 'mobile')
     expect(markup).toContain('Logged every attempt, then read the log')
     expect(markup).not.toContain('Six mornings on the north wall')
+  })
+
+  it('names the rival bonus only on a qualifying duel (#3858)', () => {
+    const rival = duel({ challenger: side({ rival_bonus: 5 }), opponent: { ...OPPONENT, rival_bonus: 5 } })
+    expect(render({ duel: rival })).toMatch(/Rival duel: whoever wins.*takes 5 more/)
+    expect(render({})).not.toMatch(/Rival duel/)
   })
 
   it('draws two columns on desktop and two panels on a phone', () => {

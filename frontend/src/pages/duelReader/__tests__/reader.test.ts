@@ -21,6 +21,7 @@ function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
     win_multiplier: 1,
     loss_multiplier: 1,
     tie_multiplier: 1,
+    rival_bonus: 0,
     points_from_votes: 0,
     praxis_id: 601,
     ...overrides,

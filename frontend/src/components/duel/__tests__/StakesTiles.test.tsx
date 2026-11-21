@@ -19,6 +19,7 @@ function side(over: Partial<DuelSideOut>): DuelSideOut {
     win_multiplier: 1.5,
     loss_multiplier: 0.5,
     tie_multiplier: 1.0,
+    rival_bonus: 0,
     ...over,
   } as DuelSideOut
 }
@@ -71,6 +72,12 @@ describe('StakesTiles', () => {
     expect(t).toMatch(/If Rax declines/i)
     expect(t).toMatch(/ordinary praxis worth 30/)
     expect(t).not.toMatch(/If you win|If you lose/i)
+  })
+
+  it('names the rival bonus only on a qualifying duel (#3858)', () => {
+    expect(text(side({ rival_bonus: 5 }), 'active')).toMatch(/Rival duel: whoever wins.*takes 5 more/)
+    expect(text(side({ rival_bonus: 0 }), 'active')).not.toMatch(/Rival duel/)
+    expect(text(side({ rival_bonus: 5 }), 'pending')).not.toMatch(/Rival duel/)
   })
 
   it('labels the figures as base points, before crowd votes', () => {

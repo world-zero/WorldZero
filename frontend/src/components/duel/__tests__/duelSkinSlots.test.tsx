@@ -56,6 +56,7 @@ function side(overrides: Partial<DuelSideOut>): DuelSideOut {
     win_multiplier: 1.5,
     loss_multiplier: 0.5,
     tie_multiplier: 1.0,
+    rival_bonus: 0,
     ...overrides,
   } as DuelSideOut
 }
