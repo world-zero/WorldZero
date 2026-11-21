@@ -9,9 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import ErrorCode
 from models.account import Account, AccountTombstone, AuthProvider, OAuthProvider
 from models.character import CharacterStatus
+from models.roles import Permission
 from services.account_deletion import TOMBSTONE_RETENTION_DAYS, delete_account
 from services.character import load_account_eligibility
-from tests.integration.factories import make_character
+from tests.integration.factories import make_admin, make_character
 from tests.integration.test_returning_player_gate import (
     _RETURNING_EMAIL,
     _SUB,
@@ -101,3 +102,42 @@ async def test_the_ban_expires_with_the_tombstone(
 
     eligibility = await load_account_eligibility(fresh.id, era.id, db_session)
     assert eligibility.character_creation_banned is False
+
+
+@pytest.mark.asyncio
+async def test_a_mod_clears_the_carried_ban_and_the_player_can_create(
+    client: AsyncClient, db_session: AsyncSession, monkeypatch, era, some_faction,
+    account, auth_headers,
+) -> None:
+    await make_admin(db_session, account, permissions=[Permission.ban_suspend])
+    fresh = await _delete_then_sign_back_in(
+        client, db_session, monkeypatch, era, banned=True
+    )
+    people = (await client.get("/admin/characters", headers=auth_headers)).json()
+    banned_row = next(p for p in people if p["status"] == "banned")
+    assert banned_row["carried_ban_until"] is not None
+    assert banned_row["account_id"] != fresh.id
+
+    resp = await client.post(
+        f"/admin/accounts/{banned_row['account_id']}/clear-carried-ban",
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200
+    created = await client.post("/characters", json={"display_name": "Again"})
+    assert created.status_code == 201
+    people = (await client.get("/admin/characters", headers=auth_headers)).json()
+    assert all(p["carried_ban_until"] is None for p in people)
+
+
+@pytest.mark.asyncio
+async def test_clearing_a_carried_ban_needs_the_ban_permission(
+    client: AsyncClient, db_session: AsyncSession, account, auth_headers
+) -> None:
+    await make_admin(db_session, account, permissions=[Permission.handle_reports])
+    resp = await client.post(
+        "/admin/accounts/1/clear-carried-ban", headers=auth_headers
+    )
+    assert (resp.status_code, resp.json()["detail"]["code"]) == (
+        403,
+        "ADMIN_PERMISSION_REQUIRED",
+    )

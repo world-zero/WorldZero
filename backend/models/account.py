@@ -158,3 +158,8 @@ class AccountTombstone(CreatedAtMixin, Base):
     mod_banned: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    # The deleted account whose life was banned, once the tombstone is re-pointed at
+    # the returning account: how a mod finds the carried ban from the old life.
+    carried_from_account_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("account.id"), nullable=True
+    )

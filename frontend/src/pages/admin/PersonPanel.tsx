@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { banCharacter, suspendAccount, type AdminCharacterSummary } from '../../api/admin'
+import { banCharacter, clearCarriedBan, suspendAccount, type AdminCharacterSummary } from '../../api/admin'
+import { useCan } from '../../auth/permissions'
 import { extractError } from '../../utils/errors'
+import { formatTimestamp } from '../../utils/dates'
 import { factionName } from '../../utils/factions'
 import { SidePanel } from './AdminList'
 import ModerateConfirm from './ModerateConfirm'
@@ -24,6 +26,7 @@ export default function PersonPanel({
   const [error, setError] = useState<string | null>(null)
   const banned = person.status === 'banned'
   const suspended = person.account_status === 'suspended'
+  const canBan = useCan()('banSuspend')
 
   const apply = async (act: Act, on: boolean) => {
     await (act === 'ban' ? banCharacter(person.id, on) : suspendAccount(person.account_id, on))
@@ -36,6 +39,15 @@ export default function PersonPanel({
       await apply(act, false)
     } catch (err) {
       setError(extractError(err, t(`console.people.${act}Error`)))
+    }
+  }
+  const clearCarried = async () => {
+    setError(null)
+    try {
+      await clearCarriedBan(person.account_id)
+      await onChanged()
+    } catch (err) {
+      setError(extractError(err, t('console.people.clearCarriedBanError')))
     }
   }
   const toggle = (act: Act, on: boolean) => (on ? void undo(act) : setConfirm(act))
@@ -75,6 +87,11 @@ export default function PersonPanel({
       <section className="adm-sec">
         <h3 className="adm-h2 adm-grp-danger">{t('console.people.panel.act')}</h3>
         {error && <p className="adm-err">{error}</p>}
+        {person.carried_ban_until && (
+          <p className="adm-muted">
+            {t('console.people.panel.carriedBan', { date: formatTimestamp(person.carried_ban_until) })}
+          </p>
+        )}
         {confirm ? (
           <ModerateConfirm
             heading={t(`console.people.${confirm}Confirm.heading`, { name: person.display_name })}
@@ -92,6 +109,11 @@ export default function PersonPanel({
             <button type="button" className="adm-btn adm-btn-dng" onClick={() => toggle('suspend', suspended)}>
               {suspended ? t('console.people.panel.unsuspend') : t('console.people.panel.suspend')}
             </button>
+            {person.carried_ban_until && canBan && (
+              <button type="button" className="adm-btn adm-btn-dng" onClick={() => void clearCarried()}>
+                {t('console.people.panel.clearCarriedBan')}
+              </button>
+            )}
           </div>
         )}
       </section>

@@ -376,6 +376,7 @@
           "unban": "unbanned",
           "suspend": "suspended",
           "unsuspend": "unsuspended",
+          "clear_carried_ban": "cleared a carried ban on",
           "remove_flagged": "removed flagged posts",
           "praxis_visible": "kept",
           "praxis_hidden": "removed",
@@ -479,8 +480,11 @@
         "ban": "Ban character…",
         "unban": "Unban character",
         "suspend": "Suspend account…",
-        "unsuspend": "Unsuspend account"
+        "unsuspend": "Unsuspend account",
+        "carriedBan": "Ban carried from a deleted account, until {{date}}.",
+        "clearCarriedBan": "Clear carried ban"
       },
+      "clearCarriedBanError": "Could not clear the carried ban.",
       "banConfirm": {
         "heading": "Ban {{name}}?",
         "lead": "{{name}} (@{{username}}) will be banned. You can unban them later.",
@@ -566,6 +570,7 @@
         "unban": "unbanned",
         "suspend": "suspended",
         "unsuspend": "unsuspended",
+        "clear_carried_ban": "cleared a carried ban on",
         "praxis_hidden": "removed",
         "praxis_visible": "kept",
         "praxis_flagged": "flagged",
