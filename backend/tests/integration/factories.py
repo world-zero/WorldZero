@@ -174,7 +174,12 @@ async def make_solo_praxis(
     )
     session.add(praxis)
     await session.flush()
-    session.add(PraxisMember(praxis_id=praxis.id, character_id=author.id))
+    session.add(PraxisMember(
+            praxis_id=praxis.id,
+            character_id=author.id,
+            faction_slug=author.faction_slug,
+        )
+    )
     await session.flush()
     if proof:
         await attach_proof(session, praxis)

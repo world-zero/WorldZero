@@ -92,7 +92,7 @@
   "services/praxis_out.py::E501": 8,
   "services/praxis_out.py::I001": 1,
   "services/praxis_room.py::E501": 1,
-  "services/praxis_scoring.py::E501": 2,
+  "services/praxis_scoring.py::E501": 1,
   "services/relationship_service.py::E501": 1,
   "services/relationship_service.py::I001": 1,
   "services/scoring.py::E501": 1,

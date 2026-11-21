@@ -338,6 +338,7 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
                 praxis_id=praxis.id,
                 character_id=molly.id,
                 has_approved=False,
+                faction_slug=molly.faction_slug,
             ))
         await session.flush()
         print("  >Dev-login character (@dev 'Molly', unaffiliated) + 1 in-progress task")
