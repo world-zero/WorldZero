@@ -189,7 +189,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
           <JoinConfirm
             membership={{ currentFactionSlug: user?.character?.faction_slug, join, joining, joinError: null }}
             name={letterName}
-            skin={{ openStyle: acceptStyle, confirmStyle: acceptStyle, cancelStyle: QUIET, className: "feed-action" }}
+            skin={{ openStyle: acceptStyle, confirmStyle: acceptStyle, cancelStyle: QUIET, className: "feed-action", cancelClassName: "feed-action" }}
             joiningLabel={i18n.t("feed:invitationLetter.confirm.confirm")}
             confirmLabel={i18n.t("feed:invitationLetter.confirm.confirm")}
             cancelLabel={i18n.t("feed:invitationLetter.confirm.cancel")}
