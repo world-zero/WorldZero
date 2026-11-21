@@ -73,6 +73,7 @@ from services.praxis_duel import (
     maybe_settle_duel,
 )
 from services.praxis_room import (
+    absorb_room_on_commit,
     close_member_sockets,
     loaded_room_values,
     merge_client_state,
@@ -1398,6 +1399,8 @@ async def submit_praxis(
         # Text the other members never saw: a live proposal or published collab
         # falls back, and this submit proposes the merged text afresh (ADR-0079).
         await collab_consensus.on_member_edit(praxis, session, era)
+    if merged:
+        absorb_room_on_commit(praxis_id, merged, session)
 
     went_live = await collab_consensus.on_submit(praxis, character_id, session, era)
     if went_live:
