@@ -671,3 +671,9 @@ def test_cmyk_display_copy_drops_the_cmyk_profile():
     assert out is not None
     with Image.open(io.BytesIO(out)) as copy:
         assert copy.mode == "RGB" and "icc_profile" not in copy.info
+
+
+def test_display_copy_is_skipped_when_no_smaller_than_the_original():
+    buffer = io.BytesIO()
+    Image.new("P", (4, 4)).save(buffer, format="GIF")
+    assert media.make_display_bytes(buffer.getvalue()) is None
