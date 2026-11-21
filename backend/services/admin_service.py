@@ -52,7 +52,7 @@ from services.character_stats import (
     recalculate_for_account_votes,
 )
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
-from services.duel import forfeit_duels_for_character, forfeit_duels_for_characters
+from services.duel import forfeit_duels_collect
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.era import (
@@ -394,11 +394,10 @@ async def apply_ban(
             "This character was deleted by its player and cannot be restored.",
         )
 
+    rescore_ids: set[int] = set()
     if banned:
         character.status = CharacterStatus.banned
-        await forfeit_duels_for_character(
-            character.id, session, era, emit_taunts=False
-        )
+        rescore_ids = await forfeit_duels_collect([character.id], session)
     else:
         character.status = CharacterStatus.active
 
@@ -406,7 +405,9 @@ async def apply_ban(
     await log_mod_action(
         session, actor_id, "ban" if banned else "unban", "character", character.id
     )
-    await recalculate_for_account_votes(character.account_id, session, era)
+    await recalculate_for_account_votes(
+        character.account_id, session, era, rescore_ids
+    )
 
 
 async def set_character_stats(
@@ -587,14 +588,13 @@ async def suspend_account(
         raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    rescore_ids: set[int] = set()
     if suspended:
         # Same as a ban; lifting the suspension does not undo it (#3766).
         character_ids = (await session.scalars(
             select(Character.id).where(Character.account_id == account_id)
         )).all()
-        await forfeit_duels_for_characters(
-            character_ids, session, era, emit_taunts=False
-        )
+        rescore_ids = await forfeit_duels_collect(character_ids, session)
     await log_mod_action(
         session,
         actor_id,
@@ -602,7 +602,7 @@ async def suspend_account(
         "account",
         account_id,
     )
-    await recalculate_for_account_votes(account_id, session, era)
+    await recalculate_for_account_votes(account_id, session, era, rescore_ids)
     await session.refresh(account)
     return account
 

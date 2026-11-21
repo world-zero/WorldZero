@@ -299,3 +299,48 @@ async def test_keep_closes_comment_flags_and_flagger_can_report_again(
     assert again.status_code == 200
     queue = (await client.get("/admin/comments/flagged", headers=auth_headers)).json()
     assert [f["reason"] for f in queue[0]["flags"]] == ["harassment"]
+
+
+@pytest.mark.asyncio
+async def test_comment_threshold_counts_only_unresolved_flags(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    era: Era,
+    some_faction: Faction,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    """#3968: every era's threshold is 1, so only a higher one proves the filter."""
+    import dataclasses
+
+    from eras.era_1 import ERA_1
+    from models.comment import Comment
+    from models.flag import FlagReason
+    from models.praxis import ModerationStatus
+    from services.comment import flag_comment
+    from tests.integration.factories import make_admin
+
+    comment_id = await _post_comment(client, praxis_solo.id, auth_headers2)
+    await _set_level(db_session, character, era, FLAG_LEVEL)
+    await make_admin(db_session, account)
+    url = f"/comments/{comment_id}/flag"
+    first = await client.post(url, json={"reason": "spam"}, headers=auth_headers)
+    assert first.status_code == 200
+    await client.patch(
+        f"/admin/comments/{comment_id}/moderate",
+        json={"status": "visible"},
+        headers=auth_headers,
+    )
+
+    era_two = dataclasses.replace(ERA_1, comment_flag_review_threshold=2)
+    await flag_comment(
+        comment_id, character, FlagReason.harassment, db_session, era=era_two
+    )
+
+    comment = await db_session.get(Comment, comment_id)
+    await db_session.refresh(comment)
+    assert comment.moderation_status != ModerationStatus.flagged
