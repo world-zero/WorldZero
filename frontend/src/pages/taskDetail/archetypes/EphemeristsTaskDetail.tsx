@@ -76,9 +76,6 @@ const BRIEF_LEADING = 32;
 interface SizeSet {
   /** Masthead band height. Geometry, so a raw px number (WORLD_ZERO_STYLE §4a). */
   masthead: number
-  wordmarkDisc: number
-  medallion: number
-  ledgerWidth: number
   /** Where the ochre margin rule is struck down the gutter. */
   marginRule: number
 }
@@ -94,16 +91,10 @@ const EPH_POINTS = "var(--detail-title-size, var(--text-heading))";
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     masthead: 108,
-    wordmarkDisc: 176,
-    medallion: 104,
-    ledgerWidth: 150,
     marginRule: 26,
   },
   mobile: {
     masthead: 92,
-    wordmarkDisc: 150,
-    medallion: 88,
-    ledgerWidth: 116,
     marginRule: 18,
   },
 };
@@ -436,7 +427,7 @@ export default function EphemeristsTaskDetail({
         ...cell,
         // Alone on the plate (no move, #1138) the ledger spreads to fill it.
         flex: hasAction ? "0 0 auto" : "1 1 auto",
-        width: hasAction ? size.ledgerWidth : "auto",
+        width: hasAction ? "var(--detail-ledger-width, 150px)" : "auto",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

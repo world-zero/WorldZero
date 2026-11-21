@@ -57,7 +57,6 @@ interface SizeSet {
   /** Action-panel width; dress (§4a). */
   panel: number;
   /** Ornament geometry, so raw px. */
-  enso: number;
   lotus: number;
   lotusLeft: number;
   lotusTop: number;
@@ -70,14 +69,12 @@ const UA_COUNT = "var(--detail-lead-size, var(--text-title))";
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     panel: 460,
-    enso: 124,
     lotus: 880,
     lotusLeft: -230,
     lotusTop: -110,
   },
   mobile: {
     panel: 0,
-    enso: 104,
     lotus: 560,
     lotusLeft: -200,
     lotusTop: 40,

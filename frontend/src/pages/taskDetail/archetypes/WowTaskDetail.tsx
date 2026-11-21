@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wowOrnament";
-import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
@@ -60,11 +59,8 @@ const HAIR = "var(--faction-wow-chronicle-rule)";
 /** Praxis shown before expanding; `.praxis-gallery` fits three per row (#1137). */
 const GALLERY_PREVIEW = 3;
 
-interface SizeSet {
-  /** The action plate's width; dress. */
-  plate: number;
-  /** Ornament geometry, exempt from the spacing scale (§4a). */
-}
+/** The action plate's width; dress. */
+const PLATE = 452;
 
 const WOW_TITLE = "var(--detail-hero-size, var(--text-display))";
 const WOW_SECTION_HEAD = "var(--detail-title-size, var(--text-heading))";
@@ -75,15 +71,6 @@ const WOW_BUNTING_GAP = "var(--detail-panel-space, var(--space-xl))";
 const WOW_PANEL_PAD = "var(--detail-pad, var(--space-xl))";
 const WOW_BOX_PAD = "var(--detail-card-pad, var(--space-lg))";
 const WOW_SECTION_GAP = "var(--detail-section-gap, var(--space-2xl))";
-
-const SIZES: Record<"desktop" | "mobile", SizeSet> = {
-  desktop: {
-    plate: 452,
-  },
-  mobile: {
-    plate: 452,
-  },
-};
 
 const EYEBROW: CSSProperties = {
   fontFamily: MED,
@@ -155,8 +142,6 @@ function initialsOf(name: string): string {
 
 export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
-  const formFactor = useFormFactor();
-  const size = SIZES[formFactor];
   // Expands in place; deliberately no link out to `/praxis?task_id=N`.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -711,7 +696,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           </div>
           <div
             style={{
-              ...actionColumnSize({ hasAction, width: size.plate }),
+              ...actionColumnSize({ hasAction, width: PLATE }),
               marginTop: "var(--detail-action-top, var(--space-sm))",
             }}
           >
