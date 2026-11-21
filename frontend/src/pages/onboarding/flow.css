@@ -1,6 +1,6 @@
 /* The flow's frame: header, title page, text box. ob- prefixed because this sheet stays loaded once /start has been visited. */
 /* Sizes track the flow's own pane, not the viewport: an open sidebar narrows one and not the other. --ob-m is the shell's side margin (80px desktop, 32px phone, ShellContent), so cqi + margin*N reads as the old Nvw. Phone-only rules stay @media: the sidebar never opens that narrow. Wider thresholds are the old viewport ones minus 80. */
-.ob-root{container:ob-flow/inline-size;--ob-m:80px;position:relative;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
+.ob-root{container:ob-flow/inline-size;--ob-m:80px;position:relative;min-height:100vh;min-height:100svh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
 /* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
 html:has(.ob-root){overflow-x:hidden}
 .ob-cap{font-family:var(--font-body);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--faction-default-card-muted)}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -16,6 +16,7 @@ import { markOnboardingHandoff, onboardingHandoffPending } from '../utils/onboar
 import MobileTabBar from './layout/MobileTabBar'
 import ShellContent from './layout/ShellContent'
 import SiteFooter from './layout/SiteFooter'
+import { FlowChromeContext } from './layout/FlowChrome'
 
 /**
  * The app shell (ADR-0035). Desktop and phone chromes are SIBLINGS of the page
@@ -27,6 +28,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isMobile = useFormFactor() === 'mobile'
+  // Phones only: the flow is full-bleed there; desktop keeps its top nav.
+  const [inFlow, setInFlow] = useState(false)
+  const flowOnPhone = isMobile && inFlow
   // Held here: `ShellContent` is called as a plain function by tests, so owns no hook (#1191).
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
 
@@ -67,6 +71,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <BackdropProvider>
+    <FlowChromeContext.Provider value={setInFlow}>
     <div className="min-h-screen flex flex-col relative">
       <a
         href="#content"
@@ -88,9 +93,10 @@ export default function Layout({ children }: { children: ReactNode }) {
       >
         {children}
       </ShellContent>
-      <SiteFooter isMobile={isMobile} />
-      {isMobile && <MobileTabBar />}
+      <SiteFooter isMobile={isMobile && !flowOnPhone} />
+      {isMobile && !flowOnPhone && <MobileTabBar />}
     </div>
+    </FlowChromeContext.Provider>
     </BackdropProvider>
   )
 }
