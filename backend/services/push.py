@@ -211,6 +211,7 @@ async def notify(
     actor: Optional[Character] = None,
     task_title: Optional[str] = None,
     count: Optional[int] = None,
+    faction: Optional[str] = None,
 ) -> None:
     """Queue a push for a character's account if it is on, wanted and has a device."""
     if not push_available():
@@ -242,6 +243,7 @@ async def notify(
         "actor": actor.display_name if actor else None,
         "task": task_title,
         "count": count,
+        "faction": faction,
     }
     targets = [Target(s.id, s.endpoint, s.p256dh, s.auth) for s in subscriptions]
     session.sync_session.info.setdefault(_OUTBOX, []).append((payload, targets))
@@ -365,13 +367,16 @@ async def notify_duel_challenge(
     )
 
 
-async def notify_invitation_letter(session: AsyncSession, character: Character) -> None:
+async def notify_invitation_letter(
+    session: AsyncSession, character: Character, faction_slug: str
+) -> None:
     await notify(
         session,
         kind=FEED_ITEM_TYPE_INVITATION_LETTER,
         recipient_id=character.id,
-        tag=f"{FEED_ITEM_TYPE_INVITATION_LETTER}:{character.id}",
+        tag=f"{FEED_ITEM_TYPE_INVITATION_LETTER}:{character.id}:{faction_slug}",
         url="/updates",
+        faction=faction_slug,
     )
 
 

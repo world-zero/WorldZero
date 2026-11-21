@@ -3,6 +3,7 @@
   "headingAnon": "World Zero",
   "someone": "Someone",
   "aTask": "a task",
+  "aFaction": "A faction",
   "kinds": {
     "vote_on_mine": {
       "title": "New rating",
@@ -31,7 +32,7 @@
       "body": "Join their praxis for {{task}}."
     },
     "invitation_letter": {
-      "title": "{{actor}} invited you",
+      "title": "{{faction}} invited you",
       "body": "A faction letter is waiting in Updates."
     },
     "level_up": {
