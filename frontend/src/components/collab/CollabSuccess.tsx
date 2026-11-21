@@ -43,7 +43,7 @@ export function CollabSuccess({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{
         background: 'var(--takeover-bg, var(--color-overlay-strong))',
-        paddingBottom: 'max(var(--space-md), env(safe-area-inset-bottom))',
+        paddingBottom: 'max(var(--space-lg), env(safe-area-inset-bottom))',
       }}
     >
       <div
