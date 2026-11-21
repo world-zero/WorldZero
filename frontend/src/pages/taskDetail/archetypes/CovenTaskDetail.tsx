@@ -54,9 +54,6 @@ const GALLERY_PREVIEW = 3;
 interface SizeSet {
   /** Action-plate width: Coven dress, not a shared constant. */
   plate: number;
-  /** Ward disc (WORLD_ZERO_STYLE §4a). */
-  ward: number;
-  wardSize: string;
 }
 
 const COVEN_TITLE = "var(--detail-hero-size, var(--text-display))";
@@ -68,13 +65,9 @@ const COVEN_WORTH_MIN = "var(--detail-worth-min-coven, 182px)";
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     plate: 452,
-    ward: 120,
-    wardSize: "var(--text-heading)",
   },
   mobile: {
     plate: 452,
-    ward: 96,
-    wardSize: "var(--text-title)",
   },
 };
 

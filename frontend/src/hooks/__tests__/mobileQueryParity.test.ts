@@ -98,6 +98,7 @@ describe('phone vars the components read', () => {
       '--detail-tap-min': '44px',
       '--detail-eph-brief-pad': 'var(--space-lg) var(--space-lg) var(--space-md) var(--space-xl)',
       '--detail-ua-btn-pad': 'var(--space-sm) var(--space-lg)',
+      '--detail-ledger-width': '116px',
       '--detail-action-top': '0',
       '--detail-col-flex': '1 1 auto',
       '--detail-col-width': '100%',
