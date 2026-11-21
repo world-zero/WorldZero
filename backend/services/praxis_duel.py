@@ -4,6 +4,7 @@ A leaf (reads only ``Duel``/``Praxis``) so ``services.praxis``, ``.vote`` and
 ``.duel`` can import it without a cycle (``duel`` imports ``praxis``; #2872).
 """
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import select
@@ -11,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.duel import Duel, DuelStatus
 from models.praxis import Praxis, PraxisStatus
+from services.push import notify_duel_live
 
 
 async def get_duel_for_praxis(praxis_id: int, session: AsyncSession) -> Optional[Duel]:
@@ -71,7 +73,9 @@ async def maybe_settle_duel(praxis_id: int, session: AsyncSession) -> None:
     ]
     if all(p is not None and p.status == PraxisStatus.submitted for p in required):
         duel.status = DuelStatus.settled
+        duel.live_at = datetime.now(timezone.utc)
         await session.flush()
+        await notify_duel_live(session, duel)
 
 
 async def discard_dissolved_duels_for_praxis(

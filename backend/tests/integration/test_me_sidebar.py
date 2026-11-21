@@ -106,7 +106,8 @@ async def test_sidebar_returns_all_three_panels(
 #: +1 (#3766): duel_forfeited.
 #: +1 (#3875): the lapsed-duel sweep.
 #: +1 (#3776): the sibling-lives list; counts only run when a sibling exists.
-SIDEBAR_SELECT_BUDGET = 28
+#: -1 (#3886): friend and foe edges share one pre-fetch round trip.
+SIDEBAR_SELECT_BUDGET = 27
 
 
 @pytest.mark.asyncio
@@ -128,10 +129,10 @@ async def test_sidebar_stays_inside_its_query_budget(
 
 
 #: SELECTs for one rail read when the account has ONE sibling life holding a
-#: pending request (measured): 28 (the no-sibling read, which already pays the
-#: sibling-list query) + 6 `_build_fetch_context` round trips for the sibling
-#: + 1 UNION count = 35. Each further sibling adds 6.
-SIDEBAR_ONE_SIBLING_SELECT_BUDGET = 35
+#: pending request (measured): 27 (the no-sibling read, which already pays the
+#: sibling-list query) + 5 `_build_fetch_context` round trips for the sibling
+#: + 1 UNION count = 33. Each further sibling adds 5.
+SIDEBAR_ONE_SIBLING_SELECT_BUDGET = 33
 
 
 @pytest.mark.asyncio

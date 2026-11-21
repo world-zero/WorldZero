@@ -13,6 +13,7 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_COMMENT_MENTION,
     FEED_ITEM_TYPE_COMMENT_ON_MINE,
     FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    FEED_ITEM_TYPE_DUEL_LIVE,
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_ITEM_TYPE_INVITATION_LETTER,
@@ -37,6 +38,8 @@ RULED_DEFAULTS = {
     FEED_ITEM_TYPE_COMMENT_ON_MINE: (True, True, False),
     FEED_ITEM_TYPE_COMMENT_MENTION: (True, True, False),
     FEED_ITEM_TYPE_VOTE_ON_MINE: (True, False, False),
+    # #3886: ambient, so off by email and free on the page.
+    FEED_ITEM_TYPE_DUEL_LIVE: (True, False, False),
     # `level_up` has no feed row (ruling 2026-08-18), so page is locked OFF.
     LEVEL_UP: (False, False, True),
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT: (True, False, False),
@@ -64,9 +67,9 @@ def test_junk_in_the_column_resolves_to_defaults(raw):
     } == RULED_DEFAULTS
 
 
-def test_ten_rows_and_awaiting_submission_is_not_one_of_them():
+def test_eleven_rows_and_awaiting_submission_is_not_one_of_them():
     """``awaiting_submission`` is state, not an event, so it gets no row."""
-    assert len(NOTIFICATION_EVENTS) == 10
+    assert len(NOTIFICATION_EVENTS) == 11
     every_feed_type = {t for event in NOTIFICATION_EVENTS for t in event.feed_types}
     assert FEED_ITEM_TYPE_AWAITING_SUBMISSION not in every_feed_type
 

@@ -115,6 +115,21 @@ class DuelForfeitedPayload(FeedPayloadBase):
     task_faction_slug: str
 
 
+class DuelLivePayload(FeedPayloadBase):
+    """A friend or foe's duel just opened for votes (#3886). The item's actor is
+    the challenger."""
+
+    duel_id: int
+    challenger_character_id: int
+    opponent_character_id: int
+    opponent_display_name: str
+    opponent_faction_slug: str
+    opponent_avatar_url: str
+    task_title: str
+    task_point_value: int
+    task_faction_slug: str
+
+
 class FriendSignupPayload(FeedPayloadBase):
     """A friend joined a task the viewer is also doing."""
 
@@ -207,6 +222,7 @@ FeedPayload = Union[
     CollabInvitePayload,
     DuelChallengePayload,
     DuelForfeitedPayload,
+    DuelLivePayload,
     FriendSignupPayload,
     InvitationLetterPayload,
     FriendDefectionPayload,
@@ -307,6 +323,11 @@ class DuelForfeitedItem(FeedItemBase):
     payload: DuelForfeitedPayload
 
 
+class DuelLiveItem(FeedItemBase):
+    type: Literal["duel_live"]
+    payload: DuelLivePayload
+
+
 class FriendSignupItem(FeedItemBase):
     type: Literal["friend_signup"]
     payload: FriendSignupPayload
@@ -368,6 +389,7 @@ ActivityFeedItem = Annotated[
         CollabInviteItem,
         DuelChallengeItem,
         DuelForfeitedItem,
+        DuelLiveItem,
         FriendSignupItem,
         InvitationLetterItem,
         FriendDefectionItem,

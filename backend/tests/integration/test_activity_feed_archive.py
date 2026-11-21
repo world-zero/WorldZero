@@ -71,13 +71,16 @@ REQUESTS_FILTER = "requests"
 # ADR-0070: the four request types leave the live stream, so ALL and YOUR_STUFF
 # read four short of their registry membership.
 SEEDED_ITEM_COUNTS = {
-    ALL_FILTER: 15,
-    FRIENDS_FILTER: 3,
-    FOES_FILTER: 2,
+    ALL_FILTER: 16,
+    FRIENDS_FILTER: 4,
+    FOES_FILTER: 3,
     YOUR_STUFF_FILTER: 7,
     GLOBAL_FILTER: 3,
     REQUESTS_FILTER: 4,
 }
+
+#: duel_live is the one type on both edge tabs, so friends + foes over-count by it.
+ON_BOTH_EDGE_TABS = 1
 
 # ``global`` is renamed ``global_count`` around the Python keyword.
 COUNT_KEYS = {
@@ -100,7 +103,7 @@ async def full_feed(
     active_task: Task,
     some_faction,
 ) -> dict:
-    """Seed one feed item of each of the 19 types for ``character``."""
+    """Seed one feed item of each of the 20 types for ``character``."""
     now = datetime.now(timezone.utc)
 
     # character2 friend, character3 foe: feeds the friend_*/foe_* sources.
@@ -292,6 +295,32 @@ async def full_feed(
         )
     )
 
+    # --- duel_live: friend vs foe, so one row on both the friends and foes tabs ---
+    live_sides = [
+        Praxis(
+            task_id=active_task.id,
+            created_by_id=side.id,
+            type=PraxisType.solo,
+            status=PraxisStatus.in_progress,
+            title="Live",
+            body_text="proof",
+        )
+        for side in (character2, character3)
+    ]
+    db_session.add_all(live_sides)
+    await db_session.flush()
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=live_sides[0].id,
+            opponent_character_id=character3.id,
+            opponent_praxis_id=live_sides[1].id,
+            status=DuelStatus.settled,
+            accepted_at=now,
+            live_at=now,
+        )
+    )
+
     # --- invitation_letter + friend_defection ---
     # Letter is for a faction the viewer is NOT in, so unanswered (ADR-0070).
     letter = InvitationLetter(
@@ -372,7 +401,7 @@ def _key_of(feed: dict, item_type: str) -> str:
 async def test_every_feed_type_yields_a_stable_item_key(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
-    """All 19 types present, keyed, and stable across two requests (stream + queue)."""
+    """All 20 types present, keyed, and stable across two requests (stream + queue)."""
     first = await _feed(client, auth_headers)
     second = await _feed(client, auth_headers)
     queue = await _feed(client, auth_headers, REQUESTS_FILTER)
@@ -702,7 +731,7 @@ async def test_dismiss_all_scopes_to_the_current_filter(
     assert friends["counts"]["friends"] == 0
 
     foes = await _feed(client, auth_headers, FOES_FILTER)
-    assert len(foes["items"]) == SEEDED_ITEM_COUNTS[FOES_FILTER]
+    assert len(foes["items"]) == SEEDED_ITEM_COUNTS[FOES_FILTER] - ON_BOTH_EDGE_TABS
 
     everything = await _feed(client, auth_headers)
     assert len(everything["items"]) == (
@@ -729,7 +758,9 @@ async def test_archived_view_ignores_the_type_slicing(
     archived = await _feed(client, auth_headers, FRIENDS_FILTER, archived=True)
     archived_types = {item["type"] for item in archived["items"]}
     assert len(archived["items"]) == (
-        SEEDED_ITEM_COUNTS[FRIENDS_FILTER] + SEEDED_ITEM_COUNTS[FOES_FILTER]
+        SEEDED_ITEM_COUNTS[FRIENDS_FILTER]
+        + SEEDED_ITEM_COUNTS[FOES_FILTER]
+        - ON_BOTH_EDGE_TABS
     )
     assert "foe_taunt" in archived_types
     assert FEED_ITEM_TYPE_FRIEND_COMPLETION in archived_types
@@ -740,6 +771,7 @@ async def test_archived_view_ignores_the_type_slicing(
         SEEDED_ITEM_COUNTS[ALL_FILTER]
         - SEEDED_ITEM_COUNTS[FRIENDS_FILTER]
         - SEEDED_ITEM_COUNTS[FOES_FILTER]
+        + ON_BOTH_EDGE_TABS
     )
 
     await client.post("/activity-feed/restore-all", json={}, headers=auth_headers)
@@ -801,7 +833,7 @@ async def test_restore_all_can_be_scoped_to_one_filter(
     assert len(foes["items"]) == SEEDED_ITEM_COUNTS[FOES_FILTER]
 
     friends = await _feed(client, auth_headers, FRIENDS_FILTER)
-    assert friends["items"] == []
+    assert [item["type"] for item in friends["items"]] == ["duel_live"]
 
 
 # --- 6. Stale rows leave the LIVE feed at read time, never a write (#1301) ---
@@ -1158,6 +1190,7 @@ async def test_per_type_counts_respect_the_rail_they_sit_under(
         FEED_ITEM_TYPE_FRIEND_COMPLETION,
         FEED_ITEM_TYPE_FRIEND_SIGNUP,
         "friend_defection",
+        "duel_live",
     }
     assert FEED_ITEM_TYPE_FOE_TAUNT not in friends["counts"]["by_type"]
 
@@ -1176,8 +1209,11 @@ async def test_archived_facet_counts_describe_the_archive(
 
     archived = await _feed(client, auth_headers, ALL_FILTER, archived=True)
     assert _published_type_counts(archived) == _observed_type_counts(archived)
-    assert _published_type_counts(archived) == {FEED_ITEM_TYPE_FOE_TAUNT: 1,
-                                                "foe_completion": 1}
+    assert _published_type_counts(archived) == {
+        FEED_ITEM_TYPE_FOE_TAUNT: 1,
+        "foe_completion": 1,
+        "duel_live": 1,
+    }
     assert archived["counts"]["by_type"] != live["counts"]["by_type"]
     assert archived["counts"]["foes"] == 0
-    assert archived["counts"]["all"] == live["counts"]["all"] - 2
+    assert archived["counts"]["all"] == live["counts"]["all"] - 3

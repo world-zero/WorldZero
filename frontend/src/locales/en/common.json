@@ -408,6 +408,8 @@
       "rows": {
         "duelChallenge": "Duel challenges",
         "duelChallengeHelp": "Someone challenges you to a duel.",
+        "duelLive": "Duels I could judge",
+        "duelLiveHelp": "A friend or foe's duel opens for votes.",
         "collabInvite": "Collaboration invites",
         "collabInviteHelp": "Someone asks you to join a praxis with them.",
         "invitationLetter": "Faction invitations",

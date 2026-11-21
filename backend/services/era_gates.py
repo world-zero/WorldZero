@@ -154,6 +154,11 @@ def meets_albescent_level(
     return level >= era.secret_faction_join_level
 
 
+def meets_vote_level(peak_level: int | None, era: EraConfig = CURRENT_ERA) -> bool:
+    """The level half of :func:`vote_lock_reason`; who hears a duel is live (#3886)."""
+    return peak_level is not None and peak_level >= era.vote_level_required
+
+
 def vote_lock_reason(
     peak_level: int | None,
     has_received_vote: bool,
@@ -167,7 +172,7 @@ def vote_lock_reason(
     zeroes everyone at rollover, which would leave nobody able to vote on day
     one. The admin bypass covers only the received-vote rule, never the level.
     """
-    if peak_level is None or peak_level < era.vote_level_required:
+    if not meets_vote_level(peak_level, era):
         return "level"
     if era.vote_requires_received_vote and not has_received_vote and not is_admin:
         return "no_received_vote"

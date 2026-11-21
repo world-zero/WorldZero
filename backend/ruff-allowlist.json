@@ -69,7 +69,7 @@
   "seed.py::E501": 3,
   "seed.py::F541": 2,
   "seed.py::I001": 1,
-  "services/activity_feed.py::E501": 8,
+  "services/activity_feed.py::E501": 6,
   "services/activity_feed.py::I001": 1,
   "services/admin_service.py::E501": 5,
   "services/admin_service.py::I001": 1,
