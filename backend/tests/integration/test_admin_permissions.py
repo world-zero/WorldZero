@@ -154,7 +154,8 @@ async def test_me_carries_the_permissions_the_client_gates_on(
     assert me.json()["permissions"] == []
     await make_admin(db_session, account, permissions=[Permission.handle_reports])
     me = await client.get("/auth/me", headers=auth_headers)
-    assert (me.json()["permissions"], me.json()["is_owner"]) == (["handle_reports"], False)
+    body = me.json()
+    assert (body["permissions"], body["is_owner"]) == (["handle_reports"], False)
     await make_owner(db_session, account)
     me = await client.get("/auth/me", headers=auth_headers)
     assert me.json()["permissions"] == [p.value for p in Permission]
