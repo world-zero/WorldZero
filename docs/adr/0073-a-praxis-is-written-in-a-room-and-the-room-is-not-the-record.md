@@ -131,7 +131,7 @@ arriving by its back door.
   closed** (non-browser clients send none) unless an explicit test/dev setting
   allows it: cross-site hijacking is browser-only, so this costs nothing real
   and keeps the production rule "a valid known `Origin`, or nothing".
-- **At revoke:** kick and leave **close the socket**. A gate checked only on
+- **At revoke:** kick, leave, a mod ban, an account suspend and character deletion **close the socket**. A gate checked only on
   the way in is the capability-flag/enforcement drift this codebase has shipped
   before; a removed member must stop writing at removal, not at tab close.
 

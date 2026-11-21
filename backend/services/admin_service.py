@@ -60,6 +60,7 @@ from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_duels_collect
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
+from services.praxis_room import close_character_sockets
 from services.era import (
     apply_era_reset,
     commit_and_bind_live_era,
@@ -429,6 +430,7 @@ async def apply_ban(
     if banned:
         character.status = CharacterStatus.banned
         rescore_ids = await forfeit_duels_collect([character.id], session)
+        close_character_sockets(character.id)
     else:
         character.status = CharacterStatus.active
 
@@ -639,6 +641,8 @@ async def suspend_account(
             select(Character.id).where(Character.account_id == account_id)
         )).all()
         rescore_ids = await forfeit_duels_collect(character_ids, session)
+        for character_id in character_ids:
+            close_character_sockets(character_id)
     await log_mod_action(
         session,
         actor_id,

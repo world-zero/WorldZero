@@ -46,7 +46,9 @@ from models.praxis import (
 )
 from models.praxis_room import PraxisRoomUpdate
 from models.task import Task
+from services.admin_service import apply_ban, suspend_account
 from services.auth import create_jwt
+from services.character import soft_delete_character
 from services.character_stats import recalculate_character_stats
 from services.praxis import (
     kick_member,
@@ -582,6 +584,54 @@ async def test_kicked_member_socket_is_closed(
 
             await _wait_for(kickee.closed.is_set, "the kicked member's socket to close")
             assert kickee.close_code == 1008
+
+
+async def _close_via(action, rooms, collab, account, account2, character2, db_session):
+    """Run ``action`` against character2; return (their socket, the collaborator's)."""
+    victim = await rooms.open(collab.id, account2.id)
+    mate = await rooms.open(collab.id, account.id)
+    async with client_doc(victim) as doc, client_doc(mate) as mate_doc:
+        await _wait_for_body(doc, SEED_BODY, "the member about to lose access")
+        await _wait_for_body(mate_doc, SEED_BODY, "the collaborator")
+        await action()
+        await asyncio.sleep(0.3)
+        return victim, mate
+
+
+@pytest.mark.parametrize("path", ["ban", "suspend", "delete"])
+async def test_removing_a_player_closes_their_socket_not_the_collaborators(
+    path, db_session, collab, account, account2, character2, monkeypatch
+) -> None:
+    actions = {
+        "ban": lambda: apply_ban(character2, True, db_session, actor_id=account.id),
+        "suspend": lambda: suspend_account(
+            account2.id, True, db_session, actor_id=account.id
+        ),
+        "delete": lambda: soft_delete_character(character2.id, db_session),
+    }
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        victim, mate = await _close_via(
+            actions[path], rooms, collab, account, account2, character2, db_session
+        )
+        assert victim.closed.is_set()
+        assert victim.close_code == 1008
+        assert not mate.closed.is_set()
+
+
+async def test_unban_and_unsuspend_close_nothing(
+    db_session, collab, account, account2, character2, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        victim, _ = await _close_via(
+            lambda: _lift(db_session, account, account2, character2),
+            rooms, collab, account, account2, character2, db_session,
+        )
+        assert not victim.closed.is_set()
+
+
+async def _lift(db_session, account, account2, character2) -> None:
+    await apply_ban(character2, False, db_session, actor_id=account.id)
+    await suspend_account(account2.id, False, db_session, actor_id=account.id)
 
 
 async def test_leaving_member_socket_is_closed(
