@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { withAppCopy } from '../../i18n'
 import type { CharacterOut } from '../../api/auth'
-import { useModal } from '../../hooks/useModal'
 import { factionName } from '../../utils/factions'
 import { REQUESTS_QUEUE_LINK } from '../../pages/updates/requestsQueueAnchor'
 import FactionAvatar from '../avatar/FactionAvatar'
-import { drawAtRoot } from '../ui/drawAtRoot'
+import BottomSheet from '../ui/BottomSheet'
 import PendingBadge from './PendingBadge'
 import './youSheet.css'
 
@@ -30,14 +29,10 @@ export default function YouSheet({
   onClose: () => void
 }) {
   const { t } = useTranslation('common')
-  const ref = useModal(onClose)
   const requests = t('nav.youRequests', { count: pending })
 
-  return drawAtRoot(
-    <div ref={ref} role="dialog" aria-modal="true" aria-label={t('nav.you')}>
-      <button type="button" className="you-scrim" aria-label={t('nav.youClose')} onClick={onClose} />
-      <div className="you-sheet">
-        <span className="you-grab" />
+  return (
+    <BottomSheet label={t('nav.you')} scrimLabel={t('nav.youClose')} onClose={onClose} aboveTabBar>
         <div className="you-head">
           <FactionAvatar character={character} size={40} badge={false} />
           <div>
@@ -73,7 +68,6 @@ export default function YouSheet({
             <ModGroup onNavigate={onClose} />
           </Suspense>
         )}
-      </div>
-    </div>,
+    </BottomSheet>
   )
 }

@@ -1,6 +1,6 @@
 /**
  * Every `role="dialog"` takes its modal behaviour from `hooks/useModal` and carries
- * an accessible name (#3568). A twelfth hand-rolled dialog fails here.
+ * an accessible name (#3568). An eleventh hand-rolled dialog fails here.
  */
 import { describe, expect, it } from 'vitest'
 
@@ -14,7 +14,7 @@ const dialogFiles = () =>
 
 describe('role="dialog" components share useModal (#3568)', () => {
   it('still sees the known dialogs, so it cannot pass by matching nothing', () => {
-    expect(dialogFiles().length).toBeGreaterThanOrEqual(11)
+    expect(dialogFiles().length).toBeGreaterThanOrEqual(10)
   })
 
   for (const { rel, text } of dialogFiles()) {
