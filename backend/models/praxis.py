@@ -29,6 +29,10 @@ if TYPE_CHECKING:
     from models.vote import Vote
 
 
+# Write-only caps (#3750), like MAX_COMMENT_BODY: reads stay uncapped, no migration.
+PRAXIS_TITLE_MAX = 200
+PRAXIS_BODY_MAX = 20000
+
 class MediaType(enum.Enum):
     image = "image"
     video = "video"
@@ -121,6 +125,11 @@ class Praxis(TimestampMixin, Base):
     # Collab pending-publish window (ADR-0012); cleared on edit.
     submit_proposed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    # Names the room document's life; bumped when publish destroys it, so a
+    # browser's offline copy of an older one can be told apart (#3644).
+    room_generation: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
     )
     created_by_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=False

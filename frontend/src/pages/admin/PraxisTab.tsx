@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { listAdminPraxes } from "../../api/admin";
+import { getPraxis } from "../../api/praxis";
 import type { FactionOut } from "../../api/factions";
 import type { ModerationStatus, PraxisCardOut } from "../../api/praxis";
 import FilterBar, {
@@ -81,6 +82,8 @@ export default function PraxisTab() {
   } | null>(null);
   // The row whose first action takes focus back once its confirm closes.
   const refocusId = useRef<number | null>(null);
+  // Latest confirm opened; a slower prefill fetch from an earlier row must not write its note.
+  const prefillFor = useRef(0);
 
   // Any criteria change resets to page one.
   const change = (patch: Partial<AdminPraxisCriteria>) => {
@@ -148,11 +151,26 @@ export default function PraxisTab() {
     closeConfirm(praxisId);
   };
 
-  const begin = (praxisId: number, action: PraxisRowAction) => {
+  const begin = (
+    praxisId: number,
+    action: PraxisRowAction,
+    status: ModerationStatus,
+  ) => {
     setRowError(null);
     if (isDestructive(action)) {
       setFailNote("");
       setConfirm({ id: praxisId, action });
+      const token = ++prefillFor.current;
+      // The list rows carry no note; failing a Hidden praxis or hiding a Not-met one must not wipe its reason.
+      if ((action === "hide" && status === "failed") || (action === "fail" && status === "hidden")) {
+        getPraxis(praxisId)
+          .then((full) => {
+            if (token === prefillFor.current) setFailNote((typed) => typed || full.admin_note);
+          })
+          .catch((err) =>
+            setRowError({ id: praxisId, message: extractError(err, t("praxis.actionError")) }),
+          );
+      }
     } else {
       void send(praxisId, action);
     }
@@ -333,7 +351,7 @@ export default function PraxisTab() {
                                 }
                               : undefined
                           }
-                          onClick={() => begin(praxis.id, action)}
+                          onClick={() => begin(praxis.id, action, praxis.moderation_status)}
                           // Disabled, not unmounted, so the row doesn't jump.
                           disabled={busyId !== null}
                           className={`text-xs control-off ${action === "restore" ? "btn-primary" : "btn-outline"}`}
@@ -359,18 +377,18 @@ export default function PraxisTab() {
                     onConfirm={() => void send(praxis.id, open)}
                     onCancel={() => closeConfirm(praxis.id)}
                   >
-                    {open === "fail" && (
-                      <label className="font-body text-xs text-muted flex flex-col gap-1">
-                        {t("praxis.confirm.fail.noteLabel")}
-                        <textarea
-                          rows={2}
-                          maxLength={1000}
-                          value={failNote}
-                          onChange={(event) => setFailNote(event.target.value)}
-                          className="font-body content-text border border-border bg-surface px-2 py-1 resize-y"
-                        />
-                      </label>
-                    )}
+                    <label className="font-body text-xs text-muted flex flex-col gap-1">
+                      {open === "fail"
+                        ? t("praxis.confirm.fail.noteLabel")
+                        : t("console.reports.decision.reasonLabel")}
+                      <textarea
+                        rows={2}
+                        maxLength={1000}
+                        value={failNote}
+                        onChange={(event) => setFailNote(event.target.value)}
+                        className="font-body content-text border border-border bg-surface px-2 py-1 resize-y"
+                      />
+                    </label>
                   </AdminConfirm>
                 )}
 

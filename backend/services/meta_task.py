@@ -2,7 +2,7 @@
 ``point_value`` is a flat bonus on praxes it's applied to.
 """
 
-from typing import Mapping, Optional, Union
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,14 +30,18 @@ def faction_bypasses_metatask_level(
 
 def character_sees_metatasks(
     character_level: int,
+    faction_slug: Optional[str],
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """Does the metatask list open for a character at this level? (#453, #2280)
+    """Does the metatask list open for this character? (#453, #2280, #3707)
 
-    The SEE rule, used by ``list_tasks`` and the activity feed. **No faction
-    bypass**: Albescent's perk lifts only the APPLY gate. Callers handle
-    anonymous viewers themselves.
+    The SEE rule, used by ``list_tasks`` and the activity feed. A faction whose
+    perk is apply-at-any-level needs the list to apply from, so the same bypass
+    lifts SEE (owner ruling 2026-11-20, upholding #2365's 2026-08-21 ruling).
+    Callers handle anonymous viewers themselves.
     """
+    if faction_bypasses_metatask_level(faction_slug, era):
+        return True
     return character_level >= era.level_to_see_metatasks
 
 
@@ -50,13 +54,11 @@ def metatask_cap_for_level(character_level: int, era: EraConfig) -> int:
 
 async def get_meta_task_points_bulk(
     praxis_ids: list[int],
-    character_level: Union[int, Mapping[int, int]],
     session: AsyncSession,
 ) -> dict[int, int]:
     """``{praxis_id: flat bonus}`` from attached metatasks, in one query.
 
-    Counts only metatasks whose ``level_required`` the viewer meets (a mapping
-    gives each praxis its own character's level). Missing key = 0.
+    No level gate: who may attach is checked once, at apply time. Missing key = 0.
     """
     if not praxis_ids:
         return {}
@@ -69,13 +71,6 @@ async def get_meta_task_points_bulk(
     totals: dict[int, int] = {}
     for praxis_id, task in result.all():
         if task.task_type != TaskType.metatask:
-            continue
-        level = (
-            character_level
-            if isinstance(character_level, int)
-            else character_level.get(praxis_id, 0)
-        )
-        if level < task.level_required:
             continue
         totals[praxis_id] = totals.get(praxis_id, 0) + int(task.point_value)
     return totals

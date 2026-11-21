@@ -18,6 +18,8 @@ export interface AdminCounts {
   people: number | null
 }
 
+export const modTotal = (c: AdminCounts): number => (c.reports ?? 0) + (c.messages ?? 0) + (c.proposals ?? 0)
+
 const NONE: AdminCounts = { reports: null, messages: null, proposals: null, praxis: null, tasks: null, people: null }
 
 const ok = <T,>(r: PromiseSettledResult<T>): T | null => (r.status === 'fulfilled' ? r.value : null)
@@ -51,7 +53,7 @@ export function useAdminCounts(refreshKey = ''): AdminCounts & { reload: () => v
         proposals: ok(proposals)?.length ?? null,
         praxis: o?.praxis ?? null,
         tasks: o?.active_tasks ?? null,
-        people: o?.accounts ?? null,
+        people: o?.characters ?? null,
       })
     })
     return () => {

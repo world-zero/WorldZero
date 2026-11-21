@@ -1,3 +1,4 @@
+import '../components/ui/FilterBar/filterBar.css'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PageTitle from '../components/ui/PageTitle'
@@ -7,6 +8,7 @@ import FeedBulkArchiveButton from '../components/feed/FeedBulkArchiveButton'
 import UpdatesFilterBar, { UpdatesListEmpty } from './updates/UpdatesFilterBar'
 import RequestsQueue from './updates/RequestsQueue'
 import { useUpdates, type UpdatesState } from './updates/useUpdates'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /**
  * The activity feed — ONE responsive page (#1421). A mixed, multi-faction
@@ -72,12 +74,10 @@ export default function Updates() {
       {loading ? (
         <div className="py-8 font-body text-muted">{tc('loading')}</div>
       ) : fetchError ? (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">
-          {fetchError}{' '}
+        <ErrorBanner message={<>{fetchError}{' '}
           <button onClick={() => window.location.reload()} className="underline">
             {tc('states.tryRefreshing')}
-          </button>
-        </p>
+          </button></>} />
       ) : items.length === 0 ? (
         <UpdatesListEmpty state={state} />
       ) : (

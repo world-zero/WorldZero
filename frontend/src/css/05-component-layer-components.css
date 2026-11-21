@@ -310,6 +310,25 @@
     font-size: var(--text-title);
   }
 
+  /* Corner stickers (START HERE, META) hang past the card on desktop; a
+     full-width phone card has no gutter for them. */
+  :root {
+    --sticker-inset: -6px;
+  }
+  @media (max-width: 767px) {
+    :root {
+      --sticker-inset: 0px;
+    }
+  }
+
+  /* List-card titles stop at 3 lines, like .card-description. Never on a detail page. */
+  .card-title {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
   /* ── Functional ink role classes (#1609) ──
      Replace Tailwind's stock `text-red-*`, which ignores the dark cascade.
      Paint only, one class per token — spacing belongs to a future
@@ -361,6 +380,44 @@
 
   .page {
     @apply max-w-5xl mx-auto px-4 sm:px-6 py-8;
+  }
+
+  /* One framed layer on a phone (#3754): the shell region already insets 16px.
+     Must match `MOBILE_QUERY` in `hooks/useFormFactor.ts`. */
+  @media (max-width: 767px) and (pointer: coarse) {
+    .page {
+      @apply px-0;
+    }
+    .ob-sheet-outer {
+      padding-inline: 0 !important; /* beats the card's inline padding */
+    }
+    /* Phone drops the masthead floor (#2995 keeps it on desktop): an unmasthead kit left ~80px empty. */
+    [data-composer-head] {
+      min-height: 0 !important;
+    }
+    .composer-slip,
+    .profile-frame,
+    .profile-header,
+    .ob-sheet {
+      padding-inline: var(--space-md) !important;
+    }
+    /* The stamp's own max-width is a one-size mount; on a phone it fills its row. */
+    .composer-stamp {
+      flex: 1 1 100%;
+    }
+    .composer-stamp > * {
+      width: 100% !important;
+      max-width: none !important;
+    }
+    .profile-level,
+    .ob-terms-doc {
+      padding: 0 !important;
+      border: 0 !important;
+    }
+    .profile-level {
+      background: none !important;
+      max-width: none !important;
+    }
   }
 
   /* ── Nav links (Courier Prime 10px uppercase — Style Guide §5.1) ── */

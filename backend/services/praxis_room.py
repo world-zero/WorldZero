@@ -45,7 +45,7 @@ from config import settings
 from db import AsyncSessionLocal
 from errors import ErrorCode, raise_coded
 from models.account import Account, AccountStatus
-from models.praxis import Praxis
+from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, Praxis, PraxisStatus
 from models.praxis_room import PraxisRoomUpdate
 from services.auth import decode_jwt
 from services.character import resolve_active_character
@@ -66,7 +66,10 @@ _FLUSH_DEBOUNCE_SECONDS = 2.0
 
 _MAX_CLIENT_UPDATE_BYTES = 2 * 1024 * 1024
 _INVALID_DRAFT = "That draft is not a valid document."
-_OVERSIZED_DRAFT = "That draft is too large."
+_OVERSIZED_DRAFT = (
+    f"That post is too long: keep the title under {PRAXIS_TITLE_MAX} and the body "
+    f"under {PRAXIS_BODY_MAX} characters."
+)
 
 # Path below the ``main.py`` mount (``/rooms`` prefix belongs to the mount).
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
@@ -109,6 +112,13 @@ def _document_values(document: Doc) -> dict[str, str]:
     if isinstance(title, str):
         values["title"] = title
     return values
+
+
+def _over_cap(values: dict[str, str]) -> bool:
+    return (
+        len(values.get("title", "")) > PRAXIS_TITLE_MAX
+        or len(values["body_text"]) > PRAXIS_BODY_MAX
+    )
 
 
 class PostgresYStore(BaseYStore):
@@ -266,6 +276,10 @@ class _RoomFlusher:
         transaction as ``on_room_edit`` so text and countdown can't diverge.
         """
         values = _document_values(self._room.ydoc)
+        if _over_cap(values):
+            self._log.warning("Praxis %s over cap; not flushed", self._praxis_id)
+            self._pending = False
+            return
 
         async with self._session_factory() as session:
             await session.execute(
@@ -491,6 +505,27 @@ class PraxisRoomServer(WebsocketServer):
                         await flusher.close()
                     await self.delete_room(room=room)
 
+    async def _current_doc(self, name: str, room: Any) -> Doc:
+        if room is not None:
+            return room.ydoc
+        # After a restart the store may hold over-cap text the flusher
+        # skipped; the delete in discard_document would silently drop it.
+        doc = Doc()
+        store = PostgresYStore(
+            name, log=self.log, session_factory=self._session_factory
+        )
+        try:
+            await store.apply_updates(doc)
+        except YDocNotFound:
+            pass
+        return doc
+
+    async def document_over_cap(self, praxis_id: int) -> bool:
+        name = room_name_for(praxis_id)
+        async with self._open_lock:
+            doc = await self._current_doc(name, self.rooms.get(name))
+        return _over_cap(_document_values(doc))
+
     async def discard_document(self, praxis: Praxis, session: AsyncSession) -> None:
         """Publish: the document becomes the record, and is then destroyed (#1745).
 
@@ -501,10 +536,13 @@ class PraxisRoomServer(WebsocketServer):
         """
         name = room_name_for(praxis.id)
         async with self._open_lock:
+            room = self.rooms.get(name)
+            doc = await self._current_doc(name, room)
+            if _over_cap(_document_values(doc)):
+                raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
             flusher = self._flushers.pop(name, None)
             if flusher is not None:
                 flusher.abandon()
-            room = self.rooms.get(name)
             if room is not None:
                 for column, value in _document_values(room.ydoc).items():
                     setattr(praxis, column, value)
@@ -517,6 +555,8 @@ class PraxisRoomServer(WebsocketServer):
                     PraxisRoomUpdate.praxis_id == praxis.id
                 )
             )
+            # The only place a document dies; clients key their offline copy on this.
+            praxis.room_generation += 1
 
     async def apply_client_update(
         self, praxis_id: int, update: bytes
@@ -533,8 +573,25 @@ class PraxisRoomServer(WebsocketServer):
         except Exception:
             raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
         # The caller cancels on a difference; this text is the new proposal.
+        values = _document_values(room.ydoc)
+        if _over_cap(values):
+            raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
         flusher.absorb()
-        return _document_values(room.ydoc)
+        return values
+
+    def loaded_values(self, praxis_id: int) -> dict[str, str]:
+        """The running room's column values, or {} when none is loaded or a proposal
+        already absorbed this exact text (stored row lags it by the flush window).
+        Never opens a room."""
+        name = room_name_for(praxis_id)
+        room, flusher = self.rooms.get(name), self._flushers.get(name)
+        if room is None or flusher is None:
+            return {}
+        values = _document_values(room.ydoc)
+        if values == flusher._absorbed:
+            return {}
+        flusher.absorb()
+        return values
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
@@ -576,6 +633,9 @@ class PraxisRoomServer(WebsocketServer):
             # The one membership rule (ADR-0013); deferred, praxis imports us.
             from services.praxis import _require_member
 
+            if praxis.status == PraxisStatus.submitted:
+                logger.info("Room handshake refused: praxis %d is live", praxis_id)
+                return None
             try:
                 _require_member(praxis, character.id, "edit")
             except HTTPException:
@@ -667,6 +727,11 @@ async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
     await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
 
 
+async def document_over_cap(praxis_id: int) -> bool:
+    """Would sealing now 413? Lazy seals skip such a praxis rather than raise."""
+    return await PRAXIS_ROOM_SERVER.document_over_cap(praxis_id)
+
+
 async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
     """Decode a submit's base64 Yjs state and merge it; the merged column values."""
     if len(state_b64) > _MAX_CLIENT_UPDATE_BYTES * 4 // 3 + 4:
@@ -678,6 +743,10 @@ async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
     if len(update) > _MAX_CLIENT_UPDATE_BYTES:
         raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
     return await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
+
+
+def loaded_room_values(praxis_id: int) -> dict[str, str]:
+    return PRAXIS_ROOM_SERVER.loaded_values(praxis_id)
 
 
 def close_member_sockets(praxis_id: int, character_id: int) -> None:

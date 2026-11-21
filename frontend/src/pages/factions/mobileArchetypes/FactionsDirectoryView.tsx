@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import type { FactionOut, FactionPageOut } from '../../../api/factions'
-import { factionCssVar, sortFactionsByRainbowOrder } from '../../../utils/factions'
+import { sortFactionsByRainbowOrder } from '../../../utils/factions'
 import FactionSelectCard, { type SelectState } from '../../../components/selectCard/FactionSelectCard'
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 
 const NA_SLUG = 'na'
 
@@ -24,12 +25,9 @@ interface FactionsDirectoryViewProps {
 }
 
 /**
- * Pure skin for the mobile factions directory: title, stripe bar,
- * unaffiliated banner, then the same FactionSelectCards desktop uses (#732).
+ * Pure skin for the mobile factions directory: unaffiliated banner, then the same FactionSelectCards desktop uses (#732).
  * No member counts (ADR-0035: no cheap query). No fetching or effects (#743).
- *
- * The stripe bar is a legend: stripe N == card N, so it is not the smooth
- * `--faction-default-rainbow` and the list keeps rainbow order.
+ * The list keeps rainbow order. The title lives in `Community` (#3761).
  */
 export default function FactionsDirectoryView({
   factions,
@@ -40,7 +38,6 @@ export default function FactionsDirectoryView({
   onVisit,
 }: FactionsDirectoryViewProps) {
   const { t } = useTranslation('factions')
-  const { t: tc } = useTranslation('common')
 
   // Same invite-gated status → three-state mapping as DesktopFactions.
   const selectState = (slug: string): SelectState => {
@@ -55,33 +52,6 @@ export default function FactionsDirectoryView({
 
   return (
     <div className="py-4" data-testid="mobile-factions-directory">
-      <h1
-        className="font-display italic font-medium mb-3"
-        style={{ fontSize: 'var(--text-title)', color: 'var(--color-text-primary)', lineHeight: 1.1 }}
-      >
-        {tc('nav.factions')}
-      </h1>
-
-      {/* Driven off `visible`, not a static order list, so stripe count
-          always matches the rendered rows (ADR-0082). */}
-      {visible.length > 0 && (
-        <div
-          aria-hidden="true"
-          data-testid="faction-stripe-bar"
-          style={{
-            display: 'flex',
-            height: 10,
-            borderRadius: 999,
-            overflow: 'hidden',
-            marginBottom: 'var(--space-xl)',
-          }}
-        >
-          {visible.map((f) => (
-            <span key={f.slug} style={{ flex: 1, background: factionCssVar(f.slug) }} />
-          ))}
-        </div>
-      )}
-
       {unaffiliated && (
         <section
           className="sidebar-card mb-4"
@@ -122,7 +92,7 @@ export default function FactionsDirectoryView({
       {loading ? (
         <p className="font-body text-muted">{t('index.loading')}</p>
       ) : error ? (
-        <p className="font-body content-text danger-text border-2 danger-edge px-3 py-2">{error}</p>
+        <ErrorBanner message={error} />
       ) : (
         <div
           data-testid="faction-tile-column"

@@ -13,6 +13,10 @@ interface SettingsRowProps {
   readonly noteId?: string
   /** Drops the bottom rule. */
   readonly last?: boolean
+  /** Controls drop under the text instead of beside it (phones, #3703). */
+  readonly stacked?: boolean
+  /** Label flex-basis; the default 22ch leaves no room for three switch columns at 800px. */
+  readonly labelMeasure?: string
   readonly children: ReactNode
 }
 
@@ -32,7 +36,6 @@ const row: CSSProperties = {
 
 /**
  * 22ch fits beside a 48px switch on a 375px phone, so only text rows wrap.
- * ponytail: one measure for every row; make it a prop if a row needs another.
  */
 const LABEL_MEASURE = '1 1 22ch'
 
@@ -42,17 +45,20 @@ export default function SettingsRow({
   note,
   noteId,
   last = false,
+  stacked = false,
+  labelMeasure = LABEL_MEASURE,
   children,
 }: SettingsRowProps) {
   return (
     <div
       style={{
         ...row,
+        ...(stacked && { flexDirection: 'column' as const, alignItems: 'stretch' }),
         paddingBottom: last ? 0 : 'var(--space-lg)',
         borderBottom: last ? undefined : '1px solid var(--color-border)',
       }}
     >
-      <div className="font-body" style={{ flex: LABEL_MEASURE }}>
+      <div className="font-body" style={{ flex: stacked ? 'none' : labelMeasure }}>
         <div style={{ fontSize: 'var(--text-content)', color: 'var(--color-text-primary)' }}>
           {title}
         </div>

@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
@@ -268,7 +269,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           >
             <Link
               to={`/praxis/${inProgressPraxisId}/edit`}
-              style={{ ...primaryAction, flex: 1, width: "auto" }}
+              style={{ ...primaryAction, flex: "1 1 8rem", width: "auto", minWidth: 0, padding: "var(--space-md) var(--space-xs)", overflowWrap: "anywhere" }}
             >
               {t("detail.inProgress.continue")}
             </Link>
@@ -280,8 +281,11 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                 fontSize: "var(--text-lg)",
                 background: "none",
                 border: "none",
-                borderBottom: "1px solid var(--faction-ua-rule)",
+                textDecoration: "underline",
+                textDecorationColor: "var(--faction-ua-rule)",
                 cursor: "pointer",
+                ...CARD_CTA,
+                minWidth: 44,
                 padding: 0,
                 color: "var(--leaf-task-detail-quiet)",
               }}

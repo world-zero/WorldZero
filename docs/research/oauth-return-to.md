@@ -2,8 +2,8 @@
 
 > **Snapshot as of 2026-08-15; Render retired 2026-09.** The `render.yaml` citations below describe the hosting at the time of writing. Production now runs on the Hetzner box (`deploy/docker-compose.yml`, `deploy/env.example`); the lines below are history and were not edited.
 
-Research for [#1734](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1734), part of the
-onboarding map [#1732](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1732).
+Research for [#1734](https://github.com/world-zero/WorldZero/issues/1734), part of the
+onboarding map [#1732](https://github.com/world-zero/WorldZero/issues/1732).
 
 > **Status: none of this was built.** #1734 was superseded — the onboarding arc carries nothing
 > through the round trip and remembers its place client-side instead. §7's recommendation is

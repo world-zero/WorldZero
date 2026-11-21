@@ -1,5 +1,6 @@
 import { ApiError } from '../api/apiError'
 import i18n from '../i18n'
+import { formatClockTime } from './dates'
 import errorsCatalog from '../locales/en/errors.json'
 
 type ValidationDetail = { msg?: string }
@@ -56,6 +57,7 @@ export const ErrorCode = {
   taskBankFull: 'TASK_BANK_FULL',
   taskNotFound: 'TASK_NOT_FOUND',
   factionAlreadyMember: 'FACTION_ALREADY_MEMBER',
+  factionAlbescentNewGamePlusOnly: 'FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY',
 } as const
 
 /**
@@ -65,7 +67,12 @@ export const ErrorCode = {
  * `params.context` selects a `<CODE>_<context>` sibling.
  */
 function catalogMessage(detail: CodedDetail): string | null {
-  const { code, params } = detail
+  const { code } = detail
+  // The backend sends an instant; the wording names it in the reader's zone.
+  const params =
+    typeof detail.params?.next_post_at === 'string'
+      ? { ...detail.params, next_post_at: formatClockTime(detail.params.next_post_at) }
+      : detail.params
   if (typeof code !== 'string' || !isCataloged(code)) return null
   if (!hasEveryPlaceholder(catalogTemplate(code, params?.context), params)) {
     return null
@@ -122,7 +129,7 @@ function failureOf(err: unknown): {
  */
 export function extractError(
   err: unknown,
-  fallback = 'Something went wrong. Please try again.'
+  fallback = i18n.t('errors:fallback')
 ): string {
   const { status, body } = failureOf(err)
 
@@ -130,14 +137,14 @@ export function extractError(
   if (message) return message
 
   if (status && status >= 500) {
-    return 'The server ran into an unexpected problem. Try again in a moment.'
+    return i18n.t('errors:server')
   }
 
   if (status !== undefined) return fallback
 
   // Keyed off the absence of a status, not `instanceof ApiNetworkError`: a
   // `catch` also receives ordinary bugs, and "did not get through" is nearer the truth.
-  return 'Unable to reach the server. Check your connection and try again.'
+  return i18n.t('errors:offline')
 }
 
 /** The one reader of `detail.code` (#1598: never substring-match prose). Null when uncoded. */

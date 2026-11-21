@@ -24,6 +24,7 @@ const importUpdates = () => withAppCopy(import('./pages/Updates'))
 const importSettings = () => withAppCopy(import('./pages/Settings'))
 const importAdmin = () => withAppCopy(import('./pages/Admin'))
 const importFactionCopySheet = () => withAppCopy(import('./pages/admin/FactionCopySheet'))
+const importTauntCopySheet = () => withAppCopy(import('./pages/admin/TauntCopySheet'))
 const importLevelUpCopySheet = () => withAppCopy(import('./pages/admin/LevelUpCopySheet'))
 const importCreateCharacter = () => withAppCopy(import('./pages/CreateCharacter'))
 const importProposeTask = () => withAppCopy(import('./pages/ProposeTask'))
@@ -39,8 +40,8 @@ const PraxisDetail = lazy(() => withAppCopy(import('./pages/PraxisDetail')))
 const DuelReader = lazy(() => withAppCopy(import('./pages/DuelReader')))
 const EditPraxis = lazy(importEditPraxis)
 const CharacterProfile = lazy(() => withAppCopy(import('./pages/CharacterProfile')))
-const Leaderboard = lazy(() => withAppCopy(import('./pages/Leaderboard')))
-const Factions = lazy(() => withAppCopy(import('./pages/Factions')))
+const Leaderboard = lazy(() => withAppCopy(import('./pages/CommunityPlayers')))
+const Factions = lazy(() => withAppCopy(import('./pages/CommunityFactions')))
 const FactionDetail = lazy(() => withAppCopy(import('./pages/FactionDetail')))
 const AlbescentSecretPlaceholder = lazy(() => withAppCopy(import('./pages/AlbescentSecretPlaceholder')))
 const Updates = lazy(importUpdates)
@@ -60,6 +61,7 @@ const EraPage = consolePage((m) => m.EraPage)
 const CopySheetIndexPage = consolePage((m) => m.CopySheetIndexPage)
 const FactionCopySheet = lazy(importFactionCopySheet)
 const LevelUpCopySheet = lazy(importLevelUpCopySheet)
+const TauntCopySheet = lazy(importTauntCopySheet)
 const CreateCharacter = lazy(importCreateCharacter)
 const EditCharacter = lazy(importEditCharacter)
 const About = lazy(() => withAppCopy(import('./pages/About')))
@@ -121,7 +123,7 @@ function AlbescentGate() {
 /** `/admin/*` brings its own layout (#3665), so it sits beside `Layout`, not in it. */
 function AdminRoutes() {
   // The console has no mod-mode toggle, so its copy sheets carry the editor themselves.
-  const onCopySheet = /^\/admin\/(copy\/|level-ups)/.test(useLocation().pathname)
+  const onCopySheet = /^\/admin\/(copy\/|level-ups|taunts)/.test(useLocation().pathname)
   return (
     <ProtectedRoute adminOnly warm={importAdmin}>
       <Suspense fallback={<PageLoading />}>
@@ -142,6 +144,7 @@ function AdminRoutes() {
             <Route path="copy/:slug" element={<FactionCopySheet />} />
             {/* Every level's Field Stamp on one page, for the same editor. */}
             <Route path="level-ups" element={<LevelUpCopySheet />} />
+            <Route path="taunts" element={<TauntCopySheet />} />
           </Route>
         </Routes>
       </Suspense>
@@ -217,6 +220,14 @@ function PlayerRoutes() {
           <Route path="/contact" element={<Contact />} />
           <Route
             path="/propose-task"
+            element={
+              <ProtectedRoute warm={importProposeTask}>
+                <ProposeTask />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/propose-task/:taskId"
             element={
               <ProtectedRoute warm={importProposeTask}>
                 <ProposeTask />

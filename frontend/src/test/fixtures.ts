@@ -78,6 +78,7 @@ export const aMember = (over: Partial<PraxisMemberOut> = {}): PraxisMemberOut =>
   is_done: false,
   joined_at: '2026-01-01T00:00:00Z',
   nudged_at: null,
+  nudge_again_at: null,
   approved_at: null,
   ...over,
 })
@@ -102,6 +103,7 @@ export const aPraxis = (over: Partial<PraxisOut> = {}): PraxisOut => ({
   flagged_at: null,
   submitted_at: '2026-01-03T00:00:00Z',
   submit_proposed_at: null,
+  room_generation: 0,
   created_by_id: AUTHOR.id,
   created_by_display_name: AUTHOR.name,
   created_by_avatar_url: '',
@@ -247,6 +249,7 @@ export const aDuelSide = (over: Partial<DuelSideOut> = {}): DuelSideOut => ({
   points_from_votes: 0,
   is_submitted: true,
   nudged_at: null,
+  nudge_again_at: null,
   win_multiplier: 1,
   loss_multiplier: 1,
   tie_multiplier: 1,

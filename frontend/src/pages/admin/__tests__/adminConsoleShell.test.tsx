@@ -11,7 +11,7 @@ const api = vi.hoisted(() => ({
   getFlaggedComments: vi.fn(async () => [{}]),
   getMessages: vi.fn(async () => [{}]),
   getPendingTasks: vi.fn(async () => []),
-  getOverview: vi.fn(async () => ({ praxis: 38, active_tasks: 10, accounts: 21 })),
+  getOverview: vi.fn(async () => ({ praxis: 38, active_tasks: 10, accounts: 21, characters: 27 })),
 }))
 vi.mock('../../../api/admin', () => api)
 vi.mock('../../../auth/AuthContext', () => ({
@@ -32,6 +32,7 @@ vi.mock('../consolePages', () => ({
 vi.mock('../../../components/admin/ModStrip', () => ({ default: () => 'COPY EDITOR STRIP' }))
 vi.mock('../FactionCopySheet', () => ({ default: () => 'FactionCopySheet' }))
 vi.mock('../LevelUpCopySheet', () => ({ default: () => 'LevelUpCopySheet' }))
+vi.mock('../TauntCopySheet', () => ({ default: () => 'TauntCopySheet' }))
 
 afterEach(cleanup)
 
@@ -59,6 +60,7 @@ describe('admin console shell', () => {
     ['/admin/copy', 'CopySheetIndexPage'],
     ['/admin/copy/ua', 'FactionCopySheet'],
     ['/admin/level-ups', 'LevelUpCopySheet'],
+    ['/admin/taunts', 'TauntCopySheet'],
   ])('%s renders %s inside the rail', async (path, page) => {
     at(path)
     expect(await screen.findByText(page)).toBeTruthy()
@@ -83,6 +85,9 @@ describe('admin console shell', () => {
     expect(await within(rail).findByLabelText('3 waiting')).toBeTruthy()
     expect(within(rail).getByLabelText('1 waiting')).toBeTruthy()
     expect(await within(rail).findByText('38')).toBeTruthy()
+    // People lists characters, so the rail counts them, not accounts (#3737).
+    expect(within(rail).getByText('27')).toBeTruthy()
+    expect(within(rail).queryByText('21')).toBeNull()
     const current = within(rail).getAllByRole('link').filter((a) => a.getAttribute('aria-current') === 'page')
     expect(current.map((a) => a.textContent)).toEqual(['Tasks10'])
     expect(within(rail).getByRole('link', { name: '← Back to World Zero' }).getAttribute('href')).toBe('/')

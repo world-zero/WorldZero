@@ -257,13 +257,13 @@ reverted to docs only for that reason.
 
 | Issue | |
 |---|---|
-| [#2705](https://github.com/pixieofhugs/WorldZeroPlayground/issues/2705) | `era_reset.py` cannot roll over into a new `config_key` — F1/F3 |
-| [#2706](https://github.com/pixieofhugs/WorldZeroPlayground/issues/2706) | A dropped faction is `retired`, not `hidden` — F2 |
-| [#2707](https://github.com/pixieofhugs/WorldZeroPlayground/issues/2707) | `EraConfig` must require `na` + `albescent` and pin the two `na`-fields |
-| [#2708](https://github.com/pixieofhugs/WorldZeroPlayground/issues/2708) | Fixtures ask the era for a faction, never name one — F5 |
-| [#2709](https://github.com/pixieofhugs/WorldZeroPlayground/issues/2709) | Per-era rules modules + perk-coverage guard — F5/F6 |
-| [#2710](https://github.com/pixieofhugs/WorldZeroPlayground/issues/2710) | Dev demo fixtures KeyError on a fresh Era 2 DB — F4 |
-| [#2711](https://github.com/pixieofhugs/WorldZeroPlayground/issues/2711) | Point `CURRENT_ERA` at Era 2 — blocked by the six above |
+| [#2705](https://github.com/world-zero/WorldZero/issues/2705) | `era_reset.py` cannot roll over into a new `config_key` — F1/F3 |
+| [#2706](https://github.com/world-zero/WorldZero/issues/2706) | A dropped faction is `retired`, not `hidden` — F2 |
+| [#2707](https://github.com/world-zero/WorldZero/issues/2707) | `EraConfig` must require `na` + `albescent` and pin the two `na`-fields |
+| [#2708](https://github.com/world-zero/WorldZero/issues/2708) | Fixtures ask the era for a faction, never name one — F5 |
+| [#2709](https://github.com/world-zero/WorldZero/issues/2709) | Per-era rules modules + perk-coverage guard — F5/F6 |
+| [#2710](https://github.com/world-zero/WorldZero/issues/2710) | Dev demo fixtures KeyError on a fresh Era 2 DB — F4 |
+| [#2711](https://github.com/world-zero/WorldZero/issues/2711) | Point `CURRENT_ERA` at Era 2 — blocked by the six above |
 
 ### Rulings that resolved the open options above
 

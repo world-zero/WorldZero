@@ -57,7 +57,9 @@ async def can_comment(
     )
 
 
-async def get_comment(comment_id: int, session: AsyncSession) -> Comment:
+async def get_comment(
+    comment_id: int, session: AsyncSession, *, removed_is_missing: bool = False
+) -> Comment:
     result = await session.execute(
         select(Comment)
         .options(*_COMMENT_LOADERS)
@@ -66,7 +68,12 @@ async def get_comment(comment_id: int, session: AsyncSession) -> Comment:
         .where(Comment.id == comment_id)
     )
     comment = result.scalar_one_or_none()
-    if comment is None:
+    # A removed comment answers as a missing one, so a flagger can't tell them apart.
+    if comment is None or (
+        removed_is_missing
+        and comment.moderation_status
+        in (ModerationStatus.hidden, ModerationStatus.deleted)
+    ):
         raise HTTPException(status_code=404, detail="Comment not found.")
     return comment
 
@@ -185,7 +192,12 @@ async def create_comment(
     await _reconcile_mentions(comment, mentioned, session)
     await session.flush()
     await notify_comment(
-        session, author, praxis_id=praxis_id, task_id=task_id, mentioned=mentioned
+        session,
+        author,
+        comment_id=comment.id,
+        praxis_id=praxis_id,
+        task_id=task_id,
+        mentioned=mentioned,
     )
     return await get_comment(comment.id, session)
 
@@ -264,7 +276,7 @@ async def flag_comment(
     era: EraConfig = CURRENT_ERA,
 ) -> Comment:
     """Flag for moderation; mirrors :func:`services.praxis.flag_praxis`."""
-    comment = await get_comment(comment_id, session)
+    comment = await get_comment(comment_id, session, removed_is_missing=True)
 
     # Account-scoped (#328): the review threshold is 1, so a second life could
     # otherwise queue its own account's comment.
@@ -317,11 +329,18 @@ async def moderate_comment(
     """Admin moderation: hidden (reversible hold) / deleted (tombstone) / visible."""
     comment = await get_comment(comment_id, session)
     try:
-        comment.moderation_status = ModerationStatus(new_status)
+        status = ModerationStatus(new_status)
     except ValueError:
         raise HTTPException(
             status_code=422, detail=f"Invalid moderation status: {new_status}"
         )
+    if comment.moderation_status == ModerationStatus.deleted:
+        raise_coded(
+            409,
+            ErrorCode.comment_already_deleted,
+            "That comment was already deleted. Nothing was changed.",
+        )
+    comment.moderation_status = status
     removed = comment.moderation_status in (
         ModerationStatus.hidden,
         ModerationStatus.deleted,

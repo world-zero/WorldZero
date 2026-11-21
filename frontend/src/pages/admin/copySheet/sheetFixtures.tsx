@@ -184,6 +184,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     joined_at: EARLIER,
     approved_at: NOW,
     nudged_at: null,
+    nudge_again_at: null,
   },
   {
     id: 2,
@@ -196,6 +197,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     joined_at: EARLIER,
     approved_at: null,
     nudged_at: null,
+    nudge_again_at: null,
   },
 ]
 
@@ -251,6 +253,7 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     flagged_at: null,
     submitted_at: NOW,
     submit_proposed_at: null,
+    room_generation: 0,
     created_by_id: 7,
     created_by_display_name: 'Ada Reed',
     created_by_avatar_url: '',
@@ -553,6 +556,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       points_from_votes: 42,
       is_submitted: true,
       nudged_at: null,
+      nudge_again_at: null,
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,
@@ -566,6 +570,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       points_from_votes: 28,
       is_submitted: false,
       nudged_at: null,
+      nudge_again_at: null,
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,

@@ -97,7 +97,6 @@
     "DefaultSigil": "src/components/sigil/DefaultSigil.tsx",
     "DefaultTaskCard": "src/components/taskCard/DefaultTaskCard.tsx",
     "DefaultTaskDetail": "src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
-    "DefaultTasks": "src/pages/tasks/mobileArchetypes/DefaultTasks.tsx",
     "DefaultVote": "src/components/vote/DefaultVote.tsx",
     "DeleteAccountCard": "src/pages/settings/DeleteAccountCard.tsx",
     "DesktopPlayers": "src/pages/players/DesktopPlayers.tsx",
@@ -196,9 +195,7 @@
     "MetataskRemoveConfirm": "src/components/metataskSeal/MetataskRemoveConfirm.tsx",
     "MetataskSeal": "src/components/metataskSeal/MetataskSeal.tsx",
     "MetataskSealStack": "src/components/metataskSeal/MetataskSealStack.tsx",
-    "MobileHeader": "src/components/layout/MobileHeader.tsx",
     "MobilePlayers": "src/pages/players/MobilePlayers.tsx",
-    "MobilePraxisFeed": "src/pages/praxes/MobilePraxisFeed.tsx",
     "MobileStickyBar": "src/pages/factionDetail/MobileStickyBar.tsx",
     "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
     "NavBar": "src/components/NavBar.tsx",
@@ -497,10 +494,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "DefaultTasks": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "DesktopPlayers": {
       "cardMode": "single",
       "viewport": "1200x900"
@@ -638,14 +631,7 @@
       "cardMode": "single",
       "viewport": "560x520"
     },
-    "MobileHeader": {
-      "cardMode": "column"
-    },
     "MobilePlayers": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
-    "MobilePraxisFeed": {
       "cardMode": "single",
       "viewport": "390x760"
     },

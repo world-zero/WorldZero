@@ -9,6 +9,7 @@ import base64
 import io
 import linecache
 from contextlib import asynccontextmanager, suppress
+from datetime import datetime, timezone
 from typing import Any, AsyncIterator, Callable
 
 import pytest
@@ -29,18 +30,30 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.praxis_room as praxis_room
 from config import settings
+from game_config import CURRENT_ERA
 from main import app as fastapi_app
 from models.character import Character
-from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
+from models.character_stats import CharacterStats
+from models.duel import Duel, DuelStatus
+from models.praxis import (
+    PRAXIS_BODY_MAX,
+    PRAXIS_TITLE_MAX,
+    Praxis,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.praxis_room import PraxisRoomUpdate
 from models.task import Task
 from services.auth import create_jwt
+from services.character_stats import recalculate_character_stats
 from services.praxis import (
     kick_member,
     leave_praxis,
     submit_praxis,
     unsubmit_praxis,
 )
+from services.praxis_out import build_praxis_out
 from services.praxis_room import (
     ROOM_BODY_KEY,
     ROOM_META_KEY,
@@ -50,6 +63,7 @@ from services.praxis_room import (
     acquire_single_instance_lock,
     room_name_for,
 )
+from tests.integration.factories import cast_vote, make_solo_praxis
 
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
@@ -1053,6 +1067,29 @@ async def test_a_submit_after_unflushed_socket_edits_cancels_the_proposal(
         assert approved[character.id] and not approved[character2.id]
 
 
+async def test_an_approve_without_doc_state_cancels_on_unflushed_socket_edits(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """#3746: an API client sends no doc_state; the loaded room is compared anyway."""
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(collab.id, character2.id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"unseen {SEED_BODY}", "the room"
+            )
+
+            result = await rooms.submit(collab.id, character.id)
+
+        assert result.status == PraxisStatus.pending
+        approved = await _approved(rooms, collab.id)
+        assert approved[character.id] and not approved[character2.id]
+
+
 async def test_a_submit_that_changes_nothing_still_approves(
     db_session, collab, account2, character, character2, monkeypatch
 ) -> None:
@@ -1166,6 +1203,21 @@ async def test_withdrawing_a_proposal_has_the_same_effect_as_an_edit(
             await _wait_for_body(
                 rooms.room_doc(collab.id), f"withdrawn {SEED_BODY}", "the room"
             )
+
+
+async def test_unsubmit_after_publish_carries_a_newer_room_generation(
+    db_session, collab, character, character2, monkeypatch
+) -> None:
+    """#3644: a browser's offline copy is told apart from the reseed by this."""
+    async with running_rooms(db_session, monkeypatch):
+        before = collab.room_generation
+        await submit_praxis(collab.id, character.id, db_session)
+        await submit_praxis(collab.id, character2.id, db_session)
+        reopened = await unsubmit_praxis(collab.id, character2.id, db_session)
+
+        assert reopened.room_generation == before + 1
+        out = await build_praxis_out(reopened, db_session, viewer=character2)
+        assert out.room_generation == before + 1
 
 
 async def test_publishing_discards_the_document_and_keeps_the_body(
@@ -1353,3 +1405,212 @@ async def test_text_a_member_deleted_does_not_outlive_the_draft(
         for update in await _every_stored_update(rooms):
             assert secret.encode() not in update
         assert await _record(rooms, collab.id) == ("Collab Praxis", SEED_BODY)
+
+
+@pytest.mark.parametrize("kind", [PraxisType.solo, PraxisType.duel, PraxisType.collab])
+async def test_a_doc_state_on_a_live_praxis_is_refused_and_opens_no_room(
+    db_session, active_task, character, monkeypatch, kind
+) -> None:
+    live = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=kind,
+        status=PraxisStatus.submitted,
+        title="Honest proof",
+        body_text=SEED_BODY,
+    )
+    db_session.add(live)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=live.id, character_id=character.id))
+    await db_session.commit()
+
+    rewrite = Doc()
+    rewrite.get(ROOM_BODY_KEY, type=Text).insert(0, "EDITED AFTER VOTING")
+    state = base64.b64encode(rewrite.get_update()).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        with pytest.raises(HTTPException) as refused:
+            await rooms.submit(live.id, character.id, doc_state=state)
+        assert refused.value.status_code == 409
+        assert refused.value.detail["code"] == "PRAXIS_ALREADY_LIVE"
+        assert rooms.room_doc(live.id) is None
+    await db_session.refresh(live)
+    assert (live.title, live.body_text) == ("Honest proof", SEED_BODY)
+    assert live.status == PraxisStatus.submitted
+
+
+async def test_a_refused_doc_state_leaves_a_voted_duel_score_unchanged(
+    db_session, active_task, character, character2, character3, monkeypatch
+) -> None:
+    live = await make_solo_praxis(
+        db_session, active_task, character, body_text=SEED_BODY
+    )
+    opponent = await make_solo_praxis(db_session, active_task, character2)
+    await cast_vote(db_session, live, character3, 4)
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=live.id,
+            opponent_character_id=character2.id,
+            opponent_praxis_id=opponent.id,
+            status=DuelStatus.settled,
+            accepted_at=datetime.now(timezone.utc),
+        )
+    )
+    await recalculate_character_stats(character.id, db_session)
+    await db_session.commit()
+
+    async def score() -> int:
+        stats = await db_session.scalar(
+            select(CharacterStats).where(CharacterStats.character_id == character.id)
+        )
+        await db_session.refresh(stats)
+        return stats.score
+
+    before = await score()
+    assert before > 0
+    rewrite = Doc()
+    rewrite.get(ROOM_BODY_KEY, type=Text).insert(0, "EDITED AFTER VOTING")
+    state = base64.b64encode(rewrite.get_update()).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        with pytest.raises(HTTPException) as refused:
+            await rooms.submit(live.id, character.id, doc_state=state)
+        assert refused.value.status_code == 409
+    assert await score() == before
+    await recalculate_character_stats(character.id, db_session)
+    assert await score() == before
+
+
+async def test_a_live_praxis_refuses_the_room_handshake(
+    db_session, collab, account, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        collab.status = PraxisStatus.submitted
+        await db_session.commit()
+        socket = await rooms.open(collab.id, account.id)
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
+
+
+
+async def test_an_over_cap_room_document_is_not_flushed(
+    db_session, collab, account, monkeypatch
+) -> None:
+    pad = "x" * (PRAXIS_BODY_MAX - len(SEED_BODY))
+    flush = {"flush_debounce_seconds": 0.05}
+    async with running_rooms(db_session, monkeypatch, **flush) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            body = doc.get(ROOM_BODY_KEY, type=Text)
+            body.insert(0, pad + "y")
+            await asyncio.sleep(0.4)
+            assert await _record(rooms, collab.id) == ("Collab Praxis", SEED_BODY)
+            del body[len(pad) : len(pad) + 1]
+            await _wait_for_record(
+                rooms, collab.id, "the at-cap flush", body_text=pad + SEED_BODY
+            )
+            long_title = "t" * (PRAXIS_TITLE_MAX + 1)
+            doc.get(ROOM_META_KEY, type=Map)[ROOM_TITLE_KEY] = long_title
+            await asyncio.sleep(0.4)
+            assert (await _record(rooms, collab.id))[0] == "Collab Praxis"
+
+
+async def _over_cap_solo(db_session, active_task, character) -> Praxis:
+    solo = Praxis(
+        task_id=active_task.id,
+        created_by_id=character.id,
+        type=PraxisType.solo,
+        status=PraxisStatus.in_progress,
+        title="Solo Praxis",
+        body_text=SEED_BODY,
+    )
+    db_session.add(solo)
+    await db_session.flush()
+    db_session.add(PraxisMember(praxis_id=solo.id, character_id=character.id))
+    await db_session.commit()
+    return solo
+
+
+def _over_cap_doc() -> Doc:
+    doc = Doc()
+    doc[ROOM_BODY_KEY] = Text("x" * (PRAXIS_BODY_MAX + 1))
+    return doc
+
+
+async def test_a_submit_with_an_over_cap_draft_is_refused_and_changes_nothing(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    solo = await _over_cap_solo(db_session, active_task, character)
+    state = base64.b64encode(_over_cap_doc().get_update()).decode()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        await rooms.server.get_room(room_name_for(solo.id))
+        with pytest.raises(HTTPException) as refused:
+            await rooms.submit(solo.id, character.id, doc_state=state)
+        assert refused.value.status_code == 413
+        assert refused.value.detail["code"] == "PRAXIS_DOC_UPDATE_INVALID"
+        assert await _record(rooms, solo.id) == ("Solo Praxis", SEED_BODY)
+        assert (await db_session.get(Praxis, solo.id)).status != PraxisStatus.submitted
+
+
+async def test_publishing_an_over_cap_document_is_refused_and_keeps_it(
+    db_session, active_task, character, account, monkeypatch
+) -> None:
+    solo = await _over_cap_solo(db_session, active_task, character)
+    slow = {"flush_debounce_seconds": 30.0}
+    async with running_rooms(db_session, monkeypatch, **slow) as rooms:
+        socket = await rooms.open(solo.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the solo author")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "x" * PRAXIS_BODY_MAX)
+            await _wait_for(
+                lambda: len(str(rooms.room_doc(solo.id).get(ROOM_BODY_KEY, type=Text)))
+                > PRAXIS_BODY_MAX,
+                "the over-cap text in the room",
+            )
+            with pytest.raises(HTTPException) as refused:
+                await rooms.submit(solo.id, character.id)
+        assert refused.value.status_code == 413
+        assert await _record(rooms, solo.id) == ("Solo Praxis", SEED_BODY)
+        assert await _stored_updates(rooms, solo.id) != []
+
+
+async def test_publishing_after_a_restart_cannot_drop_an_over_cap_document(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    """Stored updates outlive the room; the flush skip must not become lost text."""
+    solo = await _over_cap_solo(db_session, active_task, character)
+    db_session.add(
+        PraxisRoomUpdate(praxis_id=solo.id, update=_over_cap_doc().get_update())
+    )
+    await db_session.commit()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        # Not via rooms.submit: it holds the one session lock the cold read needs.
+        with pytest.raises(HTTPException) as refused:
+            await rooms.server.discard_document(solo, db_session)
+        assert refused.value.status_code == 413
+        assert len(await _stored_updates(rooms, solo.id)) == 1
+
+
+async def test_a_lapsed_collab_with_an_over_cap_draft_stays_unsealed(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    """A read path's lazy seal must skip the 413, not raise it on every read."""
+    import services.collab_consensus as collab_consensus
+
+    collab = await _over_cap_solo(db_session, active_task, character)
+    collab.type = PraxisType.collab
+    collab.status = PraxisStatus.pending
+    db_session.add(
+        PraxisRoomUpdate(praxis_id=collab.id, update=_over_cap_doc().get_update())
+    )
+    await db_session.commit()
+
+    async def _proof(*_args: Any) -> bool:
+        return True
+
+    monkeypatch.setattr(collab_consensus, "_has_proof", _proof)
+    async with running_rooms(db_session, monkeypatch):
+        await db_session.refresh(collab, ["members"])
+        await collab_consensus.seal_to_live(collab, db_session, CURRENT_ERA)
+        assert collab.status == PraxisStatus.pending
+        assert collab.submitted_at is None

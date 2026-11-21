@@ -3,6 +3,7 @@
   "headingAnon": "World Zero",
   "someone": "Someone",
   "aTask": "a task",
+  "aFaction": "A faction",
   "kinds": {
     "vote_on_mine": {
       "title": "New rating",
@@ -18,7 +19,9 @@
     },
     "comment_mention": {
       "title": "{{actor}} mentioned you",
-      "body": "In a comment on {{task}}."
+      "body": "In a comment on {{task}}.",
+      "titleMany": "{{count}} new mentions",
+      "bodyMany": "{{actor}} and {{others}} more mentioned you on {{task}}."
     },
     "duel_challenge": {
       "title": "{{actor}} challenged you to a duel",
@@ -29,7 +32,7 @@
       "body": "Join their praxis for {{task}}."
     },
     "invitation_letter": {
-      "title": "{{actor}} invited you",
+      "title": "{{faction}} invited you",
       "body": "A faction letter is waiting in Updates."
     },
     "level_up": {

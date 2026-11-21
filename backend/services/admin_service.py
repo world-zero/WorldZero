@@ -188,7 +188,11 @@ async def list_contact_messages(
 
 async def game_overview(session: AsyncSession) -> OverviewStats:
     account_count_result = await session.execute(select(func.count()).select_from(Account))
-    character_count_result = await session.execute(select(func.count()).select_from(Character))
+    character_count_result = await session.execute(
+        select(func.count())
+        .select_from(Character)
+        .where(Character.departed_at.is_(None))
+    )
     active_task_count_result = await session.execute(
         select(func.count()).select_from(Task).where(Task.status == TaskStatus.active)
     )
@@ -675,7 +679,7 @@ async def admin_edit_task(
             status_code=400,
             detail="Active tasks cannot be edited. Retire the task first.",
         )
-    before = (task.point_value, task.primary_faction_slug, task.level_required)
+    before = (task.point_value, task.primary_faction_slug)
     if data.primary_faction_slug is not None:
         # Config owns factions (ADR-0042; cross-faction sentinel is a key). Else FK 500.
         if data.primary_faction_slug not in era.factions:
@@ -695,7 +699,7 @@ async def admin_edit_task(
     if data.level_required is not None:
         task.level_required = data.level_required
     await session.flush()
-    if before != (task.point_value, task.primary_faction_slug, task.level_required):
+    if before != (task.point_value, task.primary_faction_slug):
         # Scoring reads these live; stored stats would split from them.
         doers = select(Praxis.id).where(Praxis.task_id == task_id).union(
             select(PraxisMetaTask.praxis_id).where(PraxisMetaTask.task_id == task_id)

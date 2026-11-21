@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
+from pydantic import Field
 from schemas.base import WireModel
 from schemas.task import TaskOut
-from models.praxis import PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
+from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
 
 
 class MediaItemOut(WireModel):
@@ -49,6 +50,8 @@ class PraxisMemberOut(WireModel):
     # When the VIEWER last nudged this member (#1083); NULL once `NUDGE_COOLDOWN`
     # lapses, so non-null means "can't nudge yet".
     nudged_at: Optional[datetime] = None
+    # `nudged_at` + the cooldown; the instant the Nudge button unlocks.
+    nudge_again_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}
 
@@ -95,6 +98,7 @@ class PraxisOut(WireModel):
     flagged_at: Optional[datetime]
     submitted_at: Optional[datetime] = None  # set on in_progress→submitted
     submit_proposed_at: Optional[datetime] = None  # collab pending-publish window opened-at (ADR-0012)
+    room_generation: int  # keys the browser's offline room store (#3644)
     created_by_id: int
     created_by_display_name: str  # populated by build_praxis_out
     # Relative media path or "" (monogram fallback) (#2106).
@@ -194,8 +198,8 @@ class PraxisCardOut(WireModel):
 class PraxisCreate(WireModel):
     task_id: int
     type: PraxisType = PraxisType.solo
-    title: Optional[str] = None
-    body_text: Optional[str] = None
+    title: Optional[str] = Field(None, max_length=PRAXIS_TITLE_MAX)
+    body_text: Optional[str] = Field(None, max_length=PRAXIS_BODY_MAX)
 
 
 class PraxisTypeChange(WireModel):

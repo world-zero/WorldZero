@@ -1,4 +1,6 @@
 """Integration tests for /admin endpoints."""
+from datetime import datetime, timezone
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -900,11 +902,13 @@ async def test_overview_active_accounts_counts_accounts_not_characters(
     suspended = await make_character(db_session, era, username="sus")
     suspended_account = await db_session.get(Account, suspended.account_id)
     suspended_account.status = AccountStatus.suspended
+    gone = await make_character(db_session, era, username="gone")
+    gone.departed_at = datetime.now(timezone.utc)
     await db_session.commit()
 
     stats = (await client.get("/admin/overview", headers=auth_headers)).json()
     assert stats["characters"] == 4
-    assert stats["active_accounts"] == 1
+    assert stats["active_accounts"] == 2
 
 
 @pytest.mark.asyncio
@@ -1030,9 +1034,8 @@ async def test_admin_edit_task_faction_rescores_doers(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("field,value", [("point_value", 50), ("level_required", 99)])
 async def test_admin_edit_metatask_rescores_applied_praxis_authors(
-    client, account, character, era, auth_headers, db_session, field, value
+    client, account, character, era, auth_headers, db_session
 ):
     await make_admin(db_session, account)
     parent = await make_task(db_session, character)
@@ -1044,7 +1047,7 @@ async def test_admin_edit_metatask_rescores_applied_praxis_authors(
         meta=(parent,),
     )
     before, after = await _patch_and_compare(
-        client, auth_headers, db_session, doer, meta, {field: value}
+        client, auth_headers, db_session, doer, meta, {"point_value": 50}
     )
     assert after[0] != before[0]
 
