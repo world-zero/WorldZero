@@ -145,3 +145,16 @@ async def test_task_status_needs_the_box_for_its_transition(
     for status, expected in (("active", 200), ("retired", 200), ("deleted", 403)):
         r = await client.put(url, json={"status": status}, headers=auth_headers)
         assert r.status_code == expected, (status, r.text)
+
+
+async def test_me_carries_the_permissions_the_client_gates_on(
+    client, db_session, account, auth_headers
+):
+    me = await client.get("/auth/me", headers=auth_headers)
+    assert me.json()["permissions"] == []
+    await make_admin(db_session, account, permissions=[Permission.handle_reports])
+    me = await client.get("/auth/me", headers=auth_headers)
+    assert (me.json()["permissions"], me.json()["is_owner"]) == (["handle_reports"], False)
+    await make_owner(db_session, account)
+    me = await client.get("/auth/me", headers=auth_headers)
+    assert me.json()["permissions"] == [p.value for p in Permission]
