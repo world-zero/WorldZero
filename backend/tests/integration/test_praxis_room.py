@@ -1792,7 +1792,12 @@ async def test_a_socket_update_over_the_cap_is_dropped_before_it_is_stored(
 ) -> None:
     async with running_rooms(db_session, monkeypatch) as rooms:
         socket = await rooms.open(collab.id, account.id)
-        await _wait_for(lambda: rooms.room_doc(collab.id) is not None, "the room")
+        name = room_name_for(collab.id)
+        # Registered is not seeded: ready flips only after the seed is stored.
+        await _wait_for(
+            lambda: name in rooms.server.rooms and rooms.server.rooms[name].ready,
+            "the seeded room",
+        )
         doc = rooms.room_doc(collab.id)
         stored = await _stored_updates(rooms, collab.id)
         await socket.send_bytes(create_update_message(_over_cap_doc().get_update()))
