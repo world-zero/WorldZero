@@ -11,7 +11,7 @@ from sqlalchemy import select
 from errors import ErrorCode
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA, ERA_1, era_config_for_key
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.invitation_letter import InvitationLetter
 from models.mod_action import ModAction
@@ -284,6 +284,26 @@ async def test_delivery_that_completes_coverage_unlocks_albescent(
     await db_session.commit()
 
     assert await can_start_as_albescent(account.id, db_session) is True
+
+
+@pytest.mark.asyncio
+async def test_the_sweep_skips_banned_characters(
+    db_session, account, era, some_faction
+):
+    await _owed_player(db_session, era, account)
+    earner = await db_session.scalar(
+        select(Character).where(Character.username == "earner")
+    )
+    earner.status = CharacterStatus.banned
+    await db_session.commit()
+    lenient = replace(
+        CURRENT_ERA, invitation_task_threshold=1, invitation_point_threshold=10
+    )
+
+    await deliver_invitations_to_all(db_session, lenient)
+    await db_session.commit()
+
+    assert await _letters(db_session) == []
 
 
 @pytest.mark.asyncio

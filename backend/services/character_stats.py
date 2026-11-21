@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.invitation_letter import InvitationLetter
@@ -160,7 +160,8 @@ async def deliver_invitations_to_all(
     if era_row is None:
         return
     within_era = _era_window_condition(era_row, None)
-    for character in (await session.execute(select(Character))).scalars().all():
+    live = select(Character).where(Character.status == CharacterStatus.active)
+    for character in (await session.execute(live)).scalars().all():
         praxes = await _scored_praxes(character.id, within_era, session)
         contributions = await compute_contributions(
             praxes, character, era, session
