@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import services.activity_feed as activity_feed_service
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
+from models.account import Account
 from models.character import Character
 from models.duel import Duel, DuelStatus
-from models.account import Account
 from models.era import Era
 from models.faction import Faction
 from models.invitation_letter import InvitationLetter
