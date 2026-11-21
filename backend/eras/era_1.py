@@ -235,6 +235,9 @@ ERA_1 = EraConfig(
     pending_task_admin_review_hours=48,
     backdoor_hint_stage_days=(30, 60),
     duel_level_required=2,
+    duel_challenge_lapse_days=7,
+    rival_duel_bonus=5,
+    duel_cast_lapse_days=7,
     collaboration_level_required=1,
     collab_auto_submit_days=10,
     metatask_apply_level=5,
@@ -267,6 +270,10 @@ ERA_1 = EraConfig(
     # Ephemerists' Task Vision: a perk outside FactionConfig (#1871). Albescent
     # is added by inheritance; don't list it.
     allow_praxis_on_retired_task_factions=frozenset({"ephemerists"}),
+    # Past, present and future: pending too, but only cheap tasks, so a big
+    # proposal can't be farmed before review.
+    allow_praxis_on_pending_task_factions=frozenset({"ephemerists"}),
+    pending_task_praxis_points_below=30,
     # Invites reach across levels and factions on purpose (#1511).
     collab_invite_bypasses_level=True,
     collab_invite_bypasses_faction=True,

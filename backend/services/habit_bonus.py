@@ -84,3 +84,36 @@ async def stamp_habit_bonus(
         member.habit_bonus_points = faction_habit_bonus_points(
             faction_by_character.get(member.character_id), era
         )
+
+
+async def restamp_after_moderation(
+    praxis: Praxis,
+    session: AsyncSession,
+    era: EraConfig,
+) -> None:
+    """Re-stamp every sealed praxis of ``praxis``'s members in the window after it.
+
+    A stamp leans on any scoring praxis in its window, not just the nearest, so
+    a flip stales every later one (a hidden praxis in between hides nothing).
+    Re-running ``stamp_habit_bonus`` keeps the predecessor rule in one place.
+    """
+    if praxis.status != PraxisStatus.submitted or praxis.submitted_at is None:
+        return
+    member_character_ids = [member.character_id for member in praxis.members]
+    result = await session.execute(
+        select(Praxis.id)
+        .join(PraxisMember, Praxis.id == PraxisMember.praxis_id)
+        .where(
+            PraxisMember.character_id.in_(member_character_ids),
+            Praxis.id != praxis.id,
+            Praxis.status == PraxisStatus.submitted,
+            Praxis.submitted_at > praxis.submitted_at,
+            Praxis.submitted_at
+            <= praxis.submitted_at + timedelta(days=era.habit_window_days),
+        )
+        .distinct()
+        .order_by(Praxis.id)
+    )
+    for later_id in result.scalars().all():
+        later = await session.get(Praxis, later_id)
+        await stamp_habit_bonus(later, later.submitted_at, session, era)

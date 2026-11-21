@@ -64,16 +64,17 @@ def may_see_pending_tasks(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """``era.level_to_see_pending_tasks`` — admins watch the moderation queue too.
+    """``era.level_to_see_pending_tasks`` OR the pending-praxis faction perk.
 
     Admin bypass is ruled (#2863): the pending queue is the moderation queue.
-    No faction bypass, so ``pending_visibility_clause`` passes ``None``.
+    A perk faction can see the queue at any level but only up to the era's
+    points ceiling; ``pending_visibility_clause`` applies that per row.
     """
     if is_admin:
         return True
-    if level is None:
-        return False
-    return level >= era.level_to_see_pending_tasks
+    if level is not None and level >= era.level_to_see_pending_tasks:
+        return True
+    return faction_slug in era.allow_praxis_on_pending_task_factions
 
 
 def may_comment(
@@ -153,6 +154,11 @@ def meets_albescent_level(
     return level >= era.secret_faction_join_level
 
 
+def meets_vote_level(peak_level: int | None, era: EraConfig = CURRENT_ERA) -> bool:
+    """The level half of :func:`vote_lock_reason`; who hears a duel is live (#3886)."""
+    return peak_level is not None and peak_level >= era.vote_level_required
+
+
 def vote_lock_reason(
     peak_level: int | None,
     has_received_vote: bool,
@@ -166,7 +172,7 @@ def vote_lock_reason(
     zeroes everyone at rollover, which would leave nobody able to vote on day
     one. The admin bypass covers only the received-vote rule, never the level.
     """
-    if peak_level is None or peak_level < era.vote_level_required:
+    if not meets_vote_level(peak_level, era):
         return "level"
     if era.vote_requires_received_vote and not has_received_vote and not is_admin:
         return "no_received_vote"

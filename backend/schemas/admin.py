@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import ConfigDict, Field
 from schemas.base import WireModel
 
+from models.roles import Permission
 from schemas.comment import CommentOut
 from schemas.praxis import PraxisOut
 
@@ -105,27 +106,6 @@ class OverviewStats(WireModel):
     suspended_accounts: int = 0
     # Not suspended or deleted, with at least one non-banned character.
     active_accounts: int = 0
-
-
-class CharacterStatsPatch(WireModel):
-    """Only supplied fields are updated."""
-
-    level: int | None = Field(None, ge=0)
-    score: int | None = Field(None, ge=0)
-    all_time_score: int | None = Field(None, ge=0)
-    votes_available: int | None = Field(None, ge=0)
-
-
-class CharacterStatsOut(WireModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    character_id: int
-    era_id: int
-    score: int
-    all_time_score: int
-    level: int
-    votes_available: int
 
 
 class ModerationAction(WireModel):
@@ -254,10 +234,14 @@ class AdminRow(WireModel):
     username: str
     display_name: str
     is_owner: bool
+    #: Kept on the roster so the owner can revoke a suspended holder (#4025).
+    suspended: bool
+    #: The ticked boxes; empty for the owner, who holds all nine implicitly.
+    permissions: list[Permission]
 
 
-class AdminGrantIn(WireModel):
-    username: str
+class AdminPermissionIn(WireModel):
+    on: bool
 
 
 class RingRecipient(WireModel):

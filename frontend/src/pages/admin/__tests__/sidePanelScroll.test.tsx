@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Seam: SidePanel mount + useSelection. Phone shows the panel as a sheet, so it takes focus, Esc closes it, focus returns to the row; opening pushes one history entry that closing pops. */
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter, useLocation, useNavigationType } from 'react-router-dom'
+import { MemoryRouter, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { afterEach, expect, it, vi } from 'vitest'
 import '../../../i18n'
 import { SidePanel, useSelection } from '../AdminList'
@@ -65,6 +65,48 @@ it('closing returns focus to the row last opened, not the first', () => {
   expect(document.activeElement).toBe(b)
   a.remove()
   b.remove()
+})
+
+it('re-opening the same row leaves no stale opener for a later panel mount', () => {
+  let go: (to: string) => void = () => {}
+  function PanelProbe() {
+    sel = useSelection('task')
+    const navigate = useNavigate()
+    go = navigate
+    return sel[0] ? <SidePanel key={sel[0]} label="P" badge={<b>P</b>} onClose={() => sel![1](null)}>x</SidePanel> : null
+  }
+  const [a, b] = [1, 2].map(() => document.body.appendChild(document.createElement('button')))
+  render(<MemoryRouter><PanelProbe /></MemoryRouter>)
+  a.focus()
+  act(() => sel![1](1))
+  b.focus()
+  act(() => sel![1](1))
+  // A mount no open() preceded (back/forward, deep link) must not inherit b.
+  a.focus()
+  act(() => go('/?task=3'))
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(document.activeElement).toBe(a)
+  a.remove()
+  b.remove()
+})
+
+it('a detached opener never takes focus back to a detached node', () => {
+  function PanelProbe() {
+    sel = useSelection('task')
+    return sel[0] ? <SidePanel key={sel[0]} label="P" badge={<b>P</b>} onClose={() => sel![1](null)}>x</SidePanel> : null
+  }
+  const [a, gone] = [1, 2].map(() => document.body.appendChild(document.createElement('button')))
+  render(<MemoryRouter><PanelProbe /></MemoryRouter>)
+  a.focus()
+  act(() => sel![1](1))
+  gone.focus()
+  act(() => {
+    sel![1](2)
+    gone.remove()
+  })
+  fireEvent.keyDown(document, { key: 'Escape' })
+  expect(document.activeElement).toBe(a)
+  a.remove()
 })
 
 it('Esc inside a form field leaves the panel open', () => {

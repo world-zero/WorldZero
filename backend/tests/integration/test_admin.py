@@ -239,30 +239,6 @@ async def test_admin_list_flagged_comments_includes_flags(
 
 
 @pytest.mark.asyncio
-async def test_admin_patch_character_stats(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-):
-    await make_admin(db_session, account)
-
-    resp = await client.patch(
-        f"/admin/characters/{character.id}/stats",
-        json={"score": 999, "level": 7, "votes_available": 50},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["score"] == 999
-    assert data["level"] == 7
-    assert data["votes_available"] == 50
-
-
-
-
-@pytest.mark.asyncio
 async def test_admin_ban_deletes_no_media(
     client: AsyncClient,
     account: Account,
@@ -631,52 +607,6 @@ async def test_admin_edit_active_task_rejected(
 
 
 @pytest.mark.asyncio
-async def test_admin_patch_stats_recomputes_votes_available(
-    client: AsyncClient,
-    account: Account,
-    character: Character,
-    auth_headers: dict,
-    db_session: AsyncSession,
-    era: Era,
-):
-    from math import floor
-
-    from sqlalchemy import select
-
-    from game_config import CURRENT_ERA
-
-    await make_admin(db_session, account)
-
-    patch_resp = await client.patch(
-        f"/admin/characters/{character.id}/stats",
-        json={"score": 0, "votes_available": 5},
-        headers=auth_headers,
-    )
-    assert patch_resp.status_code == 200
-    assert patch_resp.json()["votes_available"] == 5
-
-    result = await db_session.execute(
-        select(CharacterStats).where(
-            CharacterStats.character_id == character.id,
-            CharacterStats.era_id == era.id,
-        )
-    )
-    stats = result.scalar_one()
-    await db_session.refresh(stats)
-    cap = CURRENT_ERA.vote_budget_base + floor(CURRENT_ERA.vote_budget_multiplier * 0)
-    assert stats.votes_spent_this_era == max(0, cap - 5)
-
-    list_resp = await client.get(
-        f"/admin/characters?faction={character.faction_slug}",
-        headers=auth_headers,
-    )
-    assert list_resp.status_code == 200
-    matching = [c for c in list_resp.json() if c["id"] == character.id]
-    assert len(matching) == 1
-    assert matching[0]["votes_available"] == 5
-
-
-@pytest.mark.asyncio
 async def test_admin_era_reset_zeros_votes_spent_this_era(
     client: AsyncClient,
     account: Account,
@@ -1031,6 +961,36 @@ async def test_admin_edit_task_faction_rescores_doers(
         client, auth_headers, db_session, doer, task, {"primary_faction_slug": other}
     )
     assert after[0] != before[0]
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_task_rescores_doers_in_ascending_id_order(
+    client, account, character, era, auth_headers, db_session, monkeypatch
+):
+    """Opposite-ordered rescores elsewhere would deadlock on the stats locks."""
+    import services.admin_service as admin_module
+
+    await make_admin(db_session, account)
+    task = await make_task(db_session, character, status=TaskStatus.retired)
+    doers = [
+        await make_character(db_session, era, username=f"doer{i}") for i in range(4)
+    ]
+    for doer in reversed(doers):
+        await make_solo_praxis(db_session, task, doer)
+    await db_session.commit()
+    seen: list[int] = []
+    real = admin_module.recalculate_character_stats
+
+    async def spy(character_id, *args, **kwargs):
+        seen.append(character_id)
+        return await real(character_id, *args, **kwargs)
+
+    monkeypatch.setattr(admin_module, "recalculate_character_stats", spy)
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}", json={"point_value": 77}, headers=auth_headers
+    )
+    assert resp.status_code == 200
+    assert seen == sorted(d.id for d in doers)
 
 
 @pytest.mark.asyncio

@@ -16,10 +16,10 @@ import {
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import {
   actionColumnSize,
   detailSignupCta,
-  ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
   TaskDetailComments,
@@ -57,42 +57,33 @@ interface SizeSet {
   /** Action-panel width; dress (§4a). */
   panel: number;
   /** Ornament geometry, so raw px. */
-  enso: number;
   lotus: number;
   lotusLeft: number;
   lotusTop: number;
-  title: string;
-  level: string;
-  count: string;
 }
+
+const UA_TITLE = "var(--detail-hero-size, var(--text-display))";
+const UA_LEVEL = "var(--detail-title-size, var(--text-heading))";
+const UA_COUNT = "var(--detail-lead-size, var(--text-title))";
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     panel: 460,
-    enso: 124,
     lotus: 880,
     lotusLeft: -230,
     lotusTop: -110,
-    title: "var(--text-display)",
-    level: "var(--text-heading)",
-    count: "var(--text-title)",
   },
   mobile: {
     panel: 0,
-    enso: 104,
     lotus: 560,
     lotusLeft: -200,
     lotusTop: 40,
-    title: "var(--text-heading)",
-    level: "var(--text-title)",
-    count: "var(--text-content)",
   },
 };
 
 export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
   const formFactor = useFormFactor();
-  const desktop = formFactor !== "mobile";
   const size = SIZES[formFactor];
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -126,7 +117,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     background: "var(--leaf-task-detail-paper)",
     border: "1px solid var(--faction-ua-rule)",
     borderRadius: 5,
-    padding: desktop ? "var(--space-lg)" : "var(--space-md)",
+    padding: "var(--detail-card-pad, var(--space-lg))",
     boxSizing: "border-box",
   };
   /** The practice's one saturated note. Fill + on-fill: 4.59:1 / 5.59:1. */
@@ -141,15 +132,13 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     textDecoration: "none",
     fontFamily: UA_DISPLAY,
     fontWeight: 600,
-    fontSize: desktop ? "var(--text-content)" : "var(--text-xl)",
+    fontSize: "var(--detail-btn-size, var(--text-content))",
     letterSpacing: "0.02em",
     color: "var(--leaf-task-detail-on-fill)",
     background: "var(--leaf-task-detail-fill)",
     border: "1.5px solid var(--faction-ua-card-frame)",
     borderRadius: 5,
-    padding: desktop
-      ? "var(--space-md) var(--space-xl)"
-      : "var(--space-sm) var(--space-lg)",
+    padding: "var(--detail-ua-btn-pad, var(--space-md) var(--space-xl))",
   };
   const aside: CSSProperties = {
     fontFamily: UA_TEXT,
@@ -316,7 +305,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
       <div
         style={{
           display: "flex",
-          flexDirection: desktop ? "row" : "column",
+          flexDirection: "var(--detail-row-direction, row)" as "row",
           gap: "var(--space-xs)",
           alignItems: "stretch",
         }}
@@ -328,7 +317,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            minWidth: desktop ? 176 : undefined,
+            minWidth: "var(--detail-worth-min-ua, 176px)",
           }}
         >
           {worth}
@@ -390,7 +379,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           fontFamily: UA_DISPLAY,
           fontWeight: 700,
-          fontSize: size.title,
+          fontSize: UA_TITLE,
           lineHeight: 1.08,
           letterSpacing: "-0.015em",
           margin: 0,
@@ -499,7 +488,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--detail-panel-space, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -511,7 +500,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               fontFamily: UA_DISPLAY,
               fontWeight: 700,
-              fontSize: size.level,
+              fontSize: UA_LEVEL,
               lineHeight: 0.9,
               color: "var(--leaf-task-detail-ink)",
             }}
@@ -536,7 +525,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               fontFamily: UA_DISPLAY,
               fontWeight: 700,
-              fontSize: size.count,
+              fontSize: UA_COUNT,
               lineHeight: 0.9,
               color: "var(--leaf-task-detail-ink)",
             }}
@@ -551,7 +540,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   // The brief, in full. No clamp.
   const brief = (
     <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+      style={{ marginBottom: "var(--detail-section-gap, var(--space-2xl))" }}
     >
       {sectionHead(t("detail.brief.heading"))}
       {task.description && (
@@ -560,7 +549,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             background: "var(--faction-ua-lift)",
             border: "1px solid var(--faction-ua-hair)",
             borderRadius: 6,
-            padding: desktop ? "var(--space-xl)" : "var(--space-lg)",
+            padding: "var(--detail-panel-space, var(--space-xl))",
           }}
         >
           <p
@@ -582,7 +571,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
 
   const gallery = (
     <section
-      style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}
+      style={{ marginBottom: "var(--detail-section-gap, var(--space-2xl))" }}
     >
       <div
         style={{
@@ -707,7 +696,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           background: "var(--faction-ua-page)",
           border: "1px solid var(--faction-ua-rule)",
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--detail-pad, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -729,10 +718,10 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
+            flexDirection: "var(--detail-row-direction, row)" as "row",
+            alignItems: "var(--detail-row-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+            marginBottom: "var(--detail-section-gap, var(--space-2xl))",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -743,7 +732,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           <div
             style={{
               ...actionColumnSize({ hasAction, width: size.panel }),
-              marginTop: desktop ? "var(--space-sm)" : 0,
+              marginTop: "var(--detail-action-top, var(--space-sm))",
             }}
           >
             {actionPanel}

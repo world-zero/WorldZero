@@ -19,7 +19,7 @@ from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.population_dial import PopulationDial
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisMember
 from models.task import Task, TaskStatus
 # ``seed`` imports no service, so this costs no cycle; the seeder owns the key (#511).
 from seed import ONBOARDING_TASK_SEED_KEY
@@ -330,6 +330,23 @@ async def resolve_duels_at_era_close(
     faction_by_character: dict[int, str] = {
         character_id: (slug or "") for character_id, slug in faction_result.all()
     }
+    # The faction held at each side's seal wins over today's (#3873).
+    stamp_result = await session.execute(
+        select(
+            PraxisMember.praxis_id,
+            PraxisMember.character_id,
+            PraxisMember.faction_slug,
+        ).where(
+            PraxisMember.praxis_id.in_(praxes_by_id),
+            PraxisMember.faction_slug.isnot(None),
+        )
+    )
+    stamped = {(p, c): slug for p, c, slug in stamp_result.all()}
+
+    def faction_of(praxis_id, character_id):
+        return stamped.get(
+            (praxis_id, character_id), faction_by_character.get(character_id, "")
+        )
 
     for duel in duels:
         is_contest = duel.status == DuelStatus.settled
@@ -369,9 +386,9 @@ async def resolve_duels_at_era_close(
                 ),
                 forfeited_by_character_id=duel.forfeited_by_character_id,
                 tie_break_winner_id=sole_tie_taker_id(
-                    faction_by_character.get(challenger_character_id, ""),
+                    faction_of(duel.challenger_praxis_id, challenger_character_id),
                     challenger_character_id,
-                    faction_by_character.get(duel.opponent_character_id, ""),
+                    faction_of(duel.opponent_praxis_id, duel.opponent_character_id),
                     duel.opponent_character_id,
                     era,
                 ),
@@ -439,11 +456,15 @@ async def apply_era_reset(
         # The closing era's rules, not the opening era's: its score is frozen history.
         closing_era = era_config_for_key(closing_era_row.config_key)
         if closing_era is None:
-            raise RuntimeError(
-                f"Era {closing_era_row.id} names unregistered config_key "
-                f"{closing_era_row.config_key!r}; "
-                "cannot seal its collabs or re-score its duels"
+            # The roll is the way out of this state (era_reset.py), so it must not fail.
+            logger.warning(
+                "Closing Era %s names unregistered config_key %r; sealing and "
+                "re-scoring it under the compile-time era %r.",
+                closing_era_row.id,
+                closing_era_row.config_key,
+                COMPILE_TIME_ERA_CONFIG_KEY,
             )
+            closing_era = era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY)
 
         # Lapsed collabs belong to the closing era, not to whoever reads them first.
         participants = await seal_lapsed_at_era_close(
@@ -483,11 +504,14 @@ async def apply_era_reset(
         )
         prev_stats = prev_result.scalar_one_or_none()
 
+        carried_level = prev_stats.level if prev_stats else 0
+        starting_level = 0 if era.reset_level else carried_level
         new_stats = CharacterStats(
             character_id=character.id,
             era_id=new_era_row.id,
             score=0 if era.reset_score else (prev_stats.score if prev_stats else 0),
-            level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
+            level=starting_level,
+            era_peak_level=starting_level,
             votes_spent_this_era=0 if era.reset_vote_budget else (
                 prev_stats.votes_spent_this_era if prev_stats else 0
             ),

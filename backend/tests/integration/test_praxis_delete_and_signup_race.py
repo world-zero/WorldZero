@@ -25,6 +25,7 @@ from models.task import Task
 from models.vote import Vote
 from services import media as media_service
 from services.praxis import _SIGNUP_LOCK_NAMESPACE
+from tests.integration.factories import raise_to_duel_level
 
 
 @pytest.fixture(autouse=True)
@@ -301,6 +302,7 @@ async def test_deleting_a_duel_side_without_dissolving_the_duel_is_refused(
     character2: Character,
     active_task: Task,
     auth_headers2: dict,
+    db_session: AsyncSession,
 ):
     """The FK refusal itself, so the cancel step cannot be called redundant.
 
@@ -311,6 +313,7 @@ async def test_deleting_a_duel_side_without_dissolving_the_duel_is_refused(
     praxis_id, _duel_id = await _duel_side(
         client, auth_headers2, active_task.id, character.id
     )
+    await raise_to_duel_level(db_session, character.id)
 
     delete = await client.delete(f"/praxes/{praxis_id}", headers=auth_headers2)
     assert delete.status_code == 409, (

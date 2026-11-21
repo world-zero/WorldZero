@@ -13,6 +13,16 @@ const detailCss = readFileSync(
   'utf8',
 )
 
+const adminCss = readFileSync(
+  new URL('../../pages/admin/adminConsole.css', import.meta.url),
+  'utf8',
+)
+
+const layoutCss = readFileSync(
+  new URL('../../css/10-layout-settings-inventory.css', import.meta.url),
+  'utf8',
+)
+
 const praxisCss = readFileSync(
   new URL('../../pages/praxisDetail/praxisDetail.css', import.meta.url),
   'utf8',
@@ -31,6 +41,9 @@ describe('phone breakpoint', () => {
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --sheet-align`)
     expect(detailCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --detail-row-align`)
     expect(praxisCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --praxis-section-gap`)
+    expect(layoutCss).toContain(`@media ${MOBILE_QUERY} {\n  .wz-settings-title {`)
+    expect(layoutCss).toContain('footer.site-footer {\n    padding-bottom: calc(var(--space-md) + var(--tab-bar-clearance)')
+    expect(adminCss).toContain(`@media ${MOBILE_QUERY} {\n  .adm-levelup-frame {`)
   })
 })
 
@@ -86,6 +99,13 @@ describe('phone vars the components read', () => {
       '--detail-worth-min-default': '122px',
       '--detail-worth-min-singularity': '118px',
       '--detail-worth-min-snide': '132px',
+      '--detail-worth-min-ua': 'auto',
+      '--detail-worth-min-wow': '132px',
+      '--detail-worth-min-coven': '148px',
+      '--detail-tap-min': '44px',
+      '--detail-eph-brief-pad': 'var(--space-lg) var(--space-lg) var(--space-md) var(--space-xl)',
+      '--detail-ua-btn-pad': 'var(--space-sm) var(--space-lg)',
+      '--detail-ledger-width': '116px',
       '--detail-action-top': '0',
       '--detail-col-flex': '1 1 auto',
       '--detail-col-width': '100%',

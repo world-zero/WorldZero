@@ -25,11 +25,14 @@ from sqlalchemy.orm import Session
 
 from config import settings
 from db import AsyncSessionLocal
+from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
 from models.comment import Comment, CommentMention
+from models.duel import Duel
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisMember
 from models.push_subscription import PushSubscription
+from models.relationship import Relationship
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import (
@@ -37,6 +40,7 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_COMMENT_MENTION,
     FEED_ITEM_TYPE_COMMENT_ON_MINE,
     FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    FEED_ITEM_TYPE_DUEL_LIVE,
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_ITEM_TYPE_INVITATION_LETTER,
@@ -44,6 +48,7 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_VOTE_ON_MINE,
 )
 from services.block_service import blocked_counterpart_ids
+from services.era_gates import meets_vote_level
 from services.notification_prefs import LEVEL_UP, resolve_prefs
 
 logger = logging.getLogger(__name__)
@@ -367,6 +372,49 @@ async def notify_duel_challenge(
     )
 
 
+async def notify_duel_live(
+    session: AsyncSession, duel: Duel, era: EraConfig = CURRENT_ERA
+) -> None:
+    """Anyone with a friend/foe edge to either duelist, once, as it goes live (#3886).
+
+    The same three exclusions as the ``duel_live`` feed row. ``notify`` checks
+    blocks against the challenger only, so the opponent's are checked here.
+    """
+    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+    challenger = await session.get(Character, challenger_praxis.created_by_id)
+    duelist_ids = {challenger.id, duel.opponent_character_id}
+    recipients = await session.scalars(
+        select(Character)
+        .join(Relationship, Relationship.from_character_id == Character.id)
+        .where(
+            Relationship.to_character_id.in_(duelist_ids),
+            Character.account_id.not_in(
+                select(Character.account_id).where(Character.id.in_(duelist_ids))
+            ),
+        )
+        .distinct()
+        .order_by(Character.id)
+    )
+    title = await _task_title(session, duel.task_id)
+    for recipient in recipients.all():
+        if not meets_vote_level(recipient.peak_level, era):
+            continue
+        blocked = set(
+            (await session.scalars(blocked_counterpart_ids(recipient.id))).all()
+        )
+        if blocked & duelist_ids:
+            continue
+        await notify(
+            session,
+            kind=FEED_ITEM_TYPE_DUEL_LIVE,
+            recipient_id=recipient.id,
+            tag=f"{FEED_ITEM_TYPE_DUEL_LIVE}:{duel.id}",
+            url=f"/duel/{duel.id}",
+            actor=challenger,
+            task_title=title,
+        )
+
+
 async def notify_invitation_letter(
     session: AsyncSession, character: Character, faction_slug: str
 ) -> None:
@@ -411,6 +459,7 @@ SENDERS: dict[str, Callable[..., Awaitable[None]]] = {
     FEED_ITEM_TYPE_COMMENT_MENTION: notify_comment,
     FEED_ITEM_TYPE_COLLAB_INVITE: notify_collab_invite,
     FEED_ITEM_TYPE_DUEL_CHALLENGE: notify_duel_challenge,
+    FEED_ITEM_TYPE_DUEL_LIVE: notify_duel_live,
     FEED_ITEM_TYPE_INVITATION_LETTER: notify_invitation_letter,
     LEVEL_UP: notify_level_up,
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT: partial(

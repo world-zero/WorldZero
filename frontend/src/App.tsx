@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, type ComponentType } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from './components/Layout'
 import ProtectedRoute from './auth/ProtectedRoute'
@@ -7,7 +7,6 @@ import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 import { useAdminMode } from './auth/AdminModeContext'
 import { loadAppCopy, loadOnboardingCopy, withAppCopy } from './i18n'
 import { onboardingHandoffPending } from './utils/onboardingResume'
-import LoginNotice from './components/LoginNotice'
 import { importAccountDeleted } from './pages/accountDeletedLoader'
 
 /**
@@ -98,12 +97,7 @@ function Landing() {
   const { user } = useAuth()
   const [inFlow] = useState(() => !user?.character || onboardingHandoffPending())
   if (!inFlow) return <FieldDesk />
-  return (
-    <>
-      {!user && <LoginNotice />}
-      <Onboarding />
-    </>
-  )
+  return <Onboarding />
 }
 
 /** `/`: the welcome flow, except for a player with a character, who gets the desk. Exported for tests. */
@@ -135,7 +129,8 @@ function AdminRoutes() {
       <Suspense fallback={<PageLoading />}>
         <Routes>
           <Route element={<Admin />}>
-            <Route index element={<Navigate to="reports" replace />} />
+            {/* `Admin` sends this to the first page the caller may open. */}
+            <Route index element={null} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="messages" element={<MessagesPage />} />
             <Route path="proposals" element={<TasksPage />} />

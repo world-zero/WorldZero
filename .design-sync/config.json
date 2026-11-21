@@ -83,7 +83,6 @@
     "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",
     "DefaultFactionHero": "src/components/factionHero/DefaultFactionHero.tsx",
-    "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
     "DefaultFeedFrame": "src/components/feed/DefaultFeedFrame.tsx",
     "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
     "DefaultPointsRing": "src/components/factionMarks/DefaultPointsRing.tsx",
@@ -99,7 +98,7 @@
     "DefaultTaskDetail": "src/pages/taskDetail/archetypes/DefaultTaskDetail.tsx",
     "DefaultVote": "src/components/vote/DefaultVote.tsx",
     "DeleteAccountCard": "src/pages/settings/DeleteAccountCard.tsx",
-    "DesktopPlayers": "src/pages/players/DesktopPlayers.tsx",
+    "PlayersDirectory": "src/pages/players/PlayersDirectory.tsx",
     "DuelCard": "src/pages/praxisDetail/DuelCard.tsx",
     "DuelSealConfirm": "src/components/duel/DuelSealConfirm.tsx",
     "DuelSealSheet": "src/components/duel/DuelSealSheet.tsx",
@@ -158,7 +157,6 @@
     "FactionProfileBody": "src/pages/characterProfile/FactionProfileBody.tsx",
     "FactionSelectCard": "src/components/selectCard/FactionSelectCard.tsx",
     "FactionSigil": "src/components/sigil/FactionSigil.tsx",
-    "FactionsDirectoryView": "src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx",
     "FeedArchiveButton": "src/components/feed/FeedArchiveButton.tsx",
     "FeedBadge": "src/components/feed/FeedBadge.tsx",
     "FeedBankFullModal": "src/components/feed/FeedBankFullModal.tsx",
@@ -170,7 +168,6 @@
     "FeedCardRouter": "src/components/feed/FeedCardRouter.tsx",
     "FeedChassisBand": "src/components/feed/FeedChassisBand.tsx",
     "FeedDateDivider": "src/components/feed/FeedDateDivider.tsx",
-    "FeedEmptyState": "src/components/feed/FeedEmptyState.tsx",
     "FeedItemSlot": "src/components/feed/FeedItemSlot.tsx",
     "FeedRowActions": "src/components/feed/FeedRowActions.tsx",
     "FeedRowContent": "src/components/feed/FeedRowContent.tsx",
@@ -195,7 +192,6 @@
     "MetataskRemoveConfirm": "src/components/metataskSeal/MetataskRemoveConfirm.tsx",
     "MetataskSeal": "src/components/metataskSeal/MetataskSeal.tsx",
     "MetataskSealStack": "src/components/metataskSeal/MetataskSealStack.tsx",
-    "MobilePlayers": "src/pages/players/MobilePlayers.tsx",
     "MobileStickyBar": "src/pages/factionDetail/MobileStickyBar.tsx",
     "MobileTabBar": "src/components/layout/MobileTabBar.tsx",
     "NavBar": "src/components/NavBar.tsx",
@@ -467,10 +463,6 @@
     "DefaultFactionHero": {
       "cardMode": "column"
     },
-    "DefaultFactionsDirectory": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "DefaultFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -494,7 +486,7 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "DesktopPlayers": {
+    "PlayersDirectory": {
       "cardMode": "single",
       "viewport": "1200x900"
     },
@@ -591,10 +583,6 @@
       "cardMode": "single",
       "viewport": "1200x900"
     },
-    "FactionsDirectoryView": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "FeedBankFullModal": {
       "cardMode": "single",
       "viewport": "460x600"
@@ -630,10 +618,6 @@
     "MetataskRemoveConfirm": {
       "cardMode": "single",
       "viewport": "560x520"
-    },
-    "MobilePlayers": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "MobileStickyBar": {
       "cardMode": "column"

@@ -21,9 +21,10 @@ from models.praxis import (
     PraxisStatus,
 )
 from models.vote import Vote
+from services.block_service import has_blocked
 from services.character_stats import recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
-from services.era_gates import may_vote, vote_lock_reason
+from services.era_gates import vote_lock_reason
 from services.praxis_duel import get_duel_for_praxis
 from services.push import notify_vote
 from services.scoring import compute_votes_available
@@ -100,17 +101,7 @@ async def cast_or_update_vote(
     # the UI reads ``can_vote`` on ``/auth/me``, which calls ``may_vote``.
     received = await account_has_received_vote(voter.account_id, session)
     is_admin = await account_has_admin_role(voter.account_id, session)
-    lock = (
-        None
-        if may_vote(
-            voter.peak_level,
-            voter.faction_slug,
-            is_admin,
-            era,
-            has_received_vote=received,
-        )
-        else vote_lock_reason(voter.peak_level, received, is_admin, era)
-    )
+    lock = vote_lock_reason(voter.peak_level, received, is_admin, era)
     if lock == "level":
         raise_coded(
             403,
@@ -297,9 +288,36 @@ async def _pending_invite_praxis_ids(
             PraxisInvite.praxis_id.in_(praxis_ids),
             PraxisInvite.status == PraxisInviteStatus.pending,
             Character.account_id == account_id,
+            # A swallowed invite (#3867) must not cost the invitee their vote.
+            ~has_blocked(PraxisInvite.invitee_id, PraxisInvite.inviter_id),
         )
     )
     return set(result.scalars().all())
+
+
+async def _duel_participant_account_ids(
+    duel: Duel, session: AsyncSession
+) -> set[int]:
+    """Both duelists' accounts; a swallowed challenge (#3867) drops the opponent."""
+    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+    challenger = (
+        await session.get(Character, challenger_praxis.created_by_id)
+        if challenger_praxis is not None
+        else None
+    )
+    opponent = await session.get(Character, duel.opponent_character_id)
+    if (
+        duel.status == DuelStatus.pending
+        and challenger is not None
+        and opponent is not None
+        and await session.scalar(select(has_blocked(opponent.id, challenger.id)))
+    ):
+        opponent = None
+    return {
+        participant.account_id
+        for participant in (challenger, opponent)
+        if participant is not None
+    }
 
 
 async def _voter_in_praxis_duel(
@@ -309,19 +327,7 @@ async def _voter_in_praxis_duel(
     duel = await get_duel_for_praxis(praxis.id, session)
     if duel is None:
         return False
-    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
-    challenger = (
-        await session.get(Character, challenger_praxis.created_by_id)
-        if challenger_praxis is not None
-        else None
-    )
-    opponent = await session.get(Character, duel.opponent_character_id)
-    participant_account_ids = {
-        participant.account_id
-        for participant in (challenger, opponent)
-        if participant is not None
-    }
-    return voter.account_id in participant_account_ids
+    return voter.account_id in await _duel_participant_account_ids(duel, session)
 
 
 async def viewer_can_vote(
@@ -376,19 +382,7 @@ async def viewer_can_vote_map(
         )
     )
     for duel in duel_result.scalars().all():
-        challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
-        challenger = (
-            await session.get(Character, challenger_praxis.created_by_id)
-            if challenger_praxis is not None
-            else None
-        )
-        opponent = await session.get(Character, duel.opponent_character_id)
-        participant_account_ids = {
-            participant.account_id
-            for participant in (challenger, opponent)
-            if participant is not None
-        }
-        if account_id in participant_account_ids:
+        if account_id in await _duel_participant_account_ids(duel, session):
             for side_id in (duel.challenger_praxis_id, duel.opponent_praxis_id):
                 if side_id in praxis_ids:
                     blocked_ids.add(side_id)

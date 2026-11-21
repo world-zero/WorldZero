@@ -10,10 +10,10 @@ import {
 } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { mediaUrl } from "../../../utils/media";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import {
   actionColumnSize,
   detailSignupCta,
-  ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
   TaskDetailComments,

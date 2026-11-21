@@ -1,9 +1,11 @@
 """Duel lookups keyed by ``praxis_id`` (ADR-0011).
 
-A leaf (reads only ``Duel``/``Praxis``) so ``services.praxis``, ``.vote`` and
-``.duel`` can import it without a cycle (``duel`` imports ``praxis``; #2872).
+Calls ``notify_duel_live`` (``services.push``), so it must not be imported by
+``services.push`` or anything push imports (``activity_feed``,
+``notification_prefs``, ...), or the cycle returns (#2872, #4019).
 """
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import select
@@ -11,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.duel import Duel, DuelStatus
 from models.praxis import Praxis, PraxisStatus
+from services.push import notify_duel_live
 
 
 async def get_duel_for_praxis(praxis_id: int, session: AsyncSession) -> Optional[Duel]:
@@ -63,14 +66,17 @@ async def maybe_settle_duel(praxis_id: int, session: AsyncSession) -> None:
         else None
     )
 
-    if (
-        challenger_praxis
-        and challenger_praxis.status == PraxisStatus.submitted
-        and opponent_praxis
-        and opponent_praxis.status == PraxisStatus.submitted
-    ):
+    sides = [challenger_praxis, opponent_praxis]
+    # A forfeiter can't submit, so only the honest side has to (#3766).
+    required = [
+        p for p in sides
+        if p is None or p.created_by_id != duel.forfeited_by_character_id
+    ]
+    if all(p is not None and p.status == PraxisStatus.submitted for p in required):
         duel.status = DuelStatus.settled
+        duel.live_at = datetime.now(timezone.utc)
         await session.flush()
+        await notify_duel_live(session, duel)
 
 
 async def discard_dissolved_duels_for_praxis(

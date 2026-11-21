@@ -3,14 +3,20 @@ from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
+from sqlalchemy import String, cast, select, union_all
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from errors import ErrorCode, raise_coded
 from models.account import Account, AccountStatus
 from models.character import Character
-from models.roles import AccountRole, Role
+from models.roles import (
+    OWNER_ROLE_NAME,
+    AccountPermission,
+    AccountRole,
+    Permission,
+    Role,
+)
 from services.auth import decode_jwt, get_current_account
 from services.character import resolve_active_character
 
@@ -98,7 +104,7 @@ async def require_admin(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Account:
-    """Raise 403 unless the authenticated account has the 'admin' role."""
+    """Raise 403 unless the account is an admin (any permission, or owner)."""
     if not await account_has_admin_role(account.id, session):
         raise HTTPException(status_code=403, detail="Admin access required.")
     return account
@@ -114,33 +120,69 @@ async def get_viewer_is_admin(
     return await account_has_admin_role(account.id, session)
 
 
-async def account_has_admin_role(account_id: int, session: AsyncSession) -> bool:
-    """Informational admin check; for a hard gate use :func:`require_admin`."""
-    result = await session.execute(
-        select(AccountRole)
-        .join(Role, AccountRole.role_id == Role.id)
-        .where(AccountRole.account_id == account_id, Role.name == "admin")
+async def account_grants(
+    account_id: int, session: AsyncSession
+) -> tuple[bool, frozenset[Permission]]:
+    """(holds the owner role, the permissions it may use); one query.
+
+    The owner role is set only from the CLI or the DB (ADR-0101) and holds all nine.
+    """
+    owner_names = (
+        select(Role.name)
+        .join(AccountRole, AccountRole.role_id == Role.id)
+        .where(AccountRole.account_id == account_id, Role.name == OWNER_ROLE_NAME)
     )
-    return result.scalar_one_or_none() is not None
-
-
-#: The owner, while it also holds admin (#3258). An id, never a username:
-#: deleted usernames can be reclaimed; ids are never reused.
-OWNER_ACCOUNT_ID = 1
+    held = select(cast(AccountPermission.permission, String)).where(
+        AccountPermission.account_id == account_id
+    )
+    names = set(await session.scalars(union_all(owner_names, held)))
+    if OWNER_ROLE_NAME in names:
+        return True, frozenset(Permission)
+    return False, frozenset(Permission[name] for name in names)
 
 
 async def account_is_owner(account_id: int, session: AsyncSession) -> bool:
-    """True for :data:`OWNER_ACCOUNT_ID` while it still holds admin."""
-    return account_id == OWNER_ACCOUNT_ID and await account_has_admin_role(
-        account_id, session
-    )
+    return (await account_grants(account_id, session))[0]
+
+
+async def account_permissions(
+    account_id: int, session: AsyncSession
+) -> frozenset[Permission]:
+    return (await account_grants(account_id, session))[1]
+
+
+async def account_has_admin_role(account_id: int, session: AsyncSession) -> bool:
+    """The one definition of admin: owner, or at least one permission."""
+    return bool(await account_permissions(account_id, session))
+
+
+def require_permission(*permissions: Permission):
+    """403 unless the account is the owner or holds one of ``permissions``.
+
+    More than one only where a single route spans checkboxes and the handler
+    re-checks the finer one (``update_task_status``).
+    """
+
+    async def dependency(
+        account: Account = Depends(get_current_account),
+        session: AsyncSession = Depends(get_db, scope="function"),
+    ) -> Account:
+        held = await account_permissions(account.id, session)
+        if not held.intersection(permissions):
+            raise_coded(
+                403, ErrorCode.admin_permission_required, "You lack that permission."
+            )
+        return account
+
+    dependency.required_permissions = frozenset(permissions)  # type: ignore
+    return dependency
 
 
 async def require_owner(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> Account:
-    """Raise 403 unless the account is the owner (admin alone is not enough)."""
+    """Raise 403 unless the account holds the owner role."""
     if not await account_is_owner(account.id, session):
         raise_coded(403, ErrorCode.admin_owner_required, "Owner access required.")
     return account

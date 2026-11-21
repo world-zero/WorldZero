@@ -53,6 +53,7 @@ function currentUser(): CurrentUser {
     },
     is_admin: false,
     is_owner: false,
+    permissions: [],
     has_accepted_terms: true,
     can_create_additional_character: false,
     character_creation_banned: false,
@@ -119,7 +120,7 @@ describe('EphemeristsVote markup', () => {
   it('renders the shared login gate for an anonymous viewer', () => {
     mocks.user = null
     const html = render()
-    expect(text(html)).toContain('Log in to vote')
+    expect(text(html)).toContain('Sign in to vote')
     expect(html).not.toContain('aria-label="Rate')
   })
 

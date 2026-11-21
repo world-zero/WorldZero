@@ -52,12 +52,13 @@ async def _gated_task(
     author: Character,
     status: TaskStatus,
     age: timedelta = FRESH_AGE,
+    point_value: int = 10,
 ) -> Task:
     """Backdated by ``age``: the #1695 window is arithmetic on ``created_at``."""
     task = Task(
         title=f"{status.value} row",
         description="",
-        point_value=10,
+        point_value=point_value,
         level_required=0,
         primary_faction_slug="na",
         task_type=TaskType.standard,
@@ -76,10 +77,10 @@ async def _ids(client: AsyncClient, query: str, headers: dict | None) -> set[int
     return {row["id"] for row in response.json()}
 
 
-#: Retired-task-perk factions see the archive from level 0. Found by the perk,
+#: Task Vision factions see archive + cheap pending from level 0. Found by the perk,
 #: not named (#2708); sentinels dropped since no character can join them.
 TASK_VISION_CASES = [
-    (0, slug, True, False)
+    (0, slug, True, True)
     for slug in sorted(CURRENT_ERA.allow_praxis_on_retired_task_factions)
     if slug in real_faction_slugs(CURRENT_ERA)
 ]
@@ -111,6 +112,13 @@ async def test_the_flag_and_the_query_agree(
     retired = await _gated_task(db_session, character2, TaskStatus.retired)
     ripe = await _gated_task(db_session, character2, TaskStatus.pending, RIPE_AGE)
     fresh = await _gated_task(db_session, character2, TaskStatus.pending, FRESH_AGE)
+    at_ceiling = await _gated_task(
+        db_session,
+        character2,
+        TaskStatus.pending,
+        RIPE_AGE,
+        CURRENT_ERA.pending_task_praxis_points_below,
+    )
     await _set_level_and_faction(db_session, character, era, level, faction)
 
     me = (await client.get("/auth/me", headers=auth_headers)).json()
@@ -121,6 +129,10 @@ async def test_the_flag_and_the_query_agree(
     assert (retired.id in await _ids(client, "/tasks?status=retired", auth_headers)) is sees_retired
     assert (ripe.id in explicit_pending) is sees_pending
     assert fresh.id not in explicit_pending  # #1695
+    # The perk shows only cheap rows; the ceiling row needs the level itself.
+    assert (at_ceiling.id in explicit_pending) is (
+        level >= CURRENT_ERA.level_to_see_pending_tasks
+    )
 
     everything = await _ids(client, "/tasks?status=all&limit=200", auth_headers)
     assert (retired.id in everything) is sees_retired

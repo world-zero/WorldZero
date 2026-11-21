@@ -4,6 +4,7 @@
  * from `components['schemas']`, so a wire change fails to compile here once (#1692).
  * Values are distinctive so substring asserts can't collide; ids are stable (hrefs).
  */
+import type { Permission } from '../api/admin'
 import type { CharacterOut, CurrentUser } from '../api/auth'
 import type { DuelDetailOut, DuelSideOut } from '../api/duel'
 import type { PraxisCardOut, PraxisMemberOut, PraxisOut } from '../api/praxis'
@@ -11,6 +12,19 @@ import type { TaskOut } from '../api/tasks'
 import type { CreateCharacterState } from '../pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../pages/characterPaths/useEditCharacter'
 import type { EditPraxisState } from '../pages/editPraxis/editPraxisState'
+
+/** What `/auth/me` gives the owner: every box. */
+export const ALL_PERMISSIONS: Permission[] = [
+  'handle_reports',
+  'ban_suspend',
+  'review_proposals',
+  'manage_tasks',
+  'delete_import_tasks',
+  'read_messages',
+  'edit_copy',
+  'small_world',
+  'roll_era',
+]
 
 /** The praxis author, and the viewer most detail suites sign in as. */
 export const AUTHOR = { id: 3, name: 'Ada' } as const
@@ -215,6 +229,7 @@ export const aCurrentUser = (over: Partial<CurrentUser> = {}): CurrentUser => ({
   character: aCharacter(),
   is_admin: false,
   is_owner: false,
+  permissions: [],
   has_accepted_terms: true,
   can_create_additional_character: false,
   character_creation_banned: false,
@@ -255,6 +270,7 @@ export const aDuelSide = (over: Partial<DuelSideOut> = {}): DuelSideOut => ({
   win_multiplier: 1,
   loss_multiplier: 1,
   tie_multiplier: 1,
+  rival_bonus: 0,
   ...over,
 })
 

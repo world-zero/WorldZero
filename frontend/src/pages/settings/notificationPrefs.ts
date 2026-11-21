@@ -28,7 +28,7 @@ export interface NotificationRow {
 }
 
 /**
- * The nine rows in draw order. Catalog keys are literal so they typecheck and
+ * The rows in draw order. Catalog keys are literal so they typecheck and
  * grep. Order is ours, values the server's; the test pins this list to the
  * Python registry.
  */
@@ -62,6 +62,11 @@ export const NOTIFICATION_ROWS: readonly NotificationRow[] = [
     key: 'vote_on_mine',
     titleKey: 'settings.notifications.rows.voteOnMine',
     helpKey: 'settings.notifications.rows.voteOnMineHelp',
+  },
+  {
+    key: 'duel_live',
+    titleKey: 'settings.notifications.rows.duelLive',
+    helpKey: 'settings.notifications.rows.duelLiveHelp',
   },
   {
     key: 'level_up',
@@ -107,8 +112,8 @@ export function lockNoteKey(pref: NotificationPrefOut): ParseKeys<'common'> | un
 }
 
 /**
- * The unlocked rows the master cell governs: nine on `by_email`, five on
- * `on_updates` (the 2026-08-19 ruling's "all nine" read as "all it can write").
+ * The unlocked rows the master cell governs: every row on `by_email`, the
+ * unlocked ones on `on_updates` (the 2026-08-19 ruling's "all" read as "all it can write").
  */
 export function governedRows(prefs: NotificationPrefs, axis: PrefAxis): NotificationRow[] {
   return rowsFor(prefs).filter((row) => !isLocked(prefs[row.key], axis))

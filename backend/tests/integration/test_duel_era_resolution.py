@@ -266,3 +266,22 @@ async def test_era_reset_script_resolves_duels(
     await db_session.refresh(resolved)
     assert resolved.status == DuelStatus.resolved
     assert resolved.winner_character_id == challenger.id
+
+
+@pytest.mark.asyncio
+async def test_era_reset_tie_uses_the_sealed_faction_not_todays(
+    db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
+):
+    if TIE_TAKER is None:
+        pytest.skip(f"no faction in {CURRENT_ERA.config_key} takes duel ties")
+    duel, challenger, _opponent = await make_duel(
+        db_session, era, label="stampfreeze", status=DuelStatus.settled,
+        challenger_votes=3, opponent_votes=3,
+        challenger_faction=TIE_TAKER, opponent_faction=NOT_TIE_TAKER,
+    )
+    challenger.faction_slug = NOT_TIE_TAKER
+
+    await _close_the_era(db_session, account)
+
+    await db_session.refresh(duel)
+    assert duel.winner_character_id == challenger.id

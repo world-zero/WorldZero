@@ -191,7 +191,7 @@ export default function EphemeristsComment(props: CommentProps) {
             text={INK}
           />
         ) : (
-          <MentionText body={comment.body_text} mentions={comment.mentions} accent={BRASS_LIGHT} />
+          <MentionText body={comment.body_text} mentions={comment.mentions} censored={comment.is_censored} accent={BRASS_LIGHT} />
         )}
       </Marginalia>
 

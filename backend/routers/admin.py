@@ -23,13 +23,20 @@ from services.population_dial import list_dials, set_dials
 from config import settings
 from db import get_db
 from errors import ErrorCode, raise_coded
-from dependencies import get_current_character_optional, require_admin, require_owner
+from dependencies import (
+    account_permissions,
+    get_current_character_optional,
+    require_admin,
+    require_owner,
+    require_permission,
+)
 from models.account import Account
 from models.character import Character, CharacterStatus
+from models.roles import Permission
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import TaskStatus
 from schemas.admin import (
-    AdminGrantIn,
+    AdminPermissionIn,
     PopulationDialOut,
     AdminRow,
     AdminTaskPatch,
@@ -37,8 +44,6 @@ from schemas.admin import (
     BanActionOut,
     RemoveFlaggedIn,
     RemoveFlaggedOut,
-    CharacterStatsPatch,
-    CharacterStatsOut,
     CharacterSummary,
     CliTokenResponse,
     EraOption,
@@ -75,9 +80,9 @@ from services.admin_service import (
     task_ids_with_history,
     remove_flagged_praxes_by_author,
     find_admin_accounts,
-    grant_admin,
     list_admins,
     revoke_admin,
+    set_admin_permission,
     flags_for_comments,
     flags_for_praxes,
     game_overview,
@@ -87,7 +92,6 @@ from services.admin_service import (
     list_registered_eras,
     preflight_era_roll,
     roll_into_era,
-    set_character_stats,
     suspend_account,
     update_task_status,
 )
@@ -95,7 +99,6 @@ from services.task_import import (
     TaskImportError,
     import_tasks_from_csv,
 )
-from services.scoring import compute_votes_available
 from services.auth import create_jwt
 from services.vote_ring import get_vote_ring
 
@@ -127,7 +130,7 @@ async def admin_overview(
 @router.get("/messages", response_model=list[ContactMessageOut])
 async def admin_list_messages(
     archived: bool = False,
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.read_messages)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[ContactMessageOut]:
     messages = await list_contact_messages(session, archived=archived)
@@ -137,7 +140,7 @@ async def admin_list_messages(
 @router.patch("/messages/{message_id}/archive", response_model=ContactMessageOut)
 async def admin_archive_message(
     message_id: int,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.read_messages)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> ContactMessageOut:
     message = await archive_message(message_id, session, actor_id=admin.id)
@@ -188,7 +191,7 @@ async def admin_mod_log(
 @router.get("/accounts/{account_id}/vote-ring", response_model=VoteRingOut)
 async def admin_vote_ring(
     account_id: int,
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.ban_suspend)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> VoteRingOut:
     return await get_vote_ring(account_id, session)
@@ -206,14 +209,16 @@ async def admin_list_admins(
     return await list_admins(session)
 
 
-@router.post("/admins", response_model=AdminRow, status_code=201)
-async def admin_grant_admin(
-    data: AdminGrantIn,
+@router.put("/admins/{username}/permissions/{permission}", status_code=204)
+async def admin_set_permission(
+    username: str,
+    permission: Permission,
+    data: AdminPermissionIn,
     owner: Account = Depends(require_owner),
     session: AsyncSession = Depends(get_db, scope="function"),
-) -> AdminRow:
-    """Owner-only: grant admin to the account behind a character username."""
-    return await grant_admin(data.username, owner.id, session)
+) -> None:
+    """Owner-only: tick or untick one box; the first tick makes an admin."""
+    await set_admin_permission(username, permission, data.on, owner.id, session)
 
 
 @router.delete("/admins/{username}", status_code=204)
@@ -231,31 +236,10 @@ async def admin_list_characters(
     faction: str | None = None,
     status: CharacterStatus | None = None,
     search: str | None = None,
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.ban_suspend)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[CharacterSummary]:
     return await list_characters(session, faction=faction, status=status, search=search)
-
-
-
-
-@router.patch("/characters/{character_id}/stats", response_model=CharacterStatsOut)
-async def admin_patch_character_stats(
-    character_id: int,
-    patch: CharacterStatsPatch,
-    admin: Account = Depends(require_admin),
-    session: AsyncSession = Depends(get_db, scope="function"),
-) -> CharacterStatsOut:
-    stats = await set_character_stats(character_id, patch, session, actor_id=admin.id)
-    return CharacterStatsOut(
-        id=stats.id,
-        character_id=stats.character_id,
-        era_id=stats.era_id,
-        score=stats.score,
-        all_time_score=(await session.get(Character, character_id)).all_time_score,
-        level=stats.level,
-        votes_available=compute_votes_available(stats),
-    )
 
 
 
@@ -266,7 +250,7 @@ async def admin_patch_character_stats(
 async def admin_suspend_account(
     account_id: int,
     data: SuspendAction,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.ban_suspend)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> SuspendActionOut:
     account = await suspend_account(
@@ -312,7 +296,7 @@ async def admin_list_praxes(
     era_scope: PraxisEraScope = PraxisEraScope.this_era,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
-    account: Account = Depends(require_admin),
+    account: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
@@ -341,7 +325,7 @@ async def admin_list_praxes(
 
 @router.get("/praxes/flagged", response_model=list[FlaggedPraxisOut])
 async def admin_list_flagged_praxes(
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
@@ -387,7 +371,7 @@ async def admin_list_flagged_praxes(
 async def admin_moderate_praxis(
     praxis_id: int,
     data: ModerationAction,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
@@ -402,7 +386,7 @@ async def admin_moderate_praxis(
 
 @router.get("/comments/flagged", response_model=list[FlaggedCommentOut])
 async def admin_list_flagged_comments(
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Return comments with moderation_status == flagged, each with its flag rows (#237)."""
@@ -423,7 +407,7 @@ async def admin_list_flagged_comments(
 async def admin_moderate_comment(
     comment_id: int,
     data: CommentModerationIn,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     comment = await moderate_comment(
@@ -436,7 +420,7 @@ async def admin_moderate_comment(
 async def admin_patch_task(
     task_id: int,
     data: AdminTaskPatch,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.manage_tasks)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     task = await admin_edit_task(task_id, data, session, admin.id)
@@ -447,7 +431,13 @@ async def admin_patch_task(
 async def admin_update_task_status(
     task_id: int,
     data: TaskStatusAction,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(
+        require_permission(
+            Permission.manage_tasks,
+            Permission.review_proposals,
+            Permission.delete_import_tasks,
+        )
+    ),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     new_status = TaskStatus(data.status)
@@ -456,6 +446,7 @@ async def admin_update_task_status(
         new_status,
         session,
         actor_id=admin.id,
+        held=await account_permissions(admin.id, session),
         backdoor_opens_at=data.backdoor_opens_at,
         backdoor_closes_at=data.backdoor_closes_at,
     )
@@ -464,7 +455,7 @@ async def admin_update_task_status(
 
 @router.get("/tasks/with-history", response_model=list[int])
 async def list_task_ids_with_history(
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.delete_import_tasks)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Admin-only: ids of tasks with history, which Delete refuses (#3667).
@@ -477,7 +468,7 @@ async def list_task_ids_with_history(
 @router.delete("/tasks/{task_id}", status_code=204)
 async def admin_delete_task(
     task_id: int,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.delete_import_tasks)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
     """Soft-delete (status=deleted) a task nothing references; 409 if it has history."""
@@ -494,7 +485,7 @@ class PendingTaskOut(TaskOut):
 
 @router.get("/tasks/pending", response_model=list[PendingTaskOut])
 async def list_pending_tasks(
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.review_proposals)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     rows = await list_pending_tasks_with_proposer(session)
@@ -530,7 +521,7 @@ async def list_pending_tasks(
 async def ban_character(
     character_id: int,
     data: BanAction,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.ban_suspend)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> BanActionOut:
     character = await session.get(Character, character_id)
@@ -547,7 +538,7 @@ async def ban_character(
 async def remove_flagged_praxes(
     character_id: int,
     data: RemoveFlaggedIn | None = None,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> RemoveFlaggedOut:
     if await session.get(Character, character_id) is None:
@@ -564,7 +555,7 @@ async def remove_flagged_praxes(
 @router.post("/tasks/import-csv", response_model=TaskImportResult, status_code=201)
 async def admin_import_tasks_csv(
     file: UploadFile = File(...),
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.delete_import_tasks)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Admin-only: bulk-create tasks from an uploaded CSV (#1376).
@@ -592,7 +583,7 @@ async def admin_import_tasks_csv(
 
 @router.get("/eras", response_model=list[EraOption])
 async def admin_list_eras(
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.roll_era)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[EraOption]:
     """Admin-only: the eras a rollover may target, and which one is live.
@@ -609,7 +600,7 @@ async def admin_list_eras(
 @router.get("/eras/{config_key}/preflight", response_model=EraPreflightOut)
 async def admin_preflight_era_roll(
     config_key: str,
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.roll_era)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> EraPreflightOut:
     """Admin-only: count what rolling into this era would do. Writes nothing."""
@@ -619,7 +610,7 @@ async def admin_preflight_era_roll(
 @router.put("/eras/live", response_model=EraRollOut)
 async def admin_roll_into_era(
     data: EraRollIn,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.roll_era)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> EraRollOut:
     """Admin-only: end the live era and open the one named. **No undo.**
@@ -651,7 +642,7 @@ async def admin_roll_into_era(
 
 @router.get("/small-world", response_model=list[PopulationDialOut])
 async def admin_get_small_world(
-    _: Account = Depends(require_admin),
+    _: Account = Depends(require_permission(Permission.small_world)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[PopulationDialOut]:
     """Admin-only: each population dial, its side, both values, who flipped it."""
@@ -661,7 +652,7 @@ async def admin_get_small_world(
 @router.put("/small-world", response_model=list[PopulationDialOut])
 async def admin_set_small_world(
     data: dict[str, Literal["small", "full"]] = Body(..., min_length=1),
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.small_world)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> list[PopulationDialOut]:
     """Admin-only: set the named dials to a side; unchanged dials write nothing."""

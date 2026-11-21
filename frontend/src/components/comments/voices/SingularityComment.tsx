@@ -232,7 +232,7 @@ export default function SingularityComment(props: CommentProps) {
             <span aria-hidden="true" style={{ color: BLUE }}>
               {'> '}
             </span>
-            <MentionText body={comment.body_text} mentions={comment.mentions} accent={BLUE} />
+            <MentionText body={comment.body_text} mentions={comment.mentions} censored={comment.is_censored} accent={BLUE} />
           </>
         )}
       </div>

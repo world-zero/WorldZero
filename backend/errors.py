@@ -78,6 +78,8 @@ class ErrorCode(str, enum.Enum):
     praxis_needs_proof = "PRAXIS_NEEDS_PROOF"
     #: 413 too big, 422 not a Yjs update: the draft the browser sent with a submit.
     praxis_doc_update_invalid = "PRAXIS_DOC_UPDATE_INVALID"
+    #: 413: the draft's encoded state itself is over the byte cap.
+    praxis_doc_update_too_large = "PRAXIS_DOC_UPDATE_TOO_LARGE"
     #: 409: a submit carried a draft for a praxis that is already published.
     praxis_already_live = "PRAXIS_ALREADY_LIVE"
     #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).
@@ -151,6 +153,9 @@ class ErrorCode(str, enum.Enum):
     #: ADR-0077: the block route's only refusal. Any other refusal would
     #: announce the block.
     block_self = "BLOCK_SELF"
+    #: 403 to the BLOCKER only (#3867): they may not invite, challenge or nudge
+    #: whom they blocked. The blocked party's requests are swallowed instead.
+    contact_blocked = "CONTACT_BLOCKED"
 
     # -- Activity feed ------------------------------------------------------
     feed_item_key_unknown = "FEED_ITEM_KEY_UNKNOWN"
@@ -209,12 +214,15 @@ class ErrorCode(str, enum.Enum):
     username_taken = "USERNAME_TAKEN"
 
     admin_unknown_username = "ADMIN_UNKNOWN_USERNAME"
-    #: The service is idempotent; this tells a typo from a real grant.
-    admin_already_admin = "ADMIN_ALREADY_ADMIN"
-    #: 404, the mirror of the grant's 409.
     admin_not_an_admin = "ADMIN_NOT_AN_ADMIN"
     #: The owner cannot be demoted from the page.
     admin_cannot_revoke_owner = "ADMIN_CANNOT_REVOKE_OWNER"
+
+    # -- Admin permissions + admin-on-admin guard (#3847, #3821) ------------
+    admin_permission_required = "ADMIN_PERMISSION_REQUIRED"
+    admin_cannot_target_owner = "ADMIN_CANNOT_TARGET_OWNER"
+    admin_cannot_target_self = "ADMIN_CANNOT_TARGET_SELF"
+    admin_target_needs_owner = "ADMIN_TARGET_NEEDS_OWNER"
 
 
 #: The keys of a coded ``detail`` body.

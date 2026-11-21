@@ -27,6 +27,8 @@ export const FACTION_ROW_TYPES = new Set([
   'collaborator_submitted',
   'awaiting_submission',
   'nudge',
+  'duel_forfeited',
+  'duel_live',
   'comment_mention',
   'comment_on_mine',
 ])
@@ -279,10 +281,13 @@ export function normalizeFeedItem(
             : 'feed:row.action.commentedOnYours',
         ),
         badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
-        // Quoted like a taunt; the backend caps it at 140 chars.
-        headline: p.excerpt ?? null,
+        // Quoted like a taunt; the backend caps it at 140 chars. Censored
+        // (#3867): the server sent no excerpt, so the label stands in, unquoted.
+        headline: p.is_censored
+          ? i18n.t('common:relationships.censoredComment')
+          : (p.excerpt ?? null),
         headlineHref: commentTargetHref(p),
-        headlineQuoted: true,
+        headlineQuoted: !p.is_censored,
         points: null,
         level: null,
         actions: buildCommentActions(p, commentGate),
@@ -340,6 +345,47 @@ export function normalizeFeedItem(
         actions: [],
       }
     }
+    case 'duel_forfeited':
+      // The other player was banned or suspended (#3766).
+      return {
+        slug,
+        actor,
+        actorHref: null,
+        action: i18n.t('feed:row.action.duelForfeited'),
+        badge: { type: 'duel', label: i18n.t('feed:badge.duel') },
+        headline: p.task_title ?? null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
+        headlineQuoted: false,
+        points: null,
+        level: null,
+        actions: [],
+      }
+    case 'duel_live':
+      // A friend or foe's duel just opened for votes (#3886); actor = challenger.
+      return {
+        slug,
+        actor,
+        actorHref:
+          p.challenger_character_id != null ? `/characters/${p.challenger_character_id}` : null,
+        action: i18n.t('feed:row.action.duelLive', { opponent: p.opponent_display_name ?? '' }),
+        badge: { type: 'duel', label: i18n.t('feed:badge.duel') },
+        headline: p.task_title ?? null,
+        headlineHref: p.duel_id != null ? `/duel/${p.duel_id}` : null,
+        headlineQuoted: false,
+        points: p.task_point_value != null ? i18n.t('feed:row.points', { count: p.task_point_value, points: p.task_point_value }) : null,
+        level: null,
+        actions:
+          p.duel_id != null
+            ? [
+                {
+                  id: 'castYourVote',
+                  label: i18n.t('feed:rowAction.castYourVote'),
+                  tone: 'primary',
+                  href: `/duel/${p.duel_id}`,
+                },
+              ]
+            : [],
+      }
     case 'friend_defection':
       return {
         slug,

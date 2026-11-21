@@ -180,6 +180,7 @@ export default function CovenComment(props: CommentProps) {
           <MentionText
             body={comment.body_text}
             mentions={comment.mentions}
+            censored={comment.is_censored}
             accent="var(--faction-coven-slip-deep)"
           />
         )}

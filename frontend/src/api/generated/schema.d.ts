@@ -168,11 +168,7 @@ export interface paths {
          */
         get: operations["admin_list_admins_admin_admins_get"];
         put?: never;
-        /**
-         * Admin Grant Admin
-         * @description Owner-only: grant admin to the account behind a character username.
-         */
-        post: operations["admin_grant_admin_admin_admins_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -194,6 +190,26 @@ export interface paths {
          * @description Owner-only: revoke admin. The owner's own role is refused.
          */
         delete: operations["admin_revoke_admin_admin_admins__username__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/admins/{username}/permissions/{permission}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Admin Set Permission
+         * @description Owner-only: tick or untick one box; the first tick makes an admin.
+         */
+        put: operations["admin_set_permission_admin_admins__username__permissions__permission__put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -248,23 +264,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/admin/characters/{character_id}/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Admin Patch Character Stats */
-        patch: operations["admin_patch_character_stats_admin_characters__character_id__stats_patch"];
         trace?: never;
     };
     "/admin/cli-token": {
@@ -2201,14 +2200,14 @@ export interface components {
         ActivityFeedResponse: {
             counts: components["schemas"]["FeedCounts"];
             /** Items */
-            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["DuelLiveItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
             next_cursor: string | null;
         };
-        /** AdminGrantIn */
-        AdminGrantIn: {
-            /** Username */
-            username: string;
+        /** AdminPermissionIn */
+        AdminPermissionIn: {
+            /** On */
+            on: boolean;
         };
         /**
          * AdminRow
@@ -2221,6 +2220,10 @@ export interface components {
             display_name: string;
             /** Is Owner */
             is_owner: boolean;
+            /** Permissions */
+            permissions: components["schemas"]["Permission"][];
+            /** Suspended */
+            suspended: boolean;
             /** Username */
             username: string;
         };
@@ -2453,37 +2456,6 @@ export interface components {
             tagline: string;
             /** Username */
             username: string;
-        };
-        /** CharacterStatsOut */
-        CharacterStatsOut: {
-            /** All Time Score */
-            all_time_score: number;
-            /** Character Id */
-            character_id: number;
-            /** Era Id */
-            era_id: number;
-            /** Id */
-            id: number;
-            /** Level */
-            level: number;
-            /** Score */
-            score: number;
-            /** Votes Available */
-            votes_available: number;
-        };
-        /**
-         * CharacterStatsPatch
-         * @description Only supplied fields are updated.
-         */
-        CharacterStatsPatch: {
-            /** All Time Score */
-            all_time_score?: number | null;
-            /** Level */
-            level?: number | null;
-            /** Score */
-            score?: number | null;
-            /** Votes Available */
-            votes_available?: number | null;
         };
         /**
          * CharacterStatus
@@ -2766,6 +2738,11 @@ export interface components {
             created_at: string;
             /** Id */
             id: number;
+            /**
+             * Is Censored
+             * @default false
+             */
+            is_censored: boolean;
             /** Is Edited */
             is_edited: boolean;
             /**
@@ -2798,6 +2775,11 @@ export interface components {
             comment_id: number;
             /** Excerpt */
             excerpt: string;
+            /**
+             * Is Censored
+             * @default false
+             */
+            is_censored: boolean;
             /** Praxis Id */
             praxis_id: number | null;
             /** Task Id */
@@ -2965,6 +2947,11 @@ export interface components {
              */
             level_jump_reach: number;
             /**
+             * Permissions
+             * @default []
+             */
+            permissions: components["schemas"]["Permission"][];
+            /**
              * Provider
              * @default
              */
@@ -3092,6 +3079,103 @@ export interface components {
             /** Winner Character Id */
             winner_character_id: number | null;
         };
+        /** DuelForfeitedItem */
+        DuelForfeitedItem: {
+            /** Actor Avatar Url */
+            actor_avatar_url: string | null;
+            /** Actor Display Name */
+            actor_display_name: string | null;
+            /** Actor Faction Slug */
+            actor_faction_slug: string | null;
+            /**
+             * Context Faction Slug
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
+             *
+             *     ``getattr`` because only some payloads carry a task.
+             */
+            readonly context_faction_slug: string | null;
+            /** Item Key */
+            item_key: string;
+            payload: components["schemas"]["DuelForfeitedPayload"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "duel_forfeited";
+        };
+        /**
+         * DuelForfeitedPayload
+         * @description The viewer's duel ended because the other player was locked out (#3766).
+         */
+        DuelForfeitedPayload: {
+            /** Duel Id */
+            duel_id: number;
+            /** Praxis Id */
+            praxis_id: number | null;
+            /** Task Faction Slug */
+            task_faction_slug: string;
+            /** Task Title */
+            task_title: string;
+        };
+        /** DuelLiveItem */
+        DuelLiveItem: {
+            /** Actor Avatar Url */
+            actor_avatar_url: string | null;
+            /** Actor Display Name */
+            actor_display_name: string | null;
+            /** Actor Faction Slug */
+            actor_faction_slug: string | null;
+            /**
+             * Context Faction Slug
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
+             *
+             *     ``getattr`` because only some payloads carry a task.
+             */
+            readonly context_faction_slug: string | null;
+            /** Item Key */
+            item_key: string;
+            payload: components["schemas"]["DuelLivePayload"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "duel_live";
+        };
+        /**
+         * DuelLivePayload
+         * @description A friend or foe's duel just opened for votes (#3886). The item's actor is
+         *     the challenger.
+         */
+        DuelLivePayload: {
+            /** Challenger Character Id */
+            challenger_character_id: number;
+            /** Duel Id */
+            duel_id: number;
+            /** Opponent Avatar Url */
+            opponent_avatar_url: string;
+            /** Opponent Character Id */
+            opponent_character_id: number;
+            /** Opponent Display Name */
+            opponent_display_name: string;
+            /** Opponent Faction Slug */
+            opponent_faction_slug: string;
+            /** Task Faction Slug */
+            task_faction_slug: string;
+            /** Task Point Value */
+            task_point_value: number;
+            /** Task Title */
+            task_title: string;
+        };
         /** DuelOut */
         DuelOut: {
             /** Challenger Praxis Id */
@@ -3147,6 +3231,11 @@ export interface components {
             points_from_votes: number;
             /** Praxis Id */
             praxis_id: number | null;
+            /**
+             * Rival Bonus
+             * @default 0
+             */
+            rival_bonus: number;
             /**
              * Tie Multiplier
              * @default 1
@@ -3463,6 +3552,11 @@ export interface components {
             flags: components["schemas"]["FlagOut"][];
             /** Id */
             id: number;
+            /**
+             * Is Censored
+             * @default false
+             */
+            is_censored: boolean;
             /** Is Edited */
             is_edited: boolean;
             /**
@@ -3809,6 +3903,8 @@ export interface components {
             backdoor_hint_stage_days: number[];
             /** Collab Auto Submit Days */
             collab_auto_submit_days: number;
+            /** Duel Challenge Lapse Days */
+            duel_challenge_lapse_days: number;
             /** Duel Level Required */
             duel_level_required: number;
             /** Era Id */
@@ -4258,6 +4354,15 @@ export interface components {
             /** To Character Id */
             to_character_id: number;
         };
+        /** OtherLifePending */
+        OtherLifePending: {
+            /** Character Id */
+            character_id: number;
+            /** Display Name */
+            display_name: string;
+            /** Pending Requests Count */
+            pending_requests_count: number;
+        };
         /** OverviewStats */
         OverviewStats: {
             /** Accounts */
@@ -4379,6 +4484,12 @@ export interface components {
              */
             viewer_faction_multiplier: number;
         };
+        /**
+         * Permission
+         * @description The nine admin checkboxes (ADR-0101); a tenth widens the CHECK.
+         * @enum {string}
+         */
+        Permission: "handle_reports" | "ban_suspend" | "review_proposals" | "manage_tasks" | "delete_import_tasks" | "read_messages" | "edit_copy" | "small_world" | "roll_era";
         /** PickerPollOut */
         PickerPollOut: {
             state: components["schemas"]["PickerPollState"];
@@ -4899,6 +5010,50 @@ export interface components {
             /** Votes Back Of */
             votes_back_of: number;
         };
+        /**
+         * RosterCharacterOut
+         * @description ``/me/characters`` only: the owner's view adds the life's waiting requests.
+         */
+        RosterCharacterOut: {
+            /** All Time Score */
+            all_time_score: number;
+            /** Avatar Url */
+            avatar_url: string;
+            /** Badges */
+            badges: components["schemas"]["BadgeOut"][];
+            /** Bio */
+            bio: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Faction Slug */
+            faction_slug: string;
+            /** Id */
+            id: number;
+            /** Invitations */
+            invitations: string[];
+            /** Level */
+            level: number;
+            /** Location */
+            location: string;
+            /**
+             * Pending Requests Count
+             * @default 0
+             */
+            pending_requests_count: number;
+            /** Score */
+            score: number;
+            /** Status */
+            status: string;
+            /** Tagline */
+            tagline: string;
+            /** Username */
+            username: string;
+        };
         /** RulesChangeEntry */
         RulesChangeEntry: {
             /** Dial Key */
@@ -4970,9 +5125,14 @@ export interface components {
             /** Active Praxes */
             active_praxes: components["schemas"]["PraxisCardOut"][];
             /** Global Activity */
-            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["DuelLiveItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Global Activity Count */
             global_activity_count: number;
+            /**
+             * Other Lives Pending
+             * @default []
+             */
+            other_lives_pending: components["schemas"]["OtherLifePending"][];
             /** Pending Requests Count */
             pending_requests_count: number;
         };
@@ -5715,41 +5875,6 @@ export interface operations {
             };
         };
     };
-    admin_grant_admin_admin_admins_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminGrantIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminRow"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     admin_revoke_admin_admin_admins__username__delete: {
         parameters: {
             query?: never;
@@ -5762,6 +5887,42 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_set_permission_admin_admins__username__permissions__permission__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+                permission: components["schemas"]["Permission"];
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminPermissionIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {
@@ -5877,43 +6038,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RemoveFlaggedOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    admin_patch_character_stats_admin_characters__character_id__stats_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                character_id: number;
-            };
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CharacterStatsPatch"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterStatsOut"];
                 };
             };
             /** @description Validation Error */
@@ -7826,7 +7950,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CharacterOut"][];
+                    "application/json": components["schemas"]["RosterCharacterOut"][];
                 };
             };
             /** @description Validation Error */

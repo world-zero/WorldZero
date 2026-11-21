@@ -57,13 +57,18 @@ export function MentionText({
   mentions,
   accent,
   rainbow = false,
+  censored = false,
 }: {
   body: string
   mentions: CommentMention[]
   accent?: string
   /** na tell (#970): mentions in `.rainbow-ink` spectrum instead of `accent`. */
   rainbow?: boolean
+  /** The viewer blocked the author (#3867); the server sent no body. */
+  censored?: boolean
 }) {
+  const { t } = useTranslation('common')
+  if (censored) return <em>{t('relationships.censoredComment')}</em>
   if (mentions.length === 0) return <>{body}</>
   const byHandle = new Map(mentions.map((m) => [m.username.toLowerCase(), m]))
   const parts = body.split(/(@[A-Za-z0-9_]+)/g)

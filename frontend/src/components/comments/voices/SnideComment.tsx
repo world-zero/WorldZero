@@ -142,6 +142,7 @@ export default function SnideComment(props: CommentProps) {
               <MentionText
                 body={comment.body_text}
                 mentions={comment.mentions}
+                censored={comment.is_censored}
                 accent="var(--faction-snide-slip-acid-ink)"
               />
             )}

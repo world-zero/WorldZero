@@ -1,12 +1,12 @@
 import { createContext, useContext, useLayoutEffect } from 'react'
 
-/** Set by `Layout`; the onboarding flow raises it while mounted so the phone chrome steps aside. */
+/** Set by `Layout`; the onboarding flow raises it while mounted and `active` so the phone chrome steps aside. */
 export const FlowChromeContext = createContext<(on: boolean) => void>(() => {})
 
-export function useHidePhoneChrome(): void {
+export function useHidePhoneChrome(active: boolean): void {
   const set = useContext(FlowChromeContext)
   useLayoutEffect(() => {
-    set(true)
+    set(active)
     return () => set(false)
-  }, [set])
+  }, [set, active])
 }

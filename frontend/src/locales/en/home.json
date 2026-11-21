@@ -1,5 +1,5 @@
 {
-  "loginRequired": "You need to log in to access that page.",
+  "loginRequired": "Sign in to see that page.",
   "loginFailed": "That sign-in didn't go through. Pick a way in and try again.",
   "install": {
     "kicker": "HOME SCREEN",
@@ -17,7 +17,7 @@
     "once": "We only ask once. Not now means not now, forever."
   },
   "signup": {
-    "error": "Could not sign up — make sure you are logged in."
+    "error": "Could not sign up — make sure you are signed in."
   },
   "signedIn": {
     "continue": {

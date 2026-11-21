@@ -6,13 +6,14 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '../../../i18n'
+import { ALL_PERMISSIONS } from '../../../test/fixtures'
 import { AdminModeProvider, ADMIN_MODE_STORAGE_KEY } from '../../../auth/AdminModeContext'
 import { useAdminMode } from '../../../auth/AdminModeContext'
 import NavBar from '../../NavBar'
 import ModStrip from '../ModStrip'
 import { ModStripMount } from '../../../App'
 
-let user: { is_admin: boolean; character: null } | null = null
+let user: { is_admin: boolean; character: null; permissions?: string[] } | null = null
 vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user }) }))
 vi.mock('../../../hooks/useSidebarPanels', () => ({ useSidebarPanels: () => ({ pending_requests_count: 0 }) }))
 vi.mock('../../../api/copy', () => ({ putCopyOverride: vi.fn(), deleteCopyOverride: vi.fn() }))
@@ -71,7 +72,7 @@ describe('the MOD menu', () => {
   })
 
   it('badges reports + messages + proposals, with no ADMIN link beside the nav', async () => {
-    user = { is_admin: true, character: null }
+    user = { is_admin: true, character: null, permissions: ALL_PERMISSIONS }
     mount()
     const button = await screen.findByRole('button', { name: 'Mod, 7 waiting' })
     expect(button.getAttribute('aria-haspopup')).toBe('menu')
@@ -80,7 +81,7 @@ describe('the MOD menu', () => {
   })
 
   it('toggles mod mode from the switch and opens /admin from the link', async () => {
-    user = { is_admin: true, character: null }
+    user = { is_admin: true, character: null, permissions: ALL_PERMISSIONS }
     mount()
     fireEvent.click(await screen.findByRole('button', { name: /^Mod/ }))
     const sw = screen.getByRole('menuitemcheckbox', { name: /Edit on the page/ })
@@ -92,7 +93,7 @@ describe('the MOD menu', () => {
   })
 
   it('closes on Escape and gives focus back to the button', async () => {
-    user = { is_admin: true, character: null }
+    user = { is_admin: true, character: null, permissions: ALL_PERMISSIONS }
     mount()
     const button = await screen.findByRole('button', { name: /^Mod/ })
     fireEvent.click(button)
@@ -103,7 +104,7 @@ describe('the MOD menu', () => {
   })
 
   it('closes on an outside click', async () => {
-    user = { is_admin: true, character: null }
+    user = { is_admin: true, character: null, permissions: ALL_PERMISSIONS }
     mount()
     fireEvent.click(await screen.findByRole('button', { name: /^Mod/ }))
     fireEvent.pointerDown(document.body)
@@ -131,7 +132,7 @@ describe('the mod-mode strip', () => {
 
 describe('ModStripMount', () => {
   const strip = (admin: boolean, mode: boolean) => {
-    user = { is_admin: admin, character: null }
+    user = { is_admin: admin, character: null, permissions: ALL_PERMISSIONS }
     if (mode) store.set(ADMIN_MODE_STORAGE_KEY, 'true')
     render(
       <AdminModeProvider>

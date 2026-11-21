@@ -15,7 +15,7 @@ from models.faction import Faction, FactionStatus
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task, TaskStatus
 from schemas.task import TaskSignupOut
-from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
+from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin, make_character
 from tests.integration.query_capture import capture_selects
 
 #: Any live faction other than the fixtures' default; derived, never named (#2708).
@@ -800,16 +800,7 @@ async def test_admin_bypass_propose_level_gate(
     db_session: AsyncSession,
 ):
     """B.5."""
-    from models.roles import AccountRole, Role
-
-    role = Role(name="admin", description="Administrator")
-    db_session.add(role)
-    await db_session.flush()
-    account_role = AccountRole(
-        account_id=account.id, role_id=role.id, granted_by_id=account.id
-    )
-    db_session.add(account_role)
-    await db_session.commit()
+    await make_admin(db_session, account)
 
     resp = await client.post(
         "/tasks",

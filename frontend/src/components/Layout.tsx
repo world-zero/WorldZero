@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -28,7 +28,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isMobile = useFormFactor() === 'mobile'
-  // Phones only: the flow is full-bleed there; desktop keeps its top nav.
+  // Phones only, signed out: the flow is full-bleed there (no bar to clear); desktop keeps its top nav.
   const [inFlow, setInFlow] = useState(false)
   const flowOnPhone = isMobile && inFlow
   // Held here: `ShellContent` is called as a plain function by tests, so owns no hook (#1191).
@@ -72,7 +72,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <BackdropProvider>
     <FlowChromeContext.Provider value={setInFlow}>
-    <div className="min-h-screen flex flex-col relative">
+    <div
+      className="min-h-screen flex flex-col relative"
+      style={flowOnPhone ? ({ '--tab-bar-clearance': 'env(safe-area-inset-bottom)' } as CSSProperties) : undefined}
+    >
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:p-2 bg-[var(--color-surface)]"
@@ -93,7 +96,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       >
         {children}
       </ShellContent>
-      <SiteFooter isMobile={isMobile && !flowOnPhone} />
+      <SiteFooter />
       {isMobile && !flowOnPhone && <MobileTabBar />}
     </div>
     </FlowChromeContext.Provider>

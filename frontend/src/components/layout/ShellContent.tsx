@@ -29,10 +29,10 @@ const MOBILE_REGION = 'flex-1 relative px-4 pb-4'
  */
 const DESKTOP_REGION = 'flex-1 relative max-w-[var(--shell-max-width)] mx-auto w-full pt-8 px-10 pb-[72px]'
 
-// No top bar on the phone (#3761): the region itself clears the status bar.
+// No top bar on the phone (#3761): the region clears the status bar, unless the mod strip already did (modMode.css zeroes the var).
 const MOBILE_REGION_STYLE: CSSProperties = {
   zIndex: 5,
-  paddingTop: 'calc(var(--space-lg) + env(safe-area-inset-top))',
+  paddingTop: 'calc(var(--space-lg) + var(--region-inset-top, env(safe-area-inset-top)))',
 }
 const DESKTOP_REGION_STYLE: CSSProperties = { zIndex: 5 }
 

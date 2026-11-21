@@ -131,6 +131,7 @@ export default function UaComment(props: CommentProps) {
             <MentionText
               body={comment.body_text}
               mentions={comment.mentions}
+              censored={comment.is_censored}
               accent="var(--leaf-comment-accent)"
             />
           )}

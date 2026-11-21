@@ -193,7 +193,7 @@ export default function WowComment(props: CommentProps) {
             text={INK}
           />
         ) : (
-          <MentionText body={comment.body_text} mentions={comment.mentions} accent={PLUM} />
+          <MentionText body={comment.body_text} mentions={comment.mentions} censored={comment.is_censored} accent={PLUM} />
         )}
       </div>
 

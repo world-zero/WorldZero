@@ -1,6 +1,6 @@
 import { withAppCopy } from '../i18n'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef } from 'react'
+import { Link, NavLink } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
@@ -22,7 +22,6 @@ interface NavLinkSpec {
 // Off the initial payload: it only draws once opened.
 // Admins only: the chunk and its counts never reach a player.
 const ModControl = lazy(() => withAppCopy(import('./admin/ModControl')))
-const SignInSheet = lazy(() => import('./SignInOptions').then((m) => ({ default: m.SignInSheet })))
 
 export default function NavBar() {
   const { t } = useTranslation('common')
@@ -49,7 +48,6 @@ export default function NavBar() {
    * Two read-only pointers at one number is not ADR-0070's forbidden duplication.
    */
   const { pending_requests_count: pendingCount } = useSidebarPanels()
-  const [signInOpen, setSignInOpen] = useState(false)
 
   const links: readonly NavLinkSpec[] = [
     { to: '/', label: t('nav.home'), end: true },
@@ -80,7 +78,7 @@ export default function NavBar() {
       }}
     >
       {/* `min-h-14`: wraps at 600-767px (#3182). Shares `ShellContent`'s width cap (#1562). */}
-      <div className="max-w-[var(--shell-max-width)] mx-auto px-4 sm:px-6 min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 lg:gap-x-6">
+      <div className="max-w-[var(--shell-max-width)] mx-auto pl-[max(var(--space-lg),env(safe-area-inset-left))] pr-[max(var(--space-lg),env(safe-area-inset-right))] sm:pl-[max(var(--space-xl),env(safe-area-inset-left))] sm:pr-[max(var(--space-xl),env(safe-area-inset-right))] min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 lg:gap-x-6">
         <NavLink to="/" className="shrink-0 leading-none" style={{ textDecoration: 'none' }}>
           <span
             className="font-display italic"
@@ -173,23 +171,10 @@ export default function NavBar() {
               {/* Sign out lives in Settings' Account card (#2155). */}
             </>
           ) : (
-            /* One button opens the provider choice (#1773). */
-            <>
-              <button
-                type="button"
-                onClick={() => setSignInOpen(true)}
-                className="btn-primary"
-                aria-haspopup="dialog"
-                aria-expanded={signInOpen}
-              >
-                {t('nav.login')}
-              </button>
-              {signInOpen && (
-                <Suspense fallback={null}>
-                  <SignInSheet open onClose={() => setSignInOpen(false)} />
-                </Suspense>
-              )}
-            </>
+            /* The onboarding's sign-in view, the one sign-in screen (#1773). */
+            <Link to="/?login" className="btn-primary">
+              {t('nav.login')}
+            </Link>
           )}
         </div>
       </div>

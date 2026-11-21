@@ -26,7 +26,7 @@ from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.era import Era
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisMember
 from schemas.character import BadgeOut
 from services.duel_outcome import duel_winner
 from services.scoring import sole_tie_taker_id
@@ -166,6 +166,23 @@ async def _duel_winner_facts(
         faction_by_character = {
             character_id: (slug or "") for character_id, slug in faction_rows.all()
         }
+    # The stamp (faction held at the seal) wins over today's faction (#3873).
+    stamp_rows = await session.execute(
+        select(
+            PraxisMember.praxis_id,
+            PraxisMember.character_id,
+            PraxisMember.faction_slug,
+        ).where(
+            PraxisMember.praxis_id.in_(praxis_ids),
+            PraxisMember.faction_slug.isnot(None),
+        )
+    )
+    stamped = {(p, c): slug for p, c, slug in stamp_rows.all()}
+
+    def faction_of(praxis_id, character_id):
+        return stamped.get(
+            (praxis_id, character_id), faction_by_character.get(character_id, "")
+        )
 
     winners: set[int] = set()
     last_era_winners: set[int] = set()
@@ -189,9 +206,9 @@ async def _duel_winner_facts(
                 opponent_moderation=row.opponent_moderation,
                 forfeited_by_character_id=row.forfeited_by_character_id,
                 tie_break_winner_id=sole_tie_taker_id(
-                    faction_by_character.get(row.challenger_character_id, ""),
+                    faction_of(row.challenger_praxis_id, row.challenger_character_id),
                     row.challenger_character_id,
-                    faction_by_character.get(row.opponent_character_id, ""),
+                    faction_of(row.opponent_praxis_id, row.opponent_character_id),
                     row.opponent_character_id,
                     era,
                 ),

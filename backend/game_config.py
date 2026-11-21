@@ -195,6 +195,9 @@ class EraConfig:
 
     # Enforced in services/praxis.py
     duel_level_required: int
+    duel_challenge_lapse_days: int        # unanswered challenge → declined (#3875)
+    duel_cast_lapse_days: int             # accepted, never cast → forfeit (#3875)
+    rival_duel_bonus: int                 # flat, to a Rival duel's winner (ADR-0100)
     collaboration_level_required: int
     collab_auto_submit_days: int          # silence-is-consent days (ADR-0012)
     metatask_apply_level: int             # non-Albescent
@@ -269,6 +272,8 @@ class EraConfig:
     # These are PERKS too (#1871); _inherited_perk_slugs covers them.
     allow_praxis_on_retired_task_factions: frozenset = field(default=frozenset())
     allow_praxis_on_pending_task_factions: frozenset = field(default=frozenset())
+    # Pending perk only reaches tasks worth STRICTLY below this; None = no ceiling.
+    pending_task_praxis_points_below: int | None = None
 
     # Collab-invite carve-outs (#1511, owner ruling): an invitee may submit on a
     # task they could not claim. Enforced in invite_to_praxis (level, faction)

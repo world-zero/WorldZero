@@ -16,6 +16,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
+import { useGameConfig } from '../../hooks/useGameConfig'
 import { formatPoints } from '../../utils/points'
 
 /**
@@ -66,6 +67,8 @@ interface DuelStakes {
   tie: number
   /** Duel never happens (declined): plain solo. */
   solo: number
+  /** Flat, on top of whichever figure wins (ADR-0100); `0` off a Rival duel. */
+  rival: number
 }
 
 /** Base points for one side: server-resolved multipliers (#2865) × task points. */
@@ -79,7 +82,15 @@ export function duelStakes(
     lose: taskPointValue * me.loss_multiplier,
     tie: taskPointValue * me.tie_multiplier,
     solo: taskPointValue,
+    rival: me.rival_bonus,
   }
+}
+
+/** The rival-bonus sentence, appended to a paragraph the host already styles. */
+export function RivalBonusSentence({ points }: { points: number }) {
+  const { t } = useTranslation('praxis')
+  if (!(points > 0)) return null
+  return <> {t('duelStakes.rivalBonus', { points: formatPoints(points) })}</>
 }
 
 
@@ -176,6 +187,7 @@ export function StakesTiles({
       >
         {t('duelStakes.tieLine', { points: formatPoints(stakes.tie) })}{' '}
         {t('duelStakes.beforeVotes')}
+        <RivalBonusSentence points={stakes.rival} />
       </p>
     </div>
   )
@@ -264,6 +276,7 @@ export function useDuelSealCopy(
 ): DuelSealCopy {
   const { t } = useTranslation('praxis')
   const { me, foe } = duelSides(duel, viewerCharacterId)
+  const lapseDays = useGameConfig()?.duel_challenge_lapse_days
   // Unconditional: hooks may not sit behind the mode branch.
   const stakes = duelStakes(me, taskPointValue)
 
@@ -289,7 +302,9 @@ export function useDuelSealCopy(
     heading: t('duelSeal.heading'),
     body:
       duel.status === 'pending'
-        ? t('duelSeal.bodyPending', { name: foe.display_name })
+        ? lapseDays === undefined
+          ? t('duelSeal.bodyPendingNoDays', { name: foe.display_name })
+          : t('duelSeal.bodyPending', { name: foe.display_name, days: lapseDays })
         : t('duelSeal.bodyActive', { name: foe.display_name }),
     // Until the foe casts nothing is stuck; only once live.
     note:

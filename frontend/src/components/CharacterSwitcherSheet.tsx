@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { getMyCharacters, setActiveCharacter } from '../api/me'
 import type { CharacterOut } from '../api/auth'
+import type { RosterCharacter } from '../api/me'
 import { factionName } from '../utils/factions'
 import FactionAvatar from './avatar/FactionAvatar'
-import { useModal } from '../hooks/useModal'
-import { drawAtRoot } from './ui/drawAtRoot'
+import BottomSheet from './ui/BottomSheet'
+import './characterSwitcherSheet.css'
 
 /**
  * MOBILE active-character switcher (#516): a bottom sheet listing the account's
@@ -18,8 +19,7 @@ import { drawAtRoot } from './ui/drawAtRoot'
  * `can_create_additional_character` — hidden, not padlocked (#2111, #1560).
  * Callers hide the trigger via `rosterOffersAChoice` when there's nothing to offer.
  *
- * Drawn at the document root (#1591) to escape `ShellContent`'s stacking context;
- * see `drawAtRoot`.
+ * Drawn by `BottomSheet`, at the document root (#1591).
  */
 
 export default function CharacterSwitcherSheet({
@@ -34,15 +34,13 @@ export default function CharacterSwitcherSheet({
   const { t } = useTranslation('common')
   const { user, applyUser } = useAuth()
   const navigate = useNavigate()
-  const [lives, setLives] = useState<CharacterOut[]>([])
+  const [lives, setLives] = useState<RosterCharacter[]>([])
   const [switching, setSwitching] = useState<number | null>(null)
 
   useEffect(() => {
     if (!open) return
     void getMyCharacters().then(setLives).catch(() => setLives([]))
   }, [open])
-
-  const ref = useModal(onClose, open)
 
   if (!open) return null
 
@@ -61,12 +59,14 @@ export default function CharacterSwitcherSheet({
     }
   }
 
-  return drawAtRoot(
-    <div ref={ref} role="dialog" aria-modal="true" aria-label={t('fieldDesk.home.switcher.title')}>
-      <button type="button" aria-label={t('fieldDesk.home.switcher.close')} onClick={onClose} style={scrim} />
-      <div style={{ ...sheet, paddingBottom: 'var(--switcher-bottom, var(--space-xl))' }}>
-        <span style={grab} />
-        <div style={sheetTitle}>{t('fieldDesk.home.switcher.title')}</div>
+  return (
+    <BottomSheet
+      label={t('fieldDesk.home.switcher.title')}
+      scrimLabel={t('fieldDesk.home.switcher.close')}
+      onClose={onClose}
+      panelClass="switcher-sheet"
+    >
+      <div style={sheetTitle}>{t('fieldDesk.home.switcher.title')}</div>
 
         <CharacterSwitcherRows
           lives={lives}
@@ -81,8 +81,7 @@ export default function CharacterSwitcherSheet({
             {t('fieldDesk.home.switcher.createNew')}
           </button>
         )}
-      </div>
-    </div>
+    </BottomSheet>
   )
 }
 
@@ -93,7 +92,7 @@ export function CharacterSwitcherRows({
   onSelect,
   switching = null,
 }: {
-  lives: CharacterOut[]
+  lives: (CharacterOut & { pending_requests_count?: number })[]
   activeCharacterId: number
   onSelect: (id: number) => void
   switching?: number | null
@@ -126,6 +125,15 @@ export function CharacterSwitcherRows({
                 })}
               </span>
             </span>
+            {!!life.pending_requests_count && (
+              <span
+                className="switcher-sheet__waiting"
+                data-testid={`switcher-waiting-${life.id}`}
+                aria-label={t('fieldDesk.home.switcher.waiting', { count: life.pending_requests_count })}
+              >
+                {life.pending_requests_count}
+              </span>
+            )}
             {isActive ? (
               <span aria-hidden style={{
                 color: 'var(--faction-default-card-muted)', flex: 'none',
@@ -142,24 +150,6 @@ export function CharacterSwitcherRows({
   )
 }
 
-// Bottom-sheet band shared with `.filter-factions__*` in `components/ui/FilterBar/filterBar.css`: scrim 39, sheet 40
-// (root context, #1591) — above chrome 10, below ConfirmDialog 50 and modals 1000.
-const scrim: CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 39, border: 'none', padding: 0,
-  background: 'var(--color-overlay-strong)', cursor: 'pointer',
-}
-/** Opaque ground (#2109): `--color-bg-surface` is alpha and showed the page through. */
-const sheet: CSSProperties = {
-  position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40,
-  background: 'var(--color-bg-page)', borderRadius: '22px 22px 0 0',
-  padding: 'var(--space-md) var(--space-lg)',
-  // No --shadow-* token; the colour comes from a token (as ConfirmDialog).
-  boxShadow: '0 -12px 34px var(--color-cast-shadow)', maxHeight: '80vh', overflowY: 'auto',
-}
-const grab: CSSProperties = {
-  display: 'block', width: 38, height: 4, borderRadius: 999,
-  background: 'var(--color-border-strong)', margin: 'var(--space-xs) auto var(--space-lg)',
-}
 const sheetTitle: CSSProperties = {
   fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 'var(--text-content)',
   color: 'var(--color-text-primary)', margin: '0 var(--space-xs) var(--space-sm)',

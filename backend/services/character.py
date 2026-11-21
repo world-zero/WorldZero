@@ -461,6 +461,22 @@ async def list_account_roster(
     return rows
 
 
+async def list_sibling_lives(
+    account: Account, carried_id: int, session: AsyncSession
+) -> list[tuple[int, str]]:
+    """``(id, display_name)`` of the account's other roster lives, one query."""
+    result = await session.execute(
+        select(Character.id, Character.display_name)
+        .where(
+            Character.account_id == account.id,
+            Character.id != carried_id,
+            Character.status.in_(list(_ROSTER_STATUSES)),
+        )
+        .order_by(Character.created_at.desc())
+    )
+    return [(row.id, row.display_name) for row in result]
+
+
 async def create_character(
     account_id: int,
     data: CharacterCreate,
@@ -618,9 +634,9 @@ async def soft_delete_character(
     character.avatar_url = ""
 
     # Deferred: services.duel -> character_stats -> this module.
-    from services.duel import forfeit_settled_duels_for_character
+    from services.duel import forfeit_duels_for_character
 
-    await forfeit_settled_duels_for_character(character_id, session, era)
+    await forfeit_duels_for_character(character_id, session, era)
 
     # No-op for remote URLs or another character's file (player-written column).
     delete_stored_avatar(erased_avatar_url, character.id)

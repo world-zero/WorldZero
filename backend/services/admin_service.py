@@ -21,7 +21,13 @@ from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
-from models.roles import AccountRole, Role
+from models.roles import (
+    OWNER_ROLE_NAME,
+    AccountPermission,
+    AccountRole,
+    Permission,
+    Role,
+)
 from models.comment import Comment
 from models.contact import ContactMessage
 from models.duel import Duel, DuelStatus
@@ -34,7 +40,6 @@ from models.vote import Vote
 from schemas.admin import (
     AdminRow,
     AdminTaskPatch,
-    CharacterStatsPatch,
     CharacterSummary,
     EraOption,
     EraPreflightOut,
@@ -46,13 +51,13 @@ from schemas.admin import (
 # ``seed`` imports no service, so no cycle; it owns the mirror (runs every deploy).
 from seed import factions_leaving_roster, upsert_era_factions
 from services.faction_service import refuse_hidden_faction
-from services.character import MOD_BANNED, record_level_reached
+from services.character import MOD_BANNED
 from services.character_stats import (
     recalculate_character_stats,
     recalculate_for_account_votes,
 )
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
-from services.duel import forfeit_settled_duels_for_character
+from services.duel import forfeit_duels_collect
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.era import (
@@ -60,12 +65,11 @@ from services.era import (
     commit_and_bind_live_era,
     get_current_era_row,
     get_current_era_row_safe,
-    get_or_create_stats,
     DUELS_FROZEN_AT_ERA_CLOSE,
     lock_era_rollover,
     tasks_retired_at_era_close,
 )
-from services.scoring import compute_vote_budget, compute_votes_available
+from services.scoring import compute_votes_available
 
 logger = logging.getLogger(__name__)
 
@@ -159,15 +163,17 @@ async def list_active_characters(session: AsyncSession) -> list[Character]:
 
 
 async def find_admin_accounts(session: AsyncSession) -> list[Account]:
-    """Return accounts holding the ``admin`` role, ordered by account id."""
+    """Active accounts that are admin (owner or any permission), by account id."""
+    # Active only: `/admin/cli-token` mints for `admins[0]`, and a suspended
+    # (compromised) admin must not get a token.
+    holders = select(AccountPermission.account_id).union(
+        select(AccountRole.account_id)
+        .join(Role, Role.id == AccountRole.role_id)
+        .where(Role.name == OWNER_ROLE_NAME)
+    )
     result = await session.execute(
         select(Account)
-        .join(AccountRole, AccountRole.account_id == Account.id)
-        .join(Role, Role.id == AccountRole.role_id)
-        # Active only: `/admin/cli-token` mints for `admins[0]`, and a suspended
-        # (compromised) admin must not get a token. Matches
-        # `import_tasks_csv._first_admin_account`.
-        .where(Role.name == "admin", Account.status == AccountStatus.active)
+        .where(Account.id.in_(holders), Account.status == AccountStatus.active)
         .order_by(Account.id.asc())
     )
     return list(result.scalars().all())
@@ -252,7 +258,7 @@ async def flags_for_praxes(
     result = await session.execute(
         select(Flag, Character.display_name)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(Flag.praxis_id.in_(praxis_ids))
+        .where(Flag.praxis_id.in_(praxis_ids), Flag.resolved_at.is_(None))
         .order_by(Flag.created_at.desc())
     )
     flags_by_praxis: dict[int, list[FlagOut]] = {}
@@ -272,7 +278,7 @@ async def flags_for_comments(
     result = await session.execute(
         select(Flag, Character.display_name)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(Flag.comment_id.in_(comment_ids))
+        .where(Flag.comment_id.in_(comment_ids), Flag.resolved_at.is_(None))
         .order_by(Flag.created_at.desc())
     )
     flags_by_comment: dict[int, list[FlagOut]] = {}
@@ -368,6 +374,29 @@ async def remove_flagged_praxes_by_author(
     return len(praxis_ids)
 
 
+async def refuse_unfit_target(
+    target_account_id: int, actor_id: int, session: AsyncSession
+) -> None:
+    """Admin-on-admin guard for a ban or suspend (#3821): never yourself or an
+    owner; an admin only by the owner."""
+    if target_account_id == actor_id:
+        raise_coded(
+            409, ErrorCode.admin_cannot_target_self, "You can't do that to yourself."
+        )
+    if await dependencies.account_is_owner(target_account_id, session):
+        raise_coded(
+            409, ErrorCode.admin_cannot_target_owner, "Nobody can do that to the owner."
+        )
+    if await dependencies.account_has_admin_role(
+        target_account_id, session
+    ) and not await dependencies.account_is_owner(actor_id, session):
+        raise_coded(
+            403,
+            ErrorCode.admin_target_needs_owner,
+            "Only the owner can do that to another admin.",
+        )
+
+
 async def apply_ban(
     character: Character,
     banned: bool,
@@ -378,13 +407,15 @@ async def apply_ban(
 ) -> None:
     """Ban or un-ban a character on behalf of a moderator (#1577).
 
-    Banning forfeits settled duels (ADR-0011 §Forfeit), via the same function
-    as self-delete. Un-banning does not un-forfeit: the forfeit is sticky.
+    Banning forfeits the character's duels (ADR-0011 §Forfeit), via
+    ``forfeit_duels_collect``. Un-banning does not un-forfeit.
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
     A mod-banned life of a deleted account stays unstamped, so that is checked too.
     """
+    if banned:
+        await refuse_unfit_target(character.account_id, actor_id, session)
     account = await session.get(Account, character.account_id)
     deleted = account is not None and account.status == AccountStatus.deleted
     if not banned and (character.departed_at is not None or deleted):
@@ -394,9 +425,10 @@ async def apply_ban(
             "This character was deleted by its player and cannot be restored.",
         )
 
+    rescore_ids: set[int] = set()
     if banned:
         character.status = CharacterStatus.banned
-        await forfeit_settled_duels_for_character(character.id, session, era)
+        rescore_ids = await forfeit_duels_collect([character.id], session)
     else:
         character.status = CharacterStatus.active
 
@@ -404,49 +436,9 @@ async def apply_ban(
     await log_mod_action(
         session, actor_id, "ban" if banned else "unban", "character", character.id
     )
-    await recalculate_for_account_votes(character.account_id, session, era)
-
-
-async def set_character_stats(
-    character_id: int,
-    patch: CharacterStatsPatch,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-    *,
-    actor_id: int,
-) -> CharacterStats:
-    era_row = await get_current_era_row(session)
-
-    stats = await get_or_create_stats(
-        session,
-        character_id=character_id,
-        era_id=era_row.id,
+    await recalculate_for_account_votes(
+        character.account_id, session, era, rescore_ids
     )
-
-    if patch.level is not None:
-        stats.level = patch.level
-        character = await session.get(Character, character_id)
-        if character is not None:
-            record_level_reached(character, patch.level)
-    if patch.score is not None:
-        stats.score = patch.score
-    if patch.all_time_score is not None:
-        character = await session.get(Character, character_id)
-        if character is not None:
-            character.all_time_score = patch.all_time_score
-    if patch.votes_available is not None:
-        # Back out votes_spent so the on-read formula yields the requested value.
-        score_for_cap = patch.score if patch.score is not None else stats.score
-        cap = compute_vote_budget(score_for_cap, era)
-        stats.votes_spent_this_era = max(0, cap - patch.votes_available)
-
-    await session.flush()
-    await log_mod_action(
-        session, actor_id, "stats_edit", "character", character_id,
-        ", ".join(f"{k}={v}" for k, v in patch.model_dump(exclude_none=True).items()),
-    )
-    await session.refresh(stats)
-    return stats
 
 
 async def assign_or_revoke_role(
@@ -499,37 +491,49 @@ async def assign_or_revoke_role(
     )
 
 
-async def _admin_row(account_id: int, session: AsyncSession) -> Optional[AdminRow]:
-    """The account's lowest-id character as an :class:`AdminRow`, or None."""
-    character = (
-        await session.execute(
-            select(Character)
-            .where(Character.account_id == account_id)
-            .order_by(Character.id.asc())
-            .limit(1)
-        )
-    ).scalar_one_or_none()
-    if character is None:
-        return None
-    return AdminRow(
-        username=character.username,
-        display_name=character.display_name,
-        is_owner=account_id == dependencies.OWNER_ACCOUNT_ID,
-    )
-
-
 async def list_admins(session: AsyncSession) -> list[AdminRow]:
-    """One row per account holding admin (accounts with no character are skipped)."""
-    ids = (
-        await session.execute(
+    """One row per holder, any status, as its lowest-id character.
+
+    Unlike :func:`find_admin_accounts` this keeps suspended holders, so the owner
+    can revoke them before an unsuspend hands their powers back (#4025).
+    """
+    owners = set(
+        await session.scalars(
             select(AccountRole.account_id)
             .join(Role, Role.id == AccountRole.role_id)
-            .where(Role.name == "admin")
-            .order_by(AccountRole.account_id.asc())
+            .where(Role.name == OWNER_ROLE_NAME)
         )
-    ).scalars().all()
-    rows = [await _admin_row(i, session) for i in ids]
-    return [r for r in rows if r is not None]
+    )
+    held: dict[int, list[Permission]] = {}
+    for account_id, permission in await session.execute(
+        select(AccountPermission.account_id, AccountPermission.permission)
+    ):
+        held.setdefault(account_id, []).append(permission)
+    first_character = (
+        select(Character.account_id, func.min(Character.id).label("id"))
+        .where(Character.account_id.in_(owners | held.keys()))
+        .group_by(Character.account_id)
+        .subquery()
+    )
+    rows = await session.execute(
+        select(Character, Account.status)
+        .join(first_character, first_character.c.id == Character.id)
+        .join(Account, Account.id == Character.account_id)
+        .order_by(Character.account_id)
+    )
+    order = list(Permission)
+    return [
+        AdminRow(
+            username=character.username,
+            display_name=character.display_name,
+            is_owner=character.account_id in owners,
+            suspended=status == AccountStatus.suspended,
+            permissions=[]
+            if character.account_id in owners
+            else sorted(held.get(character.account_id, []), key=order.index),
+        )
+        for character, status in rows
+    ]
 
 
 async def _account_id_for_username(username: str, session: AsyncSession) -> int:
@@ -543,23 +547,63 @@ async def _account_id_for_username(username: str, session: AsyncSession) -> int:
     return account_id
 
 
-async def grant_admin(username: str, owner_id: int, session: AsyncSession) -> AdminRow:
-    """Owner grants admin to a character's account. Refuses an existing admin."""
-    account_id = await _account_id_for_username(username, session)
-    if await dependencies.account_has_admin_role(account_id, session):
-        raise_coded(
-            409, ErrorCode.admin_already_admin, "That account is already an admin."
+async def set_permission(
+    account_id: int,
+    permission: Permission,
+    on: bool,
+    actor_id: int,
+    session: AsyncSession,
+) -> None:
+    """Tick or untick one box; idempotent. Callers gate on the owner."""
+    held = await session.scalar(
+        select(AccountPermission).where(
+            AccountPermission.account_id == account_id,
+            AccountPermission.permission == permission,
         )
-    await assign_or_revoke_role(account_id, "admin", "grant", owner_id, session)
-    row = await _admin_row(account_id, session)
-    assert row is not None  # the username resolved through a character
-    return row
+    )
+    if on == (held is not None):
+        return
+    if on:
+        session.add(
+            AccountPermission(
+                account_id=account_id, permission=permission, granted_by_id=actor_id
+            )
+        )
+    else:
+        await session.delete(held)
+    await session.flush()
+    await log_mod_action(
+        session,
+        actor_id,
+        "permission_grant" if on else "permission_revoke",
+        "account",
+        account_id,
+        permission.value,
+    )
+
+
+async def set_admin_permission(
+    username: str,
+    permission: Permission,
+    on: bool,
+    owner_id: int,
+    session: AsyncSession,
+) -> None:
+    """Owner ticks one box; ticking the first one is how an account becomes admin."""
+    account_id = await _account_id_for_username(username, session)
+    if await dependencies.account_is_owner(account_id, session):
+        raise_coded(
+            409,
+            ErrorCode.admin_cannot_revoke_owner,
+            "The owner holds every permission.",
+        )
+    await set_permission(account_id, permission, on, owner_id, session)
 
 
 async def revoke_admin(username: str, owner_id: int, session: AsyncSession) -> None:
-    """Owner revokes admin. Refuses the owner's own account and a non-admin."""
+    """Owner clears every box. Refuses an owner account and a non-admin."""
     account_id = await _account_id_for_username(username, session)
-    if account_id == dependencies.OWNER_ACCOUNT_ID:
+    if await dependencies.account_is_owner(account_id, session):
         raise_coded(
             409,
             ErrorCode.admin_cannot_revoke_owner,
@@ -567,7 +611,8 @@ async def revoke_admin(username: str, owner_id: int, session: AsyncSession) -> N
         )
     if not await dependencies.account_has_admin_role(account_id, session):
         raise_coded(404, ErrorCode.admin_not_an_admin, "That account is not an admin.")
-    await assign_or_revoke_role(account_id, "admin", "revoke", owner_id, session)
+    for permission in await dependencies.account_permissions(account_id, session):
+        await set_permission(account_id, permission, False, owner_id, session)
 
 
 async def suspend_account(
@@ -583,8 +628,17 @@ async def suspend_account(
         raise HTTPException(status_code=404, detail="Account not found.")
     if account.status == AccountStatus.deleted:
         raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
+    if suspended:
+        await refuse_unfit_target(account_id, actor_id, session)
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    rescore_ids: set[int] = set()
+    if suspended:
+        # Same as a ban; lifting the suspension does not undo it (#3766).
+        character_ids = (await session.scalars(
+            select(Character.id).where(Character.account_id == account_id)
+        )).all()
+        rescore_ids = await forfeit_duels_collect(character_ids, session)
     await log_mod_action(
         session,
         actor_id,
@@ -592,7 +646,7 @@ async def suspend_account(
         "account",
         account_id,
     )
-    await recalculate_for_account_votes(account_id, session, era)
+    await recalculate_for_account_votes(account_id, session, era, rescore_ids)
     await session.refresh(account)
     return account
 
@@ -645,6 +699,7 @@ async def update_task_status(
     session: AsyncSession,
     *,
     actor_id: int,
+    held: frozenset[Permission],
     backdoor_opens_at: Optional[datetime] = None,
     backdoor_closes_at: Optional[datetime] = None,
 ) -> Task:
@@ -664,6 +719,19 @@ async def update_task_status(
             detail=f"Task is already {task.status.value}.",
         )
 
+    # One route spans three boxes: approving or rejecting a proposal, Delete
+    # and its undo, and everything else (retire, reactivate, backdoor).
+    if task.status == TaskStatus.pending:
+        needed = Permission.review_proposals
+    elif TaskStatus.deleted in (task.status, new_status):
+        needed = Permission.delete_import_tasks
+    else:
+        needed = Permission.manage_tasks
+    if needed not in held:
+        raise_coded(
+            403, ErrorCode.admin_permission_required, "You lack that permission."
+        )
+
     if new_status == TaskStatus.deleted:
         await _refuse_if_undeletable(task, session)
 
@@ -672,7 +740,7 @@ async def update_task_status(
         opens = backdoor_opens_at or datetime.now(timezone.utc)
         _check_backdoor_window(opens, backdoor_closes_at)
         task.backdoor_opens_at, task.backdoor_closes_at = opens, backdoor_closes_at
-    task.status = new_status
+    task.set_status(new_status)
     await session.flush()
     await log_mod_action(
         session, actor_id, "task_status", "task", task_id, new_status.value
@@ -731,9 +799,12 @@ async def admin_edit_task(
             select(PraxisMember.character_id)
             .where(PraxisMember.praxis_id.in_(doers))
             .distinct()
+            .order_by(PraxisMember.character_id)
         )
         for character_id in member_ids.all():
-            await recalculate_character_stats(character_id, session, era)
+            await recalculate_character_stats(
+                character_id, session, era, emit_taunts=False
+            )
         await session.flush()
     await log_mod_action(session, actor_id, "task_edit", "task", task_id)
     await session.refresh(task)
@@ -947,7 +1018,7 @@ async def roll_into_era(
     )
 
     for task in to_reactivate:
-        task.status = TaskStatus.active
+        task.set_status(TaskStatus.active)
     tasks_created = await sync_era_tasks(session, era_config, creator_id)
 
     # Durable first, live second; see `commit_and_bind_live_era`.

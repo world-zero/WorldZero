@@ -1,4 +1,4 @@
-/* ══ TASK DETAIL (na, Everymen, Singularity, Snide): phone vs desktop values (#3002) ══
+/* ══ TASK DETAIL (all archetypes; ornament sizes still read the hook): phone vs desktop values (#3002) ══
    Only the phone is declared; the use site's fallback is the desktop value, so nothing is
    aliased into :root. Named by role, not by value: retuning these never moves the composer
    (`--composer-*`, 09-component-shared.css). ══ */
@@ -24,6 +24,13 @@
     --detail-worth-min-default: 122px;
     --detail-worth-min-singularity: 118px;
     --detail-worth-min-snide: 132px;
+    --detail-worth-min-ua: auto;
+    --detail-worth-min-wow: 132px;
+    --detail-worth-min-coven: 148px;
+    --detail-tap-min: 44px;
+    --detail-eph-brief-pad: var(--space-lg) var(--space-lg) var(--space-md) var(--space-xl);
+    --detail-ua-btn-pad: var(--space-sm) var(--space-lg);
+    --detail-ledger-width: 116px;
     --detail-action-top: 0;
     --detail-col-flex: 1 1 auto;
     --detail-col-width: 100%;

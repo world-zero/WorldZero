@@ -31,6 +31,8 @@ export interface JoinControlSkin {
   cancelStyle: CSSProperties;
   /** A kit CSS class for the two AFFIRMATIVE buttons only (e.g. `.eph-cta`, #2146). */
   className?: string;
+  /** Same, for the quiet Cancel (the feed letter's `.feed-action`). */
+  cancelClassName?: string;
   /** The switch sentence above the pair. */
   proseStyle?: CSSProperties;
   /** Renders only after a FAILED join. */
@@ -174,6 +176,7 @@ export function JoinConfirm({
           type="button"
           data-join="cancel"
           autoFocus={autoFocus === "cancel"}
+          className={skin.cancelClassName}
           onClick={cancel}
           disabled={busy}
           style={{ ...CARD_CTA, ...skin.cancelStyle, cursor: busy ? "not-allowed" : "pointer" }}

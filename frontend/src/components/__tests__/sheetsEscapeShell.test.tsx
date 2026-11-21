@@ -27,10 +27,22 @@ vi.mock('../../api/me', () => ({
   setActiveCharacter: async () => ({}),
 }))
 
+import ShellContent from '../layout/ShellContent'
+import ConfirmDialog from '../confirm/ConfirmDialog'
+import FeedBankFullModal from '../feed/FeedBankFullModal'
 import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
 import { OptionOverlay } from '../ui/FilterBar/OptionPicker'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import type { FilterFacet } from '../ui/FilterBar/filterState'
+import BottomSheet from '../ui/BottomSheet'
+import YouSheet from '../layout/YouSheet'
+import type { CharacterOut } from '../../api/auth'
+import { ruleBodies, stripComments } from '../../utils/__tests__/cssVars'
+
+import { readIndexCss } from '../../test/indexCss'
+
+const css = stripComments(readIndexCss())
+const body = (css: string, sel: string) => ruleBodies(css, sel).join('\n')
 
 const REACT_PORTAL = Symbol.for('react.portal')
 
@@ -104,14 +116,83 @@ describe('CharacterSwitcherSheet', () => {
     expect(html).toContain('Your characters')
   })
 
-  it('clears the tab bar on the phone and nothing on the desktop rail', () => {
-    expect(switcher('mobile')).toContain('padding-bottom:var(--switcher-bottom, var(--space-xl))')
+  it('wears the switcher panel class on the phone', () => {
+    expect(switcher('mobile')).toContain('switcher-sheet')
   })
 
-  it('takes its scrim and shadow from a token, never a raw rgba', () => {
-    const html = switcher('mobile')
-    expect(html).toContain('var(--color-overlay-strong)')
-    expect(html).not.toMatch(/rgba\(/)
+  it('draws on the shared chassis', () => {
+    expect(switcher('mobile')).toContain('sheet-scrim')
+  })
+})
+
+describe('sheet paint (rule bodies)', () => {
+  it('takes its scrim and shadow from tokens, never a raw rgba', () => {
+    expect(body(css, ':where(.sheet-scrim)')).toMatch(/background:\s*var\(--color-overlay-strong\)/)
+    expect(body(css, ':where(.sheet-panel)')).toMatch(/box-shadow:[^;]*var\(--color-cast-shadow\)/)
+    expect(body(css, '.sheet-grab') + body(css, '.switcher-sheet')).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i)
+  })
+
+  it('clears the tab bar on the switcher through --switcher-bottom', () => {
+    expect(body(css, '.switcher-sheet')).toMatch(/padding-bottom:\s*var\(--switcher-bottom,/)
+  })
+
+  it('pays the bottom inset once: the chassis does, an above-tab-bar panel does not', () => {
+    expect(body(css, ':where(.sheet-panel)')).toMatch(/padding:[^;]*env\(safe-area-inset-bottom\)/)
+    const above = body(css, '.sheet-above-tabs > .sheet-panel')
+    expect(above).toMatch(/bottom:\s*var\(--tab-bar-clearance\)/)
+    expect(above).toMatch(/padding-bottom:\s*var\(--space-sm\)/)
+  })
+
+  it('pays the top inset once: the strip holds it, the phone region drops it while the strip is up', () => {
+    expect(body(css, 'html[data-mod-strip]')).toMatch(/--region-inset-top:\s*0px/)
+    expect(renderToStaticMarkup(<ShellContent isMobile sidebarCollapsed={false} onToggleSidebar={() => {}}>x</ShellContent>)).toContain(
+      'var(--space-lg) + var(--region-inset-top, env(safe-area-inset-top))',
+    )
+  })
+
+  it('pays the top inset on the mod strip', () => {
+    expect(body(css, '.mod-strip')).toMatch(/padding:\s*calc\(var\(--space-xs\) \+ env\(safe-area-inset-top\)\)/)
+  })
+})
+
+describe('BottomSheet switches', () => {
+  const sheet = (props: { aboveTabBar?: boolean; grab?: boolean }) =>
+    renderToStaticMarkup(
+      <BottomSheet label="L" scrimLabel="S" onClose={() => {}} {...props}>
+        x
+      </BottomSheet>,
+    )
+
+  it('aboveTabBar adds sheet-above-tabs; the default covers the tab bar', () => {
+    expect(sheet({ aboveTabBar: true })).toContain('sheet-above-tabs')
+    expect(sheet({})).not.toContain('sheet-above-tabs')
+  })
+
+  it('grab={false} drops the handle', () => {
+    expect(sheet({})).toContain('sheet-grab')
+    expect(sheet({ grab: false })).not.toContain('sheet-grab')
+  })
+
+  it('keeps the scrim out of the tab order', () => {
+    expect(sheet({})).toMatch(/<button[^>]*tabindex="-1"[^>]*sheet-scrim/)
+  })
+})
+
+describe('YouSheet', () => {
+  it('is a labelled dialog stopping above the tab bar', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <YouSheet
+          character={{ id: 1, username: 'ada', display_name: 'Ada', faction_slug: 'ua' } as unknown as CharacterOut}
+          pending={0}
+          isAdmin={false}
+          onClose={() => {}}
+        />
+      </MemoryRouter>,
+    )
+    expect(html).toContain('role="dialog"')
+    expect(html).toContain('sheet-above-tabs')
+    expect(html).toContain('Ada')
   })
 })
 
@@ -130,13 +211,43 @@ describe('OptionOverlay', () => {
       renderToStaticMarkup(<OptionOverlay facet={FACET} isSheet={false} onDone={() => {}} />),
     )
     expect(html).toContain('filter-factions__popover')
-    expect(html).not.toContain('filter-factions__scrim')
+    expect(html).not.toContain('sheet-scrim')
   })
 
   it('still renders the sheet and its scrim inline in the DOM-less harness', () => {
     const html = renderToStaticMarkup(<OptionOverlay facet={FACET} isSheet onDone={() => {}} />)
-    expect(html).toContain('filter-factions__scrim')
+    expect(html).toContain('sheet-scrim')
     expect(html).toContain('filter-factions__sheet')
     expect(html).toContain('aria-checked="true"')
+  })
+})
+
+describe('modals', () => {
+  const confirm = (
+    <ConfirmDialog
+      request={{ kind: 'k', title: 'T', body: 'B', confirmLabel: 'Go' }}
+      factionSlug={null}
+      onConfirm={() => {}}
+      onDismiss={() => {}}
+    />
+  )
+  const bankFull = (
+    <FeedBankFullModal
+      title="Full"
+      body="B"
+      cancelLabel="No"
+      options={[]}
+      busy={false}
+      error=""
+      onDismiss={() => {}}
+    />
+  )
+
+  it.each([
+    ['ConfirmDialog', confirm, 'role="dialog"'],
+    ['FeedBankFullModal', bankFull, 'role="dialog"'],
+  ])('%s portals with a document and renders inline without one', (_n, el, marker) => {
+    expect(() => withDocument(() => renderToStaticMarkup(el))).toThrow(/[Pp]ortal/)
+    expect(renderToStaticMarkup(el)).toContain(marker)
   })
 })

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -99,8 +100,20 @@ class Duel(CreatedAtMixin, Base):
         DateTime(timezone=True), nullable=True
     )
     # Sticky forfeit of a settled duel; resubmitting doesn't restore it (ADR-0011).
+    # Also the locked-out player of a live duel a ban/suspension ended (#3766):
+    # active, then settling on the honest side's submit; or a declined pending one.
     forfeited_by_character_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=True
+    )
+    # Set only by the lock-out path; the honest player's feed line sorts on it.
+    forfeited_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    # Stamped once at active -> settled; the duel_live feed row sorts on it, and
+    # praxis submit times can't stand in because they move on unsubmit (#3886).
+    live_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     # Frozen at era close (ADR-0052). NULL winner = tie or no-contest.
@@ -120,6 +133,10 @@ class Duel(CreatedAtMixin, Base):
         Integer, nullable=True
     )
     opponent_final_points: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # Mutual foes at accept (ADR-0100); never re-read, so edge edits can't move it.
+    rival_bonus: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
     challenger_praxis: Mapped["Praxis"] = relationship(
         "Praxis", foreign_keys=[challenger_praxis_id], lazy="selectin"

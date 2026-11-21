@@ -18,6 +18,7 @@ import {
 } from './adminTaskRows'
 import { markTaskRowDeleted } from './taskDelete'
 import { useReloadCounts } from './useAdminCounts'
+import { useCan } from '../../auth/permissions'
 
 type Segment = 'proposals' | 'active' | 'retired' | 'deleted' | 'backdoor'
 const SEGMENTS: { key: Segment; status: string }[] = [
@@ -35,6 +36,9 @@ export default function TasksTab() {
   const { pathname } = useLocation()
   const config = useGameConfig()
   const reloadCounts = useReloadCounts()
+  const can = useCan()
+  const canReview = can('proposals')
+  const canDelete = can('deleteTask')
   const [tasks, setTasks] = useState<AdminTaskRow[]>([])
   const [segment, setSegment] = useState<Segment>(pathname.endsWith('/proposals') ? 'proposals' : 'active')
   const [search, setSearch] = useState('')
@@ -48,11 +52,12 @@ export default function TasksTab() {
 
   const refresh = useCallback(() => {
     setError(null)
-    Promise.all([getAllTasks(), getPendingTasks(), getTaskIdsWithHistory()])
+    // A read the caller may not make would 403 and blank the whole tab.
+    Promise.all([getAllTasks(), canReview ? getPendingTasks() : [], canDelete ? getTaskIdsWithHistory() : []])
       .then(([all, pending, history]) => setTasks(mergeAdminTaskRows(all, pending, history)))
       .catch((err) => setError(extractError(err, t('tasks.loadError'))))
       .finally(() => setLoading(false))
-  }, [t])
+  }, [t, canReview, canDelete])
   useEffect(refresh, [refresh])
 
   // An edit or refresh can remove the picked level from the options; clear it rather than filter to nothing behind a blank select.
@@ -140,16 +145,18 @@ export default function TasksTab() {
           <h1 className="adm-h1">{t('console.tasks.title')}</h1>
           <p className="adm-lede">{t('console.tasks.lede')}</p>
         </div>
-        <button type="button" className="adm-btn adm-btn-pri" aria-expanded={importing} onClick={() => setImporting(!importing)}>
-          {t('console.tasks.importCsv')}
-        </button>
+        {canDelete && (
+          <button type="button" className="adm-btn adm-btn-pri" aria-expanded={importing} onClick={() => setImporting(!importing)}>
+            {t('console.tasks.importCsv')}
+          </button>
+        )}
       </header>
       {importing && <TaskImportPanel onImported={refresh} />}
 
       <ListToolbar
         label={t('console.tasks.toolbar')}
         search={{ value: search, onChange: setSearch, placeholder: t('console.tasks.searchPlaceholder'), label: t('console.tasks.searchLabel') }}
-        segments={SEGMENTS.map((s) => ({
+        segments={SEGMENTS.filter((s) => canReview || s.key !== 'proposals').map((s) => ({
           key: s.key,
           label: t(`console.tasks.segments.${s.key}`),
           count: tasks.filter((row) => row.status === s.status).length,

@@ -229,6 +229,7 @@
     "loseLabel": "If you lose",
     "tieLine": "A tie pays {{points}}.",
     "beforeVotes": "Base points, before crowd votes — stars add on top.",
+    "rivalBonus": "Rival duel: whoever wins, tiebreak included, takes {{points}} more on top.",
     "soloFallback": "Nothing is at stake yet. If {{name}} declines, this scores as an ordinary praxis worth {{points}}."
   },
   "duelRoster": {
@@ -241,7 +242,8 @@
     "confirm": "Lock it",
     "cancel": "Not yet",
     "bodyActive": "{{name}} has accepted. Casting now locks the duel — once you have both cast, pulling back is a permanent forfeit.",
-    "bodyPending": "{{name}} hasn't accepted yet. You can cast now; if they decline, this scores as an ordinary praxis.",
+    "bodyPending": "{{name}} hasn't accepted yet. You can cast now, but your post stays private until they answer. If they decline, or don't answer within {{days}} days, it goes up as an ordinary praxis.",
+    "bodyPendingNoDays": "{{name}} hasn't accepted yet. You can cast now, but your post stays private until they answer. If they decline, or never answer, it goes up as an ordinary praxis.",
     "reopenNote": "Until {{name}} casts, you can still pull this back for free — no forfeit."
   },
   "duelForfeit": {

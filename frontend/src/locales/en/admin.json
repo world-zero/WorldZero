@@ -9,17 +9,31 @@
   },
   "admins": {
     "heading": "Admins",
-    "lead": "Everyone who can use this page. Only you see this section.",
+    "lead": "Everyone who can use this page, and what each may do. Only you see this section.",
     "loading": "Loading admins…",
     "loadError": "Couldn't load admins.",
     "empty": "No admins.",
-    "ownerBadge": "owner",
+    "ownerAll": "Owner — every permission",
+    "suspendedBadge": "suspended",
+    "toggleError": "Could not change that permission.",
     "grantLabel": "Make an admin",
     "grantPlaceholder": "Character username",
+    "grantPermissionLabel": "Their first permission",
+    "permissions": {
+      "handle_reports": "Handle reports",
+      "ban_suspend": "Ban and suspend players",
+      "review_proposals": "Review proposals",
+      "manage_tasks": "Manage tasks",
+      "delete_import_tasks": "Delete tasks and CSV import",
+      "read_messages": "Read messages",
+      "edit_copy": "Edit site copy",
+      "small_world": "Small-world switches",
+      "roll_era": "Roll the era"
+    },
     "grantSubmit": "grant admin",
     "granting": "granting…",
     "grantError": "Could not grant admin.",
-    "revoke": "revoke",
+    "revoke": "revoke all",
     "revokeError": "Could not revoke admin.",
     "revokeConfirm": {
       "heading": "Revoke admin?",
@@ -300,7 +314,7 @@
         "remove": "Remove",
         "fail": "Doesn't meet the task",
         "failShort": "Not met",
-        "help": "Remove hides it from everyone. Doesn't meet the task leaves it up but it scores nothing. Keep clears the flags and tells nobody.",
+        "help": "Remove hides it from everyone. Doesn't meet the task leaves it up but it scores nothing. Keep closes these reports and tells nobody.",
         "reasonLabel": "Reason the author sees",
         "reasonHint": "One line, for Remove or Doesn't meet the task",
         "reasonHintComment": "One line, for Remove",
@@ -376,7 +390,9 @@
           "task_withdraw": "withdrew",
           "stats_edit": "edited the stats of",
           "role_grant": "granted a role to",
-          "role_revoke": "revoked a role from"
+          "role_revoke": "revoked a role from",
+          "permission_grant": "granted a permission to",
+          "permission_revoke": "revoked a permission from"
         }
       }
     },
@@ -566,6 +582,8 @@
         "stats_edit": "edited the stats of",
         "role_grant": "made admin",
         "role_revoke": "removed admin",
+        "permission_grant": "granted a permission to",
+        "permission_revoke": "revoked a permission from",
         "era_roll": "rolled into",
       "task_import": "imported tasks",
       "message_archive": "archived a message",

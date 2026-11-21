@@ -8,18 +8,20 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import delete, select, text, update
+from sqlalchemy import delete, event, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.character_stats import CharacterStats
-from models.praxis import Praxis, PraxisInvite, PraxisStatus
+from models.praxis import Praxis, PraxisInvite, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from services import collab_consensus
 from services import praxis as praxis_service
+from services.character_stats import _STATS_LOCK_NAMESPACE
 from services.collab_consensus import _PRAXIS_LOCK_NAMESPACE
-from services.praxis import _SIGNUP_LOCK_NAMESPACE
+from services.praxis import _SIGNUP_LOCK_NAMESPACE, PraxisSort
+from tests.integration.factories import make_character, make_duel, make_solo_praxis
 
 _PROBE = text("SELECT pg_try_advisory_xact_lock(:namespace, :key)")
 
@@ -275,3 +277,77 @@ async def test_duel_accept_holds_the_signup_lock_and_decline_does_not(
     )
     assert response.status_code == 200, response.text
     assert await _is_held(db_connection, _SIGNUP_LOCK_NAMESPACE, character.id) is accept
+
+
+def _stats_lock_spy(db_connection) -> list[int]:
+    """Character ids in the order the stats lock is taken."""
+    taken: list[int] = []
+
+    @event.listens_for(db_connection.sync_connection, "before_cursor_execute")
+    def record(conn, cursor, statement, parameters, context, executemany):
+        locking = "pg_advisory_xact_lock" in statement
+        if locking and parameters[0] == _STATS_LOCK_NAMESPACE:
+            taken.append(parameters[1])
+
+    return taken
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("sort", [PraxisSort.newest, PraxisSort.oldest])
+async def test_list_praxes_settles_in_ascending_id_whatever_the_sort(
+    sort, db_session: AsyncSession, character: Character, character2: Character,
+    active_task: Task, monkeypatch,
+):
+    first = await make_solo_praxis(db_session, active_task, character, title="a")
+    second = await make_solo_praxis(db_session, active_task, character2, title="b")
+    seen: list[int] = []
+
+    async def spy(praxis, session, era):
+        seen.append(praxis.id)
+
+    monkeypatch.setattr(collab_consensus, "settle_if_window_lapsed", spy)
+    await praxis_service.list_praxes(db_session, sort=sort)
+
+    assert seen == sorted([first.id, second.id])
+
+
+@pytest.mark.asyncio
+async def test_leave_takes_leaver_and_survivor_stats_locks_ascending(
+    client: AsyncClient, character: Character, character2: Character,
+    active_task: Task, auth_headers: dict, auth_headers2: dict, db_connection,
+):
+    """The leaver has the lower id and survivors are recalculated by the seal."""
+    assert character.id < character2.id
+    praxis_id = await _collab(
+        client, active_task, auth_headers2, auth_headers, character.id
+    )
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    taken = _stats_lock_spy(db_connection)
+
+    left = await client.post(f"/praxes/{praxis_id}/leave", headers=auth_headers)
+    assert left.status_code == 200, left.text
+
+    assert taken[:2] == [character.id, character2.id]
+
+
+@pytest.mark.asyncio
+async def test_leave_locks_duel_opponents_in_the_same_ascending_pass(
+    db_session: AsyncSession, db_connection, era, character: Character
+):
+    """The opponent's id sorts between the survivor's and the leaver's."""
+    duel, survivor, opponent = await make_duel(db_session, era, label="lv")
+    leaver = await make_character(db_session, era, username="lvleaver")
+    praxis = await db_session.get(Praxis, duel.challenger_praxis_id)
+    praxis.type = PraxisType.collab
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=leaver.id))
+    await db_session.flush()
+    ids = [survivor.id, opponent.id, leaver.id]
+    praxis_id = praxis.id
+    assert ids == sorted(ids)
+    db_session.expire_all()
+    taken = _stats_lock_spy(db_connection)
+
+    await praxis_service.leave_praxis(praxis_id, ids[2], db_session)
+
+    assert taken[:3] == ids
+    assert sorted(set(taken), key=taken.index) == sorted(set(taken))

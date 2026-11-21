@@ -12,6 +12,8 @@ from typing import Any, Callable, Optional, Sequence
 from pydantic import ValidationError
 from sqlalchemy import (
     Select,
+    Integer,
+    Label,
     String,
     and_,
     case,
@@ -40,7 +42,8 @@ from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
-from services.block_service import blocked_counterpart_ids
+from services.block_service import blocked_counterpart_ids, has_blocked
+from services.era_gates import meets_vote_level
 from services.meta_task import character_sees_metatasks
 from services.vote_tally import counted_votes
 from services.praxis_visibility import praxis_visibility_condition
@@ -55,6 +58,8 @@ from schemas.activity_feed import (
     CommentPayload,
     CompletionPayload,
     DuelChallengePayload,
+    DuelForfeitedPayload,
+    DuelLivePayload,
     EraAnnouncementPayload,
     RulesChangeEntry,
     RulesChangePayload,
@@ -118,6 +123,8 @@ FEED_ITEM_TYPE_ERA_ANNOUNCEMENT = "era_announcement"
 FEED_ITEM_TYPE_RULES_CHANGE = "rules_change"
 FEED_ITEM_TYPE_COLLAB_INVITE = "collab_invite"
 FEED_ITEM_TYPE_DUEL_CHALLENGE = "duel_challenge"
+FEED_ITEM_TYPE_DUEL_FORFEITED = "duel_forfeited"
+FEED_ITEM_TYPE_DUEL_LIVE = "duel_live"
 FEED_ITEM_TYPE_FRIEND_SIGNUP = "friend_signup"
 FEED_ITEM_TYPE_INVITATION_LETTER = "invitation_letter"
 FEED_ITEM_TYPE_FRIEND_DEFECTION = "friend_defection"
@@ -158,6 +165,8 @@ FILTER_REQUESTS = "requests"
 NEEDS_FRIEND_IDS = "friend_ids"
 NEEDS_FOE_IDS = "foe_ids"
 NEEDS_MY_TASK_IDS = "my_task_ids"
+NEEDS_FRIEND_OR_FOE_IDS = "friend_or_foe_ids"
+NEEDS_VOTE_LEVEL = "meets_vote_level"
 
 SUB_QUERY_LIMIT = 50
 ERA_ANNOUNCEMENT_LIMIT = 5
@@ -179,7 +188,8 @@ class FeedContext:
 
     ``sees_metatasks`` is the resolved boolean from
     :func:`services.meta_task.character_sees_metatasks` (#2280), not a level, so
-    no source restates the threshold.
+    no source restates the threshold. ``meets_vote_level`` is the same move for
+    :func:`services.era_gates.meets_vote_level`.
     """
     character_id: int
     friend_ids: tuple[int, ...]
@@ -189,6 +199,7 @@ class FeedContext:
     before: Optional[datetime]
     unanswered_requests_only: bool
     sees_metatasks: bool
+    meets_vote_level: bool
     answered_requests_only: bool = False
 
 
@@ -224,22 +235,21 @@ class FeedArchiveView:
 
 async def _get_related_ids(
     character_id: int,
-    rel_type: RelationshipType,
     session: AsyncSession,
-) -> list[int]:
-    """Get IDs of characters the current character has declared with this relationship type.
+) -> dict[RelationshipType, list[int]]:
+    """The characters this one has declared, per edge type, in one round trip.
 
-    Minus blocks in either direction (ADR-0077), as a subquery because the
-    statement count is pinned (``test_activity_feed_query_count``).
+    Blocks don't subtract (#3867): you still see what a blocked player does.
     """
     result = await session.execute(
-        select(Relationship.to_character_id).where(
+        select(Relationship.type, Relationship.to_character_id).where(
             Relationship.from_character_id == character_id,
-            Relationship.type == rel_type,
-            Relationship.to_character_id.not_in(blocked_counterpart_ids(character_id)),
         )
     )
-    return list(result.scalars().all())
+    related: dict[RelationshipType, list[int]] = {kind: [] for kind in RelationshipType}
+    for rel_type, to_character_id in result.all():
+        related[rel_type].append(to_character_id)
+    return related
 
 
 async def _get_my_task_ids(
@@ -469,7 +479,7 @@ def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
 def _global_tasks_query(ctx: FeedContext) -> Select:
     """Recently activated tasks (global events) — the ones newer than the reader.
 
-    Tasks created before the character are not news (#2225); per character,
+    Tasks that went live before the character are not news (#2225); per character,
     not account. ``>=`` because ``now()`` is the transaction timestamp. A
     correlated subquery so it rides the badge COUNT without a round trip.
 
@@ -487,23 +497,23 @@ def _global_tasks_query(ctx: FeedContext) -> Select:
         Task.point_value,
         Task.level_required,
         Task.primary_faction_slug,
-        Task.created_at,
+        Task.activated_at,
     ).where(
         Task.status == TaskStatus.active,
-        Task.created_at >= character_born,
+        Task.activated_at >= character_born,
     )
     if not ctx.sees_metatasks:
         query = query.where(Task.task_type != TaskType.metatask)
     if ctx.before is not None:
-        query = query.where(Task.created_at < ctx.before)
-    return query.order_by(Task.created_at.desc()).limit(SUB_QUERY_LIMIT)
+        query = query.where(Task.activated_at < ctx.before)
+    return query.order_by(Task.activated_at.desc()).limit(SUB_QUERY_LIMIT)
 
 
 def _global_task_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_GLOBAL_TASK,
         item_key=build_item_key(FEED_ITEM_TYPE_GLOBAL_TASK, row.id),
-        timestamp=row.created_at,
+        timestamp=row.activated_at,
         actor_display_name=ADMIN_ACTOR_NAME,
         actor_faction_slug=None,
         actor_avatar_url=None,
@@ -629,6 +639,8 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
         .where(
             PraxisInvite.invitee_id == ctx.character_id,
             Praxis.type == PraxisType.collab,
+            # Swallowed (#3867): never shown, counted or declined.
+            ~has_blocked(ctx.character_id, PraxisInvite.inviter_id),
         )
     )
     if ctx.unanswered_requests_only:
@@ -683,7 +695,10 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
         .join(Praxis, Duel.challenger_praxis_id == Praxis.id)
         .join(Task, Duel.task_id == Task.id)
         .join(Character, Praxis.created_by_id == Character.id)
-        .where(Duel.opponent_character_id == ctx.character_id)
+        .where(
+            Duel.opponent_character_id == ctx.character_id,
+            ~has_blocked(ctx.character_id, Character.id),
+        )
     )
     if ctx.unanswered_requests_only:
         query = query.where(Duel.status == DuelStatus.pending)
@@ -710,6 +725,134 @@ def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
             duel_status=row.status.value,
+        ),
+    )
+
+
+def _duel_forfeited_query(ctx: FeedContext) -> Select:
+    """Duels a ban/suspension ended on the viewer's behalf (#3766)."""
+    forfeiter = aliased(Character)
+    challenger_praxis = aliased(Praxis)
+    query = (
+        select(
+            Duel.id,
+            Duel.forfeited_at,
+            Task.title.label("task_title"),
+            Task.primary_faction_slug.label("task_faction_slug"),
+            case(
+                (
+                    Duel.opponent_character_id == ctx.character_id,
+                    Duel.opponent_praxis_id,
+                ),
+                else_=Duel.challenger_praxis_id,
+            ).label("praxis_id"),
+            forfeiter.display_name.label("actor_display_name"),
+            forfeiter.faction_slug.label("actor_faction_slug"),
+            forfeiter.avatar_url.label("actor_avatar_url"),
+        )
+        .join(Task, Duel.task_id == Task.id)
+        .join(forfeiter, Duel.forfeited_by_character_id == forfeiter.id)
+        .join(challenger_praxis, Duel.challenger_praxis_id == challenger_praxis.id)
+        .where(
+            Duel.forfeited_at.is_not(None),
+            Duel.forfeited_by_character_id != ctx.character_id,
+            or_(
+                Duel.opponent_character_id == ctx.character_id,
+                challenger_praxis.created_by_id == ctx.character_id,
+            ),
+        )
+    )
+    if ctx.before is not None:
+        query = query.where(Duel.forfeited_at < ctx.before)
+    return query.order_by(Duel.forfeited_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _duel_forfeited_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_DUEL_FORFEITED,
+        item_key=build_item_key(FEED_ITEM_TYPE_DUEL_FORFEITED, row.id),
+        timestamp=row.forfeited_at,
+        actor_display_name=row.actor_display_name,
+        actor_faction_slug=row.actor_faction_slug,
+        actor_avatar_url=row.actor_avatar_url,
+        payload=DuelForfeitedPayload(
+            duel_id=row.id,
+            praxis_id=row.praxis_id,
+            task_title=row.task_title,
+            task_faction_slug=row.task_faction_slug,
+        ),
+    )
+
+
+def _duel_live_query(ctx: FeedContext) -> Select:
+    """Live duels with a friend or foe on either side, one row per duel (#3886).
+
+    Not for anyone whose account owns a side (ADR-0041), which covers the
+    duelists, nor across a block with either duelist (ADR-0077).
+    """
+    challenger_praxis = aliased(Praxis)
+    challenger = aliased(Character)
+    opponent = aliased(Character)
+    edges = (*ctx.friend_ids, *ctx.foe_ids)
+    viewer_account = (
+        select(Character.account_id)
+        .where(Character.id == ctx.character_id)
+        .scalar_subquery()
+    )
+    blocked = blocked_counterpart_ids(ctx.character_id)
+    query = (
+        select(
+            Duel.id,
+            Duel.live_at,
+            Task.title.label("task_title"),
+            Task.point_value.label("task_point_value"),
+            Task.primary_faction_slug.label("task_faction_slug"),
+            challenger.id.label("challenger_character_id"),
+            challenger.display_name.label("actor_display_name"),
+            challenger.faction_slug.label("actor_faction_slug"),
+            challenger.avatar_url.label("actor_avatar_url"),
+            opponent.id.label("opponent_character_id"),
+            opponent.display_name.label("opponent_display_name"),
+            opponent.faction_slug.label("opponent_faction_slug"),
+            opponent.avatar_url.label("opponent_avatar_url"),
+        )
+        .join(challenger_praxis, Duel.challenger_praxis_id == challenger_praxis.id)
+        .join(challenger, challenger_praxis.created_by_id == challenger.id)
+        .join(opponent, Duel.opponent_character_id == opponent.id)
+        .join(Task, Duel.task_id == Task.id)
+        .where(
+            Duel.status == DuelStatus.settled,
+            Duel.live_at.is_not(None),
+            or_(challenger.id.in_(edges), opponent.id.in_(edges)),
+            challenger.account_id != viewer_account,
+            opponent.account_id != viewer_account,
+            challenger.id.not_in(blocked),
+            opponent.id.not_in(blocked),
+        )
+    )
+    if ctx.before is not None:
+        query = query.where(Duel.live_at < ctx.before)
+    return query.order_by(Duel.live_at.desc()).limit(SUB_QUERY_LIMIT)
+
+
+def _duel_live_item(row: Any) -> ActivityFeedItemDC:
+    return ActivityFeedItemDC(
+        type=FEED_ITEM_TYPE_DUEL_LIVE,
+        item_key=build_item_key(FEED_ITEM_TYPE_DUEL_LIVE, row.id),
+        timestamp=row.live_at,
+        actor_display_name=row.actor_display_name,
+        actor_faction_slug=row.actor_faction_slug,
+        actor_avatar_url=row.actor_avatar_url,
+        payload=DuelLivePayload(
+            duel_id=row.id,
+            challenger_character_id=row.challenger_character_id,
+            opponent_character_id=row.opponent_character_id,
+            opponent_display_name=row.opponent_display_name,
+            opponent_faction_slug=row.opponent_faction_slug,
+            opponent_avatar_url=row.opponent_avatar_url,
+            task_title=row.task_title,
+            task_point_value=row.task_point_value,
+            task_faction_slug=row.task_faction_slug,
         ),
     )
 
@@ -864,6 +1007,11 @@ _COMMENT_COLUMNS = (
 )
 
 
+def _censored(ctx: FeedContext) -> Label[bool]:
+    """Viewer blocked the author (#3867): the item keeps its shape, not its text."""
+    return has_blocked(ctx.character_id, Comment.created_by_id).label("is_censored")
+
+
 def _mentions_the_viewer(ctx: FeedContext):
     """Does this comment name the viewer? Correlated on ``Comment.id``.
 
@@ -880,7 +1028,7 @@ def _mentions_the_viewer(ctx: FeedContext):
 def _comment_mentions_query(ctx: FeedContext) -> Select:
     """Comments that @mention the current character (visible, non-withdrawn)."""
     query = (
-        select(*_COMMENT_COLUMNS)
+        select(*_COMMENT_COLUMNS, _censored(ctx))
         .join(CommentMention, CommentMention.comment_id == Comment.id)
         .join(Character, Comment.created_by_id == Character.id)
         .where(
@@ -905,7 +1053,7 @@ def _comments_on_mine_query(ctx: FeedContext) -> Select:
     signal) stands. Visibility mirrors the mention query.
     """
     query = (
-        select(*_COMMENT_COLUMNS)
+        select(*_COMMENT_COLUMNS, _censored(ctx))
         .join(Praxis, Comment.praxis_id == Praxis.id)
         .join(Character, Comment.created_by_id == Character.id)
         .where(
@@ -942,7 +1090,10 @@ def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]
                 # Exactly one is set (DB CHECK, migration 0005).
                 praxis_id=row.praxis_id,
                 task_id=row.task_id,
-                excerpt=row.body_text[:COMMENT_EXCERPT_LENGTH],
+                excerpt=(
+                    "" if row.is_censored else row.body_text[:COMMENT_EXCERPT_LENGTH]
+                ),
+                is_censored=row.is_censored,
             ),
         )
 
@@ -1113,6 +1264,7 @@ def _nudge_query(ctx: FeedContext) -> Select:
         )
         .where(
             Nudge.to_character_id == ctx.character_id,
+            ~has_blocked(ctx.character_id, Nudge.from_character_id),
             PraxisMember.has_approved.is_(False),
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
@@ -1219,6 +1371,22 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         needs=frozenset(),
         query=_duel_challenges_query,
         to_item=_duel_challenge_item,
+        source_id_column=Duel.id,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_DUEL_FORFEITED,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_duel_forfeited_query,
+        to_item=_duel_forfeited_item,
+        source_id_column=Duel.id,
+    ),
+    FeedSource(
+        item_type=FEED_ITEM_TYPE_DUEL_LIVE,
+        filters=frozenset({FILTER_ALL, FILTER_FRIENDS, FILTER_FOES}),
+        needs=frozenset({NEEDS_FRIEND_OR_FOE_IDS, NEEDS_VOTE_LEVEL}),
+        query=_duel_live_query,
+        to_item=_duel_live_item,
         source_id_column=Duel.id,
     ),
     FeedSource(
@@ -1399,6 +1567,10 @@ def _needs_satisfied(source: FeedSource, ctx: FeedContext) -> bool:
     if NEEDS_FOE_IDS in source.needs and not ctx.foe_ids:
         return False
     if NEEDS_MY_TASK_IDS in source.needs and not ctx.my_task_ids:
+        return False
+    if NEEDS_FRIEND_OR_FOE_IDS in source.needs and not (ctx.friend_ids or ctx.foe_ids):
+        return False
+    if NEEDS_VOTE_LEVEL in source.needs and not ctx.meets_vote_level:
         return False
     return True
 
@@ -1647,21 +1819,23 @@ async def _build_fetch_context(
 ) -> tuple[FeedContext, FeedArchiveView]:
     """The pre-fetch phase: everything a source's query needs, resolved once.
 
-    Six sequential round trips, per call (the rail's panels share one, #1344).
+    Five sequential round trips, per call (the rail's panels share one, #1344).
     The level is a round trip on purpose (#2280): the metatask gate is a rule in
     :func:`character_sees_metatasks`, not to be restated in SQL.
     ``unanswered_requests_only`` follows live/archived only (see ``FeedContext``).
     """
     archive_view = await get_archive_view(character_id, session, archived_only=archived)
-    friend_ids = tuple(await _get_related_ids(character_id, RelationshipType.friend, session))
-    foe_ids = tuple(await _get_related_ids(character_id, RelationshipType.foe, session))
+    related = await _get_related_ids(character_id, session)
+    friend_ids = tuple(related[RelationshipType.friend])
+    foe_ids = tuple(related[RelationshipType.foe])
     my_task_ids = tuple(await _get_my_task_ids(character_id, session))
     era_row = await get_current_era_row(session)
+    era = era_config_for_key(era_row.config_key)
     # No stats row this era = level 0.
-    # One round trip: level (outer-joined, NULL = no stats row) + faction.
-    viewer_level, viewer_faction = (
+    # One round trip: level (outer-joined, NULL = no stats row), faction, peak.
+    viewer_level, viewer_faction, viewer_peak_level = (
         await session.execute(
-            select(CharacterStats.level, Character.faction_slug)
+            select(CharacterStats.level, Character.faction_slug, Character.peak_level)
             .select_from(Character)
             .outerjoin(
                 CharacterStats,
@@ -1682,10 +1856,9 @@ async def _build_fetch_context(
             before=before_cursor,
             unanswered_requests_only=not archived,
             sees_metatasks=character_sees_metatasks(
-                viewer_level or 0,
-                viewer_faction,
-                era_config_for_key(era_row.config_key),
+                viewer_level or 0, viewer_faction, era
             ),
+            meets_vote_level=meets_vote_level(viewer_peak_level, era),
         ),
         archive_view,
     )
@@ -1728,16 +1901,62 @@ async def get_sidebar_feed(
     recent_activity = await _fetch_sources(
         sources_for(FILTER_ALL), fetch_ctx, archive_view, session, stream=True
     )
-    request_counts = await _count_sources(
-        sources_for(FILTER_REQUESTS), fetch_ctx, archive_view, session
-    )
+    pending = await _count_requests([(character_id, fetch_ctx, archive_view)], session)
 
     recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
     return (
-        sum(request_counts.values()),
+        pending[character_id],
         recent_activity[:SIDEBAR_ACTIVITY_LIMIT],
         len(recent_activity),
     )
+
+
+def _request_sources() -> list[FeedSource]:
+    visible = _visible_types(FILTER_REQUESTS, archived=False)
+    return [source for source in FEED_SOURCES if source.item_type in visible]
+
+
+async def _count_requests(
+    scopes: Sequence[tuple[int, FeedContext, FeedArchiveView]],
+    session: AsyncSession,
+) -> dict[int, int]:
+    """The one pending-request counter: one UNION round trip for all characters.
+
+    The caller's per-character ``_build_fetch_context`` pre-fetch (6 round trips
+    each) happens before this and is not batched.
+    """
+    counts = {character_id: 0 for character_id, _, _ in scopes}
+    branches = []
+    for character_id, ctx, archive_view in scopes:
+        for source in _request_sources():
+            query = _scoped_query(source, ctx, archive_view)
+            if query is not None:
+                branches.append(
+                    select(
+                        literal(character_id, Integer).label("character_id"),
+                        func.count().label("count"),
+                    ).select_from(query.subquery())
+                )
+    if branches:
+        for character_id, count in (await session.execute(union_all(*branches))).all():
+            counts[character_id] += int(count)
+    return counts
+
+
+async def pending_requests_counts(
+    character_ids: Sequence[int], session: AsyncSession
+) -> dict[int, int]:
+    """Each character's pending-request count: the sidebar badge's number.
+
+    Request types only and never muted (#1047), so it equals ``counts.requests``.
+    """
+    scopes = []
+    for character_id in character_ids:
+        ctx, archive_view = await _build_fetch_context(
+            character_id, session, before_cursor=None, archived=False
+        )
+        scopes.append((character_id, ctx, archive_view))
+    return await _count_requests(scopes, session)
 
 
 async def get_activity_feed(

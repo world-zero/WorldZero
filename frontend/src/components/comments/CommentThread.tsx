@@ -222,6 +222,7 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
           <MentionText
             body={comment.body_text}
             mentions={comment.mentions}
+            censored={comment.is_censored}
             accent={accent}
             rainbow
           />

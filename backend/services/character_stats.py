@@ -1,13 +1,12 @@
 """Service for recomputing and persisting CharacterStats from current vote data."""
 
 import dataclasses
+from collections.abc import Iterable
 from decimal import Decimal
-from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
 
 from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
@@ -45,9 +44,9 @@ from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
 from services.push import notify_invitation_letter, notify_level_up
 
-#: Advisory-lock namespace (signup 0x5A19, vote 0x5A1A, praxis 0x5A1B, in
-#: ``collab_consensus``);
-#: the last lock a transaction takes.
+#: Advisory-lock namespace; the last a transaction takes, after signup 0x5A19
+#: (``praxis``), vote 0x5A1A (``vote``) and per-praxis 0x5A1B (``collab_consensus``).
+#: One transaction locking several characters takes them ascending.
 _STATS_LOCK_NAMESPACE = 0x5A1C
 
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset(
@@ -57,26 +56,24 @@ _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset(
 def _era_window_condition(
     era_row: Era,
     next_era_row: Era | None,
-    timestamp_column: InstrumentedAttribute[Any] = Praxis.submitted_at,
 ) -> ColumnElement[bool]:
-    """``[era.started_at, next_era.started_at)`` on ``timestamp_column`` (#1345).
+    """``[era.started_at, next_era.started_at)`` on ``Praxis.submitted_at`` (#1345).
 
     Same bound as :class:`services.praxis.PraxisEraScope` (#1362). A NULL
     timestamp counts for the live era only, so corrupt rows cannot zero a score
-    or score once per era. The vote budget passes ``Vote.created_at``: it is a
-    cast-time fact.
+    or score once per era.
 
     ponytail: seal time, as Praxis has no era column; collapses to
     ``Praxis.era_id == era_row.id`` once #1398 stamps it (votes still need this).
     """
     if next_era_row is None:
         return or_(
-            timestamp_column.is_(None),
-            timestamp_column >= era_row.started_at,
+            Praxis.submitted_at.is_(None),
+            Praxis.submitted_at >= era_row.started_at,
         )
     return and_(
-        timestamp_column >= era_row.started_at,
-        timestamp_column < next_era_row.started_at,
+        Praxis.submitted_at >= era_row.started_at,
+        Praxis.submitted_at < next_era_row.started_at,
     )
 
 
@@ -202,6 +199,16 @@ async def _scored_praxes(
     return list(solo_result.scalars().all()) + list(collab_result.scalars().all())
 
 
+async def lock_character_stats(
+    character_ids: Iterable[int], session: AsyncSession
+) -> None:
+    """Take the stats lock for each id, ascending; re-taking one is free."""
+    for character_id in sorted(set(character_ids)):
+        await session.execute(
+            select(func.pg_advisory_xact_lock(_STATS_LOCK_NAMESPACE, character_id))
+        )
+
+
 async def recalculate_character_stats(
     character_id: int,
     session: AsyncSession,
@@ -217,14 +224,15 @@ async def recalculate_character_stats(
     cast in it on older praxes (ADR-0099). A past ``era_row`` is a no-op unless
     ``rescore_closed`` (the roll re-scoring duels it just froze).
     Also the ADR-0068 taunt hook; pass ``emit_taunts=False`` from backfills.
+    Takes the character's stats lock; a caller rescoring several characters (a
+    praxis's members and its duel opponents) goes ascending, see
+    :func:`recalculate_members_stats`.
     """
     if era_row is None:
         era_row = await get_current_era_row(session)
 
     # Concurrent recalcs each read their own snapshot; last commit would win.
-    await session.execute(
-        select(func.pg_advisory_xact_lock(_STATS_LOCK_NAMESPACE, character_id))
-    )
+    await lock_character_stats([character_id], session)
     author = await session.get(Character, character_id)
     if author is None:
         return
@@ -270,13 +278,15 @@ async def recalculate_character_stats(
     score_delta = total_score - stats.score
     previous_score = stats.score
     previous_level = stats.level
+    previous_era_peak = stats.era_peak_level
     stats.score = total_score
     stats.level = compute_level(total_score, era)
     record_level_reached(author, stats.level)
+    stats.era_peak_level = max(previous_era_peak, stats.level)
     if score_delta:
         author.all_time_score += score_delta
 
-    if emit_taunts and stats.level > previous_level:
+    if emit_taunts and stats.level > previous_era_peak:
         await notify_level_up(session, author)
 
     if emit_taunts and score_delta:
@@ -289,6 +299,10 @@ async def recalculate_character_stats(
             old_level=previous_level,
             new_level=stats.level,
         )
+
+    # A closed era is history: no new letters or stamps stamped with it.
+    if rescore_closed:
+        return
 
     await deliver_earned_invitations(
         author, all_praxes, contributions, session, era, era_row
@@ -308,6 +322,7 @@ async def recalculate_members_stats(
     era: EraConfig = CURRENT_ERA,
     *,
     era_row: Era | None = None,
+    emit_taunts: bool = True,
 ) -> None:
     """Recalculate every member of ``praxis`` and its duel opponents, then flush (#492).
 
@@ -324,6 +339,7 @@ async def recalculate_members_stats(
         session,
         era,
         era_row,
+        emit_taunts=emit_taunts,
     )
 
 
@@ -333,6 +349,8 @@ async def _recalculate_with_duel_opponents(
     session: AsyncSession,
     era: EraConfig,
     era_row: Era,
+    *,
+    emit_taunts: bool = True,
 ) -> None:
     """Members of ``praxis_ids`` and their duel opponents, once, ascending id."""
     ids = await with_duel_opponents(praxis_ids, session)
@@ -341,7 +359,9 @@ async def _recalculate_with_duel_opponents(
     )
     character_ids = extra_character_ids | set(members.scalars().all())
     for character_id in sorted(character_ids):
-        await recalculate_character_stats(character_id, session, era, era_row=era_row)
+        await recalculate_character_stats(
+            character_id, session, era, era_row=era_row, emit_taunts=emit_taunts
+        )
     await session.flush()
 
 
@@ -349,19 +369,24 @@ async def recalculate_for_account_votes(
     account_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    extra_character_ids: frozenset[int] | set[int] = frozenset(),
 ) -> None:
     """Re-score every praxis ``account_id`` voted on, after a moderation flip.
 
     Tallies skip moderated voters on read, so stored scores must follow.
+    ``extra_character_ids`` join the same ascending pass: advisory locks are
+    held to commit, so a second pass could lock out of order. Silent (ADR-0068).
     """
     voted = await session.execute(
         select(Vote.praxis_id).where(Vote.voter_account_id == account_id)
     )
     praxis_ids = set(voted.scalars().all())
-    if not praxis_ids:
+    if not praxis_ids and not extra_character_ids:
         return
     live = await get_current_era_row(session)
-    await _recalculate_with_duel_opponents(praxis_ids, set(), session, era, live)
+    await _recalculate_with_duel_opponents(
+        praxis_ids, set(extra_character_ids), session, era, live, emit_taunts=False
+    )
 
 
 @dataclasses.dataclass(frozen=True)

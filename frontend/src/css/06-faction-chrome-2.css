@@ -1613,3 +1613,13 @@
     align-items: center;
   }
 }
+
+/* Directory tile: the longer name steps down to its column instead of
+   splitting mid-word. !important beats the inline display size on the name span. */
+.alb-moves [data-select-slot="band"] {
+  container-type: inline-size;
+}
+.alb-moves [data-select-slot="band"] > span:nth-child(2) {
+  font-size: min(var(--text-display), calc((100cqw - var(--space-3xl) * 2.2) / 7)) !important;
+  overflow-wrap: normal !important;
+}

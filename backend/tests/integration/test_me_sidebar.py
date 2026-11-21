@@ -6,14 +6,17 @@ Load-bearing: the activity-feed fan-out runs once, not once per panel.
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.activity_feed as activity_feed_service
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
+from models.account import Account
 from models.character import Character
 from models.duel import Duel, DuelStatus
 from models.era import Era
+from models.faction import Faction
 from models.invitation_letter import InvitationLetter
 from models.praxis import (
     Praxis,
@@ -26,8 +29,13 @@ from models.praxis import (
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import REQUEST_ITEM_TYPES
-from tests.integration.factories import DEFAULT_FACTION_SLUG
+from tests.integration.factories import (
+    DEFAULT_FACTION_SLUG,
+    make_task,
+    raise_to_duel_level,
+)
 from tests.integration.query_capture import capture_selects
+from tests.integration.test_multi_character import _add_character
 
 #: Any live faction other than the fixtures' default; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
@@ -83,6 +91,10 @@ async def test_sidebar_returns_all_three_panels(
     data = response.json()
 
     assert data["pending_requests_count"] == 1
+    counts = await activity_feed_service.pending_requests_counts(
+        [character.id], db_session
+    )
+    assert counts[character.id] == data["pending_requests_count"]
     # Membership, not equality: the panel also carries the era announcement.
     assert "global_task" in [item["type"] for item in data["global_activity"]]
     assert [praxis["id"] for praxis in data["active_praxes"]] == [mine.id]
@@ -91,7 +103,11 @@ async def test_sidebar_returns_all_three_panels(
 #: SELECTs for one rail read on a character with no activity (measured). One
 #: more fan-out, or a badge count the rail never draws, breaks the exact pin.
 #: +3 (#3456): collab, duel and letter now also fetch their answered rows.
-SIDEBAR_SELECT_BUDGET = 25
+#: +1 (#3766): duel_forfeited.
+#: +1 (#3875): the lapsed-duel sweep.
+#: +1 (#3776): the sibling-lives list; counts only run when a sibling exists.
+#: -1 (#3886): friend and foe edges share one pre-fetch round trip.
+SIDEBAR_SELECT_BUDGET = 27
 
 
 @pytest.mark.asyncio
@@ -108,6 +124,62 @@ async def test_sidebar_stays_inside_its_query_budget(
     assert response.status_code == 200
 
     assert len(selects) == SIDEBAR_SELECT_BUDGET, (
+        f"/me/sidebar ran {len(selects)} SELECTs"
+    )
+
+
+#: SELECTs for one rail read when the account has ONE sibling life holding a
+#: pending request (measured): 27 (the no-sibling read, which already pays the
+#: sibling-list query) + 5 `_build_fetch_context` round trips for the sibling
+#: + 1 UNION count = 33. Each further sibling adds 5.
+SIDEBAR_ONE_SIBLING_SELECT_BUDGET = 33
+
+
+@pytest.mark.asyncio
+async def test_sidebar_with_one_pending_sibling_stays_inside_its_budget(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    era: Era,
+    some_faction: Faction,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """The sibling pre-fetch costs per life (#3988); a second sibling adds more."""
+    collab = Praxis(
+        task_id=active_task.id,
+        created_by_id=character2.id,
+        type=PraxisType.collab,
+        status=PraxisStatus.in_progress,
+        title="Collab",
+        body_text="x",
+    )
+    db_session.add(collab)
+    await db_session.flush()
+    db_session.add(
+        PraxisInvite(
+            praxis_id=collab.id,
+            inviter_id=character2.id,
+            invitee_id=character.id,
+            status=PraxisInviteStatus.pending,
+        )
+    )
+    carried = await _add_character(
+        db_session, account, era, username="carriedlife", level=5
+    )
+    await db_session.commit()
+    await client.post(
+        "/me/active-character", json={"character_id": carried.id}, headers=auth_headers
+    )
+
+    with capture_selects() as selects:
+        response = await client.get("/me/sidebar", headers=auth_headers)
+    assert response.status_code == 200
+    assert len(response.json()["other_lives_pending"]) == 1
+
+    assert len(selects) == SIDEBAR_ONE_SIBLING_SELECT_BUDGET, (
         f"/me/sidebar ran {len(selects)} SELECTs"
     )
 
@@ -131,6 +203,7 @@ async def test_sidebar_without_a_character_is_empty(
     assert response.status_code == 200
     assert response.json() == {
         "pending_requests_count": 0,
+        "other_lives_pending": [],
         "global_activity": [],
         "global_activity_count": 0,
         "active_praxes": [],
@@ -156,6 +229,7 @@ async def test_activity_count_is_the_whole_panel_not_the_five_item_glance(
             point_value=10,
             level_required=0,
             status=TaskStatus.active,
+            activated_at=func.now(),
             created_by_id=character.id,
             primary_faction_slug=DEFAULT_FACTION_SLUG,
         )
@@ -256,6 +330,8 @@ async def four_request_types(
     # Creator's member row too: an obligation needs another party (#1980).
     my_turn = praxis(character2.id, PraxisType.collab, "My turn")
     already_filed = praxis(character2.id, PraxisType.collab, "Already filed")
+    await raise_to_duel_level(db_session, character.id)
+    other_task = await make_task(db_session, character2)
     db_session.add_all([
         open_collab, answered_collab, shut_collab, open_duel_praxis,
         answered_duel_praxis, answered_duel_reply, my_turn, already_filed,
@@ -282,7 +358,8 @@ async def four_request_types(
             status=PraxisInviteStatus.pending,
         ),
         Duel(
-            task_id=active_task.id,
+            # Another task: `character` is already on active_task via the reply.
+            task_id=other_task.id,
             challenger_praxis_id=open_duel_praxis.id,
             opponent_character_id=character.id,
             status=DuelStatus.pending,

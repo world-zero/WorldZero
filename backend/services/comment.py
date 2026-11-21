@@ -19,10 +19,11 @@ from models.flag import Flag, FlagReason
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
+from services.block_service import blocked_by
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_comment
 from services.mod_log import log_mod_action
-from services.praxis import account_already_flagged, can_view_praxis
+from services.praxis import account_already_flagged, can_view_praxis, resolve_flags
 from services.push import notify_comment
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.
@@ -310,7 +311,9 @@ async def flag_comment(
     await session.flush()
 
     count_result = await session.execute(
-        select(func.count()).select_from(Flag).where(Flag.comment_id == comment.id)
+        select(func.count())
+        .select_from(Flag)
+        .where(Flag.comment_id == comment.id, Flag.resolved_at.is_(None))
     )
     if count_result.scalar_one() >= era.comment_flag_review_threshold:
         comment.moderation_status = ModerationStatus.flagged
@@ -341,6 +344,8 @@ async def moderate_comment(
             "That comment was already deleted. Nothing was changed.",
         )
     comment.moderation_status = status
+    if status != ModerationStatus.flagged:
+        await resolve_flags(session, Flag.comment_id == comment_id)
     removed = comment.moderation_status in (
         ModerationStatus.hidden,
         ModerationStatus.deleted,
@@ -364,18 +369,38 @@ async def list_flagged_comments(session: AsyncSession) -> list[Comment]:
     return list(result.scalars().all())
 
 
+async def list_comment_outs(
+    *,
+    praxis_id: Optional[int] = None,
+    task_id: Optional[int] = None,
+    session: AsyncSession,
+    viewer_id: Optional[int] = None,
+) -> list[CommentOut]:
+    """A thread as the viewer reads it: authors they blocked come back censored."""
+    comments = await list_comments(
+        praxis_id=praxis_id, task_id=task_id, session=session, viewer_id=viewer_id
+    )
+    blocked = await blocked_by(viewer_id, session) if viewer_id is not None else set()
+    return [
+        build_comment_out(comment, viewer_id, censored=comment.created_by_id in blocked)
+        for comment in comments
+    ]
+
+
 def build_comment_out(
-    comment: Comment, viewer_id: Optional[int] = None
+    comment: Comment, viewer_id: Optional[int] = None, *, censored: bool = False
 ) -> CommentOut:
     """API shape; needs created_by + mentions loaded. Shared by both routers.
 
-    The moderator's reason goes to the author alone.
+    The moderator's reason goes to the author alone. ``censored`` (#3867) drops
+    the body server-side: blanking it in the client would still ship it.
     """
     return CommentOut(
         id=comment.id,
         praxis_id=comment.praxis_id,
         task_id=comment.task_id,
-        body_text=comment.body_text,
+        body_text="" if censored else comment.body_text,
+        is_censored=censored,
         is_edited=comment.is_edited,
         created_at=comment.created_at,
         updated_at=comment.updated_at,
@@ -388,5 +413,6 @@ def build_comment_out(
                 display_name=mention.mentioned_character.display_name,
             )
             for mention in comment.mentions
+            if not censored
         ],
     )

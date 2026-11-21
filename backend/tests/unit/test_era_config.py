@@ -192,6 +192,8 @@ def test_era_2_inherits_every_other_rule_from_era_1():
         "dials",
         # Metamorphosis has no Ephemerists, so this set is empty.
         "allow_praxis_on_retired_task_factions",
+        "allow_praxis_on_pending_task_factions",
+        "pending_task_praxis_points_below",
     }
 
 

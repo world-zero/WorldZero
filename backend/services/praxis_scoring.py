@@ -22,6 +22,7 @@ from services.scoring import (
     compute_duel_multiplier,
     compute_faction_multiplier,
     compute_praxis_score,
+    sole_tie_taker_id,
 )
 from services.vote_tally import VoteTally, get_tally, tally_votes
 
@@ -32,9 +33,11 @@ class Contribution:
 
     total = base_points × faction_multiplier × duel_multiplier
             + metatask_points + points_from_votes + habit_bonus_points
+            + rival_bonus_points
 
     Only ``base_points`` multiplies (ADR-0086). ``habit_bonus_points`` is the
-    value stamped at seal time (#1617), never recomputed.
+    value stamped at seal time (#1617), never recomputed. ``rival_bonus_points``
+    goes to a Rival duel's current winner (ADR-0100).
     """
 
     base_points: int
@@ -44,6 +47,7 @@ class Contribution:
     points_from_votes: int
     habit_bonus_points: int
     total: float
+    rival_bonus_points: int = 0
 
 
 async def compute_contributions(
@@ -157,11 +161,24 @@ async def compute_owner_contributions(
         if owner_by_praxis[pid].id == member_id
     }
 
+    # Faction each member held at the seal (#3873): defection never reprices the
+    # past. Null stamps (unsealed rows) fall back to the live faction.
+    stamp_result = await session.execute(
+        select(
+            PraxisMember.praxis_id,
+            PraxisMember.character_id,
+            PraxisMember.faction_slug,
+        ).where(PraxisMember.praxis_id.in_(set(praxis_ids) | opponent_praxis_ids))
+    )
+    stamped_faction = {(pid, cid): f for pid, cid, f in stamp_result.all()}
+
     contributions: dict[int, Contribution] = {}
 
     for praxis in praxes:
         character = owner_by_praxis[praxis.id]
-        character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
+        character_faction = (
+            stamped_faction.get((praxis.id, character.id)) or character.faction_slug
+        ) or UNAFFILIATED_FACTION_SLUG
         task = tasks_by_id.get(praxis.task_id)
         if task is None:
             continue
@@ -171,6 +188,7 @@ async def compute_owner_contributions(
         base_points = task.point_value
         metatask_points = meta_points.get(praxis.id, 0)
         habit_bonus_points = habit_bonus_by_praxis.get(praxis.id, 0)
+        rival_bonus_points = 0
 
         if praxis.type == PraxisType.collab:
             faction_multiplier = compute_faction_multiplier(
@@ -193,7 +211,11 @@ async def compute_owner_contributions(
             if opp_praxis is not None:
                 opp_char = opp_characters_by_id.get(opp_praxis.created_by_id)
                 if opp_char is not None:
-                    opponent_faction = opp_char.faction_slug or UNAFFILIATED_FACTION_SLUG
+                    opponent_faction = (
+                        stamped_faction.get((opp_praxis.id, opp_char.id))
+                        or opp_char.faction_slug
+                        or UNAFFILIATED_FACTION_SLUG
+                    )
 
             faction_multiplier = compute_faction_multiplier(
                 character_faction, task_faction, era,
@@ -230,7 +252,19 @@ async def compute_owner_contributions(
                     challenger_moderation=challenger_moderation,
                     opponent_moderation=opponent_moderation,
                     forfeited_by_character_id=duel.forfeited_by_character_id,
+                    # Names the tie-taker so the rival bonus can follow it; the
+                    # multiplier below comes out the same either way (#2664).
+                    tie_break_winner_id=sole_tie_taker_id(
+                        character_faction, character.id,
+                        opponent_faction,
+                        duel.opponent_character_id
+                        if challenger_character_id == character.id
+                        else challenger_character_id,
+                        era,
+                    ),
                 )
+            if duel.rival_bonus and winner_character_id == character.id:
+                rival_bonus_points = era.rival_duel_bonus
             duel_multiplier = compute_duel_multiplier(
                 character_faction,
                 opponent_faction,
@@ -253,6 +287,7 @@ async def compute_owner_contributions(
             meta_task_points=metatask_points,
             duel_multiplier=duel_multiplier,
             habit_bonus=habit_bonus_points,
+            rival_bonus=rival_bonus_points,
         )
 
         contributions[praxis.id] = Contribution(
@@ -263,6 +298,7 @@ async def compute_owner_contributions(
             points_from_votes=own_tally.points_from_votes,
             habit_bonus_points=habit_bonus_points,
             total=total,
+            rival_bonus_points=rival_bonus_points,
         )
 
     return contributions

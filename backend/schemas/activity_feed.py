@@ -106,6 +106,30 @@ class DuelChallengePayload(FeedPayloadBase):
     duel_status: str
 
 
+class DuelForfeitedPayload(FeedPayloadBase):
+    """The viewer's duel ended because the other player was locked out (#3766)."""
+
+    duel_id: int
+    praxis_id: Optional[int]
+    task_title: str
+    task_faction_slug: str
+
+
+class DuelLivePayload(FeedPayloadBase):
+    """A friend or foe's duel just opened for votes (#3886). The item's actor is
+    the challenger."""
+
+    duel_id: int
+    challenger_character_id: int
+    opponent_character_id: int
+    opponent_display_name: str
+    opponent_faction_slug: str
+    opponent_avatar_url: str
+    task_title: str
+    task_point_value: int
+    task_faction_slug: str
+
+
 class FriendSignupPayload(FeedPayloadBase):
     """A friend joined a task the viewer is also doing."""
 
@@ -146,6 +170,8 @@ class CommentPayload(FeedPayloadBase):
     praxis_id: Optional[int] = None
     task_id: Optional[int] = None
     excerpt: str
+    #: The viewer blocked the author (#3867); ``excerpt`` is then empty.
+    is_censored: bool = False
 
 
 class CollaboratorSubmittedPayload(FeedPayloadBase):
@@ -197,6 +223,8 @@ FeedPayload = Union[
     RulesChangePayload,
     CollabInvitePayload,
     DuelChallengePayload,
+    DuelForfeitedPayload,
+    DuelLivePayload,
     FriendSignupPayload,
     InvitationLetterPayload,
     FriendDefectionPayload,
@@ -292,6 +320,16 @@ class DuelChallengeItem(FeedItemBase):
     payload: DuelChallengePayload
 
 
+class DuelForfeitedItem(FeedItemBase):
+    type: Literal["duel_forfeited"]
+    payload: DuelForfeitedPayload
+
+
+class DuelLiveItem(FeedItemBase):
+    type: Literal["duel_live"]
+    payload: DuelLivePayload
+
+
 class FriendSignupItem(FeedItemBase):
     type: Literal["friend_signup"]
     payload: FriendSignupPayload
@@ -352,6 +390,8 @@ ActivityFeedItem = Annotated[
         RulesChangeItem,
         CollabInviteItem,
         DuelChallengeItem,
+        DuelForfeitedItem,
+        DuelLiveItem,
         FriendSignupItem,
         InvitationLetterItem,
         FriendDefectionItem,

@@ -11,7 +11,6 @@ import type { FieldDeskHomeState } from '../../frontend/src/pages/fieldDesk/useF
 import type { TaskDetailState } from '../../frontend/src/pages/taskDetail/useTaskDetail'
 import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/usePraxisDetail'
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
-import type { FactionsDirectoryState } from '../../frontend/src/pages/factions/useFactionsDirectory'
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
 import type { ProposeTaskState } from '../../frontend/src/pages/proposeTask/useProposeTask'
@@ -65,20 +64,6 @@ export function fieldDeskState(slug: string): FieldDeskHomeState {
     // pill at all is the thing #2111's gate must not be mistaken for.
     offersACharacterChoice: true,
     canVote: true,
-  }
-}
-
-// ── factions (directory) ─────────────────────────────────────────────────────
-/**
- * The populated factions grid. #1101 moved this surface off its own fetch and
- * onto a passed state — the provider's GET /factions mock no longer reaches it.
- */
-export function factionsDirectoryState(): FactionsDirectoryState {
-  return {
-    factions: factionOuts,
-    factionPage: null,
-    loading: false,
-    error: null,
   }
 }
 
@@ -459,6 +444,7 @@ function duelSide(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
     win_multiplier: 1,
     loss_multiplier: 1,
     tie_multiplier: 1,
+    rival_bonus: 0,
     points_from_votes: 7.4,
     praxis_id: 601,
     ...overrides,

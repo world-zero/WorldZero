@@ -95,6 +95,7 @@
     "RELATIONSHIP_NOT_FOUND": "Relationship not found.",
     "RELATIONSHIP_NOT_DECLARER": "Only the declaring party can delete a relationship.",
     "BLOCK_SELF": "You cannot block your own character.",
+    "CONTACT_BLOCKED": "You blocked this player, so you can't reach them.",
 
     "FEED_ITEM_KEY_UNKNOWN": "Unknown feed item key: {{item_key}}",
     "FEED_ITEM_KEY_MALFORMED": "Malformed feed item key: {{item_key}}",
@@ -106,7 +107,8 @@
     "AVATAR_MUST_BE_IMAGE": "Avatar must be an image file.",
     "AVATAR_TOO_LARGE": "Avatar too large (max {{max_megabytes}} MB).",
     "PRAXIS_NEEDS_PROOF": "Add a photo, video or audio file before you submit.",
-    "PRAXIS_DOC_UPDATE_INVALID": "Your draft couldn't be sent with the submit. If the post is very long (over 200 characters in the title or 20,000 in the body), shorten it. Otherwise copy your text somewhere safe, reload and try again.",
+    "PRAXIS_DOC_UPDATE_INVALID": "Your draft couldn't be sent with the submit. If the post is very long (over {{max_title}} characters in the title or {{max_body}} in the body), shorten it. Otherwise copy your text somewhere safe, reload and try again.",
+    "PRAXIS_DOC_UPDATE_TOO_LARGE": "Your draft is too big to send with the submit. Cut some text, then try again.",
     "PRAXIS_NEEDS_PROOF_delete": "A published praxis keeps at least one photo, video or audio file.",
     "PRAXIS_ALREADY_LIVE": "This praxis is already live. Reopen it to edit it.",
     "PRAXIS_POST_COOLDOWN": "You can post again at {{next_post_at}}.",
@@ -128,8 +130,11 @@
     "COPY_OVERRIDE_NOT_FOUND": "That wording is already back to the version the site shipped with.",
     "ADMIN_OWNER_REQUIRED": "Only the owner can change who is an admin.",
     "ADMIN_UNKNOWN_USERNAME": "No character has that username. Check the spelling — nothing was changed.",
-    "ADMIN_ALREADY_ADMIN": "That account is already an admin. Nothing was changed.",
     "ADMIN_NOT_AN_ADMIN": "That account isn't an admin, so there's nothing to revoke.",
-    "ADMIN_CANNOT_REVOKE_OWNER": "The owner's admin role can't be revoked from here."
+    "ADMIN_CANNOT_REVOKE_OWNER": "The owner's admin role can't be revoked from here.",
+    "ADMIN_PERMISSION_REQUIRED": "You don't have the permission for that.",
+    "ADMIN_CANNOT_TARGET_OWNER": "Nobody can ban or suspend the owner.",
+    "ADMIN_CANNOT_TARGET_SELF": "You can't ban or suspend yourself.",
+    "ADMIN_TARGET_NEEDS_OWNER": "Only the owner can ban or suspend another admin."
   }
 }

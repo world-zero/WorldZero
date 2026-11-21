@@ -25,9 +25,10 @@
     "block": "block",
     "blockAria": "Block {{name}}",
     "blockError": "Could not block.",
+    "censoredComment": "Hidden — you blocked this player",
     "blockConfirm": {
       "title": "Block {{name}}?",
-      "body": "Taunts stop crossing between you, and they leave your activity feed. Nothing else changes, and they are not told — a block is silent. You can unblock at any time.",
+      "body": "They can't invite you, challenge you or nudge you, and their taunts stop. Their comments and mentions show up hidden for you, so you'll see they're talking but not what they said. You'll still see what they complete. You won't be able to invite or challenge them either. They aren't told. You can unblock anytime.",
       "action": "Block"
     },
     "addFriend": "Friend",
@@ -131,6 +132,8 @@
         "title": "Your characters",
         "close": "Close",
         "tapToUse": "Tap to use",
+        "waiting_one": "{{count}} request waiting",
+        "waiting_other": "{{count}} requests waiting",
         "meta": "{{faction}} · Level {{level}} · {{points}} pts",
         "createNew": "Create new character"
       },
@@ -193,10 +196,8 @@
     "intro": "World Zero is built on the shoulders of great open source projects and creative predecessors. Thank you to all of the following."
   },
   "signIn": {
-    "title": "Somewhere to keep your score",
     "google": "Continue with Google",
-    "discord": "Continue with Discord",
-    "close": "Close"
+    "discord": "Continue with Discord"
   },
   "breadcrumb": {
     "label": "Breadcrumb",
@@ -229,7 +230,7 @@
     "youProfile": "Your profile",
     "youClose": "Close",
     "createCharacter": "create character",
-    "login": "Login"
+    "login": "Sign in"
   },
   "footer": {
     "about": "About",
@@ -408,6 +409,8 @@
       "rows": {
         "duelChallenge": "Duel challenges",
         "duelChallengeHelp": "Someone challenges you to a duel.",
+        "duelLive": "Duels I could judge",
+        "duelLiveHelp": "A friend or foe's duel opens for votes.",
         "collabInvite": "Collaboration invites",
         "collabInviteHelp": "Someone asks you to join a praxis with them.",
         "invitationLetter": "Faction invitations",
@@ -529,6 +532,7 @@
       "eyebrow": "Blocked",
       "lead": "Blocked players can't taunt you, and you won't see them in your friends-and-foes feed. They aren't told.",
       "empty": "You haven't blocked anyone. Block someone from their profile and they'll be listed here.",
+      "loadFailed": "Could not load your block list. Try again later.",
       "blockedOn": "Blocked {{date}}",
       "unblock": "Unblock",
       "unblockFailed": "Could not unblock {{name}}. Try again."

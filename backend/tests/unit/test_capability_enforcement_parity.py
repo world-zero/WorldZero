@@ -278,6 +278,8 @@ def test_every_gate_predicate_has_an_enforcement_site() -> None:
                     if alias.name in importers:
                         importers[alias.name].add(path.stem)
 
+    # may_vote is vote_lock_reason == None; enforcing the reason enforces the gate.
+    importers["may_vote"] |= importers["vote_lock_reason"]
     unenforced = {
         name: sorted(mods)
         for name, mods in importers.items()

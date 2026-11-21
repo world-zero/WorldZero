@@ -9,6 +9,7 @@ import { fromLocalInput, toLocalInput, type BackdoorWindow } from '../../compone
 import { SidePanel } from './AdminList'
 import TaskDeleteConfirm from './TaskDeleteConfirm'
 import { requestTaskDelete } from './taskDelete'
+import { taskStatusNeed, useCan } from '../../auth/permissions'
 import type { AdminTaskRow } from './adminTaskRows'
 
 // Text presentation selector: bare U+2197 renders as an emoji on iOS (#1702).
@@ -35,6 +36,8 @@ interface Props {
 export default function TaskPanel({ task, factions, proposal, onChanged, onDeleted, onClose }: Props) {
   const { t } = useTranslation('admin')
   const config = useGameConfig()
+  const can = useCan()
+  const canStatus = can(taskStatusNeed(task.status))
   const [form, setForm] = useState({
     title: task.title,
     description: task.description,
@@ -181,7 +184,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
       ) : (
         <>
           <div className="adm-btns" aria-busy={busy}>
-            {task.status === 'deleted' ? (
+            {!canStatus ? null : task.status === 'deleted' ? (
               RESTORE_STATUSES.map((s) => (
                 <button key={s} type="button" className="adm-btn" onClick={() => void save(s)}>
                   {t('tasks.actions.restoreAs', { status: t(`tasks.status.${s}`) })}
@@ -196,14 +199,14 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
                 onChange={(next, window) => save(next, window)}
               />
             )}
-            {dirty && !locked && task.status !== 'deleted' && (
+            {dirty && !locked && task.status !== 'deleted' && can('editTask') && (
               <button type="button" className="adm-btn" disabled={busy} onClick={() => void save()}>
                 {busy ? t('tasks.actions.saving') : t('tasks.actions.save')}
               </button>
             )}
           </div>
           <p className="adm-muted">{t(locked ? 'console.tasks.panel.hintActive' : 'console.tasks.panel.hint')}</p>
-          {task.status !== 'deleted' && !task.has_history && (
+          {task.status !== 'deleted' && !task.has_history && can('deleteTask') && (
             <button type="button" className="adm-btn adm-btn-dng" onClick={() => setConfirmDelete(true)}>
               {t('tasks.actions.delete')}
             </button>

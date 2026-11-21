@@ -225,6 +225,7 @@ export default function EverymenComment(props: CommentProps) {
           <MentionText
             body={comment.body_text}
             mentions={comment.mentions}
+            censored={comment.is_censored}
             // Red ink is only legible on this panel (#1223).
             accent="var(--faction-everymen-sheet-accent)"
           />

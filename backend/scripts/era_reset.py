@@ -29,11 +29,12 @@ from sqlalchemy.ext.asyncio import (  # noqa: E402
     create_async_engine,
 )
 
-from dependencies import account_has_admin_role  # noqa: E402
+from dependencies import account_permissions  # noqa: E402
 from errors import detail_message  # noqa: E402
 from game_config import EraConfig, era_config_for_key  # noqa: E402
 from models.character import Character  # noqa: E402
 from models.era import Era  # noqa: E402
+from models.roles import Permission  # noqa: E402
 from models.task import TaskStatus  # noqa: E402
 from script_utils import add_env_argument, get_settings  # noqa: E402
 from services.admin_service import list_characters_to_reset  # noqa: E402
@@ -77,10 +78,11 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
     if operator is None:
         print(f"ERROR: no character found with username '{username}'")
         return 1
-    if not await account_has_admin_role(operator.account_id, session):
+    held = await account_permissions(operator.account_id, session)
+    if Permission.roll_era not in held:
         print(
-            f"ERROR: '{username}' is not an admin, and Era.started_by_id records who "
-            f"opened the era. Run elevate_admin.py first, or name an admin."
+            f"ERROR: '{username}' lacks the roll_era permission, and Era.started_by_id "
+            f"records who opened the era. Name an owner or an admin holding it."
         )
         return 1
 
@@ -131,7 +133,7 @@ async def reset_era(session: AsyncSession, username: str, confirmed: bool) -> in
     await session.flush()
     await apply_era_reset(characters, new_era_row, session, era=opening)
     for task in to_reactivate:
-        task.status = TaskStatus.active
+        task.set_status(TaskStatus.active)
     await sync_era_tasks(session, opening, operator.id)
     await commit_and_bind_live_era(session, opening)
     print(f"\nEra {new_era_row.id} is open; {len(characters)} character(s) reset.")

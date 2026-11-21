@@ -41,6 +41,7 @@ const COMMENT: CommentOut = {
   praxis_id: null,
   task_id: 207,
   admin_note: null,
+  is_censored: false,
   body_text: "seedlings along the estuary",
   is_edited: false,
   created_at: "2026-01-04T00:00:00Z",

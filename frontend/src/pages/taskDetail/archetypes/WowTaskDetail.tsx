@@ -4,15 +4,14 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
 import { BalloonBunch, Bunting, Zig } from "../../../components/factionMarks/wowOrnament";
-import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
 import { factionRoleVars } from "../../../utils/factionRoles";
 import { factionBodyVars } from "../../../utils/factionBodyFace";
 import { mediaUrl } from "../../../utils/media";
+import { ErrorBanner } from "../../../components/ui/ErrorBanner";
 import {
   actionColumnSize,
   detailSignupCta,
-  ErrorBanner,
   headerFactionName,
   LevelJumpBanner,
   TaskDetailComments,
@@ -60,53 +59,18 @@ const HAIR = "var(--faction-wow-chronicle-rule)";
 /** Praxis shown before expanding; `.praxis-gallery` fits three per row (#1137). */
 const GALLERY_PREVIEW = 3;
 
-interface SizeSet {
-  /** The action plate's width; dress. */
-  plate: number;
-  title: string;
-  sectionHead: string;
-  statBig: string;
-  stat: string;
-  plaqueTotal: string;
-  base: string;
-  cta: string;
-  /** Ornament geometry, exempt from the spacing scale (§4a). */
-  buntingGap: string;
-  panelPad: string;
-  boxPad: string;
-  sectionGap: string;
-}
+/** The action plate's width; dress. */
+const PLATE = 452;
 
-const SIZES: Record<"desktop" | "mobile", SizeSet> = {
-  desktop: {
-    plate: 452,
-    title: "var(--text-display)",
-    sectionHead: "var(--text-heading)",
-    statBig: "var(--text-heading)",
-    stat: "var(--text-title)",
-    plaqueTotal: "var(--text-display)",
-    base: "var(--text-title)",
-    cta: "var(--text-content)",
-    buntingGap: "var(--space-xl)",
-    panelPad: "var(--space-xl)",
-    boxPad: "var(--space-lg)",
-    sectionGap: "var(--space-2xl)",
-  },
-  mobile: {
-    plate: 452,
-    title: "var(--text-heading)",
-    sectionHead: "var(--text-title)",
-    statBig: "var(--text-title)",
-    stat: "var(--text-content)",
-    plaqueTotal: "var(--text-heading)",
-    base: "var(--text-content)",
-    cta: "var(--text-xl)",
-    buntingGap: "var(--space-lg)",
-    panelPad: "var(--space-lg)",
-    boxPad: "var(--space-md)",
-    sectionGap: "var(--space-xl)",
-  },
-};
+const WOW_TITLE = "var(--detail-hero-size, var(--text-display))";
+const WOW_SECTION_HEAD = "var(--detail-title-size, var(--text-heading))";
+const WOW_STAT_BIG = "var(--detail-title-size, var(--text-heading))";
+const WOW_STAT = "var(--detail-lead-size, var(--text-title))";
+const WOW_CTA = "var(--detail-btn-size, var(--text-content))";
+const WOW_BUNTING_GAP = "var(--detail-panel-space, var(--space-xl))";
+const WOW_PANEL_PAD = "var(--detail-pad, var(--space-xl))";
+const WOW_BOX_PAD = "var(--detail-card-pad, var(--space-lg))";
+const WOW_SECTION_GAP = "var(--detail-section-gap, var(--space-2xl))";
 
 const EYEBROW: CSSProperties = {
   fontFamily: MED,
@@ -178,9 +142,6 @@ function initialsOf(name: string): string {
 
 export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   const { t } = useTranslation("tasks");
-  const formFactor = useFormFactor();
-  const desktop = formFactor !== "mobile";
-  const size = SIZES[desktop ? "desktop" : "mobile"];
   // Expands in place; deliberately no link out to `/praxis?task_id=N`.
   const [showAllPraxis, setShowAllPraxis] = useState(false);
   const {
@@ -221,7 +182,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     background: INSET,
     border: `1.5px solid ${HAIR}`,
     borderRadius: 8,
-    padding: size.boxPad,
+    padding: WOW_BOX_PAD,
     boxSizing: "border-box",
   };
   const divider = (
@@ -241,7 +202,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         flexWrap: "wrap",
       }}
     >
-      <span style={{ fontFamily: MED, fontSize: size.sectionHead, lineHeight: 1.08, color: INK }}>
+      <span style={{ fontFamily: MED, fontSize: WOW_SECTION_HEAD, lineHeight: 1.08, color: INK }}>
         {label}
       </span>
       <Zig id={id} style={{ flex: 1 }} />
@@ -265,13 +226,13 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     textAlign: "center",
     textDecoration: "none",
     fontFamily: MED,
-    fontSize: size.cta,
+    fontSize: WOW_CTA,
     letterSpacing: "0.05em",
     color: PLUM,
     background: "transparent",
     border: `2px solid ${GOLD}`,
     borderRadius: 7,
-    padding: desktop ? "var(--space-md) var(--space-lg)" : "var(--space-md)",
+    padding: "var(--detail-card-pad, var(--space-md) var(--space-lg))",
   };
 
   const quietNote: CSSProperties = {
@@ -283,7 +244,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   /** A tier below a section head: the ~240px plate column breaks a 32px line three ways. */
   const plateHeading: CSSProperties = {
     fontFamily: MED,
-    fontSize: size.stat,
+    fontSize: WOW_STAT,
     lineHeight: 1.08,
     color: INK,
     marginBottom: "var(--space-md)",
@@ -378,7 +339,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           style={{
             ...innerBox,
             flex: hasAction ? "0 0 auto" : "1 1 auto",
-            minWidth: desktop ? 176 : 132,
+            minWidth: "var(--detail-worth-min-wow, 176px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -440,7 +401,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       <h1
         style={{
           fontFamily: MED,
-          fontSize: size.title,
+          fontSize: WOW_TITLE,
           lineHeight: 1.08,
           margin: 0,
           marginBottom: "var(--space-lg)",
@@ -548,20 +509,20 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--detail-panel-space, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
           <span style={{ ...EYEBROW, color: LABEL }}>{t("detail.stats.level")}</span>
-          <span style={{ fontFamily: MED, fontSize: size.statBig, lineHeight: 0.8, color: INK }}>
+          <span style={{ fontFamily: MED, fontSize: WOW_STAT_BIG, lineHeight: 0.8, color: INK }}>
             {task.level_required}
           </span>
         </div>
         {divider}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
           <span style={{ ...EYEBROW, color: LABEL }}>{t("detail.stats.inProgress")}</span>
-          <span style={{ fontFamily: MED, fontSize: size.stat, lineHeight: 0.8, color: INK }}>
+          <span style={{ fontFamily: MED, fontSize: WOW_STAT, lineHeight: 0.8, color: INK }}>
             {inProgressCount}
           </span>
         </div>
@@ -571,9 +532,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
   // The brief, in full. No clamp.
   const brief = (
-    <section style={{ marginBottom: size.sectionGap }}>
+    <section style={{ marginBottom: WOW_SECTION_GAP }}>
       {sectionHead("brief", t("detail.brief.heading"))}
-      <div style={{ ...framed, padding: size.panelPad }}>
+      <div style={{ ...framed, padding: WOW_PANEL_PAD }}>
         {task.description && (
           <p
             className="content-text"
@@ -594,7 +555,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   const gallery = (
-    <section style={{ marginBottom: size.sectionGap }}>
+    <section style={{ marginBottom: WOW_SECTION_GAP }}>
       <div
         style={{
           display: "flex",
@@ -605,7 +566,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         }}
       >
         <span
-          style={{ fontFamily: MED, fontSize: size.sectionHead, lineHeight: 1.08, color: INK }}
+          style={{ fontFamily: MED, fontSize: WOW_SECTION_HEAD, lineHeight: 1.08, color: INK }}
         >
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
@@ -651,7 +612,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...framed,
-            padding: size.panelPad,
+            padding: WOW_PANEL_PAD,
             display: "flex",
             alignItems: "center",
             gap: "var(--space-lg)",
@@ -712,20 +673,20 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           maxWidth: 1200,
           margin: "0 auto",
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--detail-pad, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
       >
-        <Bunting style={{ marginBottom: size.buntingGap }} />
+        <Bunting style={{ marginBottom: WOW_BUNTING_GAP }} />
 
         <div
           style={{
             display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
+            flexDirection: "var(--detail-row-direction, row)" as "row",
+            alignItems: "var(--detail-row-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: size.sectionGap,
+            marginBottom: WOW_SECTION_GAP,
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -735,8 +696,8 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           </div>
           <div
             style={{
-              ...actionColumnSize({ hasAction, width: size.plate }),
-              marginTop: desktop ? "var(--space-sm)" : 0,
+              ...actionColumnSize({ hasAction, width: PLATE }),
+              marginTop: "var(--detail-action-top, var(--space-sm))",
             }}
           >
             {actionPlate}

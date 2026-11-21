@@ -107,6 +107,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,
+      rival_bonus: 0,
     },
     opponent: {
       praxis_id: null,
@@ -121,6 +122,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,
+      rival_bonus: 0,
     },
     winner_character_id: null,
     challenger_final_points: null,

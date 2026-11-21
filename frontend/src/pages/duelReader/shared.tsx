@@ -32,6 +32,7 @@ import {
   duelVerdict,
   hasForfeited,
 } from '../../components/duel/standing'
+import { RivalBonusSentence } from '../../components/duel/shared'
 import type { PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
 import { taskRefMeta } from '../praxisDetail/shared'
@@ -180,6 +181,7 @@ function Standing({
         style={{ margin: 'var(--space-md) 0 var(--space-xl)', color: QUIET }}
       >
         {duelVerdict(duel, a.side, b.side, t)}
+        <RivalBonusSentence points={a.side.rival_bonus} />
       </p>
     </>
   )

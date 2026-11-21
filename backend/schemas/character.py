@@ -67,6 +67,12 @@ class CharacterOut(WireModel):
     invitations: list[str] = Field(default_factory=list)
 
 
+class RosterCharacterOut(CharacterOut):
+    """``/me/characters`` only: the owner's view adds the life's waiting requests."""
+
+    pending_requests_count: int = 0
+
+
 class CharacterCreate(WireModel):
     # Derived from display_name when absent (ADR-0019).
     username: str | None = Field(default=None, min_length=3, max_length=30)

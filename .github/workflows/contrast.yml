@@ -1,12 +1,13 @@
 # The rendered contrast sweep on every PR (#3498). Unlike e2e.yml, this one
-# blocks: it is a required check, so it must report on every PR, hence no paths
-# filter. Same pipeline as e2e.yml (run-e2e.sh), one spec only.
+# blocks: it is a required check, so it must report on every PR and merge-queue
+# ref, hence no paths filter. Same pipeline as e2e.yml (run-e2e.sh), one spec only.
 name: Contrast
 
 on:
   # pull_request, NEVER pull_request_target: the repo is public and a fork PR
   # must get no secrets.
   pull_request:
+  merge_group:
   workflow_dispatch:
 
 permissions:

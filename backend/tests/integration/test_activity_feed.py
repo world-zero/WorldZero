@@ -2,6 +2,7 @@
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
@@ -423,6 +424,7 @@ async def test_a_malformed_payload_is_dropped_and_its_siblings_still_serve(
         point_value=5,
         level_required=0,
         status=TaskStatus.active,
+        activated_at=func.now(),
         created_by_id=character.id,
         primary_faction_slug=DEFAULT_FACTION_SLUG,
     )

@@ -1,8 +1,7 @@
-"""Block record service (ADR-0077); independent of the friend/foe edge.
+"""Block record service; a contact barrier (ADR-0077 and its #3867 amendment)."""
+from typing import Union
 
-A block prevents a closed list: taunts and friends-and-foes feed sources only.
-"""
-from sqlalchemy import Select, case, delete, or_, select
+from sqlalchemy import ColumnElement, Exists, Select, case, delete, exists, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -31,6 +30,41 @@ def blocked_counterpart_ids(character_id: int) -> Select[tuple[int]]:
             CharacterBlock.blocked_character_id == character_id,
         )
     )
+
+
+def has_blocked(
+    blocker: Union[ColumnElement[int], int], blocked: Union[ColumnElement[int], int]
+) -> Exists:
+    """``blocker`` has blocked ``blocked``: one direction, correlates on columns."""
+    return exists().where(
+        CharacterBlock.blocker_character_id == blocker,
+        CharacterBlock.blocked_character_id == blocked,
+    )
+
+
+async def blocked_by(character_id: int, session: AsyncSession) -> set[int]:
+    return set(
+        (
+            await session.scalars(
+                select(CharacterBlock.blocked_character_id).where(
+                    CharacterBlock.blocker_character_id == character_id
+                )
+            )
+        ).all()
+    )
+
+
+async def refuse_if_blocked(
+    sender_id: int, recipient_id: int, session: AsyncSession
+) -> None:
+    """The blocker may not reach whom they blocked. Only the blocker hits this:
+    the other way is swallowed, since a refusal would announce the block."""
+    if await session.scalar(select(has_blocked(sender_id, recipient_id))):
+        raise_coded(
+            403,
+            ErrorCode.contact_blocked,
+            "You blocked this player, so you can't reach them.",
+        )
 
 
 def _to_item(character: Character, block: CharacterBlock) -> BlockListItem:
@@ -81,8 +115,8 @@ async def unblock_character(
     character_id: int,
     session: AsyncSession,
 ) -> None:
-    """Restores nothing else (ADR-0077 ruling 5). No match is a no-op, not a
-    404, so the blocked party learns nothing."""
+    """Restores no edge (ADR-0077 ruling 5). No match is a no-op, not a 404, so
+    the blocked party learns nothing."""
     await session.execute(
         delete(CharacterBlock).where(
             CharacterBlock.blocker_character_id == blocker.id,

@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
-from dependencies import require_admin
+from dependencies import require_permission
 from errors import ErrorCode, raise_coded
 from models.account import Account
+from models.roles import Permission
 from schemas.copy import CopyOverrideIn, CopyOverrideOut
 from services.copy_override import delete_override, list_overrides, upsert_override
 
@@ -22,7 +23,7 @@ async def get_copy_overrides(session: AsyncSession = Depends(get_db, scope="func
 @router.put("/copy-overrides", response_model=CopyOverrideOut)
 async def put_copy_override(
     data: CopyOverrideIn,
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.edit_copy)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Set the copy for one namespace + key; idempotent.
@@ -36,7 +37,7 @@ async def put_copy_override(
 async def remove_copy_override(
     ns: str = Query(..., max_length=64),
     key: str = Query(..., max_length=255),
-    admin: Account = Depends(require_admin),
+    admin: Account = Depends(require_permission(Permission.edit_copy)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Revert one key to the wording that shipped in the bundle."""

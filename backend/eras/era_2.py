@@ -113,6 +113,9 @@ ERA_2 = EraConfig(
     level_to_see_pending_tasks=3,
     pending_task_admin_review_hours=48,
     duel_level_required=2,
+    duel_challenge_lapse_days=7,
+    rival_duel_bonus=5,
+    duel_cast_lapse_days=7,
     collaboration_level_required=1,
     collab_auto_submit_days=10,
     metatask_apply_level=5,
@@ -139,7 +142,7 @@ ERA_2 = EraConfig(
     factions=ERA_2_FACTIONS,
     tasks=ERA_2_TASKS,
     level_profiles=ERA_2_LEVEL_PROFILES,
-    # allow_praxis_on_retired_task_factions stays empty: no Ephemerists.
+    # The retired/pending perks and pending ceiling stay unset: no Ephemerists.
     collab_invite_bypasses_level=True,
     collab_invite_bypasses_faction=True,
     collab_invite_bypasses_task_bank=False,

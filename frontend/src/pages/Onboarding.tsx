@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { clearOnboardingHandoff, clearTermsAcceptance, onboardingHandoffPending } from '../utils/onboardingResume'
 import { resolveHandoffDestination } from '../utils/onboardingHandoff'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useAuth } from '../auth/AuthContext'
 import { useHidePhoneChrome } from '../components/layout/FlowChrome'
 import OnboardingFlow from './onboarding/OnboardingFlow'
 
@@ -12,10 +13,13 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const { t } = useTranslation('onboarding')
   useDocumentTitle(t('flow.welcome'))
-  useHidePhoneChrome()
+  // Signed in, the tab bar is the way to /settings and sign-out; only the signed-out visitor gets the full-bleed flow.
+  useHidePhoneChrome(!useAuth().user)
 
   // Read once (not in render, which StrictMode double-invokes); cleared in the effect.
   const [resumed] = useState(onboardingHandoffPending)
+  // `?login` (the NavBar, or the backend's `?login=<code>` bounce) opens on the sign-in view.
+  const signIn = useSearchParams()[0].has('login')
 
   useEffect(() => {
     clearOnboardingHandoff()
@@ -26,6 +30,7 @@ export default function Onboarding() {
   return (
     <OnboardingFlow
       resumed={resumed}
+      signIn={signIn}
       onAccepted={() => {
         // A player with a character; one without creates it inside the flow.
         // Reads `task.start_here`, the mark's own predicate; none marked → `/`.

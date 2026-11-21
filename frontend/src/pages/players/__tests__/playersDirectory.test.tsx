@@ -17,13 +17,9 @@ import {
 } from '../../../utils/factions'
 
 const mocks = vi.hoisted(() => ({
-  formFactor: 'desktop' as 'mobile' | 'desktop',
   useTheme: vi.fn(() => ({ theme: 'dark' as 'light' | 'dark', toggle: () => {} })),
 }))
 
-vi.mock('../../../hooks/useFormFactor', () => ({
-  useFormFactor: () => mocks.formFactor,
-}))
 // `useTheme` throws outside its provider by design (#701).
 vi.mock('../../../hooks/useTheme', () => ({ useTheme: mocks.useTheme }))
 vi.mock('../../../auth/AuthContext', () => ({
@@ -32,13 +28,15 @@ vi.mock('../../../auth/AuthContext', () => ({
 vi.mock('../../../api/leaderboard', () => ({ getLeaderboard: async () => [] }))
 
 import Leaderboard from '../../Leaderboard'
-import DesktopPlayers from '../DesktopPlayers'
-import MobilePlayers from '../MobilePlayers'
+import { DesktopPlayers, MobilePlayers } from './playersAt'
+import { ff } from './formFactorMock'
 import {
   NO_RELATIONSHIPS,
   rankPlayers,
   type PlayersViewProps,
 } from '../playersData'
+
+vi.mock('../../../hooks/useFormFactor', async () => (await import('./formFactorMock')).mockModule)
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -100,7 +98,7 @@ function props(overrides: Partial<PlayersViewProps> = {}): PlayersViewProps {
 
 describe('the page wrapper', () => {
   it('renders its loading branch with no effects — hence the direct renders below', () => {
-    mocks.formFactor = 'desktop'
+    ff.current = 'desktop'
     const { text } = render(<Leaderboard />)
     expect(text).toContain('Loading')
   })
@@ -144,7 +142,7 @@ describe('the faction race', () => {
     }
     // Glimpsed but unrevealed: the lane exists and shows the mark (#2409).
     expect(text, 'albescent has a lane').toContain(REDACTED)
-    expect(text, 'and it does not name the society').not.toContain('Albescent')
+    expect(text, 'and it does not name the society').not.toContain('Chromagencia')
     // `na` is a state, not a faction.
     expect(text, 'no unaffiliated lane').not.toContain(factionName(null))
   })
@@ -195,7 +193,7 @@ describe('the roster', () => {
   })
 })
 
-describe('form factors are structurally different, not a breakpoint', () => {
+describe('the two form factors', () => {
   it('gives the phone no roster column header and no faction line', () => {
     const desktop = render(<DesktopPlayers {...props()} />)
     const mobile = render(<MobilePlayers {...props()} />)

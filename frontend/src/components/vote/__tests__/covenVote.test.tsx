@@ -58,6 +58,7 @@ function currentUser(): CurrentUser {
     },
     is_admin: false,
     is_owner: false,
+    permissions: [],
     has_accepted_terms: true,
     can_create_additional_character: false,
     character_creation_banned: false,
@@ -148,7 +149,7 @@ describe('CovenVote picks a motif from the theme (#2020)', () => {
   it('still returns the shared login gate for an anonymous viewer', () => {
     mocks.user = null
     const html = render('light')
-    expect(html.replace(/<[^>]*>/g, '')).toContain('Log in to vote')
+    expect(html.replace(/<[^>]*>/g, '')).toContain('Sign in to vote')
     expect(html).not.toContain('aria-label="Rate')
   })
 })

@@ -149,9 +149,10 @@ Three rules the flow's build depends on:
   shows more of the spectrum as the steps go on.
 
 **On desktop, `/start` keeps the app's normal top nav.** The owner ruled that the site's
-navigation stays visible above it. On phones the flow is full-bleed: neither the tab bar nor a
-header is drawn while it shows (`/start`, and the guest flow at `/`), and both return on
-arrival ([#3753](https://github.com/world-zero/WorldZero/issues/3753), amendment comment of 2026-11-21).
+navigation stays visible above it. On phones the flow is full-bleed only before sign-in:
+neither the tab bar nor a header is drawn while a signed-out visitor sees it (`/start`, and the
+guest flow at `/`), and both return the moment sign-in completes, so a signed-in account with
+no character can still reach /settings and sign out ([#3753](https://github.com/world-zero/WorldZero/issues/3753), amendment comment of 2026-11-21).
 
 *2026-11-18, [#3457](https://github.com/world-zero/WorldZero/issues/3457):* added the three rules and the top-nav ruling for the approved
 prototype build.

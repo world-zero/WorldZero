@@ -4,7 +4,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "../../../i18n";
 import type { FlaggedPraxisOut } from "../../../api/admin";
+import { ALL_PERMISSIONS } from "../../../test/fixtures";
 import AuthorRow from "../AuthorRow";
+
+vi.mock("../../../auth/AuthContext", () => ({ useAuth: () => ({ user: { is_admin: true, permissions: ALL_PERMISSIONS } }) }));
 
 afterEach(cleanup);
 

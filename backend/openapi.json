@@ -30,6 +30,8 @@
                   "comment_mention": "#/components/schemas/CommentMentionItem",
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
+                  "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
+                  "duel_live": "#/components/schemas/DuelLiveItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -75,6 +77,12 @@
                 },
                 {
                   "$ref": "#/components/schemas/DuelChallengeItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelForfeitedItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelLiveItem"
                 },
                 {
                   "$ref": "#/components/schemas/FriendSignupItem"
@@ -125,17 +133,17 @@
         "title": "ActivityFeedResponse",
         "type": "object"
       },
-      "AdminGrantIn": {
+      "AdminPermissionIn": {
         "properties": {
-          "username": {
-            "title": "Username",
-            "type": "string"
+          "on": {
+            "title": "On",
+            "type": "boolean"
           }
         },
         "required": [
-          "username"
+          "on"
         ],
-        "title": "AdminGrantIn",
+        "title": "AdminPermissionIn",
         "type": "object"
       },
       "AdminRow": {
@@ -149,6 +157,17 @@
             "title": "Is Owner",
             "type": "boolean"
           },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "suspended": {
+            "title": "Suspended",
+            "type": "boolean"
+          },
           "username": {
             "title": "Username",
             "type": "string"
@@ -157,7 +176,9 @@
         "required": [
           "username",
           "display_name",
-          "is_owner"
+          "is_owner",
+          "suspended",
+          "permissions"
         ],
         "title": "AdminRow",
         "type": "object"
@@ -727,104 +748,6 @@
           "invitations"
         ],
         "title": "CharacterOut",
-        "type": "object"
-      },
-      "CharacterStatsOut": {
-        "properties": {
-          "all_time_score": {
-            "title": "All Time Score",
-            "type": "integer"
-          },
-          "character_id": {
-            "title": "Character Id",
-            "type": "integer"
-          },
-          "era_id": {
-            "title": "Era Id",
-            "type": "integer"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "level": {
-            "title": "Level",
-            "type": "integer"
-          },
-          "score": {
-            "title": "Score",
-            "type": "integer"
-          },
-          "votes_available": {
-            "title": "Votes Available",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "character_id",
-          "era_id",
-          "score",
-          "all_time_score",
-          "level",
-          "votes_available"
-        ],
-        "title": "CharacterStatsOut",
-        "type": "object"
-      },
-      "CharacterStatsPatch": {
-        "description": "Only supplied fields are updated.",
-        "properties": {
-          "all_time_score": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "All Time Score"
-          },
-          "level": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
-          "votes_available": {
-            "anyOf": [
-              {
-                "minimum": 0.0,
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Votes Available"
-          }
-        },
-        "title": "CharacterStatsPatch",
         "type": "object"
       },
       "CharacterStatus": {
@@ -1529,6 +1452,11 @@
             "title": "Id",
             "type": "integer"
           },
+          "is_censored": {
+            "default": false,
+            "title": "Is Censored",
+            "type": "boolean"
+          },
           "is_edited": {
             "title": "Is Edited",
             "type": "boolean"
@@ -1579,7 +1507,8 @@
           "updated_at",
           "author",
           "mentions",
-          "admin_note"
+          "admin_note",
+          "is_censored"
         ],
         "title": "CommentOut",
         "type": "object"
@@ -1599,6 +1528,11 @@
           "excerpt": {
             "title": "Excerpt",
             "type": "string"
+          },
+          "is_censored": {
+            "default": false,
+            "title": "Is Censored",
+            "type": "boolean"
           },
           "praxis_id": {
             "anyOf": [
@@ -1628,7 +1562,8 @@
           "character_id",
           "praxis_id",
           "task_id",
-          "excerpt"
+          "excerpt",
+          "is_censored"
         ],
         "title": "CommentPayload",
         "type": "object"
@@ -1886,6 +1821,14 @@
             "title": "Level Jump Reach",
             "type": "integer"
           },
+          "permissions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
           "provider": {
             "default": "",
             "title": "Provider",
@@ -1934,6 +1877,7 @@
           "character",
           "is_admin",
           "is_owner",
+          "permissions",
           "has_accepted_terms",
           "can_create_additional_character",
           "can_start_as_albescent",
@@ -2250,6 +2194,256 @@
         "title": "DuelDetailOut",
         "type": "object"
       },
+      "DuelForfeitedItem": {
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DuelForfeitedPayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "duel_forfeited",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "DuelForfeitedItem",
+        "type": "object"
+      },
+      "DuelForfeitedPayload": {
+        "additionalProperties": false,
+        "description": "The viewer's duel ended because the other player was locked out (#3766).",
+        "properties": {
+          "duel_id": {
+            "title": "Duel Id",
+            "type": "integer"
+          },
+          "praxis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Praxis Id"
+          },
+          "task_faction_slug": {
+            "title": "Task Faction Slug",
+            "type": "string"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "duel_id",
+          "praxis_id",
+          "task_title",
+          "task_faction_slug"
+        ],
+        "title": "DuelForfeitedPayload",
+        "type": "object"
+      },
+      "DuelLiveItem": {
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DuelLivePayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "duel_live",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "DuelLiveItem",
+        "type": "object"
+      },
+      "DuelLivePayload": {
+        "additionalProperties": false,
+        "description": "A friend or foe's duel just opened for votes (#3886). The item's actor is\nthe challenger.",
+        "properties": {
+          "challenger_character_id": {
+            "title": "Challenger Character Id",
+            "type": "integer"
+          },
+          "duel_id": {
+            "title": "Duel Id",
+            "type": "integer"
+          },
+          "opponent_avatar_url": {
+            "title": "Opponent Avatar Url",
+            "type": "string"
+          },
+          "opponent_character_id": {
+            "title": "Opponent Character Id",
+            "type": "integer"
+          },
+          "opponent_display_name": {
+            "title": "Opponent Display Name",
+            "type": "string"
+          },
+          "opponent_faction_slug": {
+            "title": "Opponent Faction Slug",
+            "type": "string"
+          },
+          "task_faction_slug": {
+            "title": "Task Faction Slug",
+            "type": "string"
+          },
+          "task_point_value": {
+            "title": "Task Point Value",
+            "type": "integer"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "duel_id",
+          "challenger_character_id",
+          "opponent_character_id",
+          "opponent_display_name",
+          "opponent_faction_slug",
+          "opponent_avatar_url",
+          "task_title",
+          "task_point_value",
+          "task_faction_slug"
+        ],
+        "title": "DuelLivePayload",
+        "type": "object"
+      },
       "DuelOut": {
         "properties": {
           "challenger_praxis_id": {
@@ -2381,6 +2575,11 @@
             ],
             "title": "Praxis Id"
           },
+          "rival_bonus": {
+            "default": 0,
+            "title": "Rival Bonus",
+            "type": "integer"
+          },
           "tie_multiplier": {
             "default": 1.0,
             "title": "Tie Multiplier",
@@ -2404,7 +2603,8 @@
           "nudge_again_at",
           "win_multiplier",
           "loss_multiplier",
-          "tie_multiplier"
+          "tie_multiplier",
+          "rival_bonus"
         ],
         "title": "DuelSideOut",
         "type": "object"
@@ -3060,6 +3260,11 @@
             "title": "Id",
             "type": "integer"
           },
+          "is_censored": {
+            "default": false,
+            "title": "Is Censored",
+            "type": "boolean"
+          },
           "is_edited": {
             "title": "Is Edited",
             "type": "boolean"
@@ -3111,6 +3316,7 @@
           "author",
           "mentions",
           "admin_note",
+          "is_censored",
           "flags"
         ],
         "title": "FlaggedCommentOut",
@@ -3935,6 +4141,10 @@
             "title": "Collab Auto Submit Days",
             "type": "integer"
           },
+          "duel_challenge_lapse_days": {
+            "title": "Duel Challenge Lapse Days",
+            "type": "integer"
+          },
           "duel_level_required": {
             "title": "Duel Level Required",
             "type": "integer"
@@ -3992,6 +4202,7 @@
           "level_thresholds",
           "duel_level_required",
           "collab_auto_submit_days",
+          "duel_challenge_lapse_days",
           "pending_task_admin_review_hours",
           "backdoor_hint_stage_days",
           "level_to_see_pending_tasks",
@@ -5047,6 +5258,29 @@
         "title": "NudgeResultOut",
         "type": "object"
       },
+      "OtherLifePending": {
+        "properties": {
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "pending_requests_count": {
+            "title": "Pending Requests Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "character_id",
+          "display_name",
+          "pending_requests_count"
+        ],
+        "title": "OtherLifePending",
+        "type": "object"
+      },
       "OverviewStats": {
         "properties": {
           "accounts": {
@@ -5309,6 +5543,22 @@
         ],
         "title": "PendingTaskOut",
         "type": "object"
+      },
+      "Permission": {
+        "description": "The nine admin checkboxes (ADR-0101); a tenth widens the CHECK.",
+        "enum": [
+          "handle_reports",
+          "ban_suspend",
+          "review_proposals",
+          "manage_tasks",
+          "delete_import_tasks",
+          "read_messages",
+          "edit_copy",
+          "small_world",
+          "roll_era"
+        ],
+        "title": "Permission",
+        "type": "string"
       },
       "PickerPollOut": {
         "properties": {
@@ -6584,6 +6834,103 @@
         "title": "RingRecipient",
         "type": "object"
       },
+      "RosterCharacterOut": {
+        "description": "``/me/characters`` only: the owner's view adds the life's waiting requests.",
+        "properties": {
+          "all_time_score": {
+            "title": "All Time Score",
+            "type": "integer"
+          },
+          "avatar_url": {
+            "title": "Avatar Url",
+            "type": "string"
+          },
+          "badges": {
+            "items": {
+              "$ref": "#/components/schemas/BadgeOut"
+            },
+            "title": "Badges",
+            "type": "array"
+          },
+          "bio": {
+            "title": "Bio",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "faction_slug": {
+            "title": "Faction Slug",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "invitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Invitations",
+            "type": "array"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "pending_requests_count": {
+            "default": 0,
+            "title": "Pending Requests Count",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tagline": {
+            "title": "Tagline",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "display_name",
+          "bio",
+          "tagline",
+          "avatar_url",
+          "location",
+          "level",
+          "score",
+          "all_time_score",
+          "faction_slug",
+          "status",
+          "created_at",
+          "badges",
+          "invitations",
+          "pending_requests_count"
+        ],
+        "title": "RosterCharacterOut",
+        "type": "object"
+      },
       "RulesChangeEntry": {
         "additionalProperties": false,
         "properties": {
@@ -6724,6 +7071,8 @@
                   "comment_mention": "#/components/schemas/CommentMentionItem",
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
+                  "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
+                  "duel_live": "#/components/schemas/DuelLiveItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -6771,6 +7120,12 @@
                   "$ref": "#/components/schemas/DuelChallengeItem"
                 },
                 {
+                  "$ref": "#/components/schemas/DuelForfeitedItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelLiveItem"
+                },
+                {
                   "$ref": "#/components/schemas/FriendSignupItem"
                 },
                 {
@@ -6803,6 +7158,14 @@
             "title": "Global Activity Count",
             "type": "integer"
           },
+          "other_lives_pending": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OtherLifePending"
+            },
+            "title": "Other Lives Pending",
+            "type": "array"
+          },
           "pending_requests_count": {
             "title": "Pending Requests Count",
             "type": "integer"
@@ -6810,6 +7173,7 @@
         },
         "required": [
           "pending_requests_count",
+          "other_lives_pending",
           "global_activity",
           "global_activity_count",
           "active_praxes"
@@ -8372,69 +8736,6 @@
         "tags": [
           "admin"
         ]
-      },
-      "post": {
-        "description": "Owner-only: grant admin to the account behind a character username.",
-        "operationId": "admin_grant_admin_admin_admins_post",
-        "parameters": [
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminGrantIn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminRow"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Admin Grant Admin",
-        "tags": [
-          "admin"
-        ]
       }
     },
     "/admin/admins/{username}": {
@@ -8489,6 +8790,81 @@
           }
         ],
         "summary": "Admin Revoke Admin",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/admins/{username}/permissions/{permission}": {
+      "put": {
+        "description": "Owner-only: tick or untick one box; the first tick makes an admin.",
+        "operationId": "admin_set_permission_admin_admins__username__permissions__permission__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username",
+            "required": true,
+            "schema": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "permission",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPermissionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Set Permission",
         "tags": [
           "admin"
         ]
@@ -8748,79 +9124,6 @@
           }
         ],
         "summary": "Remove Flagged Praxes",
-        "tags": [
-          "admin"
-        ]
-      }
-    },
-    "/admin/characters/{character_id}/stats": {
-      "patch": {
-        "operationId": "admin_patch_character_stats_admin_characters__character_id__stats_patch",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "character_id",
-            "required": true,
-            "schema": {
-              "title": "Character Id",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CharacterStatsPatch"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CharacterStatsOut"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Admin Patch Character Stats",
         "tags": [
           "admin"
         ]
@@ -12583,7 +12886,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/CharacterOut"
+                    "$ref": "#/components/schemas/RosterCharacterOut"
                   },
                   "title": "Response My Characters Me Characters Get",
                   "type": "array"

@@ -35,7 +35,7 @@ from services.character_stats import (
 )
 from services.era import get_current_era_row
 from services.habit_bonus import stamp_habit_bonus
-from services.praxis_room import discard_room_document, document_over_cap
+from services.praxis_room import discard_room_document
 from services.taunt_service import fan_out_taunt
 
 
@@ -46,7 +46,8 @@ async def _apply_seal(
     *,
     era_id: int | None = None,
     sealed_at: datetime | None = None,
-) -> None:
+    skip_over_cap: bool = False,
+) -> bool:
     """The only transition into ``submitted``. Caller flushes and recalcs.
 
     Sole writer of ``submitted_at``, establishing ``status == submitted ⟹
@@ -58,8 +59,12 @@ async def _apply_seal(
 
     ``era_id``/``sealed_at`` override the live era and the wall clock: the era
     close seals lapsed windows into the closing era at their deadline.
+
+    ``skip_over_cap`` (lazy and era-close seals, which must not 413): False, with
+    nothing changed, if the draft is over cap.
     """
-    await discard_room_document(praxis, session)
+    if not await discard_room_document(praxis, session, skip_over_cap=skip_over_cap):
+        return False
     # Read the era before touching the row: this query autoflushes, and a
     # half-stamped "submitted" praxis fails ck_praxis_submitted_has_stamps.
     if era_id is None:
@@ -73,11 +78,20 @@ async def _apply_seal(
         if not member.has_approved:
             member.approved_at = now
         member.has_approved = True
+    # The faction held at the seal prices the praxis from here on (#3873).
+    held = dict((await session.execute(
+        select(Character.id, Character.faction_slug).where(
+            Character.id.in_([m.character_id for m in praxis.members])
+        )
+    )).all())
+    for member in praxis.members:
+        member.faction_slug = held.get(member.character_id)
     # Same `now` as the seal, not a second clock read.
     await stamp_habit_bonus(praxis, now, session, era)
     # Second pass: the fan-out flushes, so the seal must be whole first.
     for member in praxis.members:
         await fan_out_taunt(member.character_id, TauntTriggerType.praxis_complete, session)
+    return True
 
 
 async def _admin_among(character_ids: list[int], session: AsyncSession) -> bool:
@@ -138,9 +152,8 @@ async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) ->
     member_ids = [member.character_id for member in praxis.members]
     if not await _has_proof(praxis, member_ids, session):
         return
-    if await document_over_cap(praxis.id):
+    if not await _apply_seal(praxis, session, era, skip_over_cap=True):
         return
-    await _apply_seal(praxis, session, era)
     await session.flush()
     await recalculate_members_stats(praxis, session, era)
 
@@ -216,12 +229,16 @@ async def seal_lapsed_at_era_close(
         member_ids = [m.character_id for m in praxis.members]
         if not await _has_proof(praxis, member_ids, session):
             continue
-        if await document_over_cap(praxis.id):
-            continue
         deadline = praxis.submit_proposed_at + window
-        await _apply_seal(
-            praxis, session, closing_era, era_id=closing_era_row.id, sealed_at=deadline
-        )
+        if not await _apply_seal(
+            praxis,
+            session,
+            closing_era,
+            era_id=closing_era_row.id,
+            sealed_at=deadline,
+            skip_over_cap=True,
+        ):
+            continue
         sealed.update(member_ids)
     await session.flush()
     return sealed

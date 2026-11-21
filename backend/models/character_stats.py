@@ -32,6 +32,10 @@ class CharacterStats(Base):
     )
     score: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     level: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    # Highest level held this era. Gates the level-up push.
+    era_peak_level: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
     votes_spent_this_era: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default="0"
     )
