@@ -154,7 +154,7 @@ describe('factions directory', () => {
     const at = html.indexOf('data-testid="faction-tile-row"')
     expect(at).toBeGreaterThan(-1)
     const row = html.slice(html.lastIndexOf('<', at), html.indexOf('>', at) + 1)
-    expect(row).toContain('faction-tile-row')
+    expect(row).toMatch(/class="[^"]*\bfaction-tile-row\b/)
     expect(html.match(/<div class="faction-tile" style="opacity:[^"]*">/g) ?? []).toHaveLength(6)
   })
 
