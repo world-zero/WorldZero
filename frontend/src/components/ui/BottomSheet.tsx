@@ -35,7 +35,7 @@ export default function BottomSheet({
       aria-label={label}
       className={aboveTabBar ? 'sheet-above-tabs' : undefined}
     >
-      <button type="button" className="sheet-scrim" aria-label={scrimLabel} onClick={onClose} />
+      <button type="button" tabIndex={-1} className="sheet-scrim" aria-label={scrimLabel} onClick={onClose} />
       <div className={`sheet-panel ${panelClass}`}>
         {grab && <span className="sheet-grab" />}
         {children}

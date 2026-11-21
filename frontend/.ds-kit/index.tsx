@@ -90,7 +90,6 @@ export { default as DefaultTaskCard } from "../src/components/taskCard/DefaultTa
 export { default as DefaultTaskDetail } from "../src/pages/taskDetail/archetypes/DefaultTaskDetail";
 export { default as DefaultVote } from "../src/components/vote/DefaultVote";
 export { default as DeleteAccountCard } from "../src/pages/settings/DeleteAccountCard";
-export { default as DesktopPlayers } from "../src/pages/players/DesktopPlayers";
 export { DuelCard } from "../src/pages/praxisDetail/DuelCard";
 export { default as DuelSealConfirm } from "../src/components/duel/DuelSealConfirm";
 export { default as DuelSealSheet } from "../src/components/duel/DuelSealSheet";
@@ -160,7 +159,6 @@ export { default as FeedCardInvitationLetter } from "../src/components/feed/Feed
 export { default as FeedCardRouter } from "../src/components/feed/FeedCardRouter";
 export { default as FeedChassisBand } from "../src/components/feed/FeedChassisBand";
 export { default as FeedDateDivider } from "../src/components/feed/FeedDateDivider";
-export { default as FeedEmptyState } from "../src/components/feed/FeedEmptyState";
 export { default as FeedItemSlot } from "../src/components/feed/FeedItemSlot";
 export { default as FeedRowActions } from "../src/components/feed/FeedRowActions";
 export { default as FeedRowContent } from "../src/components/feed/FeedRowContent";
@@ -185,7 +183,6 @@ export { default as MetataskPicker } from "../src/components/metataskSeal/Metata
 export { default as MetataskRemoveConfirm } from "../src/components/metataskSeal/MetataskRemoveConfirm";
 export { default as MetataskSeal } from "../src/components/metataskSeal/MetataskSeal";
 export { MetataskSealStack } from "../src/components/metataskSeal/MetataskSealStack";
-export { default as MobilePlayers } from "../src/pages/players/MobilePlayers";
 export { MobileStickyBar } from "../src/pages/factionDetail/MobileStickyBar";
 export { default as MobileTabBar } from "../src/components/layout/MobileTabBar";
 export { default as NavBar } from "../src/components/NavBar";
@@ -197,6 +194,7 @@ export { OwnerControls } from "../src/components/comments/OwnerControls";
 export { default as PageTitle } from "../src/components/ui/PageTitle";
 export { default as PendingBadge } from "../src/components/layout/PendingBadge";
 export { default as PendingRowPill } from "../src/pages/fieldDesk/PendingRowPill";
+export { default as PlayersDirectory } from "../src/pages/players/PlayersDirectory";
 export { default as PlayersFilterBar } from "../src/pages/players/PlayersFilterBar";
 export { default as PointsRoundel } from "../src/components/factionMarks/PointsRoundel";
 export { default as PortraitPicker } from "../src/pages/characterPaths/PortraitPicker";

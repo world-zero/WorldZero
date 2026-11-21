@@ -73,6 +73,14 @@ Once a duel is `settled`, backing out of it forfeits the contest rather than reo
   for non-members exactly like any editing praxis (ADR-0024); read surfaces show only
   "forfeited — won by default".
 
+### Amendment (#3766)
+
+Forfeit is no longer limited to a `settled` duel. It applies to **active** duels too: they
+settle once the honest side submits, and the opponent wins by default. **Suspension** is a
+trigger alongside unsubmit, ban and soft-delete. **Pending** challenges are declined, and
+the decline records `forfeited_by_character_id` / `forfeited_at`. Ban and suspension
+re-score silently (ADR-0068).
+
 ## Consequences
 
 - Scoring must determine "is this praxis a side of a duel?" via the `Duel` table

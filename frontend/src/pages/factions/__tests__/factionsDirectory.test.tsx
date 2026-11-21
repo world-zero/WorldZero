@@ -154,8 +154,14 @@ describe('factions directory', () => {
     const at = html.indexOf('data-testid="faction-tile-row"')
     expect(at).toBeGreaterThan(-1)
     const row = html.slice(html.lastIndexOf('<', at), html.indexOf('>', at) + 1)
-    expect(row).toContain('flex-wrap:wrap')
-    expect(row).toContain('align-items:stretch')
-    expect(html.match(/<div style="display:flex;flex-direction:column;opacity:[^"]*">/g) ?? []).toHaveLength(6)
+    expect(row).toMatch(/class="[^"]*\bfaction-tile-row\b/)
+    expect(html.match(/<div class="faction-tile" style="opacity:[^"]*">/g) ?? []).toHaveLength(6)
+  })
+
+  it('centres the tile row on phones, left-aligns from md up (#2579)', () => {
+    const { html } = dir(STATUS)
+    const at = html.indexOf('data-testid="faction-tile-row"')
+    const row = html.slice(html.lastIndexOf('<', at), html.indexOf('>', at) + 1)
+    expect(row).toContain('justify-center')
   })
 })

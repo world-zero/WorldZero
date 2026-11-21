@@ -9,9 +9,8 @@ import { useResource } from '../hooks/useResource'
 import { useGameConfig } from '../hooks/useGameConfig'
 import { useAuth } from '../auth/AuthContext'
 import { extractError } from '../utils/errors'
-import { useFormFactor } from '../hooks/useFormFactor'
-import DesktopPlayers from './players/DesktopPlayers'
-import MobilePlayers from './players/MobilePlayers'
+import { FilterBarEmpty } from '../components/ui/FilterBar'
+import PlayersDirectory from './players/PlayersDirectory'
 import {
   NO_RELATIONSHIPS,
   PODIUM_SIZE,
@@ -23,16 +22,14 @@ import {
 import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 /**
- * The Players page (#1855) — one data layer under `DesktopPlayers` /
- * `MobilePlayers`. Reads: `/leaderboard` (faction sums derive from it), three
- * podium `/praxes` after it lands (optional), `/relationships` when signed in.
+ * The Players page (#1855) — one data layer under `PlayersDirectory`.
+ * Reads: `/leaderboard` (faction sums derive from it), three podium `/praxes` after it lands (optional), `/relationships` when signed in.
  */
 export default function Leaderboard() {
   const { t } = useTranslation('common')
   useDocumentTitle(t('leaderboard.title'))
   const { user } = useAuth()
   const config = useGameConfig()
-  const formFactor = useFormFactor()
   // ponytail: one unpaginated fetch, everything ranked client-side; fine for
   // ~42 players, breaks in the high hundreds. Then move search/rank server-side.
   const { data, loading, error } = useResource(() => getLeaderboard({ limit: 500 }), [])
@@ -73,13 +70,13 @@ export default function Leaderboard() {
   if (characters.length === 0) {
     return (
       <div className="py-8">
-        <p className="font-body content-text text-muted">{t('leaderboard.empty')}</p>
+        <FilterBarEmpty title={t('leaderboard.empty')} />
       </div>
     )
   }
 
   const view = { ranked, scoreMode, onScoreMode: setScoreMode, eyebrow, myCharId, related, latest }
-  return formFactor === 'mobile' ? <MobilePlayers {...view} /> : <DesktopPlayers {...view} />
+  return <PlayersDirectory {...view} />
 }
 
 /**
@@ -151,6 +148,3 @@ function useViewerRelationships(myCharId: number | null): ViewerRelationships {
 
   return related
 }
-
-/** For tests: under SSR `<Leaderboard/>` only ever renders Loading. */
-export { default as DesktopLeaderboard } from './players/DesktopPlayers'

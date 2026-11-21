@@ -270,13 +270,15 @@ async def recalculate_character_stats(
     score_delta = total_score - stats.score
     previous_score = stats.score
     previous_level = stats.level
+    previous_era_peak = stats.era_peak_level
     stats.score = total_score
     stats.level = compute_level(total_score, era)
     record_level_reached(author, stats.level)
+    stats.era_peak_level = max(previous_era_peak, stats.level)
     if score_delta:
         author.all_time_score += score_delta
 
-    if emit_taunts and stats.level > previous_level:
+    if emit_taunts and stats.level > previous_era_peak:
         await notify_level_up(session, author)
 
     if emit_taunts and score_delta:
@@ -308,6 +310,7 @@ async def recalculate_members_stats(
     era: EraConfig = CURRENT_ERA,
     *,
     era_row: Era | None = None,
+    emit_taunts: bool = True,
 ) -> None:
     """Recalculate every member of ``praxis`` and its duel opponents, then flush (#492).
 
@@ -324,6 +327,7 @@ async def recalculate_members_stats(
         session,
         era,
         era_row,
+        emit_taunts=emit_taunts,
     )
 
 
@@ -333,6 +337,8 @@ async def _recalculate_with_duel_opponents(
     session: AsyncSession,
     era: EraConfig,
     era_row: Era,
+    *,
+    emit_taunts: bool = True,
 ) -> None:
     """Members of ``praxis_ids`` and their duel opponents, once, ascending id."""
     ids = await with_duel_opponents(praxis_ids, session)
@@ -341,7 +347,9 @@ async def _recalculate_with_duel_opponents(
     )
     character_ids = extra_character_ids | set(members.scalars().all())
     for character_id in sorted(character_ids):
-        await recalculate_character_stats(character_id, session, era, era_row=era_row)
+        await recalculate_character_stats(
+            character_id, session, era, era_row=era_row, emit_taunts=emit_taunts
+        )
     await session.flush()
 
 
@@ -349,19 +357,24 @@ async def recalculate_for_account_votes(
     account_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    extra_character_ids: frozenset[int] | set[int] = frozenset(),
 ) -> None:
     """Re-score every praxis ``account_id`` voted on, after a moderation flip.
 
     Tallies skip moderated voters on read, so stored scores must follow.
+    ``extra_character_ids`` join the same ascending pass: advisory locks are
+    held to commit, so a second pass could lock out of order. Silent (ADR-0068).
     """
     voted = await session.execute(
         select(Vote.praxis_id).where(Vote.voter_account_id == account_id)
     )
     praxis_ids = set(voted.scalars().all())
-    if not praxis_ids:
+    if not praxis_ids and not extra_character_ids:
         return
     live = await get_current_era_row(session)
-    await _recalculate_with_duel_opponents(praxis_ids, set(), session, era, live)
+    await _recalculate_with_duel_opponents(
+        praxis_ids, set(extra_character_ids), session, era, live, emit_taunts=False
+    )
 
 
 @dataclasses.dataclass(frozen=True)

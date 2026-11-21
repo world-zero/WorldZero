@@ -52,7 +52,7 @@ from services.character_stats import (
     recalculate_for_account_votes,
 )
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
-from services.duel import forfeit_duels_for_character
+from services.duel import forfeit_duels_collect
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.era import (
@@ -252,7 +252,7 @@ async def flags_for_praxes(
     result = await session.execute(
         select(Flag, Character.display_name)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(Flag.praxis_id.in_(praxis_ids))
+        .where(Flag.praxis_id.in_(praxis_ids), Flag.resolved_at.is_(None))
         .order_by(Flag.created_at.desc())
     )
     flags_by_praxis: dict[int, list[FlagOut]] = {}
@@ -272,7 +272,7 @@ async def flags_for_comments(
     result = await session.execute(
         select(Flag, Character.display_name)
         .join(Character, Character.id == Flag.flagged_by_id)
-        .where(Flag.comment_id.in_(comment_ids))
+        .where(Flag.comment_id.in_(comment_ids), Flag.resolved_at.is_(None))
         .order_by(Flag.created_at.desc())
     )
     flags_by_comment: dict[int, list[FlagOut]] = {}
@@ -394,9 +394,10 @@ async def apply_ban(
             "This character was deleted by its player and cannot be restored.",
         )
 
+    rescore_ids: set[int] = set()
     if banned:
         character.status = CharacterStatus.banned
-        await forfeit_duels_for_character(character.id, session, era)
+        rescore_ids = await forfeit_duels_collect([character.id], session)
     else:
         character.status = CharacterStatus.active
 
@@ -404,7 +405,9 @@ async def apply_ban(
     await log_mod_action(
         session, actor_id, "ban" if banned else "unban", "character", character.id
     )
-    await recalculate_for_account_votes(character.account_id, session, era)
+    await recalculate_for_account_votes(
+        character.account_id, session, era, rescore_ids
+    )
 
 
 async def set_character_stats(
@@ -585,12 +588,13 @@ async def suspend_account(
         raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
+    rescore_ids: set[int] = set()
     if suspended:
         # Same as a ban; lifting the suspension does not undo it (#3766).
-        for character_id in (await session.scalars(
+        character_ids = (await session.scalars(
             select(Character.id).where(Character.account_id == account_id)
-        )).all():
-            await forfeit_duels_for_character(character_id, session, era)
+        )).all()
+        rescore_ids = await forfeit_duels_collect(character_ids, session)
     await log_mod_action(
         session,
         actor_id,
@@ -598,7 +602,7 @@ async def suspend_account(
         "account",
         account_id,
     )
-    await recalculate_for_account_votes(account_id, session, era)
+    await recalculate_for_account_votes(account_id, session, era, rescore_ids)
     await session.refresh(account)
     return account
 
@@ -739,7 +743,9 @@ async def admin_edit_task(
             .distinct()
         )
         for character_id in member_ids.all():
-            await recalculate_character_stats(character_id, session, era)
+            await recalculate_character_stats(
+                character_id, session, era, emit_taunts=False
+            )
         await session.flush()
     await log_mod_action(session, actor_id, "task_edit", "task", task_id)
     await session.refresh(task)

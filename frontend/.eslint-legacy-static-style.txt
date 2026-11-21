@@ -74,7 +74,6 @@ src/components/feed/FeedCardEraAnnouncement.tsx
 src/components/feed/FeedCardInvitationLetter.tsx
 src/components/feed/FeedChassisBand.tsx
 src/components/feed/FeedDateDivider.tsx
-src/components/feed/FeedEmptyState.tsx
 src/components/feed/FeedItemSlot.tsx
 src/components/feed/FeedRowActions.tsx
 src/components/feed/FeedRowContent.tsx
@@ -169,7 +168,6 @@ src/pages/AlbescentSecretPlaceholder.tsx
 src/pages/CharacterProfile.tsx
 src/pages/Contact.tsx
 src/pages/EditPraxis.tsx
-src/pages/Factions.tsx
 src/pages/FieldDesk.tsx
 src/pages/Praxes.tsx
 src/pages/ProposeTask.tsx
@@ -235,8 +233,7 @@ src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx
 src/pages/onboarding/OnboardingCard.tsx
-src/pages/players/DesktopPlayers.tsx
-src/pages/players/MobilePlayers.tsx
+src/pages/players/PlayersDirectory.tsx
 src/pages/players/ScoreToggle.tsx
 src/pages/players/SectionHeading.tsx
 src/pages/praxisDetail/DuelCard.tsx

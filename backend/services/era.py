@@ -439,11 +439,15 @@ async def apply_era_reset(
         # The closing era's rules, not the opening era's: its score is frozen history.
         closing_era = era_config_for_key(closing_era_row.config_key)
         if closing_era is None:
-            raise RuntimeError(
-                f"Era {closing_era_row.id} names unregistered config_key "
-                f"{closing_era_row.config_key!r}; "
-                "cannot seal its collabs or re-score its duels"
+            # The roll is the way out of this state (era_reset.py), so it must not fail.
+            logger.warning(
+                "Closing Era %s names unregistered config_key %r; sealing and "
+                "re-scoring it under the compile-time era %r.",
+                closing_era_row.id,
+                closing_era_row.config_key,
+                COMPILE_TIME_ERA_CONFIG_KEY,
             )
+            closing_era = era_config_for_key(COMPILE_TIME_ERA_CONFIG_KEY)
 
         # Lapsed collabs belong to the closing era, not to whoever reads them first.
         participants = await seal_lapsed_at_era_close(
@@ -483,11 +487,14 @@ async def apply_era_reset(
         )
         prev_stats = prev_result.scalar_one_or_none()
 
+        carried_level = prev_stats.level if prev_stats else 0
+        starting_level = 0 if era.reset_level else carried_level
         new_stats = CharacterStats(
             character_id=character.id,
             era_id=new_era_row.id,
             score=0 if era.reset_score else (prev_stats.score if prev_stats else 0),
-            level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
+            level=starting_level,
+            era_peak_level=starting_level,
             votes_spent_this_era=0 if era.reset_vote_budget else (
                 prev_stats.votes_spent_this_era if prev_stats else 0
             ),

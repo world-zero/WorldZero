@@ -109,14 +109,14 @@ describe('the Albescent tile is named once the account qualifies (#2518)', () =>
   for (const [mount, renderAt] of [['mobile', renderMobile], ['desktop', renderDesktop]] as const) {
     it(`prints the real name for a revealed account — ${mount}`, () => {
       setAlbescentRevealed(true)
-      expect(renderAt(pickerWithAlbescent()).text).toContain('Albescent')
+      expect(renderAt(pickerWithAlbescent()).text).toContain('Chromagencia')
     })
 
     it(`still masks the name for an unrevealed viewer — ${mount}`, () => {
       // Unreachable from the server now, but proves the label goes THROUGH the
       // mask; a hardcoded name would pass the case above and leak.
       setAlbescentRevealed(false)
-      expect(renderAt(pickerWithAlbescent()).text).not.toContain('Albescent')
+      expect(renderAt(pickerWithAlbescent()).text).not.toContain('Chromagencia')
     })
   }
 
@@ -133,6 +133,6 @@ describe('the Albescent tile is named once the account qualifies (#2518)', () =>
     const { html, text } = renderMobile(pickerWithAlbescent())
     const mark = renderToStaticMarkup(<FactionSigil slug="albescent" size={PICKER_SIGIL} />)
     expect(html, 'the labyrinth is drawn').toContain(mark)
-    expect(text, 'and the word beside it is the real one').toContain('Albescent')
+    expect(text, 'and the word beside it is the real one').toContain('Chromagencia')
   })
 })

@@ -64,16 +64,17 @@ def may_see_pending_tasks(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
 ) -> bool:
-    """``era.level_to_see_pending_tasks`` — admins watch the moderation queue too.
+    """``era.level_to_see_pending_tasks`` OR the pending-praxis faction perk.
 
     Admin bypass is ruled (#2863): the pending queue is the moderation queue.
-    No faction bypass, so ``pending_visibility_clause`` passes ``None``.
+    A perk faction can see the queue at any level but only up to the era's
+    points ceiling; ``pending_visibility_clause`` applies that per row.
     """
     if is_admin:
         return True
-    if level is None:
-        return False
-    return level >= era.level_to_see_pending_tasks
+    if level is not None and level >= era.level_to_see_pending_tasks:
+        return True
+    return faction_slug in era.allow_praxis_on_pending_task_factions
 
 
 def may_comment(

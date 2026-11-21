@@ -94,7 +94,7 @@ Verified against `origin/main` at vendoring time:
 - `factionSigilRing()` in `FactionSigil.tsx` still returns a blue hoop for
   `albescent` on `CredentialCard`. #1926 flagged it as unresolved; it interacts
   with the Albescent question above.
-- `MobilePlayers.tsx` / `Sidebar.tsx` carry a `NEUTRAL_SIGIL_SLUGS` set (#1892)
+- `PlayersDirectory.tsx` / `Sidebar.tsx` carry a `NEUTRAL_SIGIL_SLUGS` set (#1892)
   that names `albescent` so it draws `DefaultSigil` on the position-sampled
   rainbow. Same interaction.
 
