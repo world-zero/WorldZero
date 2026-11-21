@@ -2034,7 +2034,7 @@ async def get_sidebar_feed(
     )
     pending = await _count_requests([(character_id, fetch_ctx, archive_view)], session)
 
-    recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
+    recent_activity.sort(key=_feed_order_cursor, reverse=True)
     return (
         pending[character_id],
         recent_activity[:SIDEBAR_ACTIVITY_LIMIT],

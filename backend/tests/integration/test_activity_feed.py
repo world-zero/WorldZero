@@ -610,7 +610,7 @@ async def test_load_more_walks_items_sharing_one_timestamp(
                 name="Tie",
                 config_key="era_1",
                 started_at=moment,
-                started_by_id=character.id,
+                started_by_id=character.account_id,
             )
         )
     await db_session.commit()

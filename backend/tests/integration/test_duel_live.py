@@ -19,6 +19,7 @@ from models.relationship import Relationship, RelationshipType
 from services import push
 from services.activity_feed import (
     FEED_ITEM_TYPE_DUEL_LIVE,
+    FeedCursor,
     FILTER_FOES,
     FILTER_FRIENDS,
     get_activity_feed,
@@ -256,7 +257,9 @@ async def test_rows_order_and_page_on_live_at(db_session: AsyncSession, era):
     page = await get_activity_feed(
         viewer.id,
         db_session,
-        before_cursor=datetime.now(timezone.utc) - timedelta(days=1),
+        before_cursor=FeedCursor(
+            datetime.now(timezone.utc) - timedelta(days=1), FEED_ITEM_TYPE_DUEL_LIVE, 0
+        ),
     )
     assert [i.item_key for i in page.items if i.type == FEED_ITEM_TYPE_DUEL_LIVE] == [
         f"duel_live:{older.id}"
