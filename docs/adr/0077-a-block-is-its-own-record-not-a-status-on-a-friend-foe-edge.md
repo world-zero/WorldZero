@@ -120,6 +120,10 @@ authored the record.
 
 ## What a block prevents — the whole list
 
+> **Amended 2026-11-21 (#3867):** this list is replaced by the contact barrier in
+> [the amendment below](#amendment-2026-11-21-3867-a-block-is-a-contact-barrier).
+> It is kept as the record of what a block first was.
+
 The new record enforces exactly what the old status enforced, and nothing more.
 There are two enforcement sites, and they are the two that read edge `status`
 today:
@@ -261,3 +265,45 @@ already showing.
 it is the inverse of the bug being fixed. A block the blocked party can remove is
 not a block, and ADR-0009's symmetric unblock only made sense while the two
 parties shared one row.
+
+## Amendment (2026-11-21, #3867): a block is a contact barrier
+
+The owner closed the request channels that "the whole list" left open on
+purpose. **You still see what a blocked player does; they can no longer reach
+you; you can see they are talking but not read it.** Silence (ruling 2) is
+unchanged: the blocked party's every response is identical with and without the
+block. Effect stops being symmetric (ruling 1) everywhere except taunts and
+pushes; the rest is keyed blocker → blocked, and a block back applies the same
+rules from the other side.
+
+A blocks B:
+
+- **Feed: B's completions, sign-ups and defections show again.** The block no
+  longer starves the friends-and-foes sources. A `duel_live` row involving B
+  stays hidden for now (`_duel_live_query`): whether watching B's duel is "what
+  they do" or reach was not ruled, so the narrower reading holds until it is.
+- **Taunts, both ways, and pushes from B: still stopped.** Votes still count
+  (ADR-0041); the rival bonus is a snapshot and ignores blocks (ADR-0100).
+- **B → A invites, duel challenges and nudges are swallowed.** B sees them sent
+  and pending; A gets no feed item, request count or push. They are never
+  declined, since a decline notice would announce the block. A swallowed
+  challenge lapses like any unanswered one (`duel_challenge_lapse_days`), which B
+  sees as an ordinary lapse. Requests already pending when A blocks become
+  swallowed from then on.
+- **A swallowed request costs A nothing.** A pending invite counts as ownership
+  for the self-vote rule (#2216) and a pending duel bars both sides; neither
+  holds for a swallowed one, or a block would silently take A's vote on B's
+  praxis.
+- **B's comments and @mentions are censored for A** in threads and feed rows: the
+  author, time and position stay, and the body and mentions are not sent to A at
+  all (a client-side blank would still ship them). A sees "Hidden — you blocked
+  this player". Stored text is never touched; mod views read the real text, and
+  B and everyone else read it normally.
+- **A can't invite, challenge or nudge B.** A knows about the block, so A needs
+  no silence: those controls are hidden and the server refuses with
+  `CONTACT_BLOCKED`. A crew nudge skips B.
+- **Unblock restores reach.** Every swallow and censor is a read-time filter on
+  the block row, so swallowed requests still pending show again and B's comments
+  read normally. Ruling 5 still holds for edges.
+
+Per character, like the rest of the block: A's other characters are unaffected.
