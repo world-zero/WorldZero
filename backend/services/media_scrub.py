@@ -214,7 +214,8 @@ async def _sweep_unclaimed_heic(
     """An original no row claims still serves its GPS from /media.
 
     With a claimed .jpg beside it, it is an interrupted run's leftover: remove
-    it. Otherwise only the orphan sweep may delete it, so fail loudly.
+    it. Otherwise fail loudly: a live-root orphan goes to sweep_orphan_media.py,
+    a quarantine orphan is deleted by hand.
     """
     claimed = (await load_known_paths(session, media_root)).claimed_paths
     files = [
