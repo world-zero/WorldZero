@@ -24,7 +24,18 @@ from services.duel import settle_lapsed_duels
 from services.praxis_visibility import duel_side_hidden_condition
 from tests.integration.factories import make_duel
 
-DAYS = CURRENT_ERA.duel_challenge_lapse_days
+DAYS = 7
+
+
+@pytest.fixture(autouse=True)
+def _lapsing_era():
+    """Era 1 never lapses (None); these tests pin a 7-day window and restore it."""
+    saved = (CURRENT_ERA.duel_challenge_lapse_days, CURRENT_ERA.duel_cast_lapse_days)
+    object.__setattr__(CURRENT_ERA, "duel_challenge_lapse_days", DAYS)
+    object.__setattr__(CURRENT_ERA, "duel_cast_lapse_days", DAYS)
+    yield
+    object.__setattr__(CURRENT_ERA, "duel_challenge_lapse_days", saved[0])
+    object.__setattr__(CURRENT_ERA, "duel_cast_lapse_days", saved[1])
 
 
 async def _duel(db_session, era, label, *, status, age_days):
@@ -306,3 +317,21 @@ async def test_a_candidate_cleared_under_lock_still_reports_the_reread(
     await db_session.refresh(duel)
     assert duel.status == DuelStatus.pending
     await build_praxis_out(praxis, db_session, viewer=None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", [DuelStatus.pending, DuelStatus.active])
+async def test_a_none_window_never_lapses(
+    db_session: AsyncSession, era: Era, some_faction: Faction, status
+):
+    duel, *_ = await _duel(
+        db_session, era, f"nv{status.value}", status=status, age_days=400
+    )
+    object.__setattr__(CURRENT_ERA, "duel_challenge_lapse_days", None)
+    object.__setattr__(CURRENT_ERA, "duel_cast_lapse_days", None)
+
+    await settle_lapsed_duels(db_session, CURRENT_ERA)
+
+    await db_session.refresh(duel)
+    assert duel.status == status
+    assert duel.forfeited_by_character_id is None

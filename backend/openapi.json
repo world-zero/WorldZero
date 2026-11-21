@@ -4142,8 +4142,15 @@
             "type": "integer"
           },
           "duel_challenge_lapse_days": {
-            "title": "Duel Challenge Lapse Days",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duel Challenge Lapse Days"
           },
           "duel_level_required": {
             "title": "Duel Level Required",

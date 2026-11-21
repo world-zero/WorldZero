@@ -302,7 +302,7 @@ export function useDuelSealCopy(
     heading: t('duelSeal.heading'),
     body:
       duel.status === 'pending'
-        ? lapseDays === undefined
+        ? lapseDays == null
           ? t('duelSeal.bodyPendingNoDays', { name: foe.display_name })
           : t('duelSeal.bodyPending', { name: foe.display_name, days: lapseDays })
         : t('duelSeal.bodyActive', { name: foe.display_name }),

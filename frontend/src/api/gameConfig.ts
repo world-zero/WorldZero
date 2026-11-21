@@ -38,7 +38,7 @@ export interface GameConfigOut {
   duel_level_required: number
   collab_auto_submit_days: number
   /** Days an unanswered duel challenge waits before it lapses (#3875). */
-  duel_challenge_lapse_days: number
+  duel_challenge_lapse_days: number | null // null = waits for the era close
   /** Hours a fresh proposal stays admin-only (#1695). */
   pending_task_admin_review_hours: number
   level_to_see_pending_tasks: number

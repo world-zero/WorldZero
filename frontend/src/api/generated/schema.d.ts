@@ -3904,7 +3904,7 @@ export interface components {
             /** Collab Auto Submit Days */
             collab_auto_submit_days: number;
             /** Duel Challenge Lapse Days */
-            duel_challenge_lapse_days: number;
+            duel_challenge_lapse_days: number | null;
             /** Duel Level Required */
             duel_level_required: number;
             /** Era Id */
