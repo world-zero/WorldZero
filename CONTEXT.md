@@ -32,30 +32,30 @@ Permanent Marker), is **stale** — the wrong identity, not a neutral one. Named
 (e.g. `DefaultFactionBody`).
 _Avoid_: reading "faction-agnostic" as "no identity" — the identity is Unaffiliated.
 
-**Albescent**:
+**Chromagencia**:
 A first-class faction — own slug, members, roster, invite-letter flow and level-8 unlock —
 whose *look* is deliberately the Unaffiliated one with extra ornament: quiet tells (a slow
 rainbow drift, a morphing vote blob) layered over the Default kit's structure, so a member
 reads as unaffiliated at a glance and reveals itself only to someone already looking
-(ADR-0083). Where a design exists, Albescent wears it; where none does yet, it
+(ADR-0083). Where a design exists, Chromagencia wears it; where none does yet, it
 falls through to Default like any undressed faction. Its **faction page is redacted, not
-hidden**: a non-member sees that Albescent exists and is told nothing about it (ADR-0082,
+hidden**: a non-member sees that Chromagencia exists and is told nothing about it (ADR-0082,
 which supersedes ADR-0027's hiding posture).
-_Avoid_: "Albescent is na", "Albescent is an alias" — below the skin it is its own faction.
-_Avoid also — plain words for ordinary things (owner ruling 2026-08-23)_: Albescent's
+_Avoid_: "Chromagencia is na", "Chromagencia is an alias" — below the skin it is its own faction.
+_Avoid also — plain words for ordinary things (owner ruling 2026-08-23)_: Chromagencia's
 surfaces are the same surfaces every faction has, and they take the same names. Say
-**Albescent**, not "the society". Say an account is **unlocked**, not "revealed to the
+**Chromagencia**, not "the society". Say an account is **unlocked**, not "revealed to the
 society". Its page is the **faction page**, in a **locked** or **unlocked** state — not "the
 sealed page", "the sealed placeholder" or "the reveal". Say **invite letter**, not "the
 letter" or "the prospectus". Identifiers are exempt and are not renamed by this rule:
 `.alb-prism`, the `invitation_letter` table and `AlbescentSecretPlaceholder` keep
-their names until something else moves them. (`--albescent-reveal-*` was listed
+their names until something else moves them. The public name is Chromagencia (#3908); the slug and identifiers keep the old one (`albescent`, `Albescent*` components, `.alb-*` classes, `FACTION_ALBESCENT_*` codes). (`--albescent-reveal-*` was listed
 here too and is gone: #2632 deleted the register, not the exemption.)
 
 **Invite letter** *(every faction; `invitation_letter` table)*:
 The letter a faction sends a character asking them to join it — one shared component
 (`InvitationLetterPopup`) plus a per-faction voice, and a feed card
-(`FeedCardInvitationLetter`) that announces one has arrived. Albescent's is the same object
+(`FeedCardInvitationLetter`) that announces one has arrived. Chromagencia's is the same object
 under a separate component (`AlbescentInvitation`) and a separate key family
 (`albescent.letter.*` where the other seven use `<slug>.invitation.*`), which is a naming
 accident rather than a second concept.
@@ -158,7 +158,7 @@ Do not introduce new legacy slugs.
 A slug that inherited another faction's archetype by design rather than rebrand. Only two
 ever existed — `albescent → ua` and `aged_out → ua` — and both are retired (#232, #428).
 `FACTION_ALIASES` is gone and `resolveVariant` has no alias step.
-_Avoid_: describing Albescent as an alias. Falling through to the Default archetype on an
+_Avoid_: describing Chromagencia as an alias. Falling through to the Default archetype on an
 undressed surface is the ordinary partial-registry behaviour every faction has, not aliasing.
 
 **Content slot**:
@@ -486,11 +486,11 @@ removed).
 `task_type` + `metatask_faction_slug` and the `TaskType` enum collapses. This reverses migration
 0006 and has **not** landed; treat the standalone-model language elsewhere as aspiration, not
 present reality.
-- **Access**: `can_access_metatask` = Albescent (bypasses the level gate) **or**
+- **Access**: `can_access_metatask` = Chromagencia (bypasses the level gate) **or**
   `level ≥ era.metatask_apply_level`. **Faction-open** — a character may apply
   **any** faction's metatask, not only their own; `metatask_faction_slug` records authorship,
   not permission. Enforced once **at apply**; the "can apply" UI flag mirrors it (minus the
-  Albescent level bypass).
+  Chromagencia level bypass).
 - **Praxis-wide**: once applied, **every member** of that praxis banks the bonus — scoring does
   **no** per-member access re-check; `get_meta_task_points` is a dumb sum of attached
   `point_value`s. _Avoid_: per-member metatask gating (rejected — see ADR-0015).
@@ -531,7 +531,7 @@ The single per-faction Comment archetype, dispatched by `resolveVariant(surfaceM
 and rendered in two modes — `row` (read-only, keyed on the author's faction) and `composer`
 (input, keyed on the current character's faction). The call site picks the slug; one
 archetype serves both modes (cf. the vote reframe's caster/summary, ADR-0005). **Seven**
-archetypes (incl. Albescent as a full faction, not the `→ ua` alias), each at task-card
+archetypes (incl. Chromagencia as a full faction, not the `→ ua` alias), each at task-card
 fidelity by **reusing** that faction's existing card atoms, not new ornaments (ADR-0018).
 
 **Comment voice** *(ADR-0018, ADR-0093)*:
@@ -622,7 +622,7 @@ The login identity — one verified email, reachable through one or more identit
 (ADR-0075). Owns one or more **Characters** and never appears on public game surfaces
 (`account_id` and `email` are private). The Account is the unit of all *cross-character*
 rules: the multi-character cap, the account-pooled invite gate (see **Faction invite**),
-the account-collective Albescent unlock, and account-scoped anti-self-voting (a character
+the account-collective Chromagencia unlock, and account-scoped anti-self-voting (a character
 cannot vote on a praxis authored by any character sharing its account).
 _Avoid_: user, player (the *player* is the human; the *account* is their credential record).
 

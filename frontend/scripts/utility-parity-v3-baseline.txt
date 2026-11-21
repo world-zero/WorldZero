@@ -144,7 +144,6 @@ filter-factions__panel-head
 filter-factions__popover
 filter-factions__row
 filter-factions__rows
-filter-factions__scrim
 filter-factions__sheet
 filter-factions__sigil
 filter-factions__stack

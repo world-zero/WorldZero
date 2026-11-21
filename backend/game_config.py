@@ -271,6 +271,8 @@ class EraConfig:
     # These are PERKS too (#1871); _inherited_perk_slugs covers them.
     allow_praxis_on_retired_task_factions: frozenset = field(default=frozenset())
     allow_praxis_on_pending_task_factions: frozenset = field(default=frozenset())
+    # Pending perk only reaches tasks worth STRICTLY below this; None = no ceiling.
+    pending_task_praxis_points_below: int | None = None
 
     # Collab-invite carve-outs (#1511, owner ruling): an invitee may submit on a
     # task they could not claim. Enforced in invite_to_praxis (level, faction)

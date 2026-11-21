@@ -300,7 +300,7 @@
         "remove": "Remove",
         "fail": "Doesn't meet the task",
         "failShort": "Not met",
-        "help": "Remove hides it from everyone. Doesn't meet the task leaves it up but it scores nothing. Keep clears the flags and tells nobody.",
+        "help": "Remove hides it from everyone. Doesn't meet the task leaves it up but it scores nothing. Keep closes these reports and tells nobody.",
         "reasonLabel": "Reason the author sees",
         "reasonHint": "One line, for Remove or Doesn't meet the task",
         "reasonHintComment": "One line, for Remove",

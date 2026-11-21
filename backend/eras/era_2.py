@@ -141,7 +141,7 @@ ERA_2 = EraConfig(
     factions=ERA_2_FACTIONS,
     tasks=ERA_2_TASKS,
     level_profiles=ERA_2_LEVEL_PROFILES,
-    # allow_praxis_on_retired_task_factions stays empty: no Ephemerists.
+    # The retired/pending perks and pending ceiling stay unset: no Ephemerists.
     collab_invite_bypasses_level=True,
     collab_invite_bypasses_faction=True,
     collab_invite_bypasses_task_bank=False,

@@ -6,11 +6,13 @@ import FactionAvatar from '../../components/avatar/FactionAvatar'
 import FactionSigil from '../../components/sigil/FactionSigil'
 import LevelGem from '../../components/ui/LevelGem'
 import { REDACTED, factionCssVar, factionName, isFactionRedacted, isKnownFaction } from '../../utils/factions'
+import { FilterBarEmpty } from '../../components/ui/FilterBar'
 import PlayersFilterBar from './PlayersFilterBar'
 import ScoreToggle from './ScoreToggle'
 import SectionHeading from './SectionHeading'
 import {
   PLAYERS_FILTERS_DEFAULT,
+  hasActiveFilter,
   PODIUM_SIZE,
   ROSTER_PAGE_STEP,
   factionHref,
@@ -164,9 +166,19 @@ export default function MobilePlayers({
             </div>
 
             {view.total === 0 ? (
-              <p className="font-body content-text text-muted" style={{ marginTop: 'var(--space-lg)' }}>
-                {t('leaderboard.roster.empty')}
-              </p>
+              <div style={{ marginTop: 'var(--space-lg)' }}>
+                <FilterBarEmpty
+                  title={t('leaderboard.roster.empty')}
+                  onClearAll={
+                    hasActiveFilter(filters)
+                      ? () => {
+                          setFilters(PLAYERS_FILTERS_DEFAULT)
+                          setVisible(ROSTER_PAGE_STEP)
+                        }
+                      : undefined
+                  }
+                />
+              </div>
             ) : (
               <div style={{ marginTop: 'var(--space-lg)' }}>
                 {view.rows.map((row) => (

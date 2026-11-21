@@ -119,7 +119,7 @@ describe('EphemeristsVote markup', () => {
   it('renders the shared login gate for an anonymous viewer', () => {
     mocks.user = null
     const html = render()
-    expect(text(html)).toContain('Log in to vote')
+    expect(text(html)).toContain('Sign in to vote')
     expect(html).not.toContain('aria-label="Rate')
   })
 

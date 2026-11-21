@@ -80,8 +80,30 @@ async def test_interrupted_run_leftover_heic_removed_only_on_apply(
     report, to_unlink = await convert_heic_rows(db_session, str(tmp_path), apply)
 
     assert to_unlink == ([leftover] if apply else [])
-    assert [path for path, _ in report.failed] == [os.path.join(directory, "LOST.heic")]
+    assert report.failed == [
+        (
+            os.path.join(directory, "LOST.heic"),
+            "unreferenced; run sweep_orphan_media.py",
+        )
+    ]
     assert os.path.exists(leftover) and os.path.exists(orphan)
+
+
+@pytest.mark.asyncio
+async def test_unreferenced_quarantined_heic_is_deleted_by_hand(
+    db_session: AsyncSession, tmp_path
+):
+    live = tmp_path / "uploads"
+    live.mkdir()
+    held = tmp_path / "uploads-quarantine" / "1" / "2"
+    held.mkdir(parents=True)
+    (held / "LOST.heic").write_bytes(_heic_bytes())
+
+    report, _ = await convert_heic_rows(db_session, str(live), apply=True)
+
+    assert report.failed == [
+        ("1/2/LOST.heic", "unreferenced; delete the file by hand")
+    ]
 
 
 @pytest.mark.asyncio

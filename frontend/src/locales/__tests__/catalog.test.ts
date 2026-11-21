@@ -736,7 +736,6 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
     ['forms.json:editPraxis.seal.confirm', 'forms.json:editPraxis.attach.confirm'],
     ['forms.json:editPraxis.seal.removeTitle', 'forms.json:editPraxis.attach.removeTitle'],
     ['forms.json:editPraxis.seal.removeBody', 'forms.json:editPraxis.attach.removeBody'],
-    ['forms.json:editPraxis.seal.removeCancel', 'forms.json:editPraxis.attach.removeCancel'],
     ['forms.json:editPraxis.seal.removeConfirm', 'forms.json:editPraxis.attach.removeConfirm'],
     ['forms.json:editPraxis.composer.sealsLabel', 'forms.json:editPraxis.composer.metatasksLabel'],
     ['forms.json:editPraxis.collab.duelPillSealed', 'forms.json:editPraxis.collab.duelPillSubmitted'],
@@ -750,7 +749,7 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   it('has the whole ruling in the list', () => {
     // Guards against a line lost in a merge.
     expect(new Set(NAME_DUPLICATES).size).toBe(16)
-    expect(new Set(RENAMED.map(([from]) => from)).size).toBe(20)
+    expect(new Set(RENAMED.map(([from]) => from)).size).toBe(19)
   })
 
   it('finds catalog leaves to check against, so absence cannot be vacuous', () => {
@@ -821,10 +820,10 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     expect(i18n.t('factions:snide.invitation.headline')).toBe('Wanna F%&* some S^&* up?')
   })
 
-  it('names UA in full and Albescent without a slash', () => {
+  it('names UA in full and Chromagencia without a slash', () => {
     expect(factionName('ua')).toBe('Unwavering Artisans')
     // Via the catalog: `factionName()` masks Albescent when unrevealed (#1891).
-    expect(i18n.t('factions:names.albescent')).toBe('Albescent')
+    expect(i18n.t('factions:names.albescent')).toBe('Chromagencia')
     expect(i18n.t('factions:names.albescent').startsWith('/')).toBe(false)
   })
 
@@ -832,9 +831,9 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     expect(i18n.t('factions:descriptions.ua')).toContain('also known as UA')
   })
 
-  it("keeps Albescent's letterhead wordmark, which was already the clean form", () => {
+  it("keeps Chromagencia's letterhead wordmark, which was already the clean form", () => {
     // A different key from `names.albescent`; pinned against the slash sweep.
-    expect(i18n.t('factions:albescent.letter.wordmark')).toBe('Albescent')
+    expect(i18n.t('factions:albescent.letter.wordmark')).toBe('Chromagencia')
   })
 })
 

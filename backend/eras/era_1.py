@@ -269,6 +269,10 @@ ERA_1 = EraConfig(
     # Ephemerists' Task Vision: a perk outside FactionConfig (#1871). Albescent
     # is added by inheritance; don't list it.
     allow_praxis_on_retired_task_factions=frozenset({"ephemerists"}),
+    # Past, present and future: pending too, but only cheap tasks, so a big
+    # proposal can't be farmed before review.
+    allow_praxis_on_pending_task_factions=frozenset({"ephemerists"}),
+    pending_task_praxis_points_below=30,
     # Invites reach across levels and factions on purpose (#1511).
     collab_invite_bypasses_level=True,
     collab_invite_bypasses_faction=True,

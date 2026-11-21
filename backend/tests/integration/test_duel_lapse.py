@@ -201,3 +201,24 @@ async def test_a_cast_past_the_window_is_still_the_opponents_forfeit(
     assert resp.status_code == 200, resp.text
     await db_session.refresh(duel)
     assert duel.forfeited_by_character_id == opponent.id
+
+
+@pytest.mark.asyncio
+async def test_a_sticky_forfeit_survives_the_lapse_sweep(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, challenger, _ = await _duel(
+        db_session, era, "lp9", status=DuelStatus.active,
+        age_days=CURRENT_ERA.duel_cast_lapse_days + 1,
+    )
+    stamped = datetime.now(timezone.utc) - timedelta(days=1)
+    duel.forfeited_by_character_id = challenger.id
+    duel.forfeited_at = stamped
+    await db_session.commit()
+
+    await settle_lapsed_duels(db_session, CURRENT_ERA)
+    await settle_lapsed_duels(db_session, CURRENT_ERA)
+
+    await db_session.refresh(duel)
+    assert duel.forfeited_by_character_id == challenger.id
+    assert duel.forfeited_at == stamped

@@ -215,4 +215,6 @@ ERA_N = EraConfig(
     #
     # allow_praxis_on_retired_task_factions=frozenset({"your_faction"}),
     # allow_praxis_on_pending_task_factions=frozenset(),
+    # Strictly-below points ceiling on the pending perk; None = no ceiling.
+    # pending_task_praxis_points_below=30,
 )

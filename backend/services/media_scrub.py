@@ -214,7 +214,8 @@ async def _sweep_unclaimed_heic(
     """An original no row claims still serves its GPS from /media.
 
     With a claimed .jpg beside it, it is an interrupted run's leftover: remove
-    it. Otherwise only the orphan sweep may delete it, so fail loudly.
+    it. Otherwise fail loudly: a live-root orphan goes to sweep_orphan_media.py,
+    a quarantine orphan is deleted by hand.
     """
     claimed = (await load_known_paths(session, media_root)).claimed_paths
     files = [
@@ -236,6 +237,6 @@ async def _sweep_unclaimed_heic(
                 to_unlink.append(scanned.absolute_path)
             report.cleaned.append(f"{scanned.relative_path} (leftover, removed)")
         else:
-            report.failed.append(
-                (scanned.relative_path, "unreferenced; delete the file by hand")
-            )
+            held = scanned.absolute_path.startswith(_roots(media_root)[1] + os.sep)
+            fix = "delete the file by hand" if held else "run sweep_orphan_media.py"
+            report.failed.append((scanned.relative_path, f"unreferenced; {fix}"))

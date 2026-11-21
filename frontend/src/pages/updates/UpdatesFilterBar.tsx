@@ -3,7 +3,6 @@ import FilterBar, {
   FilterBarEmpty,
   type FilterRail,
 } from '../../components/ui/FilterBar'
-import FeedEmptyState from '../../components/feed/FeedEmptyState'
 import {
   RELATIONSHIPS,
   RELATIONSHIP_DEFAULT,
@@ -76,7 +75,7 @@ export default function UpdatesFilterBar({ state }: { state: UpdatesState }) {
 
 /**
  * Which empty state an empty feed gets (#1361): filtered-to-nothing gets its own
- * copy; `FeedEmptyState` keeps the inbox vs archive split.
+ * copy; unfiltered keeps the inbox vs archive wording.
  */
 export function UpdatesListEmpty({ state }: { state: UpdatesState }) {
   const { t } = useTranslation('feed')
@@ -90,5 +89,11 @@ export function UpdatesListEmpty({ state }: { state: UpdatesState }) {
       />
     )
   }
-  return <FeedEmptyState archivedView={state.archivedView} />
+  const archived = state.archivedView
+  return (
+    <FilterBarEmpty
+      title={t(archived ? 'archive.emptyTitle' : 'archive.feedEmptyTitle')}
+      hint={t(archived ? 'archive.emptyBody' : 'archive.feedEmptyBody')}
+    />
+  )
 }

@@ -5,7 +5,8 @@ import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import MobileTabBar, { activeTab } from '../MobileTabBar'
 
-vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: null }) }))
+let mockUser: unknown = null
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: mockUser }) }))
 vi.mock('../../../hooks/useSidebarPanels', () => ({ useSidebarPanels: () => ({ pending_requests_count: 0 }) }))
 
 function render(path: string): string {
@@ -50,5 +51,14 @@ describe('MobileTabBar', () => {
     expect(activeTab('/factions/snide', false)).toBe(3)
     expect(activeTab('/tasks/4', true)).toBe(4)
     expect(activeTab('/settings', false)).toBe(-1)
+  })
+
+  it('links a character-less account\'s You tab to Settings and lights it there', () => {
+    mockUser = { character: null }
+    const html = render('/settings')
+    mockUser = null
+    expect(html).toContain('href="/settings"')
+    expect(html).not.toContain('/characters/create')
+    expect(html).toContain('left:calc(90% - 14px)')
   })
 })

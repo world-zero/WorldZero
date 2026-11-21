@@ -102,3 +102,11 @@ surfaces pending tasks to admins only.
   re-propose or ask an admin.
 - Promotion emitting an activity-feed event is **out of scope** for #455 (can be added
   later as a read-time projection per ADR-0023).
+
+## Amendment (#3771) — proposer edits are back
+
+`PUT /tasks/{id}` returned in #3771, so a pending task is editable by its proposer again
+and "Proposer edits are removed" above no longer holds. Promotion is still deferred to
+Era 2 and no promotion votes exist in Era 1. When promotion is built, an edit must either
+reset the task's promotion votes or lock once the first vote lands, or the
+bait-and-switch this ADR closed reopens.

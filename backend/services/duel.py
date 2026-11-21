@@ -5,7 +5,7 @@ Praxis-id-keyed helpers live in the leaf ``services.praxis_duel`` (#2872).
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Iterable, Optional
 
 from fastapi import HTTPException
 from sqlalchemy import or_, select
@@ -70,6 +70,8 @@ async def forfeit_duels_for_character(
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
+    *,
+    emit_taunts: bool = True,
 ) -> None:
     """End every duel this character can no longer play (ADR-0011, #3766).
 
@@ -78,6 +80,53 @@ async def forfeit_duels_for_character(
     challenges are declined. Sticky: the first forfeit stands. When any duel
     is newly forfeited, the forfeiter and every winner are re-scored.
     """
+    await forfeit_duels_for_characters(
+        [character_id], session, era, emit_taunts=emit_taunts
+    )
+
+
+async def forfeit_duels_for_characters(
+    character_ids: Iterable[int],
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+    *,
+    emit_taunts: bool = True,
+) -> None:
+    """Forfeit for several characters, re-scoring the union once, ascending."""
+    rescore_ids = await forfeit_duels_collect(character_ids, session)
+    await _rescore(rescore_ids, session, era, emit_taunts=emit_taunts)
+
+
+async def forfeit_duels_collect(
+    character_ids: Iterable[int], session: AsyncSession
+) -> set[int]:
+    """Forfeit without re-scoring; the caller re-scores the returned ids in one pass."""
+    rescore_ids: set[int] = set()
+    for character_id in sorted(set(character_ids)):
+        rescore_ids |= await _forfeit_duels(character_id, session)
+    return rescore_ids
+
+
+async def _rescore(
+    character_ids: set[int],
+    session: AsyncSession,
+    era: EraConfig,
+    *,
+    emit_taunts: bool,
+) -> None:
+    if not character_ids:
+        return
+    era_row = await get_current_era_row(session)
+    # Ascending: votes lock stats in id order; another order can deadlock.
+    for character_id in sorted(character_ids):
+        await recalculate_character_stats(
+            character_id, session, era, era_row=era_row, emit_taunts=emit_taunts
+        )
+    await session.flush()
+
+
+async def _forfeit_duels(character_id: int, session: AsyncSession) -> set[int]:
+    """Forfeit one character's duels; return the ids that need re-scoring."""
     own_praxis_ids = select(Praxis.id).where(Praxis.created_by_id == character_id)
     duels = (await session.execute(
         select(Duel).where(
@@ -91,17 +140,15 @@ async def forfeit_duels_for_character(
             ),
         )
     )).scalars().all()
-    await _forfeit_duels([(duel, character_id) for duel in duels], session, era)
+    return await _apply_forfeits([(duel, character_id) for duel in duels], session)
 
 
-async def _forfeit_duels(
-    forfeits: list[tuple[Duel, int]],
-    session: AsyncSession,
-    era: EraConfig,
-) -> None:
-    """The one forfeit path: ``(duel, forfeiter)`` pairs, re-scored once."""
+async def _apply_forfeits(
+    forfeits: list[tuple[Duel, int]], session: AsyncSession
+) -> set[int]:
+    """The one forfeit path: ``(duel, forfeiter)`` pairs; returns ids to re-score."""
     now = datetime.now(timezone.utc)
-    rescored: set[int] = set()
+    rescore_ids: set[int] = set()
     for duel, forfeiter_id in forfeits:
         duel.forfeited_by_character_id = forfeiter_id
         duel.forfeited_at = now
@@ -118,19 +165,11 @@ async def _forfeit_duels(
             if challenger_character_id == forfeiter_id
             else challenger_character_id
         )
-        rescored |= {forfeiter_id} | ({winner_id} - {None})
+        rescore_ids |= {forfeiter_id} | ({winner_id} - {None})
         if duel.status == DuelStatus.active:
             await maybe_settle_duel(duel.challenger_praxis_id, session)
     await session.flush()
-
-    if rescored:
-        era_row = await get_current_era_row(session)
-        # Ascending: votes lock stats in id order; another order can deadlock.
-        for rescored_id in sorted(rescored):
-            await recalculate_character_stats(
-                rescored_id, session, era, era_row=era_row
-            )
-        await session.flush()
+    return rescore_ids
 
 
 async def _challenge_unanswerable(
@@ -190,13 +229,16 @@ async def settle_lapsed_duels(
         elif duel.status == DuelStatus.active:
             opponent_praxis = duel.opponent_praxis
             if (
-                duel.accepted_at is not None
+                duel.forfeited_by_character_id is None
+                and duel.accepted_at is not None
                 and now >= duel.accepted_at + timedelta(days=era.duel_cast_lapse_days)
                 and (opponent_praxis is None
                      or opponent_praxis.status != PraxisStatus.submitted)
             ):
                 forfeits.append((duel, duel.opponent_character_id))
-    await _forfeit_duels(forfeits, session, era)
+    await _rescore(
+        await _apply_forfeits(forfeits, session), session, era, emit_taunts=False
+    )
     await session.flush()
 
 

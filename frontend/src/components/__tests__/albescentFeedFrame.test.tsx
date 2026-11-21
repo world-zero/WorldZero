@@ -135,7 +135,7 @@ describe('the society stays hidden', () => {
   it('never prints the faction name on the card', () => {
     // ADR-0027. Only types whose payload names no faction of its own.
     for (const type of ['friend_completion', 'vote_on_mine', 'comment_mention', 'duel_challenge', 'collab_invite']) {
-      expect(render(item(type)), `${type} names no faction`).not.toContain('Albescent')
+      expect(render(item(type)), `${type} names no faction`).not.toContain('Chromagencia')
     }
   })
 

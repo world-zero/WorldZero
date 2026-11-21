@@ -308,7 +308,7 @@ const BUDGETS = {
  * reading that counts only depth-0 rules — but that reading FAILS OPEN: wrapping a
  * new `.alb` rule in `@media (min-width: …)` would hide it from the count without
  * removing a single selector from the sheet. Under the transparent reading the same
- * commit measures 47 of 319. Today's numbers are 47 of 215 narrow, 50 of 330 here.
+ * commit measures 47 of 319.
  *
  * ONE MORE THING THIS GUARD MUST NOT DO: pass by reading nothing. That is the exact
  * failure `src/test/indexCss.ts` was written to prevent and it applies twice over
@@ -317,7 +317,8 @@ const BUDGETS = {
  * share being capped, and `src/__tests__/albescentCssAllowance.test.ts` asserts
  * that this file's reading of the sheet and `readIndexCss()`'s agree.
  */
-const ALBESCENT_ALLOWANCE = 50
+// 52: +2 for the directory tile name stepping down to its column (#3908).
+const ALBESCENT_ALLOWANCE = 52
 
 /**
  * Below this many top-level class selectors the sheet did not assemble and the

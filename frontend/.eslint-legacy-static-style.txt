@@ -74,7 +74,6 @@ src/components/feed/FeedCardEraAnnouncement.tsx
 src/components/feed/FeedCardInvitationLetter.tsx
 src/components/feed/FeedChassisBand.tsx
 src/components/feed/FeedDateDivider.tsx
-src/components/feed/FeedEmptyState.tsx
 src/components/feed/FeedItemSlot.tsx
 src/components/feed/FeedRowActions.tsx
 src/components/feed/FeedRowContent.tsx
@@ -169,7 +168,6 @@ src/pages/AlbescentSecretPlaceholder.tsx
 src/pages/CharacterProfile.tsx
 src/pages/Contact.tsx
 src/pages/EditPraxis.tsx
-src/pages/Factions.tsx
 src/pages/FieldDesk.tsx
 src/pages/Praxes.tsx
 src/pages/ProposeTask.tsx
@@ -226,7 +224,6 @@ src/pages/factionDetail/archetypes/SingularityFactionBody.tsx
 src/pages/factionDetail/archetypes/SnideFactionBody.tsx
 src/pages/factionDetail/archetypes/UaFactionBody.tsx
 src/pages/factionDetail/archetypes/WowFactionBody.tsx
-src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx
 src/pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx

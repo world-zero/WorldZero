@@ -61,7 +61,7 @@ async function focusOrOpen(clients, url) {
     try {
       // Navigate first: on an uncontrolled client focus() spends the one window interaction.
       await open.navigate(url)
-      await open.focus()
+      await Promise.resolve(open.focus()).catch(() => {})
       return
     } catch {
       // navigate refused (uncontrolled client): fall through to a new window

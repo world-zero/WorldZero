@@ -113,7 +113,7 @@ const SKINS: {
   mark: string
 }[] = [
   { name: 'Default', render: (p) => <DefaultScoreStamp praxis={p} />, mark: 'spectrum-dial' },
-  { name: 'Albescent', render: (p) => <AlbescentScoreStamp praxis={p} />, mark: 'spectrum-dial' },
+  { name: 'Chromagencia', render: (p) => <AlbescentScoreStamp praxis={p} />, mark: 'spectrum-dial' },
   { name: 'Coven', render: (p) => <CovenScoreStamp praxis={p} />, mark: 'cvn-cauldron-sigil' },
   {
     name: 'Ephemerists',

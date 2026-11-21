@@ -100,23 +100,27 @@ test.describe('Ephemerists stamp clearance (#2820)', () => {
       await slipPage.goto(`/praxis/${draftId}/edit`)
       await slipPage.waitForLoadState('networkidle')
       await slipPage.evaluate(() => document.fonts.ready.then(() => undefined))
-      const slip = await slipPage.evaluate(() => {
+      // Phones render the slip as a collapsed recap (#3758); the link only exists once expanded.
+      if (touch) await slipPage.locator('.composer-slip button[aria-expanded]').click()
+      await slipPage.locator('.composer-slip a[href^="/tasks/"]').first().waitFor()
+      const slip = await slipPage.evaluate((isTouch) => {
         const link = Array.from(document.querySelectorAll('a')).find(
           (a) => a.getAttribute('href')?.startsWith('/tasks/') && a.closest('div[style*=flex-wrap]'),
         )!
         const slipRow = link.closest('div[style*=flex-wrap]')!
         const stamp = slipRow.lastElementChild!.getBoundingClientRect()
         return {
-          fromStatus: stamp.top - slipRow.previousElementSibling!.getBoundingClientRect().bottom,
+          fromStatus: isTouch ? 0 : stamp.top - slipRow.previousElementSibling!.getBoundingClientRect().bottom,
           fromCopy: stamp.top - slipRow.firstElementChild!.getBoundingClientRect().bottom,
           overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         }
-      })
+      }, touch)
       if (touch) {
         expect(slip.fromCopy, 'slip: copy to stacked stamp').toBeGreaterThanOrEqual(SLIP_STACK_GAP - 0.5)
       } else {
         expect(slip.fromStatus, 'slip: status row to stamp (S.N.I.D.E.)').toBeGreaterThanOrEqual(SLIP_CLEARANCE - 0.5)
       }
+      console.log('MEASURE', name, JSON.stringify(slip))
       expect(slip.overflow, 'slip overflows the viewport').toBe(false)
       await slipContext.close()
     })
