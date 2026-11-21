@@ -9,7 +9,7 @@ import { settle } from './shots/settle'
  */
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 const CASES: Array<[route: string, selectors: string[]]> = [
-  ['/settings', ['[role=switch]', 'header a', 'footer a']],
+  ['/settings', ['[role=switch]', 'nav.tabbar a', 'footer a']],
   ['/praxis/{draft}/edit', ['[role=toolbar] button', '[role=tab]', 'nav[aria-label] a', 'footer a']],
   ['/leaderboard', ['button[aria-expanded]', 'main button.hit-box', 'button[aria-pressed]']],
   ['/praxis?faction=snide', ['.filter-bar__link']],
