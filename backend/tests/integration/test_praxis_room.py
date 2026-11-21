@@ -1844,6 +1844,50 @@ async def test_deleting_a_praxis_evicts_its_room_and_sockets(
         assert name not in rooms.server._flushers
 
 
+async def test_a_closing_flush_never_waits_on_a_delete_under_the_open_lock(
+    db_session, collab, account, character, monkeypatch
+) -> None:
+    """The last socket closing with unflushed text, while a delete has flushed its
+    row DELETE and waits to evict. Postgres cannot see the open lock."""
+    import services.praxis as praxis_service
+
+    real_evict = praxis_service.evict_room
+    flushed = asyncio.Event()
+    go = asyncio.Event()
+
+    async def evict_after_the_socket_closes(praxis_id: int) -> None:
+        flushed.set()
+        await go.wait()
+        await real_evict(praxis_id)
+
+    monkeypatch.setattr(praxis_service, "evict_room", evict_after_the_socket_closes)
+    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "last words ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"last words {SEED_BODY}", "the room"
+            )
+
+            async def delete() -> None:
+                async with rooms.sessions() as session:
+                    await delete_praxis(collab.id, character.id, session)
+                    await session.commit()
+
+            deleting = asyncio.create_task(delete())
+            await asyncio.wait_for(flushed.wait(), 5)
+            await socket.disconnect()
+            # Let the release take the open lock and start its flush.
+            await asyncio.sleep(0.3)
+            go.set()
+        await asyncio.wait_for(deleting, 5)
+        await _wait_for(
+            lambda: not rooms.server._connections, "the socket to be released"
+        )
+        assert room_name_for(collab.id) not in rooms.server.rooms
+
+
 async def test_publishing_after_a_restart_cannot_drop_an_over_cap_document(
     db_session, active_task, character, monkeypatch
 ) -> None:

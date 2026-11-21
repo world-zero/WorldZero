@@ -564,7 +564,12 @@ class PraxisRoomServer(WebsocketServer):
         self._connections.add(connection)
 
     async def release(self, connection: _RoomConnection) -> None:
-        """Forget a socket, and drop its room once nobody is left in it."""
+        """Forget a socket, and drop its room once nobody is left in it.
+
+        Never waits on Postgres under ``_open_lock``: a transaction that wrote a
+        praxis row and then waits for the lock would close a cycle Postgres cannot
+        see. The closing flush runs after the lock is released.
+        """
         self._connections.discard(connection)
         # Shielded: runs in a ``finally`` a disconnect may have cancelled.
         with anyio.CancelScope(shield=True):
@@ -575,16 +580,22 @@ class PraxisRoomServer(WebsocketServer):
                     room.awareness.remove_awareness_states(
                         list(connection.awareness_ids), "local"
                     )
-                await self._drop_if_idle(connection.room_name)
-
-    async def _drop_if_idle(self, name: str) -> None:
-        """Caller holds ``_open_lock``."""
-        room = self.rooms.get(name)
-        if room is not None and not room.clients:
-            flusher = self._flushers.pop(name, None)
+                flusher = await self._drop_if_idle(connection.room_name)
             if flusher is not None:
                 await flusher.close()
-            await self.delete_room(room=room)
+
+    async def _drop_if_idle(self, name: str) -> _RoomFlusher | None:
+        """Detach an empty room and return its flusher; caller holds ``_open_lock``
+        and must ``close()`` the flusher after releasing it (no DB wait under the
+        lock). A reopen in between loads from the store, and the late flush is
+        harmless after a delete (zero rows) or a discard (the flusher is abandoned).
+        """
+        room = self.rooms.get(name)
+        if room is None or room.clients:
+            return None
+        flusher = self._flushers.pop(name, None)
+        await self.delete_room(room=room)
+        return flusher
 
     def _check_update(self, doc: Doc, update: bytes) -> dict[str, str]:
         """The column values ``doc`` would have after ``update``, on a scratch copy;
@@ -707,7 +718,9 @@ class PraxisRoomServer(WebsocketServer):
         except HTTPException:
             if opened:
                 async with self._open_lock:
-                    await self._drop_if_idle(name)
+                    flusher = await self._drop_if_idle(name)
+                if flusher is not None:
+                    await flusher.close()
             raise
         room.ydoc.apply_update(update)
         return values
