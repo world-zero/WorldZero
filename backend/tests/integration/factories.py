@@ -193,7 +193,7 @@ async def cast_vote(session: AsyncSession, praxis: Praxis, voter: Character, val
 
 
 async def raise_to_duel_level(session: AsyncSession, character_id: int) -> None:
-    """A pending challenge to a character below the duel floor declines on read (#3875)."""
+    """Below the duel floor a pending challenge declines on read (#3875)."""
     await session.execute(
         update(CharacterStats)
         .where(CharacterStats.character_id == character_id)
