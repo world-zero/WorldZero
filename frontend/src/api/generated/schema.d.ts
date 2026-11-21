@@ -1737,7 +1737,7 @@ export interface paths {
          *
          *     Limits: 100 MB per file (``MEDIA_MAX_BYTES``, per-file 413); 1000 files per
          *     request (Starlette ``max_files``, whole-request 400); no app-level total cap
-         *     (parts spool to temp files); edge proxy limit unknown, so clients chunk.
+         *     (parts spool to temp files); Caddy 413s a body over 120 MB, so clients chunk.
          */
         post: operations["upload_media_batch_route_praxes__praxis_id__media_batch_post"];
         delete?: never;
