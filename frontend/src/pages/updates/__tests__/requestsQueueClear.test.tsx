@@ -13,7 +13,10 @@ import type { ActivityFeedItem } from '../../../api/activityFeed'
 import { REQUESTS_QUEUE_ANCHOR } from '../requestsQueueAnchor'
 import type { RequestsQueueState } from '../useRequestsQueue'
 
-const mocks = vi.hoisted(() => ({ state: null as unknown }))
+const mocks = vi.hoisted(() => ({ state: null as unknown, others: [] as unknown[] }))
+vi.mock('../../../hooks/useSidebarPanels', () => ({
+  useSidebarPanels: () => ({ other_lives_pending: mocks.others }),
+}))
 vi.mock('../useRequestsQueue', () => ({ useRequestsQueue: () => mocks.state }))
 
 import RequestsQueue from '../RequestsQueue'
@@ -94,5 +97,15 @@ describe('when the fetch failed', () => {
     const html = render({ items: [], error: 'Could not load your requests.' })
     expect(html).toContain('requests-queue__head')
     expect(html).toContain('Could not load your requests.')
+  })
+})
+
+describe('a clear queue while another life has requests (#3776)', () => {
+  it('names each waiting life, one tappable line each', () => {
+    mocks.others = [{ character_id: 7, display_name: 'Life One', pending_requests_count: 2 }]
+    const html = render({ items: [] })
+    mocks.others = []
+    expect(html).toContain('data-testid="other-life-7"')
+    expect(html).toContain('2 waiting on Life One')
   })
 })

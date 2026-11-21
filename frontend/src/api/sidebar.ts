@@ -1,4 +1,5 @@
 import { apiGet } from './client'
+import type { components } from './generated/schema'
 import type { ActivityFeedItem } from './activityFeed'
 import type { PraxisCardOut } from './praxis'
 
@@ -12,6 +13,8 @@ export interface SidebarPanels {
    * count, not a list (#1456); equals the queue's `counts.requests` (ADR-0070).
    */
   pending_requests_count: number
+  /** Sibling lives with requests waiting (count > 0 only); the carried life is never listed. */
+  other_lives_pending: components['schemas']['OtherLifePending'][]
   /**
    * "Recent activity": the LIVE feed minus obligations, newest five (#1556).
    * Partitions the feed with the Requests queue (same `_visible_types` call).

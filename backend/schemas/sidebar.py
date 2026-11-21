@@ -5,6 +5,12 @@ from schemas.activity_feed import ActivityFeedItem
 from schemas.praxis import PraxisCardOut
 
 
+class OtherLifePending(WireModel):
+    character_id: int
+    display_name: str
+    pending_requests_count: int
+
+
 class SidebarOut(WireModel):
     """Everything the rail's three data panels draw, in one response.
 
@@ -26,6 +32,8 @@ class SidebarOut(WireModel):
     """
 
     pending_requests_count: int
+    #: Sibling lives with requests waiting (count > 0 only); owner-only.
+    other_lives_pending: list[OtherLifePending] = []
     #: The whole live feed minus the obligations (#1556). Legacy wire name:
     #: renaming a field the rail reads on every route is a deploy-skew hazard
     #: (old frontend reads ``undefined`` and white-pages); land a client
