@@ -61,10 +61,11 @@ interface SizeSet {
   lotus: number;
   lotusLeft: number;
   lotusTop: number;
-  title: string;
-  level: string;
-  count: string;
 }
+
+const UA_TITLE = "var(--detail-hero-size, var(--text-display))";
+const UA_LEVEL = "var(--detail-title-size, var(--text-heading))";
+const UA_COUNT = "var(--detail-lead-size, var(--text-title))";
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
@@ -73,9 +74,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     lotus: 880,
     lotusLeft: -230,
     lotusTop: -110,
-    title: "var(--text-display)",
-    level: "var(--text-heading)",
-    count: "var(--text-title)",
   },
   mobile: {
     panel: 0,
@@ -83,9 +81,6 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     lotus: 560,
     lotusLeft: -200,
     lotusTop: 40,
-    title: "var(--text-heading)",
-    level: "var(--text-title)",
-    count: "var(--text-content)",
   },
 };
 
@@ -387,7 +382,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           fontFamily: UA_DISPLAY,
           fontWeight: 700,
-          fontSize: size.title,
+          fontSize: UA_TITLE,
           lineHeight: 1.08,
           letterSpacing: "-0.015em",
           margin: 0,
@@ -508,7 +503,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               fontFamily: UA_DISPLAY,
               fontWeight: 700,
-              fontSize: size.level,
+              fontSize: UA_LEVEL,
               lineHeight: 0.9,
               color: "var(--leaf-task-detail-ink)",
             }}
@@ -533,7 +528,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               fontFamily: UA_DISPLAY,
               fontWeight: 700,
-              fontSize: size.count,
+              fontSize: UA_COUNT,
               lineHeight: 0.9,
               color: "var(--leaf-task-detail-ink)",
             }}
