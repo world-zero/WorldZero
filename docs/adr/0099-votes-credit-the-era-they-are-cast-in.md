@@ -26,3 +26,11 @@
 
 A rehearsal showed an Era 2 vote raising an Era 1 score and level after the roll.
 This replaces the sealing-era rule of #1345, which lived only in docstrings.
+
+## Amendment (2026-11-21, #3690)
+
+The roll itself re-scores the closing era's duel participants
+(`rescore_closed=True`) under the closing era's rules, in `apply_era_reset` after
+`resolve_duels_at_era_close`. Nothing after the commit does, so "a no-op for a closed
+era" holds for every later caller. A closing era whose `config_key` is unregistered is
+sealed and re-scored under the compile-time era, with a warning, so the roll still runs.
