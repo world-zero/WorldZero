@@ -1,6 +1,5 @@
 """Router for the unified activity feed."""
 from dataclasses import asdict
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -8,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from dependencies import get_current_character
+from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.character import Character
 from schemas.activity_feed import (
@@ -18,6 +18,7 @@ from schemas.activity_feed import (
     FeedItemArchiveResponse,
 )
 from services.activity_feed import (
+    FeedCursor,
     dismiss_feed_item,
     dismiss_feed_items_for_filter,
     get_activity_feed,
@@ -34,7 +35,7 @@ router = APIRouter()
 async def activity_feed(
     filter: Optional[str] = Query(None, alias="filter"),
     types: Optional[list[str]] = Query(None),
-    before: Optional[datetime] = Query(None),
+    before: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     archived: bool = Query(False),
     character: Character = Depends(get_current_character),
@@ -62,11 +63,15 @@ async def activity_feed(
     4xx. ``before`` is not: it is a cursor, and a cursor that does not parse is
     a malformed request rather than an empty page (FastAPI answers 422).
     """
+    try:
+        cursor = FeedCursor.decode(before) if before is not None else None
+    except ValueError:
+        raise_coded(422, ErrorCode.feed_cursor_malformed, "Malformed feed cursor")
     dc_response = await get_activity_feed(
         character_id=character.id,
         session=session,
         feed_filter=filter,
-        before_cursor=before,
+        before_cursor=cursor,
         limit=limit,
         archived=archived,
         item_types=types,

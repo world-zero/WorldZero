@@ -100,6 +100,7 @@
     "CONTACT_RATE_LIMITED": "Too many messages from your network. Try again later.",
 
     "FEED_ITEM_KEY_UNKNOWN": "Unknown feed item key: {{item_key}}",
+    "FEED_CURSOR_MALFORMED": "That page marker is no longer valid. Reload the feed.",
     "FEED_ITEM_KEY_MALFORMED": "Malformed feed item key: {{item_key}}",
     "FEED_ITEM_NOT_ARCHIVABLE": "Feed items of type '{{item_type}}' cannot be archived: they track work still waiting on you and clear themselves once you file.",
 

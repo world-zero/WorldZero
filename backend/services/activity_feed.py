@@ -7,10 +7,11 @@ ADR-0036: each type is one ``FeedSource`` in ``FEED_SOURCES``. Badge counts are
 import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Callable, NamedTuple, Optional, Sequence
 
 from pydantic import ValidationError
 from sqlalchemy import (
+    ColumnElement,
     Select,
     Integer,
     Label,
@@ -23,6 +24,8 @@ from sqlalchemy import (
     literal,
     or_,
     select,
+    true,
+    tuple_,
     union_all,
 )
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
@@ -139,6 +142,7 @@ FEED_ITEM_TYPE_NUDGE = "nudge"
 # The prefix is needed: several types share a source table. Never derive it
 # from position/offset/time — dismissals key on it.
 ITEM_KEY_SEPARATOR = ":"
+CURSOR_SEPARATOR = "|"
 
 
 def build_item_key(item_type: str, source_id: int) -> str:
@@ -176,6 +180,24 @@ ADMIN_ACTOR_NAME = "Admin"
 COMMENT_EXCERPT_LENGTH = 140
 
 
+class FeedCursor(NamedTuple):
+    """The last item served, in the feed's order: (timestamp, item_type, source_id)."""
+    timestamp: datetime
+    item_type: str
+    source_id: int
+
+    def encode(self) -> str:
+        return CURSOR_SEPARATOR.join(
+            (self.timestamp.isoformat(), self.item_type, str(self.source_id))
+        )
+
+    @classmethod
+    def decode(cls, raw: str) -> "FeedCursor":
+        """Raises ValueError on anything this module did not issue."""
+        raw_timestamp, item_type, raw_id = raw.split(CURSOR_SEPARATOR)
+        return cls(datetime.fromisoformat(raw_timestamp), item_type, int(raw_id))
+
+
 @dataclass(frozen=True)
 class FeedContext:
     """Everything a source's query needs, resolved once in the pre-fetch phase.
@@ -196,11 +218,24 @@ class FeedContext:
     foe_ids: tuple[int, ...]
     my_task_ids: tuple[int, ...]
     era_id: int
-    before: Optional[datetime]
+    before: Optional[FeedCursor]
     unanswered_requests_only: bool
     sees_metatasks: bool
     meets_vote_level: bool
     answered_requests_only: bool = False
+
+    def older_than(
+        self, item_type: str, timestamp: Any, source_id: Any
+    ) -> ColumnElement[bool]:
+        """This source's rows strictly after the cursor in the feed's total order."""
+        cursor = self.before
+        if cursor is None:
+            return true()
+        if item_type < cursor.item_type:
+            return timestamp <= cursor.timestamp
+        if item_type > cursor.item_type:
+            return timestamp < cursor.timestamp
+        return tuple_(timestamp, source_id) < tuple_(cursor.timestamp, cursor.source_id)
 
 
 @dataclass(frozen=True)
@@ -295,6 +330,9 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
     Cursor and ORDER BY follow the column the item's timestamp comes from.
     """
     moment = Vote.updated_at if changed else Vote.created_at
+    item_type = (
+        FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE if changed else FEED_ITEM_TYPE_VOTE_ON_MINE
+    )
 
     def build(ctx: FeedContext) -> Select:
         voter_char = Character.__table__.alias("voter_char")
@@ -320,9 +358,8 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
                 _VOTE_WAS_CHANGED if changed else ~_VOTE_WAS_CHANGED,
             )
         )
-        if ctx.before is not None:
-            query = query.where(moment < ctx.before)
-        return query.order_by(moment.desc()).limit(SUB_QUERY_LIMIT)
+        query = query.where(ctx.older_than(item_type, moment, Vote.id))
+        return query.order_by(moment.desc(), Vote.id.desc()).limit(SUB_QUERY_LIMIT)
 
     return build
 
@@ -357,7 +394,9 @@ def _vote_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
     return build
 
 
-def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext], Select]:
+def _completions_query_factory(
+    item_type: str, character_ids_attr: str
+) -> Callable[[FeedContext], Select]:
     """Build a completions query reading its character-id list from ``ctx.<attr>``."""
     def build(ctx: FeedContext) -> Select:
         character_ids = getattr(ctx, character_ids_attr)
@@ -404,9 +443,11 @@ def _completions_query_factory(character_ids_attr: str) -> Callable[[FeedContext
                 praxis_visibility_condition(ctx.character_id),
             )
         )
-        if ctx.before is not None:
-            query = query.where(Praxis.created_at < ctx.before)
-        return query.order_by(Praxis.created_at.desc()).limit(SUB_QUERY_LIMIT)
+        query = query.where(ctx.older_than(item_type, Praxis.created_at, Praxis.id))
+        return (
+            query.order_by(Praxis.created_at.desc(), Praxis.id.desc())
+            .limit(SUB_QUERY_LIMIT)
+        )
     return build
 
 
@@ -451,9 +492,17 @@ def _foe_taunts_query(ctx: FeedContext) -> Select:
         .join(to_character, TauntMessage.to_character_id == to_character.id)
         .where(TauntMessage.to_character_id == ctx.character_id)
     )
-    if ctx.before is not None:
-        query = query.where(TauntMessage.created_at < ctx.before)
-    return query.order_by(TauntMessage.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(
+            FEED_ITEM_TYPE_FOE_TAUNT,
+            TauntMessage.created_at,
+            TauntMessage.id,
+        )
+    )
+    return (
+        query.order_by(TauntMessage.created_at.desc(), TauntMessage.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
@@ -504,9 +553,13 @@ def _global_tasks_query(ctx: FeedContext) -> Select:
     )
     if not ctx.sees_metatasks:
         query = query.where(Task.task_type != TaskType.metatask)
-    if ctx.before is not None:
-        query = query.where(Task.activated_at < ctx.before)
-    return query.order_by(Task.activated_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_GLOBAL_TASK, Task.activated_at, Task.id)
+    )
+    return (
+        query.order_by(Task.activated_at.desc(), Task.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _global_task_item(row: Any) -> ActivityFeedItemDC:
@@ -530,9 +583,13 @@ def _global_task_item(row: Any) -> ActivityFeedItemDC:
 def _era_announcements_query(ctx: FeedContext) -> Select:
     """Era start announcements."""
     query: Select = select(Era)
-    if ctx.before is not None:
-        query = query.where(Era.started_at < ctx.before)
-    return query.order_by(Era.started_at.desc()).limit(ERA_ANNOUNCEMENT_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_ERA_ANNOUNCEMENT, Era.started_at, Era.id)
+    )
+    return (
+        query.order_by(Era.started_at.desc(), Era.id.desc())
+        .limit(ERA_ANNOUNCEMENT_LIMIT)
+    )
 
 
 def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
@@ -587,9 +644,13 @@ def _rules_changes_query(ctx: FeedContext) -> Select:
     query: Select = select(ModAction, batch.label("batch")).where(
         ModAction.action.in_(actions), ModAction.id == first_of_batch
     )
-    if ctx.before is not None:
-        query = query.where(ModAction.created_at < ctx.before)
-    return query.order_by(ModAction.created_at.desc()).limit(RULES_CHANGE_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_RULES_CHANGE, ModAction.created_at, ModAction.id)
+    )
+    return (
+        query.order_by(ModAction.created_at.desc(), ModAction.id.desc())
+        .limit(RULES_CHANGE_LIMIT)
+    )
 
 
 def _rules_change_item(row: Any) -> ActivityFeedItemDC:
@@ -650,9 +711,17 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
         )
     elif ctx.answered_requests_only:
         query = query.where(PraxisInvite.status != PraxisInviteStatus.pending)
-    if ctx.before is not None:
-        query = query.where(PraxisInvite.created_at < ctx.before)
-    return query.order_by(PraxisInvite.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(
+            FEED_ITEM_TYPE_COLLAB_INVITE,
+            PraxisInvite.created_at,
+            PraxisInvite.id,
+        )
+    )
+    return (
+        query.order_by(PraxisInvite.created_at.desc(), PraxisInvite.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
@@ -704,9 +773,10 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
         query = query.where(Duel.status == DuelStatus.pending)
     elif ctx.answered_requests_only:
         query = query.where(Duel.status != DuelStatus.pending)
-    if ctx.before is not None:
-        query = query.where(Duel.created_at < ctx.before)
-    return query.order_by(Duel.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_DUEL_CHALLENGE, Duel.created_at, Duel.id)
+    )
+    return query.order_by(Duel.created_at.desc(), Duel.id.desc()).limit(SUB_QUERY_LIMIT)
 
 
 def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
@@ -762,9 +832,13 @@ def _duel_forfeited_query(ctx: FeedContext) -> Select:
             ),
         )
     )
-    if ctx.before is not None:
-        query = query.where(Duel.forfeited_at < ctx.before)
-    return query.order_by(Duel.forfeited_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_DUEL_FORFEITED, Duel.forfeited_at, Duel.id)
+    )
+    return (
+        query.order_by(Duel.forfeited_at.desc(), Duel.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _duel_forfeited_item(row: Any) -> ActivityFeedItemDC:
@@ -830,9 +904,8 @@ def _duel_live_query(ctx: FeedContext) -> Select:
             opponent.id.not_in(blocked),
         )
     )
-    if ctx.before is not None:
-        query = query.where(Duel.live_at < ctx.before)
-    return query.order_by(Duel.live_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(ctx.older_than(FEED_ITEM_TYPE_DUEL_LIVE, Duel.live_at, Duel.id))
+    return query.order_by(Duel.live_at.desc(), Duel.id.desc()).limit(SUB_QUERY_LIMIT)
 
 
 def _duel_live_item(row: Any) -> ActivityFeedItemDC:
@@ -881,9 +954,17 @@ def _friend_signups_query(ctx: FeedContext) -> Select:
             Praxis.task_id.in_(ctx.my_task_ids),
         )
     )
-    if ctx.before is not None:
-        query = query.where(PraxisMember.joined_at < ctx.before)
-    return query.order_by(PraxisMember.joined_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(
+            FEED_ITEM_TYPE_FRIEND_SIGNUP,
+            PraxisMember.joined_at,
+            PraxisMember.id,
+        )
+    )
+    return (
+        query.order_by(PraxisMember.joined_at.desc(), PraxisMember.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
@@ -930,9 +1011,17 @@ def _invitation_letters_query(ctx: FeedContext) -> Select:
             .where(Character.id == ctx.character_id)
             .scalar_subquery()
         )
-    if ctx.before is not None:
-        query = query.where(InvitationLetter.delivered_at < ctx.before)
-    return query.order_by(InvitationLetter.delivered_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(
+            FEED_ITEM_TYPE_INVITATION_LETTER,
+            InvitationLetter.delivered_at,
+            InvitationLetter.id,
+        )
+    )
+    return (
+        query.order_by(InvitationLetter.delivered_at.desc(), InvitationLetter.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _invitation_letter_item(row: Any) -> ActivityFeedItemDC:
@@ -970,9 +1059,20 @@ def _friend_defections_query(ctx: FeedContext) -> Select:
             FactionDefectionHistory.era_id == ctx.era_id,
         )
     )
-    if ctx.before is not None:
-        query = query.where(FactionDefectionHistory.defected_at < ctx.before)
-    return query.order_by(FactionDefectionHistory.defected_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(
+            FEED_ITEM_TYPE_FRIEND_DEFECTION,
+            FactionDefectionHistory.defected_at,
+            FactionDefectionHistory.id,
+        )
+    )
+    return (
+        query.order_by(
+            FactionDefectionHistory.defected_at.desc(),
+            FactionDefectionHistory.id.desc(),
+        )
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
@@ -1037,9 +1137,13 @@ def _comment_mentions_query(ctx: FeedContext) -> Select:
             Comment.moderation_status == ModerationStatus.visible,
         )
     )
-    if ctx.before is not None:
-        query = query.where(Comment.created_at < ctx.before)
-    return query.order_by(Comment.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_COMMENT_MENTION, Comment.created_at, Comment.id)
+    )
+    return (
+        query.order_by(Comment.created_at.desc(), Comment.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _comments_on_mine_query(ctx: FeedContext) -> Select:
@@ -1064,9 +1168,13 @@ def _comments_on_mine_query(ctx: FeedContext) -> Select:
             Comment.moderation_status == ModerationStatus.visible,
         )
     )
-    if ctx.before is not None:
-        query = query.where(Comment.created_at < ctx.before)
-    return query.order_by(Comment.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_COMMENT_ON_MINE, Comment.created_at, Comment.id)
+    )
+    return (
+        query.order_by(Comment.created_at.desc(), Comment.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
@@ -1139,9 +1247,17 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
             Praxis.type == PraxisType.collab,
         )
     )
-    if ctx.before is not None:
-        query = query.where(PraxisMember.approved_at < ctx.before)
-    return query.order_by(PraxisMember.approved_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(
+            FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
+            PraxisMember.approved_at,
+            PraxisMember.id,
+        )
+    )
+    return (
+        query.order_by(PraxisMember.approved_at.desc(), PraxisMember.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
@@ -1199,9 +1315,17 @@ def _awaiting_submission_query(ctx: FeedContext) -> Select:
             .exists(),
         )
     )
-    if ctx.before is not None:
-        query = query.where(PraxisMember.joined_at < ctx.before)
-    return query.order_by(PraxisMember.joined_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(
+            FEED_ITEM_TYPE_AWAITING_SUBMISSION,
+            PraxisMember.joined_at,
+            PraxisMember.id,
+        )
+    )
+    return (
+        query.order_by(PraxisMember.joined_at.desc(), PraxisMember.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _awaiting_submission_item(row: Any) -> ActivityFeedItemDC:
@@ -1269,9 +1393,13 @@ def _nudge_query(ctx: FeedContext) -> Select:
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )
     )
-    if ctx.before is not None:
-        query = query.where(Nudge.created_at < ctx.before)
-    return query.order_by(Nudge.created_at.desc()).limit(SUB_QUERY_LIMIT)
+    query = query.where(
+        ctx.older_than(FEED_ITEM_TYPE_NUDGE, Nudge.created_at, Nudge.id)
+    )
+    return (
+        query.order_by(Nudge.created_at.desc(), Nudge.id.desc())
+        .limit(SUB_QUERY_LIMIT)
+    )
 
 
 def _nudge_item(row: Any) -> ActivityFeedItemDC:
@@ -1321,7 +1449,10 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         item_type=FEED_ITEM_TYPE_FRIEND_COMPLETION,
         filters=frozenset({FILTER_ALL, FILTER_FRIENDS}),
         needs=frozenset({NEEDS_FRIEND_IDS}),
-        query=_completions_query_factory(NEEDS_FRIEND_IDS),
+        query=_completions_query_factory(
+            FEED_ITEM_TYPE_FRIEND_COMPLETION,
+            NEEDS_FRIEND_IDS,
+        ),
         to_item=_completion_item_factory(FEED_ITEM_TYPE_FRIEND_COMPLETION),
         source_id_column=Praxis.id,
     ),
@@ -1444,7 +1575,7 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         item_type=FEED_ITEM_TYPE_FOE_COMPLETION,
         filters=frozenset({FILTER_ALL, FILTER_FOES}),
         needs=frozenset({NEEDS_FOE_IDS}),
-        query=_completions_query_factory(NEEDS_FOE_IDS),
+        query=_completions_query_factory(FEED_ITEM_TYPE_FOE_COMPLETION, NEEDS_FOE_IDS),
         to_item=_completion_item_factory(FEED_ITEM_TYPE_FOE_COMPLETION),
         source_id_column=Praxis.id,
     ),
@@ -1814,7 +1945,7 @@ async def _compute_counts(
 async def _build_fetch_context(
     character_id: int,
     session: AsyncSession,
-    before_cursor: Optional[datetime],
+    before_cursor: Optional[FeedCursor],
     archived: bool,
 ) -> tuple[FeedContext, FeedArchiveView]:
     """The pre-fetch phase: everything a source's query needs, resolved once.
@@ -1903,7 +2034,7 @@ async def get_sidebar_feed(
     )
     pending = await _count_requests([(character_id, fetch_ctx, archive_view)], session)
 
-    recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
+    recent_activity.sort(key=_feed_order_cursor, reverse=True)
     return (
         pending[character_id],
         recent_activity[:SIDEBAR_ACTIVITY_LIMIT],
@@ -1959,11 +2090,16 @@ async def pending_requests_counts(
     return await _count_requests(scopes, session)
 
 
+def _feed_order_cursor(item: ActivityFeedItemDC) -> FeedCursor:
+    source_id = int(item.item_key.rpartition(ITEM_KEY_SEPARATOR)[2])
+    return FeedCursor(item.timestamp, item.type, source_id)
+
+
 async def get_activity_feed(
     character_id: int,
     session: AsyncSession,
     feed_filter: Optional[str] = None,
-    before_cursor: Optional[datetime] = None,
+    before_cursor: Optional[FeedCursor] = None,
     limit: int = 20,
     archived: bool = False,
     item_types: Optional[list[str]] = None,
@@ -1975,7 +2111,7 @@ async def get_activity_feed(
         character_id: The character requesting the feed.
         session: Database session for the pre-fetch phase (friend/foe/task IDs).
         feed_filter: One of "all", "friends", "foes", "your_stuff", "global", "requests".
-        before_cursor: ISO datetime cursor for pagination (items before this time).
+        before_cursor: The last item of the previous page (see ``FeedCursor``).
         limit: Max items to return.
         archived: Return the archive instead; ignores tab type slicing.
         item_types: Intersected with the filter's set; unknown values ignored,
@@ -2009,12 +2145,12 @@ async def get_activity_feed(
         fetch_ctx, archive_view, session, active_filter, muted_types
     )
 
-    all_items.sort(key=lambda item: item.timestamp, reverse=True)
+    all_items.sort(key=_feed_order_cursor, reverse=True)
     paginated = all_items[:limit]
 
     next_cursor = None
     if len(all_items) > limit:
-        next_cursor = paginated[-1].timestamp.isoformat()
+        next_cursor = _feed_order_cursor(paginated[-1]).encode()
 
     return ActivityFeedResponseDC(
         items=paginated,
