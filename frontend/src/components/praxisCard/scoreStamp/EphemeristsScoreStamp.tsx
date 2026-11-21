@@ -111,7 +111,7 @@ function WorkingRow({
 export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, rival, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
   const working = base !== null;
 
@@ -214,6 +214,10 @@ export default function EphemeristsScoreStamp({ praxis, showCrown }: ScoreStampP
             {/* Habit (#1617): flat, outside the ratio. */}
             {habit !== null && (
               <WorkingRow figure={`+${habit}`} label={t("card.stamp.habit")} gloss="bonus" ordinal={3} ink={CAPTION} />
+            )}
+
+            {rival !== null && (
+              <WorkingRow figure={`+${rival}`} label={t("card.stamp.rival")} gloss="bonus" ordinal={4} ink={CAPTION} />
             )}
           </div>
         </div>

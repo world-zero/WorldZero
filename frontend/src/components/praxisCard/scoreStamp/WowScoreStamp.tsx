@@ -24,7 +24,7 @@ import type { ScoreStampProps } from "./ScoreStamp";
 export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, rival, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   const workingStyle = {
@@ -164,6 +164,11 @@ export default function WowScoreStamp({ praxis, showCrown }: ScoreStampProps) {
       {habit !== null && (
         <div style={workingStyle}>
           {t("card.stamp.habit")} +{habit}
+        </div>
+      )}
+      {rival !== null && (
+        <div style={workingStyle}>
+          {t("card.stamp.rival")} +{rival}
         </div>
       )}
 

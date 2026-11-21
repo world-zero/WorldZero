@@ -64,6 +64,7 @@ const PRAXIS = {
   metatask_points: 0,
   points_from_votes: 4,
   habit_bonus_points: 0,
+  rival_bonus_points: 0,
   is_top_for_task: false,
   score: 22,
 } as PraxisCardOut;

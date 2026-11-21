@@ -29,6 +29,7 @@ function praxis(overrides: Record<string, unknown> = {}): PraxisCardOut {
     metatask_points: 3,
     points_from_votes: 4,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
     is_top_for_task: false,
     score: 26.5,
     ...overrides,

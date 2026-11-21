@@ -17,7 +17,7 @@ import { factionBodyVars } from "../../../utils/factionBodyFace"
 export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, rival, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   const rowStyle = {
@@ -82,6 +82,14 @@ export default function SingularityScoreStamp({ praxis, showCrown }: ScoreStampP
       key: "habit",
       label: t("card.stamp.habit"),
       value: `+${String(habit).padStart(2, "0")}`,
+      valueColor: "var(--faction-singularity-terminal-ink)",
+    });
+  }
+  if (rival !== null) {
+    lines.push({
+      key: "rival",
+      label: t("card.stamp.rival"),
+      value: `+${String(rival).padStart(2, "0")}`,
       valueColor: "var(--faction-singularity-terminal-ink)",
     });
   }

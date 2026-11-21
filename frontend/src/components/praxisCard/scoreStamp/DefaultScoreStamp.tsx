@@ -32,7 +32,7 @@ const STAMP_WIDTH = 150;
 export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, rival, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** `chip` rides the base row; `ruled` draws the subtotal's hairline above. */
@@ -70,6 +70,9 @@ export default function DefaultScoreStamp({ praxis, showCrown }: ScoreStampProps
   }
   if (habit !== null) {
     rows.push({ key: "habit", label: t("card.stamp.habit"), value: `+${habit}` });
+  }
+  if (rival !== null) {
+    rows.push({ key: "rival", label: t("card.stamp.rival"), value: `+${rival}` });
   }
 
   /** The resolver nulls `base` exactly when no other term is in play (ADR-0076). */

@@ -39,6 +39,7 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
     metatask_points: 0,
     points_from_votes: 4,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
     score: 13.6,
     ...overrides,
   } as PraxisCardOut
@@ -51,6 +52,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       mult: 0.8,
       meta: null,
       habit: null,
+      rival: null,
       votes: 4,
       // The raw product (#2634): rounding belongs to `formatPoints`.
       subtotal: 12 * 0.8,
@@ -86,6 +88,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       metatask_points: 0,
       points_from_votes: 0,
       habit_bonus_points: 0,
+      rival_bonus_points: 0,
       score: 10,
     })
     expect(scoreBreakdown(bare)).toEqual({
@@ -93,6 +96,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       mult: null,
       meta: null,
       habit: null,
+      rival: null,
       votes: null,
       // No multiplier, no subtotal (#2634).
       subtotal: null,
@@ -115,6 +119,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       metatask_points: 0,
       points_from_votes: 0,
       habit_bonus_points: 0,
+      rival_bonus_points: 0,
       score: 99,
     })
     expect(scoreBreakdown(drifted).base).toBe(10)
@@ -137,6 +142,7 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
       mult: 0.8,
       meta: null,
       habit: null,
+      rival: null,
       votes: null,
       subtotal: 0,
       total: 0,
@@ -153,6 +159,19 @@ describe('scoreBreakdown row selection (ADR-0053)', () => {
  * #1617: UA's habit bonus is FLAT and outside the multiplier:
  * `(base + meta) × mult + votes + habit` (`backend/schemas/praxis.py`).
  */
+describe('the rival duel bonus is a flat term of the breakdown (ADR-0100)', () => {
+  it('reads through as its own row, only above 0', () => {
+    expect(scoreBreakdown(praxis({ rival_bonus_points: 5, score: 18.6 })).rival).toBe(5)
+    expect(scoreBreakdown(praxis({ rival_bonus_points: 0 })).rival).toBeNull()
+  })
+
+  it('keeps the base row when it is the only term moving the figure (#1131)', () => {
+    const b = scoreBreakdown(praxis({ task_point_value: 10, rival_bonus_points: 5, score: 15 }))
+    expect(b.base).toBe(10)
+    expect(b.rival).toBe(5)
+  })
+})
+
 describe('the habit bonus is a term of the breakdown (#1617)', () => {
   it('reads the bonus through as its own row', () => {
     expect(scoreBreakdown(praxis({ habit_bonus_points: 5, score: 18.6 })).habit).toBe(5)
@@ -172,6 +191,7 @@ describe('the habit bonus is a term of the breakdown (#1617)', () => {
       metatask_points: 0,
       points_from_votes: 0,
       habit_bonus_points: 5,
+      rival_bonus_points: 0,
       score: 15,
     })
     // Otherwise 10 of the 15 would be unaccounted for.
@@ -574,6 +594,7 @@ describe('a base-only score reads as a bare total on every stamp (ADR-0076)', ()
     metatask_points: 0,
     points_from_votes: 0,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
     score: 10,
   })
 
@@ -665,6 +686,7 @@ describe('the unaffiliated disc shrink-wraps when nothing follows it (#1894)', (
     metatask_points: 0,
     points_from_votes: 0,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
   }
 
   /** The gap between working and mark (moved off the disc in #2634). */
@@ -738,6 +760,7 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
     display_multiplier: 0.8,
     points_from_votes: 4,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
     is_top_for_task: false,
     duel_id: null,
     can_flag: true,
@@ -799,6 +822,7 @@ describe('the Ephemerists score stamp reads in the shared words (#1909)', () => 
           metatask_points: 0,
           points_from_votes: 4,
           habit_bonus_points: 0,
+          rival_bonus_points: 0,
           score: 52,
         })}
       />,
@@ -916,6 +940,7 @@ describe('the na stamp rules its working in the spectrum (#2520)', () => {
     metatask_points: 0,
     points_from_votes: 0,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
   }
   /** Every `.spectrum-rule` mount on the plate, counted by the shared class. */
   const spectra = (markup: string) => markup.split('spectrum-rule').length - 1

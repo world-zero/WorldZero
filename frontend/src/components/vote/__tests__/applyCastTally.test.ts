@@ -107,6 +107,7 @@ describe('applyCastTally on a detail payload (#1142)', () => {
       mult: null,
       meta: null,
       habit: null,
+      rival: null,
       votes: 9,
       // No multiplier, so no subtotal (#2634).
       subtotal: null,
@@ -130,6 +131,7 @@ describe('applyCastTally on a detail payload (#1142)', () => {
       display_multiplier: 1.0,
       points_from_votes: 4,
       habit_bonus_points: 0,
+      rival_bonus_points: 0,
       score: 16,
     }
     const voted = applyCastTally(scoreOnly, firstCastOfFive())

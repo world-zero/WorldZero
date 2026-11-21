@@ -1,7 +1,7 @@
 """Praxis score payload (ADR-0053, #881).
 
 One number, ``score``, resolved for the author, plus its terms so the stamp can
-render the arithmetic: ``base × display_multiplier + meta + votes + habit``.
+render the arithmetic: ``base × display_multiplier + meta + votes + habit + rival``.
 Only the base multiplies (ADR-0086); holds for every type, collab included.
 A duel side's multiplier is live and provisional (ADR-0052): a behind Snide
 side legitimately reads ×0.0.
@@ -57,12 +57,13 @@ def modifiers_of(character: Character, era=CURRENT_ERA):
 
 
 def assert_invariant(payload) -> None:
-    """score = base × mult + meta + votes + habit — every type (ADR-0053/0086)."""
+    """score = base × mult + meta + votes + habit + rival, every type (ADR-0053)."""
     expected = (
         payload.task_point_value * payload.display_multiplier
         + payload.metatask_points
         + payload.points_from_votes
         + payload.habit_bonus_points
+        + payload.rival_bonus_points
     )
     assert payload.score == pytest.approx(expected)
 
@@ -251,9 +252,11 @@ async def _make_duel(
     challenger_praxis: Praxis,
     opponent: Character,
     opponent_praxis: Praxis,
+    rival_bonus: bool = False,
 ) -> None:
     session.add(
         Duel(
+            rival_bonus=rival_bonus,
             task_id=task.id,
             challenger_praxis_id=challenger_praxis.id,
             opponent_character_id=opponent.id,
@@ -407,6 +410,35 @@ async def test_duel_winner_and_loser_scores(
     assert loser_card.display_multiplier == pytest.approx(loss)
     assert loser_card.score == pytest.approx(10 * loss + 2)
     assert_invariant(loser_card)
+
+
+@pytest.mark.asyncio
+async def test_rival_duel_winner_carries_the_bonus_on_card_and_detail(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    challenger = await _make_character(
+        db_session, era, username="rvch", email="rvch@x.com"
+    )
+    opponent = await _make_character(
+        db_session, era, username="rvop", email="rvop@x.com"
+    )
+    voter = await _make_character(db_session, era, username="rvv", email="rvv@x.com")
+    task = await _make_task(db_session, challenger, points=10)
+    winner_praxis = await _make_solo(db_session, task, challenger)
+    loser_praxis = await _make_solo(db_session, task, opponent)
+    await _cast_vote(db_session, winner_praxis, voter, 5)
+    await _cast_vote(db_session, loser_praxis, voter, 2)
+    await _make_duel(
+        db_session, task, winner_praxis, opponent, loser_praxis, rival_bonus=True
+    )
+
+    for load in (_load_card, _load_detail):
+        winner = await load(db_session, winner_praxis.id)
+        loser = await load(db_session, loser_praxis.id)
+        assert winner.rival_bonus_points == CURRENT_ERA.rival_duel_bonus
+        assert loser.rival_bonus_points == 0
+        assert_invariant(winner)
+        assert_invariant(loser)
 
 
 @pytest.mark.asyncio

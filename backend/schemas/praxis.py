@@ -112,6 +112,7 @@ class PraxisOut(WireModel):
     # The one authoritative number (ADR-0053), for the praxis AUTHOR:
     #   score = task_point_value × display_multiplier
     #           + metatask_points + points_from_votes + habit_bonus_points
+    #           + rival_bonus_points
     # Only the base multiplies (ADR-0086).
     score: float                # populated by build_praxis_out; the computed total
     metatask_points: int = 0    # populated by build_praxis_out
@@ -120,6 +121,8 @@ class PraxisOut(WireModel):
     # #1617 faction habit bonus, stamped at seal time; flat. On the wire because
     # it is a term of `score`.
     habit_bonus_points: int = 0  # populated by build_praxis_out
+    # Rival duel winner's flat bonus (ADR-0100); a term of `score`, so on the wire.
+    rival_bonus_points: int = 0  # populated by build_praxis_out
     voter_count: int = 0        # populated by build_praxis_out via vote_tally
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     duel_id: Optional[int] = None
@@ -164,6 +167,7 @@ class PraxisCardOut(WireModel):
     points_from_votes: int = 0
     # See ``PraxisOut.habit_bonus_points``.
     habit_bonus_points: int = 0
+    rival_bonus_points: int = 0
     voter_count: int = 0
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     # Full rows: the seal stack themes by issuing faction. Loaded page-wide (no N+1).

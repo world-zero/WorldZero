@@ -20,7 +20,7 @@ const FIELD_WIDTH = 38;
 export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, rival, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** `ruled` draws the subtotal rule above; `chip` is the multiplier. */
@@ -54,6 +54,9 @@ export default function EverymenScoreStamp({ praxis, showCrown }: ScoreStampProp
   // Habit is flat, outside the multiplier (#1617).
   if (habit !== null) {
     rows.push({ key: "habit", label: t("card.stamp.habit"), value: `+${habit}` });
+  }
+  if (rival !== null) {
+    rows.push({ key: "rival", label: t("card.stamp.rival"), value: `+${rival}` });
   }
 
   return (

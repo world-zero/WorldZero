@@ -345,6 +345,7 @@ describe("the Albescent stamp's rule still travels after #2634's restructure", (
             metatask_points: 0,
             points_from_votes: 0,
             habit_bonus_points: 0,
+            rival_bonus_points: 0,
             is_top_for_task: false,
             task_faction_slug: "albescent",
             moderation_status: "visible",

@@ -55,6 +55,7 @@ const PRAXIS: PraxisCardOut[] = [1, 2, 3, 4].map((n) => ({
   display_multiplier: 1.0,
   points_from_votes: 0,
   habit_bonus_points: 0,
+  rival_bonus_points: 0,
   is_top_for_task: false,
   applied_metatasks: [],
   body_text: "",
