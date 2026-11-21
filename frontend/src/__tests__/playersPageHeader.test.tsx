@@ -1,7 +1,7 @@
 /**
  * #1699 — the Players page wears the SHARED page header: `PageTitle`'s
  * per-letter rainbow, and no second rule under it (the source design draws one).
- * `DesktopPlayers` rendered directly: `<Leaderboard/>` would only show Loading.
+ * `PlayersDirectory` rendered directly: `<Leaderboard/>` would only show Loading.
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -14,7 +14,7 @@ vi.mock('../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'dark', toggle: () => {} }),
 }))
 
-import DesktopPlayers from '../pages/players/DesktopPlayers'
+import PlayersDirectory from '../pages/players/PlayersDirectory'
 import { NO_RELATIONSHIPS, rankPlayers } from '../pages/players/playersData'
 
 function player(overrides: Partial<CharacterOut>): CharacterOut {
@@ -49,7 +49,7 @@ const ERA_EYEBROW = 'Renaissance · The Standings'
 function board() {
   const html = renderToStaticMarkup(
     <MemoryRouter>
-      <DesktopPlayers
+      <PlayersDirectory
         ranked={rankPlayers(PLAYERS, 'era')}
         scoreMode="era"
         onScoreMode={() => {}}

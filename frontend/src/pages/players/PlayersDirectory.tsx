@@ -1,5 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { sideHref } from '../communitySide'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import { useTranslation } from 'react-i18next'
 import PageTitle from '../../components/ui/PageTitle'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
@@ -38,7 +40,7 @@ const RACE_STAGGER_MS = 90
 /**
  * Rank ring for a spectrum slug (#2730): conic ramp on the border box over an
  * opaque na paper interior (else the ramp shows through, #794); numeral in that
- * paper's ink. `MobilePlayers` restates it; `podiumSpectrumLead.test.tsx` checks both.
+ * paper's ink. `podiumSpectrumLead.test.tsx` checks both form factors.
  */
 const SPECTRUM_RANK_RING: CSSProperties = {
   border: '2px solid transparent',
@@ -46,19 +48,27 @@ const SPECTRUM_RANK_RING: CSSProperties = {
     'linear-gradient(var(--faction-default-card-bg), var(--faction-default-card-bg)) padding-box, var(--faction-default-rainbow-conic) border-box',
   color: 'var(--faction-default-card-text)',
 }
+const PHONE_PODIUM_COLUMNS = '34px 1fr auto'
+const PHONE_LANE_COLUMNS = '20px 1fr auto'
+const PHONE_ROSTER_COLUMNS = '26px 1fr 44px auto'
+/** Lanes the phone race shows before "N more factions". */
+const RACE_PREVIEW = 4
 const ELLIPSIS_GLYPH = '⋮'
 
 /**
- * The Players page on desktop (#1855): podium, faction race, roster.
+ * The Players page (#1855, one page since #3800): podium, faction race, roster.
+ * Phone (below 768px) stacks the podium into rows, folds the race behind "N more
+ * factions" and drops the roster's faction column; those trees are picked by
+ * `useFormFactor()`, the rest is shared.
  *
  * Deliberate deviations from the design, do not "restore":
  *   - the eyebrow reads the era config, not the literal "Era Three";
- *   - `PageTitle` draws the header; no second rainbow rule (#1699);
+ *   - `PageTitle` draws the header on desktop; no second rainbow rule (#1699);
  *   - eight race lanes incl. Albescent (ADR-0082), never `na` (a state);
  *   - the whole roster row links to the player (a stretched overlay, see `RosterRow`);
  *   - podium task titles take `--text-content` (content floor, WORLD_ZERO_STYLE §4).
  */
-export default function DesktopPlayers({
+export default function PlayersDirectory({
   ranked,
   scoreMode,
   onScoreMode,
@@ -68,6 +78,8 @@ export default function DesktopPlayers({
   latest,
 }: PlayersViewProps) {
   const { t } = useTranslation('common')
+  const navigate = useNavigate()
+  const mobile = useFormFactor() === 'mobile'
   const [filters, setFilters] = useState<PlayersFilters>(PLAYERS_FILTERS_DEFAULT)
   const [visible, setVisible] = useState(ROSTER_PAGE_STEP)
   const [raceOpen, setRaceOpen] = useState(true)
@@ -80,57 +92,107 @@ export default function DesktopPlayers({
     [ranked, filters, related],
   )
   const view = rosterView(roster, visible, myCharId)
+  const lanes = mobile ? standings.slice(0, RACE_PREVIEW) : standings
+  const hiddenLanes = standings.length - RACE_PREVIEW
+  const sectionGap = mobile ? 'var(--space-xl)' : 'var(--space-3xl)'
+  const headingSize = mobile ? 'var(--text-content)' : 'var(--text-title)'
+  const rowGap = mobile ? 'var(--space-md)' : 'var(--space-lg)'
+  const clearFilters = () => {
+    setFilters(PLAYERS_FILTERS_DEFAULT)
+    setVisible(ROSTER_PAGE_STEP)
+  }
 
   return (
-    <div className="py-8">
-      <div className="flex items-end justify-between" style={{ gap: 'var(--space-lg)' }}>
-        <PageTitle title={t('leaderboard.title')} eyebrow={eyebrow} />
-        <ScoreToggle mode={scoreMode} onChange={onScoreMode} fontSize="var(--text-base)" />
-      </div>
-
+    <div className={mobile ? 'py-4' : 'py-8'} data-testid={mobile ? 'mobile-players-directory' : undefined}>
       <div
-        className="grid items-stretch"
-        style={{
-          gridTemplateColumns: PODIUM_COLUMNS,
-          borderTop: '1px solid var(--color-border-strong)',
-          borderBottom: '1px solid var(--color-border-strong)',
-        }}
+        className={mobile ? 'flex items-center justify-between' : 'flex items-end justify-between'}
+        style={{ gap: rowGap }}
       >
-        {podium.map((row, index) => (
-          <PodiumCard key={row.character.id} row={row} lead={index === 0} latest={latest} />
-        ))}
+        {mobile ? (
+          <p className="label-heading">{eyebrow}</p>
+        ) : (
+          <PageTitle title={t('leaderboard.title')} eyebrow={eyebrow} />
+        )}
+        <ScoreToggle
+          mode={scoreMode}
+          onChange={onScoreMode}
+          fontSize={mobile ? 'var(--text-md)' : 'var(--text-base)'}
+        />
       </div>
 
-      <section style={{ marginTop: 'var(--space-3xl)' }}>
+      {mobile ? (
+        <div style={{ marginTop: 'var(--space-lg)' }}>
+          {podium.map((row, index) => (
+            <PodiumRow key={row.character.id} row={row} lead={index === 0} latest={latest} />
+          ))}
+        </div>
+      ) : (
+        <div
+          className="grid items-stretch"
+          style={{
+            gridTemplateColumns: PODIUM_COLUMNS,
+            borderTop: '1px solid var(--color-border-strong)',
+            borderBottom: '1px solid var(--color-border-strong)',
+          }}
+        >
+          {podium.map((row, index) => (
+            <PodiumCard key={row.character.id} row={row} lead={index === 0} latest={latest} />
+          ))}
+        </div>
+      )}
+
+      <section style={{ marginTop: sectionGap }}>
         <SectionHeading
           title={t('leaderboard.race.heading')}
           open={raceOpen}
           onToggle={() => setRaceOpen(!raceOpen)}
-          fontSize="var(--text-title)"
+          fontSize={headingSize}
           toggleLabel={t('leaderboard.race.heading')}
         />
         {raceOpen && (
-          <div className="flex flex-col" style={{ marginTop: 'var(--space-lg)' }}>
-            {standings.map((lane, index) => (
-              <RaceRow key={lane.slug} lane={lane} rank={index + 1} delayMs={index * RACE_STAGGER_MS} />
-            ))}
+          <div className="flex flex-col" style={{ marginTop: rowGap }}>
+            {lanes.map((lane, index) =>
+              mobile ? (
+                <CompactLane key={lane.slug} lane={lane} />
+              ) : (
+                <RaceRow key={lane.slug} lane={lane} rank={index + 1} delayMs={index * RACE_STAGGER_MS} />
+              ),
+            )}
+            {mobile && hiddenLanes > 0 && (
+              <button
+                type="button"
+                onClick={() => navigate(sideHref('factions'), { replace: true })}
+                className="font-body text-left hit-box"
+                style={{
+                  marginTop: 'var(--space-sm)',
+                  padding: 0,
+                  border: 'none',
+                  background: 'none',
+                  fontSize: 'var(--text-lg)',
+                  color: 'var(--color-text-tertiary)',
+                  cursor: 'pointer',
+                }}
+              >
+                {t('leaderboard.race.more', { count: hiddenLanes })}
+              </button>
+            )}
           </div>
         )}
       </section>
 
-      <section style={{ marginTop: 'var(--space-3xl)' }}>
+      <section style={{ marginTop: sectionGap }}>
         <SectionHeading
           title={t('leaderboard.roster.heading')}
           meta={<span className="label-heading">{t('leaderboard.playersCount', { count: view.total })}</span>}
           open={rosterOpen}
           onToggle={() => setRosterOpen(!rosterOpen)}
-          fontSize="var(--text-title)"
+          fontSize={headingSize}
           toggleLabel={t('leaderboard.roster.heading')}
         />
 
         {rosterOpen && (
           <>
-            <div style={{ marginTop: 'var(--space-lg)' }}>
+            <div style={{ marginTop: rowGap }}>
               <PlayersFilterBar
                 filters={filters}
                 onChange={(next) => {
@@ -143,100 +205,135 @@ export default function DesktopPlayers({
             </div>
 
             {view.total === 0 ? (
-              <div style={{ marginTop: 'var(--space-xl)' }}>
+              <div style={{ marginTop: mobile ? 'var(--space-lg)' : 'var(--space-xl)' }}>
                 <FilterBarEmpty
                   title={t('leaderboard.roster.empty')}
-                  onClearAll={
-                    hasActiveFilter(filters)
-                      ? () => {
-                          setFilters(PLAYERS_FILTERS_DEFAULT)
-                          setVisible(ROSTER_PAGE_STEP)
-                        }
-                      : undefined
-                  }
+                  onClearAll={hasActiveFilter(filters) ? clearFilters : undefined}
                 />
               </div>
             ) : (
               <>
-                <div
-                  className="grid items-center"
-                  style={{
-                    marginTop: 'var(--space-xl)',
-                    gridTemplateColumns: ROSTER_COLUMNS,
-                    gap: 'var(--space-lg)',
-                    paddingBottom: 'var(--space-sm)',
-                    borderBottom: '1px solid var(--color-border-strong)',
-                  }}
-                >
-                  <span className="label-heading">{t('leaderboard.roster.colRank')}</span>
-                  <span className="label-heading">{t('leaderboard.roster.colPlayer')}</span>
-                  <span className="label-heading" style={{ textAlign: 'center' }}>
-                    {t('leaderboard.roster.colFaction')}
-                  </span>
-                  <span className="label-heading" style={{ textAlign: 'center' }}>
-                    {t('leaderboard.roster.colLevel')}
-                  </span>
-                  <span className="label-heading" style={{ textAlign: 'right' }}>
-                    {t('leaderboard.roster.colPoints')}
-                  </span>
-                </div>
-
-                {view.rows.map((row) => (
-                  <RosterRow
-                    key={row.character.id}
-                    row={row}
-                    isMe={row.character.id === myCharId}
-                    showCode={filters.rail === 'nearby'}
-                  />
-                ))}
-
-                {view.gap && (
+                {!mobile && (
                   <div
                     className="grid items-center"
                     style={{
+                      marginTop: 'var(--space-xl)',
                       gridTemplateColumns: ROSTER_COLUMNS,
                       gap: 'var(--space-lg)',
-                      padding: 'var(--space-sm) 0',
-                      color: 'var(--color-text-tertiary)',
+                      paddingBottom: 'var(--space-sm)',
+                      borderBottom: '1px solid var(--color-border-strong)',
                     }}
                   >
-                    <span aria-hidden style={{ fontSize: 'var(--text-md)', letterSpacing: '0.2em' }}>
-                      {ELLIPSIS_GLYPH}
+                    <span className="label-heading">{t('leaderboard.roster.colRank')}</span>
+                    <span className="label-heading">{t('leaderboard.roster.colPlayer')}</span>
+                    <span className="label-heading" style={{ textAlign: 'center' }}>
+                      {t('leaderboard.roster.colFaction')}
                     </span>
-                    <span className="label-heading">
-                      {t('leaderboard.roster.gap', { from: view.gap.from, to: view.gap.to })}
+                    <span className="label-heading" style={{ textAlign: 'center' }}>
+                      {t('leaderboard.roster.colLevel')}
+                    </span>
+                    <span className="label-heading" style={{ textAlign: 'right' }}>
+                      {t('leaderboard.roster.colPoints')}
                     </span>
                   </div>
                 )}
+                <div style={mobile ? { marginTop: 'var(--space-lg)' } : undefined}>
+                  {view.rows.map((row) => {
+                    const rowProps = {
+                      row,
+                      isMe: row.character.id === myCharId,
+                      showCode: filters.rail === 'nearby',
+                    }
+                    return mobile ? (
+                      <CompactRosterRow key={row.character.id} {...rowProps} />
+                    ) : (
+                      <RosterRow key={row.character.id} {...rowProps} />
+                    )
+                  })}
 
-                {view.pinned && <RosterRow row={view.pinned} isMe showCode={filters.rail === 'nearby'} />}
-
-                {view.hasMore && (
-                  <div className="flex items-center justify-end" style={{ paddingTop: 'var(--space-xl)' }}>
-                    <button
-                      type="button"
-                      onClick={() => setVisible(visible + ROSTER_PAGE_STEP)}
-                      className="font-body uppercase"
+                  {view.gap && (
+                    <div
+                      className="grid items-center"
                       style={{
-                        fontSize: 'var(--text-md)',
-                        letterSpacing: '0.18em',
-                        padding: 'var(--space-sm) var(--space-lg)',
-                        borderRadius: 999,
-                        border: '1px solid var(--color-border-strong)',
-                        background: 'transparent',
-                        color: 'var(--color-text-secondary)',
-                        cursor: 'pointer',
+                        gridTemplateColumns: mobile ? PHONE_LANE_COLUMNS : ROSTER_COLUMNS,
+                        gap: rowGap,
+                        padding: mobile ? 'var(--space-xs) 0' : 'var(--space-sm) 0',
+                        color: 'var(--color-text-tertiary)',
                       }}
                     >
-                      {t('leaderboard.roster.loadMore')}
-                    </button>
-                  </div>
-                )}
+                      <span aria-hidden style={{ fontSize: 'var(--text-md)', letterSpacing: '0.2em' }}>
+                        {ELLIPSIS_GLYPH}
+                      </span>
+                      <span className="label-heading">
+                        {t('leaderboard.roster.gap', { from: view.gap.from, to: view.gap.to })}
+                      </span>
+                    </div>
+                  )}
+
+                  {view.pinned &&
+                    (mobile ? (
+                      <CompactRosterRow row={view.pinned} isMe showCode={filters.rail === 'nearby'} />
+                    ) : (
+                      <RosterRow row={view.pinned} isMe showCode={filters.rail === 'nearby'} />
+                    ))}
+
+                  {view.hasMore && (
+                    <div
+                      className="flex items-center justify-end"
+                      style={{ paddingTop: mobile ? 'var(--space-md)' : 'var(--space-xl)' }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setVisible(visible + ROSTER_PAGE_STEP)}
+                        className="font-body uppercase w-full md:w-auto"
+                        style={{
+                          fontSize: 'var(--text-md)',
+                          letterSpacing: '0.18em',
+                          padding: 'var(--space-sm) var(--space-lg)',
+                          borderRadius: 999,
+                          border: '1px solid var(--color-border-strong)',
+                          background: 'transparent',
+                          color: 'var(--color-text-secondary)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {mobile
+                          ? t('leaderboard.roster.loadMoreCount', { count: view.total - view.rows.length })
+                          : t('leaderboard.roster.loadMore')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </>
         )}
       </section>
+    </div>
+  )
+}
+
+/** Phone race lane: no rank or bar, and the share is dropped for room. */
+function CompactLane({ lane }: { lane: FactionStanding }) {
+  return (
+    <div
+      className="grid items-center"
+      style={{
+        gridTemplateColumns: PHONE_LANE_COLUMNS,
+        gap: 'var(--space-md)',
+        padding: 'var(--space-sm) 0',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+    >
+      <FactionSigil
+        slug={lane.slug}
+        size={18}
+        color={isKnownFaction(lane.slug) ? factionCssVar(lane.slug) : undefined}
+      />
+      <FactionLaneName slug={lane.slug} />
+      <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-content)' }}>
+        {Math.round(lane.points)}
+      </span>
     </div>
   )
 }
@@ -437,7 +534,7 @@ function FactionLaneName({ slug }: { slug: string }) {
   const href = factionHref(slug)
   const redacted = isFactionRedacted(slug)
   const style = { fontSize: 'var(--text-content)' }
-  const className = redacted ? 'font-display redacted' : 'font-display'
+  const className = redacted ? 'font-display truncate redacted' : 'font-display truncate'
   if (href === null) {
     return (
       <span className={className} style={style} data-redacted={redacted ? 'true' : undefined}>
@@ -580,5 +677,172 @@ function RosterRow({
         {points}
       </span>
     </div>
+  )
+}
+
+/**
+ * One podium row. Spectrum slugs are dressed as on desktop (`PodiumCard`, #2730);
+ * the wash axis is 90deg here, as 170deg spends itself on a taller card.
+ */
+function PodiumRow({
+  row,
+  lead,
+  latest,
+}: {
+  row: RankedPlayer
+  lead: boolean
+  latest: LatestPraxisMap
+}) {
+  const { t } = useTranslation('common')
+  const { character, rank, points } = row
+  const known = isKnownFaction(character.faction_slug)
+  const color = factionCssVar(character.faction_slug)
+  const recent = latest[character.id]
+
+  return (
+    <Link
+      to={`/characters/${character.id}`}
+      className={lead && !known ? 'grid items-center spectrum-wash' : 'grid items-center'}
+      style={{
+        gridTemplateColumns: PHONE_PODIUM_COLUMNS,
+        gap: 'var(--space-md)',
+        padding: 'var(--space-md) 0',
+        borderBottom: '1px solid var(--color-border)',
+        // Spectrum wash via `.spectrum-wash` (#2730), on this row's axis.
+        ...(lead && !known ? { '--spectrum-wash-axis': '90deg' } : null),
+        background:
+          lead && known
+            ? `linear-gradient(90deg, color-mix(in oklab, ${color} 9%, transparent), transparent 62%)`
+            : undefined,
+        color: 'var(--color-text-primary)',
+        textDecoration: 'none',
+      } as CSSProperties}
+    >
+      {/* Numeral never takes the faction hue (#1932): 18px regular is not
+          large text, so it owes 4.5:1. Spectrum rows: `SPECTRUM_RANK_RING`. */}
+      <span
+        className="font-display flex items-center justify-center"
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
+          ...(known
+            ? {
+                border: `1px solid ${color}`,
+                boxShadow: `0 0 0 4px color-mix(in oklab, ${color} 14%, transparent)`,
+              }
+            : SPECTRUM_RANK_RING),
+          fontSize: 'var(--text-content)',
+          flex: 'none',
+        }}
+      >
+        {rank}
+      </span>
+
+      <span className="flex items-center min-w-0" style={{ gap: 'var(--space-md)' }}>
+        <span style={{ flex: 'none', lineHeight: 0 }}>
+          <FactionAvatar character={character} size={42} />
+        </span>
+        <span className="flex flex-col min-w-0" style={{ gap: 'var(--space-xs)' }}>
+          <span className="font-display truncate" style={{ fontSize: 'var(--text-content)', lineHeight: 1.05 }}>
+            {character.display_name}
+          </span>
+          {/* Label ink seam, not faction hue (#1932). */}
+          <span className="label-heading">
+            {t('leaderboard.level', { level: character.level })}
+          </span>
+          {/* Content floor (WORLD_ZERO_STYLE §4); no room for a timestamp. */}
+          {recent && (
+            <span className="font-body content-text truncate" style={{ color: 'var(--color-text-secondary)' }}>
+              {recent.taskTitle}
+            </span>
+          )}
+        </span>
+      </span>
+
+      <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-title)' }}>
+        {points}
+      </span>
+    </Link>
+  )
+}
+
+/** Phone roster row: no faction column, the avatar's ring and sigil carry it. */
+function CompactRosterRow({
+  row,
+  isMe,
+  showCode = false,
+}: {
+  row: RankedPlayer
+  isMe: boolean
+  /** The Nearby view prints the player's airport code (#3247). */
+  showCode?: boolean
+}) {
+  const { t } = useTranslation('common')
+  const { character, rank, points } = row
+
+  return (
+    <Link
+      to={`/characters/${character.id}`}
+      className={isMe ? 'grid items-center' : 'leaderboard-row grid items-center'}
+      style={{
+        position: 'relative',
+        gridTemplateColumns: PHONE_ROSTER_COLUMNS,
+        gap: 'var(--space-md)',
+        padding: isMe ? 'var(--space-md) 0 var(--space-md) var(--space-md)' : 'var(--space-md) 0',
+        marginLeft: isMe ? 'calc(-1 * var(--space-md))' : undefined,
+        borderBottom: '1px solid var(--color-border)',
+        background: isMe ? 'var(--color-bg-surface)' : undefined,
+        color: 'var(--color-text-primary)',
+        textDecoration: 'none',
+      }}
+    >
+      {isMe && (
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 3,
+            background: 'var(--faction-default-rainbow)',
+          }}
+        />
+      )}
+
+      <span style={{ fontSize: 'var(--text-lg)', color: isMe ? undefined : 'var(--color-text-secondary)' }}>
+        {rank}
+      </span>
+
+      <span className="flex items-center min-w-0" style={{ gap: 'var(--space-sm)' }}>
+        <span style={{ flex: 'none', lineHeight: 0 }}>
+          <FactionAvatar character={character} size={28} />
+        </span>
+        <span className="font-display truncate" style={{ fontSize: 'var(--text-content)' }}>
+          {character.display_name}
+          {isMe && (
+            <>
+              {' '}
+              <span className="label-heading">{t('leaderboard.roster.you')}</span>
+            </>
+          )}
+          {showCode && (
+            <>
+              {' '}
+              <span className="label-heading">{character.location}</span>
+            </>
+          )}
+        </span>
+      </span>
+
+      <span className="flex justify-center">
+        <LevelGem level={character.level} factionSlug={character.faction_slug} size={28} />
+      </span>
+
+      <span className="font-display rainbow-ink" style={{ fontSize: 'var(--text-content)' }}>
+        {points}
+      </span>
+    </Link>
   )
 }

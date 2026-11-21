@@ -233,8 +233,7 @@ src/pages/fieldDesk/mobileArchetypes/SnideFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/UaFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/WowFieldDesk.tsx
 src/pages/onboarding/OnboardingCard.tsx
-src/pages/players/DesktopPlayers.tsx
-src/pages/players/MobilePlayers.tsx
+src/pages/players/PlayersDirectory.tsx
 src/pages/players/ScoreToggle.tsx
 src/pages/players/SectionHeading.tsx
 src/pages/praxisDetail/DuelCard.tsx

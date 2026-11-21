@@ -21,9 +21,10 @@ vi.mock('../../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'light' as const, toggle: () => {} }),
 }))
 
-import DesktopPlayers from '../DesktopPlayers'
-import MobilePlayers from '../MobilePlayers'
+import { DesktopPlayers, MobilePlayers } from './playersAt'
 import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../playersData'
+
+vi.mock('../../../hooks/useFormFactor', async () => (await import('./formFactorMock')).mockModule)
 
 function render(element: ReactElement): string {
   return renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
