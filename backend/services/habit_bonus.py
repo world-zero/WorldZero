@@ -91,18 +91,18 @@ async def restamp_after_moderation(
     session: AsyncSession,
     era: EraConfig,
 ) -> None:
-    """Re-stamp each member's next sealed praxis in the window after ``praxis``.
+    """Re-stamp every sealed praxis of ``praxis``'s members in the window after it.
 
-    A stamp leans on its predecessor's moderation state, so a flip into or out
-    of ``UNSCORED_MODERATION_STATUSES`` stales the successor's. Re-running
-    ``stamp_habit_bonus`` keeps the predecessor rule in one place.
+    A stamp leans on any scoring praxis in its window, not just the nearest, so
+    a flip stales every later one (a hidden praxis in between hides nothing).
+    Re-running ``stamp_habit_bonus`` keeps the predecessor rule in one place.
     """
     if praxis.status != PraxisStatus.submitted or praxis.submitted_at is None:
         return
     member_character_ids = [member.character_id for member in praxis.members]
     result = await session.execute(
-        select(PraxisMember.character_id, Praxis.id)
-        .join(Praxis, Praxis.id == PraxisMember.praxis_id)
+        select(Praxis.id)
+        .join(PraxisMember, Praxis.id == PraxisMember.praxis_id)
         .where(
             PraxisMember.character_id.in_(member_character_ids),
             Praxis.id != praxis.id,
@@ -111,11 +111,9 @@ async def restamp_after_moderation(
             Praxis.submitted_at
             <= praxis.submitted_at + timedelta(days=era.habit_window_days),
         )
-        .order_by(Praxis.submitted_at, Praxis.id)
+        .distinct()
+        .order_by(Praxis.id)
     )
-    next_by_character: dict[int, int] = {}
-    for character_id, next_id in result.all():
-        next_by_character.setdefault(character_id, next_id)
-    for next_id in set(next_by_character.values()):
-        successor = await session.get(Praxis, next_id)
-        await stamp_habit_bonus(successor, successor.submitted_at, session, era)
+    for later_id in result.scalars().all():
+        later = await session.get(Praxis, later_id)
+        await stamp_habit_bonus(later, later.submitted_at, session, era)

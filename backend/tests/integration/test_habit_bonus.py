@@ -432,3 +432,61 @@ async def test_failing_a_predecessor_takes_back_the_next_praxis_bonus(
     stats = await _stats(db_session, character.id, era.id)
     await db_session.refresh(stats)
     assert stats.score == round(active_task.point_value)
+
+
+async def _a_then_hidden_b_then_c(
+    client, db_session, character, active_task, headers, a_status
+):
+    """A (2d back, ``a_status``), B (1d back, hidden), C now: C leans on A alone."""
+    a_id = await _seal_solo(client, active_task, headers, "A")
+    await _backdate(db_session, a_id, days=2)
+    (await db_session.get(Praxis, a_id)).moderation_status = a_status
+    await db_session.commit()
+    b_id = await _seal_solo(
+        client, await _extra_task(db_session, character, "B Task"), headers, "B"
+    )
+    await _backdate(db_session, b_id, days=1)
+    (await db_session.get(Praxis, b_id)).moderation_status = ModerationStatus.hidden
+    await db_session.commit()
+    c_id = await _seal_solo(
+        client, await _extra_task(db_session, character, "C Task"), headers, "C"
+    )
+    return a_id, c_id
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "before,after,bonus_before,bonus_after",
+    [
+        (ModerationStatus.visible, ModerationStatus.failed, True, False),
+        (ModerationStatus.failed, ModerationStatus.visible, False, True),
+    ],
+)
+async def test_a_hidden_praxis_between_does_not_hide_the_flip_from_the_later_one(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    active_task: Task,
+    era: Era,
+    auth_headers: dict,
+    before,
+    after,
+    bonus_before,
+    bonus_after,
+):
+    await _open_era_before(db_session, era, days=30)
+    a_id, c_id = await _a_then_hidden_b_then_c(
+        client, db_session, character, active_task, auth_headers, before
+    )
+    assert await _stamp(db_session, c_id, character.id) == (
+        HABIT_BONUS if bonus_before else 0
+    )
+
+    await moderate_praxis(
+        a_id, after.value, "Not met", db_session, CURRENT_ERA, actor_id=0, log=False
+    )
+    await db_session.commit()
+
+    assert await _stamp(db_session, c_id, character.id) == (
+        HABIT_BONUS if bonus_after else 0
+    )
