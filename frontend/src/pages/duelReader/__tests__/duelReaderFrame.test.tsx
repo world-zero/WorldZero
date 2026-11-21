@@ -370,7 +370,7 @@ describe('no duel surface prints a faction name (brief §0)', () => {
     const albescent = render({
       duel: duel({ opponent: { ...OPPONENT, faction_slug: 'albescent' } }),
     })
-    for (const name of ['Albescent', 'Coven', 'Singularity', 'S.N.I.D.E.']) {
+    for (const name of ['Chromagencia', 'Coven', 'Singularity', 'S.N.I.D.E.']) {
       expect(albescent).not.toContain(name)
     }
   })

@@ -176,7 +176,7 @@ describe("Albescent's name is masked, and two surfaces redact instead (#2409)", 
     setAlbescentRevealed(true);
     expect(factionName("albescent")).not.toBe(factionName("na"));
     // Non-vacuity: a missing catalog entry would green the unrevealed cases.
-    expect(factionName("albescent")).toContain("Albescent");
+    expect(factionName("albescent")).toContain("Chromagencia");
     expect(redactableText("feed:factionSelect.albescent.cta")).not.toBe(
       REDACTED,
     );

@@ -821,10 +821,10 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     expect(i18n.t('factions:snide.invitation.headline')).toBe('Wanna F%&* some S^&* up?')
   })
 
-  it('names UA in full and Albescent without a slash', () => {
+  it('names UA in full and Chromagencia without a slash', () => {
     expect(factionName('ua')).toBe('Unwavering Artisans')
     // Via the catalog: `factionName()` masks Albescent when unrevealed (#1891).
-    expect(i18n.t('factions:names.albescent')).toBe('Albescent')
+    expect(i18n.t('factions:names.albescent')).toBe('Chromagencia')
     expect(i18n.t('factions:names.albescent').startsWith('/')).toBe(false)
   })
 
@@ -832,9 +832,9 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     expect(i18n.t('factions:descriptions.ua')).toContain('also known as UA')
   })
 
-  it("keeps Albescent's letterhead wordmark, which was already the clean form", () => {
+  it("keeps Chromagencia's letterhead wordmark, which was already the clean form", () => {
     // A different key from `names.albescent`; pinned against the slash sweep.
-    expect(i18n.t('factions:albescent.letter.wordmark')).toBe('Albescent')
+    expect(i18n.t('factions:albescent.letter.wordmark')).toBe('Chromagencia')
   })
 })
 
