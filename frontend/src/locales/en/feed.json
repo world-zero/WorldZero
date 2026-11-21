@@ -40,6 +40,8 @@
     "remaining_one": "{{count}} left",
     "remaining_other": "{{count}} left",
     "doneTitle": "Nothing is waiting on you.",
+    "otherLife_one": "{{count}} waiting on {{name}}",
+    "otherLife_other": "{{count}} waiting on {{name}}",
     "error": "That didn't go through."
   },
   "kicker": {

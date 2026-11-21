@@ -13,6 +13,9 @@ import {
   selectQueueTray,
 } from './requestsQueueCursor'
 import { useRequestsQueue } from './useRequestsQueue'
+import { useSidebarPanels } from '../../hooks/useSidebarPanels'
+import { useAuth } from '../../auth/AuthContext'
+import { setActiveCharacter } from '../../api/me'
 
 /** The sigil on a tray chip. Matches `factionFacet`'s chip-place size. */
 const CHIP_SIGIL_SIZE = 14
@@ -35,6 +38,8 @@ export default function RequestsQueue() {
   const { t: tc } = useTranslation('common')
   const { items, loading, error, refresh } = useRequestsQueue()
   const { hash } = useLocation()
+  const { other_lives_pending: otherLives } = useSidebarPanels()
+  const { applyUser } = useAuth()
 
   /** A key, not an index: the list refetches on every answer anywhere. */
   const [activeKey, setActiveKey] = useState<string | null>(null)
@@ -58,6 +63,18 @@ export default function RequestsQueue() {
     return (
       <section id={REQUESTS_QUEUE_ANCHOR} style={{ marginBottom: 'var(--space-lg)' }}>
         {!loading && <p className="label-caption">{t('queue.doneTitle')}</p>}
+        {!loading &&
+          otherLives.map((life) => (
+            <button
+              key={life.character_id}
+              type="button"
+              className="label-caption"
+              data-testid={`other-life-${life.character_id}`}
+              onClick={async () => applyUser(await setActiveCharacter(life.character_id))}
+            >
+              {t('queue.otherLife', { count: life.pending_requests_count, name: life.display_name })}
+            </button>
+          ))}
       </section>
     )
   }
