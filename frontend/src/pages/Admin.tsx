@@ -1,8 +1,9 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import AdminRail, { itemAt } from '../components/admin/AdminRail'
+import AdminRail, { firstAllowed, itemAt, needOf } from '../components/admin/AdminRail'
+import { useCan } from '../auth/permissions'
 import { useAdminCounts } from './admin/useAdminCounts'
 import './admin/adminConsole.css'
 
@@ -22,8 +23,11 @@ export default function Admin() {
     document.getElementById('content')?.focus({ preventScroll: true })
   }, [pathname])
   const item = itemAt(pathname)
+  const can = useCan()
   useDocumentTitle(item ? t(`console.rail.items.${item.key}`) : t('title'))
   const count = item?.count ? counts[item.count] : null
+  // `/admin` itself, and a typed or stale link to a page the caller may not open.
+  if (!item || !can(needOf(item))) return <Navigate to={firstAllowed(can)} replace />
 
   return (
     <div className="adm">

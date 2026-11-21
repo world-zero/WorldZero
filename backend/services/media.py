@@ -389,6 +389,21 @@ def _detect_media_type(content_type: str) -> MediaType:
     raise_coded(422, ErrorCode.media_type_unsupported, "Unsupported media type.")
 
 
+_READ_CHUNK_BYTES = 1024 * 1024
+
+
+async def read_capped(upload: UploadFile, max_bytes: int) -> bytes | None:
+    """The upload's bytes, or None once over ``max_bytes`` (reads <= cap + 1 chunk)."""
+    if upload.size is not None and upload.size > max_bytes:
+        return None
+    buffer = bytearray()
+    while chunk := await upload.read(_READ_CHUNK_BYTES):
+        buffer += chunk
+        if len(buffer) > max_bytes:
+            return None
+    return bytes(buffer)
+
+
 async def process_and_save_avatar(
     upload: UploadFile,
     character_id: int,
@@ -413,8 +428,8 @@ async def process_and_save_avatar(
 
     try:
         os.makedirs(absolute_directory, exist_ok=True)
-        contents = await upload.read()
-        if len(contents) > AVATAR_MAX_BYTES:
+        contents = await read_capped(upload, AVATAR_MAX_BYTES)
+        if contents is None:
             raise_coded(
                 413,
                 ErrorCode.avatar_too_large,
@@ -472,8 +487,8 @@ async def process_and_save_media(
     relative_path = os.path.join(relative_directory, filename)
 
     try:
-        contents = await upload.read()
-        if len(contents) > MEDIA_MAX_BYTES:
+        contents = await read_capped(upload, MEDIA_MAX_BYTES)
+        if contents is None:
             raise_coded(
                 413,
                 ErrorCode.media_too_large,

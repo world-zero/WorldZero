@@ -12,16 +12,16 @@ import { extractError } from '../../utils/errors'
  * Files per request.
  *
  * ponytail: well under Starlette's `max_files=1000` (exceeding it 400s the whole
- * request, unattributable). Upgrade: raise once the proxy body limit is measured.
+ * request, unattributable). Upgrade: raise toward the 120 MB edge body limit.
  */
 export const MEDIA_BATCH_MAX_FILES = 20
 
 /**
  * Cumulative bytes per request.
  *
- * ponytail: self-imposed, unmeasured (proxy limit unknown, #1298); matches the
+ * ponytail: self-imposed, under Caddy's 120 MB body limit; matches the
  * per-file `MEDIA_MAX_BYTES` and bounds Starlette's temp-file spooling. Upgrade:
- * measure the deployed limit, then raise or drop this.
+ * raise toward the edge limit if single requests prove too small.
  */
 export const MEDIA_BATCH_MAX_BYTES = 100 * 1024 * 1024
 

@@ -6,8 +6,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PraxisCardOut } from "../../api/praxis";
-import { useAuth } from "../../auth/AuthContext";
 import { useAdminMode } from "../../auth/AdminModeContext";
+import { useCan } from "../../auth/permissions";
 import { extractError } from "../../utils/errors";
 import type { AdminProps } from "./shared";
 
@@ -21,9 +21,9 @@ export function usePraxisCard(
   onModerated?: () => void,
 ): PraxisCardModeration {
   const { t } = useTranslation("praxis");
-  const { user } = useAuth();
   const { adminMode } = useAdminMode();
-  const showAdminControls = (user?.is_admin && adminMode) ?? false;
+  const can = useCan();
+  const showAdminControls = adminMode && can("moderate");
   const [localPraxis, setLocalPraxis] = useState(praxis);
   const [moderateError, setModerateError] = useState<string | null>(null);
 

@@ -23,6 +23,7 @@ const VIEWER: CurrentUser = {
   character: null,
   is_admin: false,
   is_owner: false,
+  permissions: [],
   has_accepted_terms: true,
   can_create_additional_character: false,
   character_creation_banned: false,

@@ -178,3 +178,26 @@ async def test_defecting_from_wow_loses_the_ability(
     character.faction_slug = NOT_WOW
     await db_session.commit()
     assert (await evaluate_signup(character, task, db_session)).allowed is False
+
+
+@pytest.mark.asyncio
+async def test_dipping_a_level_and_returning_does_not_refill_the_allowance(
+    db_session: AsyncSession, character: Character, era: Era, faction_wow: Faction
+):
+    """#3925: unsubmit/resubmit must not farm the jump."""
+    stats = await _set_faction_and_level(db_session, character, era, WOW, level=1)
+    await create_praxis(
+        (await _make_task(db_session, character, 2)).id,
+        PraxisType.solo, character.id, db_session,
+    )
+    for level in (0, 1):
+        stats.level = level
+        await db_session.commit()
+        above = await _make_task(db_session, character, level + 1)
+        result = await evaluate_signup(character, above, db_session)
+        assert result.allowed is False
+        assert result.reason == SignupDenialReason.below_level
+    stats.level = 2
+    await db_session.commit()
+    higher = await _make_task(db_session, character, 3)
+    assert (await evaluate_signup(character, higher, db_session)).allowed is True

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from game_config import VoteLockReason
+from models.roles import Permission
 from schemas.base import WireModel
 
 from schemas.character import CharacterOut
@@ -23,6 +24,9 @@ class CurrentUser(WireModel):
     is_admin: bool = False
     # Gates the admin-roster section (``account_is_owner``, #3258).
     is_owner: bool = False
+    # What the console hides (#3847); the owner gets all nine.
+    # The server stays the authority.
+    permissions: list[Permission] = []
     # Accepted the CURRENT terms version (#3468).
     has_accepted_terms: bool = False
     # Server-side capability flags. Admin forces propose/see flags True; the

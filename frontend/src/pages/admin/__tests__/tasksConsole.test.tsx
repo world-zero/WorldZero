@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '../../../i18n'
-import { aTask } from '../../../test/fixtures'
+import { ALL_PERMISSIONS, aTask } from '../../../test/fixtures'
 
 const NOW = Date.parse('2026-06-10T12:00:00Z')
 const api = vi.hoisted(() => ({
@@ -18,6 +18,7 @@ const api = vi.hoisted(() => ({
   taskImportRowErrors: vi.fn(() => []),
 }))
 vi.mock('../../../api/admin', () => api)
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: { is_admin: true, permissions: ALL_PERMISSIONS } }) }))
 // Odd numbers on purpose: a literal 48 or 3 in the page would show up as the wrong text.
 vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => ({
