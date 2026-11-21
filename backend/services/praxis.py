@@ -80,6 +80,7 @@ from services.praxis_duel import (
 from services.praxis_room import (
     absorb_room_on_commit,
     close_member_sockets,
+    evict_room,
     loaded_room_values,
     merge_client_state,
 )
@@ -783,6 +784,7 @@ async def delete_praxis(
         await refund_vote_budget(vote, session)
     await session.delete(praxis)
     await session.flush()
+    await evict_room(praxis_id)
 
 
 # ---------------------------------------------------------------------------

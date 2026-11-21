@@ -33,4 +33,4 @@ python scripts/check_db_stamp.py
 alembic upgrade head
 python seed.py --env prod --yes
 # One worker on purpose: services/google_photos.py holds Photos grants in process memory.
-exec uvicorn main:app --host 0.0.0.0 --port 8000
+exec uvicorn main:app --host 0.0.0.0 --port 8000 --ws-max-size 2097152

@@ -32,7 +32,7 @@ from typing import Any
 import anyio
 from anyio import Event, Lock
 from fastapi import HTTPException
-from pycrdt import Decoder, Doc, Map, Text, YMessageType, read_message
+from pycrdt import Decoder, Doc, Map, Text, YMessageType, YSyncMessageType, read_message
 from pycrdt.store import BaseYStore, YDocNotFound
 from pycrdt.websocket import ASGIServer, WebsocketServer, YRoom
 from pycrdt.websocket.asgi_server import ASGIWebsocket
@@ -367,9 +367,11 @@ class _RoomConnection:
         send: Callable[[dict[str, Any]], Any],
         praxis_id: int,
         character_id: int,
+        refuses: Callable[[bytes], bool] = lambda _update: False,
     ) -> None:
         self.praxis_id = praxis_id
         self.character_id = character_id
+        self._refuses = refuses
         self.room_name = room_name_for(praxis_id)
         self.revoked = False
         #: Awareness IDs this socket announced, so a drop clears its caret
@@ -406,8 +408,23 @@ class _RoomConnection:
         async with anyio.create_task_group() as task_group:
             task_group.start_soon(await_revoke)
             task_group.start_soon(await_message)
-        self._note_awareness(received.get("bytes"))
+        frame = received.get("bytes")
+        if self._frame_over_cap(frame):
+            self.revoke()
+            return _DISCONNECTED
+        self._note_awareness(frame)
         return received
+
+    def _frame_over_cap(self, frame: bytes | None) -> bool:
+        """A sync step2/update frame that would push the document over the cap."""
+        if not frame or len(frame) < 2 or frame[0] != YMessageType.SYNC:
+            return False
+        if frame[1] not in (YSyncMessageType.SYNC_STEP2, YSyncMessageType.SYNC_UPDATE):
+            return False
+        try:
+            return self._refuses(read_message(frame[2:]))
+        except Exception:  # noqa: BLE001 - the room's own handler owns bad frames
+            return False
 
     def _note_awareness(self, frame: bytes | None) -> None:
         """Remember the client IDs an inbound awareness frame speaks for."""
@@ -529,11 +546,50 @@ class PraxisRoomServer(WebsocketServer):
                     room.awareness.remove_awareness_states(
                         list(connection.awareness_ids), "local"
                     )
-                if room is not None and not room.clients:
-                    flusher = self._flushers.pop(connection.room_name, None)
-                    if flusher is not None:
-                        await flusher.close()
-                    await self.delete_room(room=room)
+                await self._drop_if_idle(connection.room_name)
+
+    async def _drop_if_idle(self, name: str) -> None:
+        """Caller holds ``_open_lock``."""
+        room = self.rooms.get(name)
+        if room is not None and not room.clients:
+            flusher = self._flushers.pop(name, None)
+            if flusher is not None:
+                await flusher.close()
+            await self.delete_room(room=room)
+
+    def _check_update(self, doc: Doc, update: bytes) -> dict[str, str]:
+        """The column values ``doc`` would have after ``update``, on a scratch copy;
+        422 if invalid, 413 if over the cap. The live doc is never touched."""
+        scratch = Doc()
+        scratch.apply_update(doc.get_update())
+        try:
+            scratch.apply_update(update)
+        except Exception:
+            raise_coded(
+                422,
+                ErrorCode.praxis_doc_update_invalid,
+                _INVALID_DRAFT,
+                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
+            )
+        values = _document_values(scratch)
+        if _over_cap(values):
+            raise_coded(
+                413,
+                ErrorCode.praxis_doc_update_invalid,
+                _OVERSIZED_DRAFT,
+                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
+            )
+        return values
+
+    def _socket_update_over_cap(self, name: str, update: bytes) -> bool:
+        room = self.rooms.get(name)
+        if room is None:
+            return False
+        try:
+            self._check_update(room.ydoc, update)
+        except HTTPException as error:
+            return error.status_code == 413
+        return False
 
     async def _current_doc(self, name: str, room: Any) -> Doc:
         if room is not None:
@@ -576,16 +632,10 @@ class PraxisRoomServer(WebsocketServer):
                     _OVERSIZED_DRAFT,
                     {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
                 )
-            flusher = self._flushers.pop(name, None)
-            if flusher is not None:
-                flusher.abandon()
             if room is not None:
                 for column, value in _document_values(room.ydoc).items():
                     setattr(praxis, column, value)
-                await self.delete_room(room=room)
-            for connection in list(self._connections):
-                if connection.praxis_id == praxis.id:
-                    connection.revoke()
+            await self._evict_locked(name, room)
             await session.execute(
                 delete(PraxisRoomUpdate).where(
                     PraxisRoomUpdate.praxis_id == praxis.id
@@ -595,33 +645,42 @@ class PraxisRoomServer(WebsocketServer):
             praxis.room_generation += 1
             return True
 
+    async def _evict_locked(self, name: str, room: YRoom | None) -> None:
+        """Stop the room and its flusher without a closing flush, and revoke every
+        socket. Caller holds ``_open_lock``."""
+        flusher = self._flushers.pop(name, None)
+        if flusher is not None:
+            flusher.abandon()
+        if room is not None:
+            await self.delete_room(room=room)
+        for connection in list(self._connections):
+            if connection.room_name == name:
+                connection.revoke()
+
+    async def evict(self, praxis_id: int) -> None:
+        """The praxis is gone: its room leaves process memory (rows cascade)."""
+        name = room_name_for(praxis_id)
+        async with self._open_lock:
+            await self._evict_locked(name, self.rooms.get(name))
+
     async def apply_client_update(
         self, praxis_id: int, update: bytes
     ) -> dict[str, str]:
         """Merge the browser's whole Yjs state into the live room; a repeat is a no-op.
-
-        ponytail: opens a room if none runs; a rejected submit strands it.
+        A refusal leaves doc and store untouched and closes a room it opened.
         """
         name = room_name_for(praxis_id)
+        opened = name not in self.rooms
         room = await self.get_room(name)
         try:
-            room.ydoc.apply_update(update)
-        except Exception:
-            raise_coded(
-                422,
-                ErrorCode.praxis_doc_update_invalid,
-                _INVALID_DRAFT,
-                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
-            )
-        # The caller cancels on a difference; this text is the new proposal.
-        values = _document_values(room.ydoc)
-        if _over_cap(values):
-            raise_coded(
-                413,
-                ErrorCode.praxis_doc_update_invalid,
-                _OVERSIZED_DRAFT,
-                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
-            )
+            # The caller cancels on a difference; this text is the new proposal.
+            values = self._check_update(room.ydoc, update)
+        except HTTPException:
+            if opened:
+                async with self._open_lock:
+                    await self._drop_if_idle(name)
+            raise
+        room.ydoc.apply_update(update)
         return values
 
     def loaded_values(self, praxis_id: int) -> dict[str, str]:
@@ -758,7 +817,15 @@ class PraxisRoomASGIServer(ASGIServer):
             return
 
         await send({"type": "websocket.accept"})
-        connection = _RoomConnection(receive, send, praxis_id, character_id)
+        connection = _RoomConnection(
+            receive,
+            send,
+            praxis_id,
+            character_id,
+            lambda update: self.rooms._socket_update_over_cap(
+                room_name_for(praxis_id), update
+            ),
+        )
         self.rooms.register(connection)
         try:
             await self.rooms.serve(connection.channel)
@@ -812,6 +879,10 @@ async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
     if len(update) > _MAX_CLIENT_UPDATE_BYTES:
         raise_coded(413, ErrorCode.praxis_doc_update_too_large, _OVERSIZED_UPDATE)
     return await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
+
+
+async def evict_room(praxis_id: int) -> None:
+    await PRAXIS_ROOM_SERVER.evict(praxis_id)
 
 
 def absorb_room_on_commit(
