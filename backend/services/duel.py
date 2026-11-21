@@ -198,7 +198,7 @@ async def settle_lapsed_duels(
     ``duel_challenge_lapse_days``, or no longer acceptable); an accepted duel
     whose opponent hasn't cast in ``duel_cast_lapse_days`` is their forfeit.
     Candidates are picked lock-free; only those lock, in ascending id order (#3877),
-    and are re-checked. Returns whether a row changed (callers reload then).
+    and are re-checked. Returns whether any row was re-read (callers reload).
 
     ponytail: scans every live duel per call; add a deadline-column index or a
     sweep job if the live-duel count ever stops being small.
@@ -236,7 +236,6 @@ async def settle_lapsed_duels(
     )).scalars().all()
 
     forfeits: list[tuple[Duel, int]] = []
-    changed = False
     for duel in duels:
         verdict = await lapse(duel)
         if verdict == "decline":
@@ -244,12 +243,11 @@ async def settle_lapsed_duels(
             duel.declined_at = now
         elif verdict == "forfeit":
             forfeits.append((duel, duel.opponent_character_id))
-        changed = changed or verdict is not None
     await _rescore(
         await _apply_forfeits(forfeits, session), session, era, emit_taunts=False
     )
     await session.flush()
-    return changed
+    return bool(duels)
 
 
 async def get_duel(duel_id: int, session: AsyncSession, lock: bool = False) -> Duel:
