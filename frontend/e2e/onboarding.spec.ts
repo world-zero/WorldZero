@@ -86,6 +86,8 @@ test('motion switch off: key elements rest on their settled frame', async ({ pag
     [1, '.b1 .b1x', 'transform', 'matrix(1, 0, 0, 1, 308, 0)'],
     [2, '.b2-nm:first-child', 'opacity', '1'],
     [2, '.b2-a1', 'opacity', '1'],
+    [4, '.b4x', 'transform', 'matrix(1, 0, 0, 1, -39, 0)'],
+    [4, '.b4y', 'transform', 'matrix(1, 0, 0, 1, 0, 100)'],
     [5, '.b5-arrow path', 'strokeDashoffset', '0px'],
     [6, '.b6x', 'transform', 'matrix(1, 0, 0, 1, 266, 0)'],
     [6, '.b6-roll', 'transform', 'matrix(1, 0, 0, 1, 0, -48)'],
@@ -100,6 +102,15 @@ test('motion switch off: key elements rest on their settled frame', async ({ pag
   await passBeats(page, async (step) => {
     for (const [at, sel, prop, want] of rest) {
       if (at === step) await expect(page.locator(sel).first(), `${step} ${sel}`).toHaveCSS(prop.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), want)
+    }
+    if (step === 7) {
+      // Rest is left:var(--hx), not the 0% keyframe's computed offset; --hx is a percentage of the stage.
+      const fx = page.locator('.b7 .fx').first()
+      const [left, want] = await fx.evaluate((el) => [
+        parseFloat(getComputedStyle(el).left),
+        (parseFloat(el.style.getPropertyValue('--hx')) / 100) * (el.offsetParent as HTMLElement).clientWidth,
+      ])
+      expect(left, '7 .b7 .fx left').toBeCloseTo(want, 0)
     }
   })
 })
