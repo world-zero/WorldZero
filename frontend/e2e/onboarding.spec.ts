@@ -106,10 +106,13 @@ test('motion switch off: key elements rest on their settled frame', async ({ pag
     if (step === 7) {
       // Rest is left:var(--hx), not the 0% keyframe's computed offset; --hx is a percentage of the stage.
       const fx = page.locator('.b7 .fx').first()
-      const [left, want] = await fx.evaluate((el) => [
+      const [left, want] = await fx.evaluate((node) => {
+        const el = node as HTMLElement
+        return [
         parseFloat(getComputedStyle(el).left),
         (parseFloat(el.style.getPropertyValue('--hx')) / 100) * (el.offsetParent as HTMLElement).clientWidth,
-      ])
+        ]
+      })
       expect(left, '7 .b7 .fx left').toBeCloseTo(want, 0)
     }
   })
