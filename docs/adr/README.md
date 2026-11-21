@@ -56,7 +56,7 @@
 | [0038](0038-faction-identity-is-config-canonical.md) | Faction identity is config-canonical; the DB row is slug + status | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md) |
 | [0039](0039-unaffiliated-fill-is-a-gradient-not-a-hue.md) | Unaffiliated's fill is a gradient, not a hue | Accepted | — |
 | [0040](0040-feed-controls-are-neutral-chrome.md) | Feed controls are neutral chrome; faction skinning stops at the card boundary | Amended | [ADR-0082](0082-albescent-is-redacted-not-hidden.md) |
-| [0041](0041-two-layer-identity-account-vs-character.md) | Two-layer identity: Account (private anchor) vs Character (public persona) | Accepted | [ADR-0101](0101-owner-role-and-per-admin-permissions.md) |
+| [0041](0041-two-layer-identity-account-vs-character.md) | Two-layer identity: Account (private anchor) vs Character (public persona) | Accepted | — |
 | [0042](0042-era-as-ruleset-config-owns-rules-db-owns-history.md) | Era-as-ruleset: `game_config` owns the rules, the DB owns only history | Amended | [ADR-0087](0087-structural-faction-slugs-are-not-era-owned.md), [ADR-0091](0091-the-latest-era-row-chooses-the-live-ruleset.md), [ADR-0099](0099-votes-credit-the-era-they-are-cast-in.md) |
 | [0043](0043-vote-budget-is-recomputed-on-read.md) | Vote budget is recomputed on read; only `votes_spent_this_era` is stored | Accepted | — |
 | [0044](0044-characterstats-is-a-per-era-star-schema-split.md) | `CharacterStats` is a per-era star-schema split off `Character` | Accepted | — |

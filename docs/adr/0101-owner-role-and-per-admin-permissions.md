@@ -3,8 +3,7 @@
 **Status:** Accepted
 **Date:** 2026-11-21
 
-**Amends:** ADR-0041 (an account's powers), #3258 (the hardcoded owner id)
-**Relates to:** #3847, #3821
+**Relates to:** ADR-0041 (an account's powers), #3258 (the hardcoded owner id), #3847, #3821
 
 ## Decision
 
