@@ -186,6 +186,7 @@ table duel
   column opponent_praxis_id bigint
   column resolved_at timestamp with time zone
   column resolved_era_id bigint
+  column rival_bonus boolean NOT NULL DEFAULT false
   column status character varying(32) NOT NULL DEFAULT 'pending'::character varying
   column task_id bigint NOT NULL
   column winner_character_id bigint

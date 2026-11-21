@@ -11,7 +11,7 @@ from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.praxis import Praxis, PraxisStatus
 from models.relationship import Relationship, RelationshipType
-from services.duel import respond_to_duel_challenge
+from services.duel import get_duel_detail, respond_to_duel_challenge
 from services.era import resolve_duels_at_era_close
 from services.praxis_scoring import compute_contributions
 from tests.integration.factories import (
@@ -89,8 +89,13 @@ async def _accepted(session: AsyncSession, era: Era, label: str, *edges) -> Duel
 
 @pytest.mark.asyncio
 async def test_accept_snapshots_mutual_foes_only(db_session: AsyncSession, era: Era):
-    assert (await _accepted(db_session, era, "riv", "ch", "op")).rival_bonus is True
-    assert (await _accepted(db_session, era, "one", "ch")).rival_bonus is False
+    rivals = await _accepted(db_session, era, "riv", "ch", "op")
+    one_sided = await _accepted(db_session, era, "one", "ch")
+    assert rivals.rival_bonus is True
+    assert one_sided.rival_bonus is False
+    detail = await get_duel_detail(rivals.id, None, db_session)
+    assert detail.challenger.rival_bonus == detail.opponent.rival_bonus == BONUS
+    assert (await get_duel_detail(one_sided.id, None, db_session)).opponent.rival_bonus == 0
     assert (await _accepted(db_session, era, "non")).rival_bonus is False
 
 

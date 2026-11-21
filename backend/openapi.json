@@ -2501,6 +2501,11 @@
             ],
             "title": "Praxis Id"
           },
+          "rival_bonus": {
+            "default": 0,
+            "title": "Rival Bonus",
+            "type": "integer"
+          },
           "tie_multiplier": {
             "default": 1.0,
             "title": "Tie Multiplier",
@@ -2524,7 +2529,8 @@
           "nudge_again_at",
           "win_multiplier",
           "loss_multiplier",
-          "tie_multiplier"
+          "tie_multiplier",
+          "rival_bonus"
         ],
         "title": "DuelSideOut",
         "type": "object"

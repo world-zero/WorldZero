@@ -3191,6 +3191,11 @@ export interface components {
             /** Praxis Id */
             praxis_id: number | null;
             /**
+             * Rival Bonus
+             * @default 0
+             */
+            rival_bonus: number;
+            /**
              * Tie Multiplier
              * @default 1
              */

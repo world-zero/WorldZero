@@ -329,6 +329,7 @@ async def get_duel_detail(
             win_multiplier=_multiplier(True, False),
             loss_multiplier=_multiplier(False, False),
             tie_multiplier=_multiplier(False, True),
+            rival_bonus=era.rival_duel_bonus if duel.rival_bonus else 0,
         )
 
     return DuelDetailOut(

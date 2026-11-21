@@ -44,6 +44,9 @@ class DuelSideOut(WireModel):
     win_multiplier: float = 1.0
     loss_multiplier: float = 1.0
     tie_multiplier: float = 1.0
+    # Flat points on top of the win figure when the pair were Rivals at accept
+    # (ADR-0100); 0 otherwise. The sole tie-taker counts as the winner.
+    rival_bonus: int = 0
 
 
 class DuelDetailOut(WireModel):
