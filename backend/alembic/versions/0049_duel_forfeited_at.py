@@ -2,16 +2,16 @@
 
 ``IF NOT EXISTS`` because a fresh DB's root already built the column.
 
-Revision ID: 0048_duel_forfeited_at
-Revises: 0047_duel_live_unique
+Revision ID: 0049_duel_forfeited_at
+Revises: 0048_task_backdoor
 Create Date: 2026-11-21
 """
 from typing import Sequence, Union
 
 from alembic import op
 
-revision: str = "0048_duel_forfeited_at"
-down_revision: Union[str, None] = "0047_duel_live_unique"
+revision: str = "0049_duel_forfeited_at"
+down_revision: Union[str, None] = "0048_task_backdoor"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
