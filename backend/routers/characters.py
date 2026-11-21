@@ -11,6 +11,7 @@ from dependencies import (
     get_current_character_optional,
     get_viewer_is_admin,
 )
+from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.character import Character, CharacterStatus
 from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
@@ -81,7 +82,7 @@ async def get_character(
     )
     character = result.scalar_one_or_none()
     if character is None:
-        raise HTTPException(status_code=404, detail="Character not found.")
+        raise_coded(404, ErrorCode.character_not_found, "Character not found.")
 
     stats = await load_current_era_stats(character_id, session)
     # Badges are evaluated on read, single-character path only (ADR-0033).

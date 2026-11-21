@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from dependencies import get_current_character_optional
+from errors import ErrorCode, raise_coded
 from models.character import Character
 from models.praxis import Praxis
 from schemas.vote import VoterDetail
@@ -25,7 +26,7 @@ async def list_voters(
     # One raise: "missing" and "not yours to see" must match, or it's an oracle.
     praxis = await session.get(Praxis, praxis_id)
     if praxis is None or not await can_view_praxis(viewer, praxis, session):
-        raise HTTPException(status_code=404, detail="Praxis not found.")
+        raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
 
     return [
         VoterDetail(

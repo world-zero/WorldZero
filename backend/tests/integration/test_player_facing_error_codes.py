@@ -485,3 +485,22 @@ async def test_creating_a_character_in_an_uninvited_faction_is_coded(
         response.json()["detail"]["code"]
         == ErrorCode.faction_invitation_required.value
     )
+
+
+# Detail-page loaders: a coded 404 is what the not-found page keys on
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "path, code",
+    [
+        ("/tasks/999999", ErrorCode.task_not_found),
+        ("/characters/999999", ErrorCode.character_not_found),
+        ("/praxes/999999/voters", ErrorCode.praxis_not_found),
+    ],
+)
+async def test_missing_detail_ids_answer_with_a_code(
+    client: AsyncClient, path: str, code: ErrorCode
+):
+    response = await client.get(path)
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == code.value

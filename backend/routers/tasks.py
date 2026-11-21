@@ -11,6 +11,7 @@ from dependencies import (
     get_current_character_optional,
     get_viewer_is_admin,
 )
+from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.character import Character
 from schemas.task import BackdoorOut, ProposalOut, TaskCreate, TaskOut, TaskSignupOut
@@ -146,7 +147,7 @@ async def get_task(
     # sequential, so a 403 would make the review queue enumerable.
     task = await get_task_for_viewer(session, task_id, viewer, is_admin=is_admin)
     if task is None:
-        raise HTTPException(status_code=404, detail="Task not found.")
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     return await build_task_out_for_viewer(task, viewer, session)
 
 

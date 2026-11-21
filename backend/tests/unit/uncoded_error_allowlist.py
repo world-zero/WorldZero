@@ -18,7 +18,7 @@ by ``uncoded_error_scan.py``.
 from __future__ import annotations
 
 #: Duplicated on purpose: the one number a reviewer reads; the test checks it.
-UNCODED_RAISE_TOTAL = 106
+UNCODED_RAISE_TOTAL = 103
 
 UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "dependencies.py::get_current_character": 1,
@@ -31,16 +31,13 @@ UNCODED_RAISE_ALLOWLIST: dict[str, int] = {
     "routers/auth.py::dev_login": 3,
 
     "routers/characters.py::delete_character_route": 1,
-    "routers/characters.py::get_character": 1,
     "routers/characters.py::update_character_route": 1,
     "routers/characters.py::upload_avatar": 1,
 
     "routers/comments.py::list_praxis_comments": 1,
 
-    "routers/tasks.py::get_task": 1,
     "routers/tasks.py::list_tasks": 1,
 
-    "routers/votes.py::list_voters": 1,
 
     "services/admin_service.py::admin_edit_task": 2,
     "services/admin_service.py::archive_message": 1,
