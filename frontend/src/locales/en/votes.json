@@ -56,7 +56,7 @@
     "tier5": "brilliant"
   },
   "chrome": {
-    "loginGate": "Log in to vote",
+    "loginGate": "Sign in to vote",
     "levelGate": "Reach level {{level}} to vote",
     "receivedVoteGate": "Your vote unlocks once another player rates your proof",
     "saveError": "Could not save your vote. Please try again.",

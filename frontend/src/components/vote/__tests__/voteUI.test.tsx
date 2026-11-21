@@ -101,7 +101,7 @@ describe('VoteUI ineligibility guard (#998)', () => {
   it('shows the login gate for an anonymous viewer even when viewer_can_vote is false', () => {
     mocks.user = null
     const html = render(false)
-    expect(html.replace(/<[^>]*>/g, '')).toContain('Log in to vote')
+    expect(html.replace(/<[^>]*>/g, '')).toContain('Sign in to vote')
     expect(html).not.toMatch(RATE_BUTTON)
   })
 })
@@ -122,7 +122,7 @@ describe('VoteUI level gate (#3102)', () => {
       mocks.user = gatedUser()
       const html = render(true, slug)
       expect(text(html)).toContain('Reach level 3 to vote')
-      expect(text(html)).not.toContain('Log in to vote')
+      expect(text(html)).not.toContain('Sign in to vote')
       expect(html).not.toMatch(/<button/)
     },
   )
@@ -142,7 +142,7 @@ describe('VoteUI level gate (#3102)', () => {
 
   it('leaves the logged-out gate worded as it was', () => {
     mocks.user = null
-    expect(text(render(true))).toContain('Log in to vote')
+    expect(text(render(true))).toContain('Sign in to vote')
     expect(text(render(true))).not.toContain('Reach level')
   })
 
