@@ -819,6 +819,62 @@ const noRawStyleValues = {
         }
       },
     },
+    'no-translucent-overlay-ground': {
+      meta: {
+        type: 'problem',
+        docs: {
+          description:
+            'An overlay panel root must paint a solid ground — --color-bg-surface* is translucent in dark mode (#3792, #3945).',
+        },
+        schema: [],
+      },
+      create(context) {
+        const init = (id) => {
+          for (let scope = context.sourceCode.getScope(id); scope; scope = scope.upper) {
+            const v = scope.set.get(id.name)
+            if (v) return v.defs[0]?.type === 'Variable' ? v.defs[0].node.init : null
+          }
+          return null
+        }
+        // ponytail: a background in a non-literal binding (`background: PAPER` from an import or a call) is not resolved; same-file string consts are.
+        const text = (n) => {
+          if (n?.type === 'Literal') return String(n.value)
+          if (n?.type === 'TemplateLiteral') return n.quasis.map((q) => q.value.cooked).join('')
+          if (n?.type === 'Identifier') return text(init(n))
+          return ''
+        }
+        const check = (el) => {
+          if (el?.type !== 'JSXElement') return
+          const attr = el.openingElement.attributes.find(
+            (a) => a.type === 'JSXAttribute' && a.name.name === 'style',
+          )
+          const obj = attr?.value?.type === 'JSXExpressionContainer' ? attr.value.expression : null
+          if (obj?.type !== 'ObjectExpression') return
+          for (const p of obj.properties) {
+            if (p.type !== 'Property') continue
+            const name = propertyName(p)
+            if (name !== 'background' && name !== 'backgroundColor') continue
+            if (!text(p.value).includes('var(--color-bg-surface')) continue
+            context.report({
+              node: p,
+              message:
+                'Overlay panels paint a solid ground (`--color-bg-page`, as ConfirmDialog does). `--color-bg-surface*` is translucent in dark mode, so the screen behind shows through (#3792).',
+            })
+          }
+        }
+        // ponytail: a panel painted by a CSS class (BottomSheet `.sheet-panel` + a caller's panelClass) is not seen; the default paint is --color-bg-page.
+        return {
+          JSXAttribute(node) {
+            if (node.name.name === 'role' && node.value?.value === 'dialog') check(node.parent.parent)
+          },
+          CallExpression(node) {
+            if (node.callee.type !== 'Identifier' || node.callee.name !== 'drawAtRoot') return
+            const arg = node.arguments[0]
+            check(arg?.type === 'Identifier' ? init(arg) : arg)
+          },
+        }
+      },
+    },
     'no-faction-hue-as-ink': {
       meta: {
         type: 'problem',
@@ -1218,7 +1274,7 @@ export default [
   {
     files: ['src/**/*.tsx'],
     ignores: ['src/**/*.test.tsx', 'src/**/__tests__/**'],
-    rules: { 'local/no-static-inline-style': 'error' },
+    rules: { 'local/no-static-inline-style': 'error', 'local/no-translucent-overlay-ground': 'error' },
   },
   {
     // The hand-built ErrorBanner copy has no role="alert"; a `<p role=...>` (the hidden-praxis
