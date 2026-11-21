@@ -1,6 +1,7 @@
 """Service for recomputing and persisting CharacterStats from current vote data."""
 
 import dataclasses
+from collections.abc import Iterable
 from decimal import Decimal
 
 from fastapi import HTTPException
@@ -43,9 +44,9 @@ from services.scoring import compute_level, exact, round_half_up
 from services.taunt_service import emit_recalc_taunts
 from services.push import notify_invitation_letter, notify_level_up
 
-#: Advisory-lock namespace (signup 0x5A19, vote 0x5A1A, praxis 0x5A1B, in
-#: ``collab_consensus``);
-#: the last lock a transaction takes.
+#: Advisory-lock namespace; the last a transaction takes, after signup 0x5A19
+#: (``praxis``), vote 0x5A1A (``vote``) and per-praxis 0x5A1B (``collab_consensus``).
+#: One transaction locking several characters takes them ascending.
 _STATS_LOCK_NAMESPACE = 0x5A1C
 
 _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset(
@@ -198,6 +199,16 @@ async def _scored_praxes(
     return list(solo_result.scalars().all()) + list(collab_result.scalars().all())
 
 
+async def lock_character_stats(
+    character_ids: Iterable[int], session: AsyncSession
+) -> None:
+    """Take the stats lock for each id, ascending; re-taking one is free."""
+    for character_id in sorted(set(character_ids)):
+        await session.execute(
+            select(func.pg_advisory_xact_lock(_STATS_LOCK_NAMESPACE, character_id))
+        )
+
+
 async def recalculate_character_stats(
     character_id: int,
     session: AsyncSession,
@@ -213,14 +224,15 @@ async def recalculate_character_stats(
     cast in it on older praxes (ADR-0099). A past ``era_row`` is a no-op unless
     ``rescore_closed`` (the roll re-scoring duels it just froze).
     Also the ADR-0068 taunt hook; pass ``emit_taunts=False`` from backfills.
+    Takes the character's stats lock; a caller rescoring several characters (a
+    praxis's members and its duel opponents) goes ascending, see
+    :func:`recalculate_members_stats`.
     """
     if era_row is None:
         era_row = await get_current_era_row(session)
 
     # Concurrent recalcs each read their own snapshot; last commit would win.
-    await session.execute(
-        select(func.pg_advisory_xact_lock(_STATS_LOCK_NAMESPACE, character_id))
-    )
+    await lock_character_stats([character_id], session)
     author = await session.get(Character, character_id)
     if author is None:
         return

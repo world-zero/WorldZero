@@ -48,6 +48,7 @@ from services.albescent_reveal import is_albescent_revealed
 from services.backdoor import may_use_door
 from services.character import is_playable
 from services.character_stats import (
+    lock_character_stats,
     recalculate_character_stats,
     recalculate_members_stats,
 )
@@ -73,6 +74,7 @@ from services.praxis_duel import (
     discard_dissolved_duels_for_praxis,
     get_duel_for_praxis,
     maybe_settle_duel,
+    with_duel_opponents,
 )
 from services.praxis_room import (
     absorb_room_on_commit,
@@ -1356,6 +1358,15 @@ async def leave_praxis(
     _require_member(praxis, character_id, "leave")
 
     leaver = next(m for m in praxis.members if m.character_id == character_id)
+    # Leaver, survivors and duel opponents in one ascending pass: the seal and
+    # conversion recalcs reach all of them, and nothing is locked after this.
+    side_ids = await with_duel_opponents({praxis_id}, session)
+    await lock_character_stats(
+        await session.scalars(
+            select(PraxisMember.character_id).where(PraxisMember.praxis_id.in_(side_ids))
+        ),
+        session,
+    )
     praxis.members.remove(leaver)
     # ADR-0073: close the room socket too.
     close_member_sockets(praxis_id, character_id)

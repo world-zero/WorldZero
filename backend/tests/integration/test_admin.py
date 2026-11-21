@@ -1034,6 +1034,36 @@ async def test_admin_edit_task_faction_rescores_doers(
 
 
 @pytest.mark.asyncio
+async def test_admin_edit_task_rescores_doers_in_ascending_id_order(
+    client, account, character, era, auth_headers, db_session, monkeypatch
+):
+    """Opposite-ordered rescores elsewhere would deadlock on the stats locks."""
+    import services.admin_service as admin_module
+
+    await make_admin(db_session, account)
+    task = await make_task(db_session, character, status=TaskStatus.retired)
+    doers = [
+        await make_character(db_session, era, username=f"doer{i}") for i in range(4)
+    ]
+    for doer in reversed(doers):
+        await make_solo_praxis(db_session, task, doer)
+    await db_session.commit()
+    seen: list[int] = []
+    real = admin_module.recalculate_character_stats
+
+    async def spy(character_id, *args, **kwargs):
+        seen.append(character_id)
+        return await real(character_id, *args, **kwargs)
+
+    monkeypatch.setattr(admin_module, "recalculate_character_stats", spy)
+    resp = await client.patch(
+        f"/admin/tasks/{task.id}", json={"point_value": 77}, headers=auth_headers
+    )
+    assert resp.status_code == 200
+    assert seen == sorted(d.id for d in doers)
+
+
+@pytest.mark.asyncio
 async def test_admin_edit_metatask_rescores_applied_praxis_authors(
     client, account, character, era, auth_headers, db_session
 ):
