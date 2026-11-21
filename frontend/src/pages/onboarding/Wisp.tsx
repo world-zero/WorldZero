@@ -4,6 +4,9 @@ import './motion/generated.css'
 import './motion/wisp.css'
 
 export type WispHat = 'crown' | 'wizard' | 'teacup'
+/** Install-flow poses (#4052); the CSS in `components/install/wispPoses.css` animates each. */
+export type WispPose = 'peek' | 'down' | 'up' | 'sign' | 'home' | 'burst' | 'knock' | 'shrink' | 'boing'
+export type WispProp = 'bindle' | 'letter'
 
 export const K = 'var(--faction-default-on-fill)'
 export const T = 'var(--faction-default-card-text)'
@@ -46,6 +49,27 @@ export const HATS: Record<WispHat, ReactNode> = {
   ),
 }
 
+const PROPS: Record<WispProp, ReactNode> = {
+  bindle: (
+    <>
+      <path d="M70 104 L 97 40" stroke={K} strokeWidth="6" strokeLinecap="round" />
+      <path d="M70 104 L 97 40" stroke="var(--faction-default-stop-3)" strokeWidth="3" strokeLinecap="round" />
+      <path d="M85 38 C 82 24, 112 22, 110 38 C 109 50, 86 52, 85 38 Z" fill={S(7)} stroke={K} strokeWidth="2.2" strokeLinejoin="round" />
+      <circle cx="92" cy="36" r="2" fill={T} />
+      <circle cx="101" cy="31" r="2" fill={T} />
+      <circle cx="103" cy="42" r="2" fill={T} />
+      <path d="M94 26 l3 -6 l4 6" fill="none" stroke={K} strokeWidth="2" strokeLinejoin="round" />
+    </>
+  ),
+  letter: (
+    <g transform="rotate(-14 84 90)">
+      <rect x="72" y="81" width="26" height="18" rx="2" fill={T} stroke={K} strokeWidth="2" />
+      <path d="M72 82 L 85 92 L 98 82" fill="none" stroke={K} strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="85" cy="91" r="3" fill={S(1)} />
+    </g>
+  ),
+}
+
 interface WispProps {
   /** Width in px; the height follows the drawing. */
   size?: number
@@ -53,17 +77,20 @@ interface WispProps {
   confidence?: number
   hat?: WispHat
   sleeping?: boolean
+  pose?: WispPose
+  /** Held in the wisp's arm. */
+  held?: WispProp
   className?: string
   style?: CSSProperties
 }
 
-export default function Wisp({ size = 52, confidence = 0.5, hat, sleeping = false, className, style }: WispProps) {
+export default function Wisp({ size = 52, confidence = 0.5, hat, sleeping = false, pose, held, className, style }: WispProps) {
   // Gradient ids are document-global and --conf resolves where the gradient sits: one pair per wisp.
   const id = useId().replace(/:/g, '')
   const path = hat ? BALD : WISP
   return (
     <svg
-      className={['pw msc', sleeping && 'wsleep', className].filter(Boolean).join(' ')}
+      className={['pw msc', sleeping && 'wsleep', pose && `pose-${pose}`, className].filter(Boolean).join(' ')}
       viewBox="14 0 72 106"
       width={size}
       height={Math.round((size * 106) / 72)}
@@ -87,6 +114,8 @@ export default function Wisp({ size = 52, confidence = 0.5, hat, sleeping = fals
           <stop offset="100%" style={{ stopColor: S(6), stopOpacity: 0.3 }} />
         </radialGradient>
       </defs>
+      <g className="w-body">
+      <g className="w-pose">
       <g className="msway">
         <path d={path} fill={`url(#${id}rain)`} />
         <path d={path} fill={`url(#${id}shade)`} stroke={K} strokeWidth="2.6" strokeLinejoin="round" />
@@ -95,21 +124,26 @@ export default function Wisp({ size = 52, confidence = 0.5, hat, sleeping = fals
         <g className="eyes">
           <circle cx="38" cy="70" r="10.5" fill={T} stroke={K} strokeWidth="2.2" />
           <circle cx="62" cy="70" r="10.5" fill={T} stroke={K} strokeWidth="2.2" />
-          <g className="mpup">
-            <circle cx="38" cy="71" r="5" fill={K} />
-            <circle cx="62" cy="71" r="5" fill={K} />
-            <circle cx="36.4" cy="69.2" r="1.6" fill={T} />
-            <circle cx="60.4" cy="69.2" r="1.6" fill={T} />
+          <g className="look">
+            <g className="mpup">
+              <circle className="pp" cx="38" cy="71" r="5" fill={K} />
+              <circle className="pp" cx="62" cy="71" r="5" fill={K} />
+              <circle cx="36.4" cy="69.2" r="1.6" fill={T} />
+              <circle cx="60.4" cy="69.2" r="1.6" fill={T} />
+            </g>
           </g>
         </g>
         <path className="lids" d="M28.5 70 q9.5 8 19 0 M52.5 70 q9.5 8 19 0" fill="none" stroke={K} strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M46 88 q4 3.4 8 0" fill="none" stroke={K} strokeWidth="2" strokeLinecap="round" />
+        <path className="smile" d="M46 88 q4 3.4 8 0" fill="none" stroke={K} strokeWidth="2" strokeLinecap="round" />
         <ellipse className="mo" cx="50" cy="89.6" rx="3.6" ry="4.6" fill={K} />
+        {held && <g>{PROPS[held]}</g>}
         {hat && (
           <g key={hat} className="hatpop">
             {HATS[hat]}
           </g>
         )}
+      </g>
+      </g>
       </g>
     </svg>
   )

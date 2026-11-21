@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { apiGet, apiPut } from '../../../api/client'
+import InstallSettingsRow from '../../../components/install/InstallSettingsRow'
 import InstallIphoneSteps from '../../../components/install/InstallIphoneSteps'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { deviceSubscribed, pushBlock, subscribePush, type PushState } from '../../../utils/pushSubscribe'
@@ -405,6 +406,8 @@ export default function NotificationsSection({ sectionId }: SettingsSectionProps
           }}
         />
       )}
+
+      {prefs && <InstallSettingsRow />}
 
       {(!prefs || error) && (
         <p

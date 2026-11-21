@@ -11,7 +11,7 @@ import { COMMUNITY_SIDE_KEY } from '../../communitySide'
 import { SIDEBAR_PANEL_LAYOUT_STORAGE_KEY } from '../../../hooks/useSidebarPanelLayout'
 import { THEME_STORAGE_KEY } from '../../../hooks/useTheme'
 import { FACTION_SECTIONS, PROFILE_SECTIONS } from '../../factionDetail/sectionDisclosure'
-import { INSTALL_DISMISSED_KEY } from '../../../utils/installPrompt'
+import { INSTALL_ASK_KEY } from '../../../utils/installAsk'
 import { PUSH_ASK_DISMISSED_KEY } from '../../../utils/pushAskDismissed'
 import { CHUNK_RELOAD_KEY } from '../../../components/ErrorBoundary'
 import { HELD_TERMS_KEY, ONBOARDING_HANDOFF_KEY, TITLE_SEEN_KEY } from '../../../utils/onboardingResume'
@@ -139,7 +139,7 @@ export const STORED_ENTRIES: readonly StoredEntry[] = [
     whereKey: BROWSER_WHERE,
   },
   {
-    name: INSTALL_DISMISSED_KEY,
+    name: INSTALL_ASK_KEY,
     purposeKey: 'settings.cookies.entries.installDismissed',
     whereKey: BROWSER_WHERE,
   },

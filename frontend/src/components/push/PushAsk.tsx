@@ -1,19 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { apiGet, apiPut } from '../../api/client'
-import { listPraxes } from '../../api/praxis'
+import { apiGet } from '../../api/client'
+import { isFirstPraxis } from '../../utils/firstPraxis'
 import { useAuth } from '../../auth/AuthContext'
-import { saveBody } from '../../pages/settings/notificationPrefs'
-import { deviceSubscribed, pushBlock, subscribePush } from '../../utils/pushSubscribe'
+import { turnOnAskedPush } from './askedPush'
+import { deviceSubscribed, pushBlock } from '../../utils/pushSubscribe'
 import { dismissPushAsk, pushAskDismissed } from '../../utils/pushAskDismissed'
 import './pushAsk.css'
-
-/**
- * The rows the card's copy promises: someone rates, comments, or calls you out. This turns
- * `vote_on_mine` push on against its default (#3704): the player just said yes to "know when
- * someone rates this", so the default no longer applies.
- */
-const ASKED_ROWS = ['vote_on_mine', 'comment_on_mine', 'comment_mention']
 
 /** One-time "want to know when someone rates this?" under a player's first praxis (#3704). */
 export default function PushAsk({ praxisId }: { readonly praxisId: number }) {
@@ -31,8 +24,7 @@ export default function PushAsk({ praxisId }: { readonly praxisId: number }) {
       const { data } = await apiGet('/me/notification-prefs')
       const key = data.vapid_public_key ?? null
       if (pushBlock(key) !== 'ok' || (await deviceSubscribed())) return
-      const mine = await listPraxes({ member_id: characterId, status: 'submitted', era_scope: 'all_eras', limit: 2 })
-      if (live && mine.length === 1 && mine[0].id === praxisId) setVapidKey(key)
+      if (live && (await isFirstPraxis(characterId, praxisId))) setVapidKey(key)
     })().catch(() => {})
     return () => {
       live = false
@@ -48,14 +40,7 @@ export default function PushAsk({ praxisId }: { readonly praxisId: number }) {
   const turnOn = async () => {
     setBusy(true)
     try {
-      const result = await subscribePush(vapidKey)
-      if (result === 'dismissed') return
-      if (result === 'ok') {
-        const { data } = await apiGet('/me/notification-prefs')
-        const next = { ...data.events }
-        for (const key of ASKED_ROWS) if (next[key]) next[key] = { ...next[key], by_push: true }
-        await apiPut('/me/notification-prefs', { body: saveBody(next) })
-      }
+      if ((await turnOnAskedPush(vapidKey)) === 'dismissed') return
       dismiss()
     } catch {
       // Left up so the player can tap again; Settings shows the error states.

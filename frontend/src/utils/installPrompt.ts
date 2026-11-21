@@ -1,23 +1,4 @@
-/** The install nudge's platform facts, kept off the component so a test can drive them. */
-
-export const INSTALL_DISMISSED_KEY = 'wz:installNudgeDismissed'
-
-// ponytail: localStorage, not per account; no settings field exists. Move server-side if one lands.
-export function installDismissed(): boolean {
-  try {
-    return localStorage.getItem(INSTALL_DISMISSED_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-export function dismissInstall(): void {
-  try {
-    localStorage.setItem(INSTALL_DISMISSED_KEY, '1')
-  } catch {
-    // Refused storage: the card may return next load.
-  }
-}
+/** The install asks' platform facts, kept off the components so a test can drive them. */
 
 export interface InstallPromptEvent extends Event {
   prompt(): Promise<void>
