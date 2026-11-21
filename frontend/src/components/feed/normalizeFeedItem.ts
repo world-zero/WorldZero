@@ -28,6 +28,7 @@ export const FACTION_ROW_TYPES = new Set([
   'awaiting_submission',
   'nudge',
   'duel_forfeited',
+  'duel_live',
   'comment_mention',
   'comment_on_mine',
 ])
@@ -355,6 +356,32 @@ export function normalizeFeedItem(
         points: null,
         level: null,
         actions: [],
+      }
+    case 'duel_live':
+      // A friend or foe's duel just opened for votes (#3886); actor = challenger.
+      return {
+        slug,
+        actor,
+        actorHref:
+          p.challenger_character_id != null ? `/characters/${p.challenger_character_id}` : null,
+        action: i18n.t('feed:row.action.duelLive', { opponent: p.opponent_display_name ?? '' }),
+        badge: { type: 'duel', label: i18n.t('feed:badge.duel') },
+        headline: p.task_title ?? null,
+        headlineHref: p.duel_id != null ? `/duel/${p.duel_id}` : null,
+        headlineQuoted: false,
+        points: p.task_point_value != null ? i18n.t('feed:row.points', { count: p.task_point_value, points: p.task_point_value }) : null,
+        level: null,
+        actions:
+          p.duel_id != null
+            ? [
+                {
+                  id: 'castYourVote',
+                  label: i18n.t('feed:rowAction.castYourVote'),
+                  tone: 'primary',
+                  href: `/duel/${p.duel_id}`,
+                },
+              ]
+            : [],
       }
     case 'friend_defection':
       return {

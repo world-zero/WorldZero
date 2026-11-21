@@ -1,6 +1,6 @@
 # ADR-0053 — A praxis has one number; Merit is retired
 
-**Status:** Amended by ADR-0061, ADR-0063, ADR-0086, ADR-0100
+**Status:** Amended by ADR-0061, ADR-0063, ADR-0086
 **Date:** 2026-07-21
 
 **Supersedes:** **ADR-0047** (the praxis card shows the computed total, not Merit)
@@ -185,7 +185,3 @@ example banks `50`, not `49`: three praxes of `16.5` sum to `49.5`.
 ## Amendment (2026-11-19, #3426)
 
 "The 14 praxis-detail archetypes are **not** retargeted at the card's score stamp" was overtaken by ADR-0061/0063: the one shared detail skin (`praxisDetailSkin.tsx`) mounts `<ScoreStamp>`. Also corrected above: in ADR-0052's lifecycle `settled` means both sides submitted and `resolved` means era close.
-
-## Amendment (2026-11-21, #3858)
-
-The payload invariant gains a fifth flat term, `+ rival_bonus_points` (ADR-0100, ADR-0086).

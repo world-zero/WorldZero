@@ -3,7 +3,6 @@
 **Status:** Accepted
 **Date:** 2026-11-21
 
-**Amends:** ADR-0086 (a fifth flat term), ADR-0053 (the payload invariant)
 **Relates to:** ADR-0011 (duels), ADR-0052 (duel outcome is final at era close),
 ADR-0077 (blocks stay narrow), ADR-0086 (only base points multiply), #3858
 

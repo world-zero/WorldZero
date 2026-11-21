@@ -31,6 +31,7 @@
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
                   "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
+                  "duel_live": "#/components/schemas/DuelLiveItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -79,6 +80,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/DuelForfeitedItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelLiveItem"
                 },
                 {
                   "$ref": "#/components/schemas/FriendSignupItem"
@@ -2368,6 +2372,140 @@
           "task_faction_slug"
         ],
         "title": "DuelForfeitedPayload",
+        "type": "object"
+      },
+      "DuelLiveItem": {
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/DuelLivePayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "duel_live",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "DuelLiveItem",
+        "type": "object"
+      },
+      "DuelLivePayload": {
+        "additionalProperties": false,
+        "description": "A friend or foe's duel just opened for votes (#3886). The item's actor is\nthe challenger.",
+        "properties": {
+          "challenger_character_id": {
+            "title": "Challenger Character Id",
+            "type": "integer"
+          },
+          "duel_id": {
+            "title": "Duel Id",
+            "type": "integer"
+          },
+          "opponent_avatar_url": {
+            "title": "Opponent Avatar Url",
+            "type": "string"
+          },
+          "opponent_character_id": {
+            "title": "Opponent Character Id",
+            "type": "integer"
+          },
+          "opponent_display_name": {
+            "title": "Opponent Display Name",
+            "type": "string"
+          },
+          "opponent_faction_slug": {
+            "title": "Opponent Faction Slug",
+            "type": "string"
+          },
+          "task_faction_slug": {
+            "title": "Task Faction Slug",
+            "type": "string"
+          },
+          "task_point_value": {
+            "title": "Task Point Value",
+            "type": "integer"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "duel_id",
+          "challenger_character_id",
+          "opponent_character_id",
+          "opponent_display_name",
+          "opponent_faction_slug",
+          "opponent_avatar_url",
+          "task_title",
+          "task_point_value",
+          "task_faction_slug"
+        ],
+        "title": "DuelLivePayload",
         "type": "object"
       },
       "DuelOut": {
@@ -6976,6 +7114,7 @@
                   "comment_on_mine": "#/components/schemas/CommentOnMineItem",
                   "duel_challenge": "#/components/schemas/DuelChallengeItem",
                   "duel_forfeited": "#/components/schemas/DuelForfeitedItem",
+                  "duel_live": "#/components/schemas/DuelLiveItem",
                   "era_announcement": "#/components/schemas/EraAnnouncementItem",
                   "foe_completion": "#/components/schemas/FoeCompletionItem",
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
@@ -7024,6 +7163,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/DuelForfeitedItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DuelLiveItem"
                 },
                 {
                   "$ref": "#/components/schemas/FriendSignupItem"

@@ -297,9 +297,9 @@ async def test_a_blocked_counterpart_leaves_the_feed_sources(
     from services.activity_feed import _get_related_ids
 
     await _declare(db_session, character, character2, RelationshipType.friend)
-    assert await _get_related_ids(
-        character.id, RelationshipType.friend, db_session
-    ) == [character2.id]
+    assert (await _get_related_ids(character.id, db_session))[
+        RelationshipType.friend
+    ] == [character2.id]
 
     db_session.add(
         CharacterBlock(
@@ -308,8 +308,8 @@ async def test_a_blocked_counterpart_leaves_the_feed_sources(
     )
     await db_session.flush()
 
-    assert await _get_related_ids(
-        character.id, RelationshipType.friend, db_session
-    ) == []
+    assert (await _get_related_ids(character.id, db_session))[
+        RelationshipType.friend
+    ] == []
     surviving = (await db_session.execute(select(Relationship))).scalars().all()
     assert len(list(surviving)) == 1

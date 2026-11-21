@@ -61,6 +61,7 @@
     "invitation_letter": "Faction invitation",
     "duel_challenge": "Duel challenge",
     "duel_forfeited": "Duel ended",
+    "duel_live": "Duel live",
     "collab_invite": "Collaboration invite",
     "comment_mention": "Mention",
     "comment_on_mine": "Comment",
@@ -91,6 +92,7 @@
     "fileYours": "Submit yours",
     "reply": "Reply",
     "replyGated": "Reach level {{level}} to reply",
+    "castYourVote": "Cast your vote",
     "failed": "That didn't go through."
   },
   "badge": {
@@ -111,6 +113,7 @@
       "changedTheirVote": "changed their vote on your praxis",
       "tauntsYou": "taunts you",
       "duelForfeited": "can no longer play, so your duel has ended",
+      "duelLive": "and {{opponent}} are dueling. Somebody has to lose. Go pick who.",
       "defected": "defected from {{oldFaction}} to {{newFaction}}",
       "globalTaskActivated": "A new task has been activated",
       "awaitingSubmission": "Waiting on your submission",

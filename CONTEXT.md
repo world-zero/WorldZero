@@ -415,14 +415,14 @@ owns "who voted and how much" even on surfaces the UI does not yet show it.
 
 **Contribution** *(atomic scoring unit; `services/praxis_scoring.py`)*:
 The points **one character** earns from **one praxis** —
-`base × faction_multiplier × duel_multiplier + metatasks + points_from_votes + habit_bonus + rival_bonus_points`.
+`base × faction_multiplier × duel_multiplier + metatasks + points_from_votes + habit_bonus`.
 Only the base multiplies (ADR-0086); every term a player earned by doing a specific extra
 thing is flat, so a duel outcome cannot delete a metatask. Scoring is
 per-`(character, praxis)`, *never* "the score of a praxis" (ill-defined the moment two
 factions touch one collab). Computed as a **batch** primitive
 (`compute_contributions(praxes, character, era, session)`; the single-praxis read path is the
 n=1 case), returned as a **breakdown** (base · metatasks · faction_multiplier ·
-duel_multiplier · points_from_votes · rival_bonus_points · total) so the **Praxis Read** page can show the math
+duel_multiplier · points_from_votes · total) so the **Praxis Read** page can show the math
 ("50 × 0.8 because it's off-faction"). The pure arithmetic stays in `services/scoring.py`;
 `praxis_scoring` is the async gather-and-assemble around it. A character's era score is the
 sum of their Contributions' `total`.
@@ -437,7 +437,7 @@ reintroduce it, and do not describe any live surface as showing it.
 A praxis now has exactly **one** number: `score`, the computed total, resolved for its
 **author** for every type including collab, with the terms behind it on the same payload:
 `score = task_point_value × display_multiplier + metatask_points + points_from_votes
-+ habit_bonus_points + rival_bonus_points`.
++ habit_bonus_points`.
 See **Contribution** for the underlying model, which ADR-0053 did not change.
 
 Merit existed to dodge "a collab has no single multiplier" — but once the scoring subject is

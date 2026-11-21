@@ -29,9 +29,10 @@ from services.activity_feed import (
     build_item_key,
 )
 
-#: Statements one default (live, ``filter=all``) feed load issues: auth, six
-#: pre-fetch round trips, one fetch per registry source, one badge UNION. Change
-#: it only with the reason in the PR body. A new registry source is +1, not +2.
+#: Statements one default (live, ``filter=all``) feed load issues: auth, five
+#: pre-fetch round trips (friends and foes share one since #3886), one fetch
+#: per registry source, one badge UNION. Change it only with the reason in the
+#: PR body. A new registry source is +1, not +2.
 #: The metatask gate (#2280) is a round trip, not SQL, so the rule lives once.
 #: ADR-0070 (#3456): answered requests join the stream, so +3 fetches (collab,
 #: duel, letter; awaiting_submission has no answered state). The answered

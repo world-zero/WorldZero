@@ -1,6 +1,6 @@
 # ADR-0086 — Only the base multiplies; a metatask is flat
 
-**Status:** Amended by ADR-0100
+**Status:** Accepted
 **Date:** 2026-08-24
 
 **Supersedes:** the **scoring formula** as recorded in **ADR-0014**
@@ -113,12 +113,3 @@ zero rows.
   *decisions* state the formula, carry an amendment pointing here. ADR-0076's
   worked example survives unchanged — it is a ×1.0 case, where the two formulas
   agree, which is exactly the reason this defect lived as long as it did.
-
-## Amendment (2026-11-21, #3858): a fifth flat term
-
-[ADR-0100](0100-rival-duel-bonus-snapshots-at-accept.md) adds `rival_bonus_points`,
-paid to a Rival duel's winner. It is flat like the other four; only the base multiplies:
-
-    score = task_point_value × faction_multiplier × duel_multiplier
-            + metatask_points + points_from_votes + habit_bonus_points
-            + rival_bonus_points

@@ -110,6 +110,12 @@ class Duel(CreatedAtMixin, Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Stamped once at active -> settled; the duel_live feed row sorts on it, and
+    # praxis submit times can't stand in because they move on unsubmit (#3886).
+    live_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # Frozen at era close (ADR-0052). NULL winner = tie or no-contest.
     winner_character_id: Mapped[Optional[int]] = mapped_column(
         BigInteger, ForeignKey("character.id"), nullable=True

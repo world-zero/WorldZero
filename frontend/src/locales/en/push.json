@@ -27,6 +27,10 @@
       "title": "{{actor}} challenged you to a duel",
       "body": "{{task}}. Answer it from Updates."
     },
+    "duel_live": {
+      "title": "{{actor}} picked a fight",
+      "body": "{{task}} is open for votes. Somebody has to lose. Go pick who."
+    },
     "collab_invite": {
       "title": "{{actor}} wants to collaborate",
       "body": "Join their praxis for {{task}}."

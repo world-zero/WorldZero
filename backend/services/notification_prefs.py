@@ -21,6 +21,7 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_COMMENT_MENTION,
     FEED_ITEM_TYPE_COMMENT_ON_MINE,
     FEED_ITEM_TYPE_DUEL_CHALLENGE,
+    FEED_ITEM_TYPE_DUEL_LIVE,
     FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_ITEM_TYPE_INVITATION_LETTER,
@@ -59,7 +60,7 @@ class NotificationEvent:
         return bool(self.feed_types)
 
 
-#: The nine rows, in the order the card draws them.
+#: The rows, in the order the card draws them.
 NOTIFICATION_EVENTS: tuple[NotificationEvent, ...] = (
     NotificationEvent(
         key=FEED_ITEM_TYPE_DUEL_CHALLENGE,
@@ -90,6 +91,11 @@ NOTIFICATION_EVENTS: tuple[NotificationEvent, ...] = (
     NotificationEvent(
         key=FEED_ITEM_TYPE_VOTE_ON_MINE,
         feed_types=(FEED_ITEM_TYPE_VOTE_ON_MINE, FEED_ITEM_TYPE_VOTE_CHANGED_ON_MINE),
+        email_default=False,
+    ),
+    NotificationEvent(
+        key=FEED_ITEM_TYPE_DUEL_LIVE,
+        feed_types=(FEED_ITEM_TYPE_DUEL_LIVE,),
         email_default=False,
     ),
     NotificationEvent(key=LEVEL_UP, feed_types=(), email_default=False),

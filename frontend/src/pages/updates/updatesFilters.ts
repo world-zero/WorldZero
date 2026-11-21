@@ -174,6 +174,7 @@ export const FEED_TYPE_LABEL_KEY = {
   collab_invite: 'feed:kicker.collab_invite',
   duel_challenge: 'feed:kicker.duel_challenge',
   duel_forfeited: 'feed:kicker.duel_forfeited',
+  duel_live: 'feed:kicker.duel_live',
   awaiting_submission: 'feed:kicker.awaiting_submission',
 } as const satisfies Record<string, string>
 
