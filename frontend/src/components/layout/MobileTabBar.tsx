@@ -40,8 +40,9 @@ export default function MobileTabBar() {
   const [youOpen, setYouOpen] = useState(false)
   const [signIn, setSignIn] = useState(false)
   const [mod, setMod] = useState(0)
-  const active = activeTab(pathname, youOpen)
   const character = user?.character ?? null
+  const noCharacter = Boolean(user) && !character
+  const active = activeTab(pathname, youOpen || (noCharacter && pathname.startsWith('/settings')))
   const isAdmin = Boolean(user?.is_admin)
   const modCount = isAdmin ? mod : 0
   const badge = pending + modCount
@@ -102,7 +103,12 @@ export default function MobileTabBar() {
             {youInner}
           </button>
         ) : !character ? (
-          <Link to="/characters/create" className={youClass}>
+          <Link
+            to="/settings"
+            className={youClass}
+            data-on={active === YOU_INDEX ? '' : undefined}
+            aria-current={active === YOU_INDEX ? 'page' : undefined}
+          >
             {youInner}
           </Link>
         ) : (
