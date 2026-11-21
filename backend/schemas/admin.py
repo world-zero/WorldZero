@@ -63,6 +63,12 @@ class CharacterSummary(WireModel):
     account_status: str
     # The account's votes this era; alts share the number.
     votes_cast: int
+    # When a ban carried on a deletion tombstone runs out (#4065); null when none.
+    carried_ban_until: datetime | None = None
+
+
+class CarriedBanClearedOut(WireModel):
+    account_id: int
 
 
 class FlagOut(WireModel):

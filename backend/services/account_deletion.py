@@ -10,7 +10,7 @@ import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, or_, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
@@ -29,6 +29,7 @@ from models.praxis_room import PraxisRoomUpdate
 from models.push_subscription import PushSubscription
 from services.character import has_mod_banned_life, soft_delete_character
 from services.media import delete_stored_media
+from services.mod_log import log_mod_action
 
 # Retention is enforced purge-on-access in :func:`resolve_account_tombstone`.
 # ponytail: an unvisited tombstone outlives 90 days; add a periodic DELETE with
@@ -58,9 +59,13 @@ def hash_provider_user_id(provider: str, provider_user_id: str) -> str:
     return hashlib.sha256(salted).hexdigest()
 
 
-def _is_live(tombstone: AccountTombstone) -> bool:
+def _is_live_at(created_at: datetime) -> bool:
     expiry = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
-    return tombstone.created_at > expiry
+    return created_at > expiry
+
+
+def _is_live(tombstone: AccountTombstone) -> bool:
+    return _is_live_at(tombstone.created_at)
 
 
 async def resolve_account_tombstone(
@@ -92,15 +97,20 @@ async def resolve_account_tombstone(
 
 async def consume_returning_tombstone(
     provider: str, provider_user_id: str, session: AsyncSession
-) -> datetime | None:
-    """Clear this identity's tombstone; return its deletion time if it carried a ban."""
+) -> tuple[datetime, int] | None:
+    """Clear this identity's tombstone; if it carried a ban, return its deletion
+    time and the account the ban came from."""
     tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
     if tombstone is None:
         return None
-    ban_since = tombstone.created_at if tombstone.mod_banned else None
+    if not tombstone.mod_banned:
+        carried = None
+    else:
+        origin = tombstone.carried_from_account_id or tombstone.account_id
+        carried = (tombstone.created_at, origin)
     await session.delete(tombstone)
     await session.flush()
-    return ban_since
+    return carried
 
 
 async def reapply_ban_tombstone(
@@ -108,6 +118,7 @@ async def reapply_ban_tombstone(
     provider: str,
     provider_user_id: str,
     ban_since: datetime,
+    carried_from_account_id: int,
     session: AsyncSession,
 ) -> None:
     """Re-write a carried ban against the new account.
@@ -121,10 +132,53 @@ async def reapply_ban_tombstone(
             provider=provider,
             provider_user_hash=hash_provider_user_id(provider, provider_user_id),
             mod_banned=True,
+            carried_from_account_id=carried_from_account_id,
             created_at=ban_since,
         )
     )
     await session.flush()
+
+
+def _carried_by(account_id: int):
+    """Tombstones holding a ban for this account: on it, or carried from it."""
+    return or_(
+        AccountTombstone.account_id == account_id,
+        AccountTombstone.carried_from_account_id == account_id,
+    )
+
+
+async def clear_carried_ban(
+    account_id: int, actor_id: int, session: AsyncSession
+) -> None:
+    """Lift the ban a deleted account's tombstone carries (#4065). No-op if none."""
+    tombstones = (
+        await session.execute(
+            select(AccountTombstone).where(
+                _carried_by(account_id), AccountTombstone.mod_banned.is_(True)
+            )
+        )
+    ).scalars().all()
+    for tombstone in tombstones:
+        tombstone.mod_banned = False
+    if tombstones:
+        await session.flush()
+        await log_mod_action(
+            session, actor_id, "clear_carried_ban", "account", account_id
+        )
+
+
+async def carried_ban_until(account_id: int, session: AsyncSession) -> datetime | None:
+    """When the ban a live tombstone carries for this account runs out."""
+    since = (
+        await session.execute(
+            select(func.max(AccountTombstone.created_at)).where(
+                _carried_by(account_id), AccountTombstone.mod_banned.is_(True)
+            )
+        )
+    ).scalar_one()
+    if since is None or not _is_live_at(since):
+        return None
+    return since + timedelta(days=TOMBSTONE_RETENTION_DAYS)
 
 
 async def delete_account(

@@ -42,6 +42,7 @@ from schemas.admin import (
     AdminTaskPatch,
     BanAction,
     BanActionOut,
+    CarriedBanClearedOut,
     RemoveFlaggedIn,
     RemoveFlaggedOut,
     CharacterSummary,
@@ -67,6 +68,7 @@ from schemas.params import Id
 from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
+from services.account_deletion import clear_carried_ban
 from services.mod_log import list_mod_actions, list_mod_actors
 from services.praxis import PraxisEraScope, list_praxes, moderate_praxis
 from services.praxis_out import build_praxis_cards, build_praxis_out, crowned_praxis_ids
@@ -514,6 +516,20 @@ async def list_pending_tasks(
         )
         for task, display_name in rows
     ]
+
+
+@router.post(
+    "/accounts/{account_id}/clear-carried-ban",
+    response_model=CarriedBanClearedOut,
+    status_code=200,
+)
+async def clear_account_carried_ban(
+    account_id: Id,
+    admin: Account = Depends(require_permission(Permission.ban_suspend)),
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> CarriedBanClearedOut:
+    await clear_carried_ban(account_id, admin.id, session)
+    return CarriedBanClearedOut(account_id=account_id)
 
 
 @router.post(

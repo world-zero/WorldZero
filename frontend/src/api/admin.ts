@@ -251,6 +251,12 @@ export async function banCharacter(id: number, banned: boolean): Promise<void> {
   })
 }
 
+export async function clearCarriedBan(accountId: number): Promise<void> {
+  await apiPost('/admin/accounts/{account_id}/clear-carried-ban', {
+    params: { path: { account_id: accountId } },
+  })
+}
+
 /**
  * End the live era and open the named one. **No undo** (#827). NOT idempotent
  * despite `PUT`: a second call opens a second era; the caller must confirm.

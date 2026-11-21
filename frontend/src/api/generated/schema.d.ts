@@ -121,6 +121,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/accounts/{account_id}/clear-carried-ban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear Account Carried Ban */
+        post: operations["clear_account_carried_ban_admin_accounts__account_id__clear_carried_ban_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/accounts/{account_id}/suspend": {
         parameters: {
             query?: never;
@@ -2431,6 +2448,11 @@ export interface components {
             /** File */
             file: string;
         };
+        /** CarriedBanClearedOut */
+        CarriedBanClearedOut: {
+            /** Account Id */
+            account_id: number;
+        };
         /** CharacterCreate */
         CharacterCreate: {
             /**
@@ -2514,6 +2536,8 @@ export interface components {
             account_id: number;
             /** Account Status */
             account_status: string;
+            /** Carried Ban Until */
+            carried_ban_until: string | null;
             /**
              * Created At
              * Format: date-time
@@ -5842,6 +5866,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FeedBulkArchiveResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_account_carried_ban_admin_accounts__account_id__clear_carried_ban_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CarriedBanClearedOut"];
                 };
             };
             /** @description Validation Error */

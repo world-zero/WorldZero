@@ -9,7 +9,7 @@ import { ListTable, ListToolbar, SelectChip, SidePanel, type Column } from './Ad
 type Kind = NonNullable<ModLogFilters['kind']>
 const KINDS: Kind[] = ['reports', 'tasks', 'people', 'rules']
 const BAD = new Set(['ban', 'suspend', 'praxis_hidden', 'comment_hidden', 'remove_flagged', 'task_delete', 'role_revoke'])
-const OK = new Set(['unban', 'unsuspend', 'praxis_visible', 'comment_visible'])
+const OK = new Set(['unban', 'clear_carried_ban', 'unsuspend', 'praxis_visible', 'comment_visible'])
 // praxis_failed and comment_deleted carry the note the author was shown; every other detail is a count or a name.
 const REASON = new Set(['praxis_failed', 'comment_deleted'])
 

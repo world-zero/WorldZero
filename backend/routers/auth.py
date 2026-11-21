@@ -326,7 +326,7 @@ async def confirm_returning_player(
     provider_user_id = pending["provider_user_id"]
 
     # Must go before create_or_get_account so it takes the stranger path.
-    ban_since = await consume_returning_tombstone(provider, provider_user_id, session)
+    carried = await consume_returning_tombstone(provider, provider_user_id, session)
 
     account = await create_or_get_account(
         provider=provider,
@@ -336,9 +336,9 @@ async def confirm_returning_player(
         session=session,
     )
 
-    if ban_since is not None:
+    if carried is not None:
         await reapply_ban_tombstone(
-            account.id, provider, provider_user_id, ban_since, session
+            account.id, provider, provider_user_id, *carried, session
         )
 
     # The question has been answered; a second POST is an ordinary 404.

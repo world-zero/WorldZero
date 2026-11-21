@@ -598,6 +598,19 @@
         "title": "Body_upload_media_route_praxes__praxis_id__media_post",
         "type": "object"
       },
+      "CarriedBanClearedOut": {
+        "properties": {
+          "account_id": {
+            "title": "Account Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "account_id"
+        ],
+        "title": "CarriedBanClearedOut",
+        "type": "object"
+      },
       "CharacterCreate": {
         "properties": {
           "avatar_url": {
@@ -771,6 +784,18 @@
             "title": "Account Status",
             "type": "string"
           },
+          "carried_ban_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Carried Ban Until"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -825,7 +850,8 @@
           "votes_available",
           "created_at",
           "account_status",
-          "votes_cast"
+          "votes_cast",
+          "carried_ban_until"
         ],
         "title": "CharacterSummary",
         "type": "object"
@@ -8623,6 +8649,71 @@
         "summary": "Restore All Items",
         "tags": [
           "activity-feed"
+        ]
+      }
+    },
+    "/admin/accounts/{account_id}/clear-carried-ban": {
+      "post": {
+        "operationId": "clear_account_carried_ban_admin_accounts__account_id__clear_carried_ban_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "required": true,
+            "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
+              "title": "Account Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarriedBanClearedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Account Carried Ban",
+        "tags": [
+          "admin"
         ]
       }
     },

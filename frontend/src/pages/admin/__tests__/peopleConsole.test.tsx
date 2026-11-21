@@ -11,9 +11,11 @@ const api = vi.hoisted(() => ({
   getVoteRing: vi.fn(),
   banCharacter: vi.fn(async () => undefined),
   suspendAccount: vi.fn(async () => undefined),
+  clearCarriedBan: vi.fn(async () => undefined),
 }))
+const viewer = vi.hoisted(() => ({ user: { is_owner: true, is_admin: true, permissions: ['ban_suspend'] } as object }))
 vi.mock('../../../api/admin', () => api)
-vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: { is_owner: true } }) }))
+vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: viewer.user }) }))
 vi.mock('../AdminRosterSection', () => ({ default: () => 'ROSTER' }))
 
 import PeopleTab from '../PeopleTab'
@@ -89,5 +91,28 @@ describe('the person panel', () => {
     expect(api.suspendAccount).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: /confirm — suspend account/ }))
     await waitFor(() => expect(api.suspendAccount).toHaveBeenCalledWith(11, true))
+  })
+})
+
+describe('a ban carried from a deleted account', () => {
+  const carried = person(4, 'Quill', { carried_ban_until: '2027-02-01T00:00:00Z' })
+  const open = async () => {
+    api.getAdminCharacters.mockResolvedValue([carried])
+    at()
+    fireEvent.click(await screen.findByRole('button', { name: /Quill/ }))
+    return screen.findByRole('complementary', { name: 'Quill' })
+  }
+
+  it('can be cleared by a mod who can ban', async () => {
+    const panel = await open()
+    expect(within(panel).getByText(/Ban carried from a deleted account, until/)).toBeTruthy()
+    fireEvent.click(within(panel).getByRole('button', { name: 'Clear carried ban' }))
+    await waitFor(() => expect(api.clearCarriedBan).toHaveBeenCalledWith(14))
+  })
+
+  it('hides the button from a mod who cannot ban', async () => {
+    viewer.user = { is_admin: true, permissions: ['handle_reports'] }
+    const panel = await open()
+    expect(within(panel).queryByRole('button', { name: 'Clear carried ban' })).toBeNull()
   })
 })
