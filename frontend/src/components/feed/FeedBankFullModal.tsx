@@ -12,7 +12,7 @@
  */
 import { useEffect, useId } from 'react'
 import { useModal } from '../../hooks/useModal'
-import { createPortal } from 'react-dom'
+import { drawAtRoot } from '../ui/drawAtRoot'
 
 /** One in-progress praxis the viewer may drop to free a bank slot. */
 interface BankFullDropOption {
@@ -162,8 +162,5 @@ export default function FeedBankFullModal({
     </div>
   )
 
-  // The static-markup harness has no document and can't portal.
-  return typeof document === 'undefined'
-    ? modal
-    : createPortal(modal, document.body)
+  return drawAtRoot(modal)
 }
