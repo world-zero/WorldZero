@@ -66,7 +66,7 @@ async def apply_metatask(
     task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
-    if task.status == TaskStatus.deleted:
+    if task.status != TaskStatus.active:
         raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     if task.task_type != TaskType.metatask:
         raise HTTPException(

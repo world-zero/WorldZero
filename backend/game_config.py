@@ -274,6 +274,8 @@ class EraConfig:
     allow_praxis_on_pending_task_factions: frozenset = field(default=frozenset())
     # Pending perk only reaches tasks worth STRICTLY below this; None = no ceiling.
     pending_task_praxis_points_below: int | None = None
+    # Ceiling on a proposed task's point_value (create and edit); None = no ceiling.
+    proposed_task_points_max: int | None = None
 
     # Collab-invite carve-outs (#1511, owner ruling): an invitee may submit on a
     # task they could not claim. Enforced in invite_to_praxis (level, faction)
