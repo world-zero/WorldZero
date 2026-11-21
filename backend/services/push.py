@@ -27,7 +27,7 @@ from config import settings
 from db import AsyncSessionLocal
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.comment import Comment, CommentMention
 from models.duel import Duel
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisMember
@@ -222,7 +222,7 @@ async def notify(
     if not push_available():
         return
     recipient = await session.get(Character, recipient_id)
-    if recipient is None:
+    if recipient is None or recipient.status != CharacterStatus.active:
         return
     if actor is not None and actor.id in set(
         (await session.scalars(blocked_counterpart_ids(recipient_id))).all()

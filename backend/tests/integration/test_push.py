@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from config import settings
 from models.account import Account
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.comment import Comment, CommentMention
 from models.praxis import ModerationStatus
 from models.push_subscription import PushSubscription
@@ -301,6 +301,20 @@ async def comment_world(db_session, account, character, keys_on):
     }
     task = await make_task(db_session, character, title="Feed a stranger")
     return task, await make_solo_praxis(db_session, task, character)
+
+
+@pytest.mark.asyncio
+async def test_a_banned_recipient_gets_no_push(
+    db_session, character, character2, comment_world
+):
+    _, praxis = comment_world
+    await _comment(db_session, character2, praxis=praxis)
+    assert len(_queued(db_session)) == 1
+
+    character.status = CharacterStatus.banned
+    await db_session.flush()
+    await _comment(db_session, character2, praxis=praxis)
+    assert len(_queued(db_session)) == 1
 
 
 @pytest.mark.asyncio
