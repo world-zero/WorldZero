@@ -1,9 +1,16 @@
 import enum
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from datetime import datetime
-
-from sqlalchemy import DateTime,  BigInteger, CheckConstraint, ForeignKey, Identity, Index, Text
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Identity,
+    Index,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base

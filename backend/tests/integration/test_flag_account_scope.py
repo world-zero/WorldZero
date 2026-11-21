@@ -234,19 +234,23 @@ async def test_keep_closes_flags_and_flagger_can_report_again(
     auth_headers: dict,
     auth_headers2: dict,
 ):
-    """#3726: a ruling stamps open flags; they leave the queue and the one-per-account check."""
+    """#3726: a ruling closes open flags: out of the queue and the per-account check."""
     from tests.integration.factories import make_admin
 
     pid = await _submit_solo(client, active_task, auth_headers2)
     await _set_level(db_session, character, era, FLAG_LEVEL)
     await make_admin(db_session, account)
     flag = {"reason": "spam"}
-    assert (await client.post(f"/praxes/{pid}/flag", json=flag, headers=auth_headers)).status_code == 200
+    first = await client.post(f"/praxes/{pid}/flag", json=flag, headers=auth_headers)
+    assert first.status_code == 200
     kept = await client.patch(
-        f"/admin/praxes/{pid}/moderate", json={"status": "visible"}, headers=auth_headers
+        f"/admin/praxes/{pid}/moderate",
+        json={"status": "visible"},
+        headers=auth_headers,
     )
     assert kept.status_code == 200
-    assert (await client.get("/admin/praxes/flagged", headers=auth_headers)).json() == []
+    emptied = await client.get("/admin/praxes/flagged", headers=auth_headers)
+    assert emptied.json() == []
 
     again = await client.post(
         f"/praxes/{pid}/flag", json={"reason": "harassment"}, headers=auth_headers
@@ -254,4 +258,5 @@ async def test_keep_closes_flags_and_flagger_can_report_again(
     assert again.status_code == 200
     queue = (await client.get("/admin/praxes/flagged", headers=auth_headers)).json()
     assert [f["reason"] for f in queue[0]["flags"]] == ["harassment"]
-    assert (await client.post(f"/praxes/{pid}/flag", json=flag, headers=auth_headers)).status_code == 409
+    repeat = await client.post(f"/praxes/{pid}/flag", json=flag, headers=auth_headers)
+    assert repeat.status_code == 409
