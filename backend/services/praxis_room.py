@@ -36,9 +36,10 @@ from pycrdt import Decoder, Doc, Map, Text, YMessageType, read_message
 from pycrdt.store import BaseYStore, YDocNotFound
 from pycrdt.websocket import ASGIServer, WebsocketServer, YRoom
 from pycrdt.websocket.asgi_server import ASGIWebsocket
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, event, func, select
 from sqlalchemy import update as sql_update
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession
+from sqlalchemy.orm import Session
 from starlette.routing import get_route_path
 
 from config import settings
@@ -229,10 +230,10 @@ class _RoomFlusher:
         self._absorbed: dict[str, str] | None = None
         self._cancel_scope: anyio.CancelScope | None = None
 
-    def absorb(self) -> None:
-        """The document now holds text its submitter is proposing: that text
-        alone must not cancel the proposal. Any later difference still does."""
-        self._absorbed = _document_values(self._room.ydoc)
+    def absorb(self, values: dict[str, str]) -> None:
+        """``values`` is text a committed submit is proposing: that text alone
+        must not cancel the proposal. Any later difference still does."""
+        self._absorbed = values
 
     def mark_changed(self) -> None:
         """The document moved. Safe from the observer: it only sets a flag."""
@@ -294,6 +295,20 @@ class _RoomFlusher:
         # Only after commit, so a cancelled write still flushes on close.
         self._pending = False
         self._absorbed = None
+
+
+_ABSORB = "praxis_room_absorb"
+
+
+@event.listens_for(Session, "after_commit")
+def _absorb_committed(session: Session) -> None:
+    if absorb := session.info.pop(_ABSORB, None):
+        absorb()
+
+
+@event.listens_for(Session, "after_rollback")
+def _drop_absorb(session: Session) -> None:
+    session.info.pop(_ABSORB, None)
 
 
 def _header(scope: dict[str, Any], name: str) -> str | None:
@@ -567,7 +582,6 @@ class PraxisRoomServer(WebsocketServer):
         """
         name = room_name_for(praxis_id)
         room = await self.get_room(name)
-        flusher = self._flushers[name]
         try:
             room.ydoc.apply_update(update)
         except Exception:
@@ -576,7 +590,6 @@ class PraxisRoomServer(WebsocketServer):
         values = _document_values(room.ydoc)
         if _over_cap(values):
             raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
-        flusher.absorb()
         return values
 
     def loaded_values(self, praxis_id: int) -> dict[str, str]:
@@ -590,8 +603,19 @@ class PraxisRoomServer(WebsocketServer):
         values = _document_values(room.ydoc)
         if values == flusher._absorbed:
             return {}
-        flusher.absorb()
         return values
+
+    def absorb_on_commit(
+        self, praxis_id: int, values: dict[str, str], session: AsyncSession
+    ) -> None:
+        """Absorb only if the submit's transaction commits; a rollback un-proposes it."""
+        name = room_name_for(praxis_id)
+
+        def absorb() -> None:
+            if flusher := self._flushers.get(name):
+                flusher.absorb(values)
+
+        session.info[_ABSORB] = absorb
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
@@ -743,6 +767,12 @@ async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
     if len(update) > _MAX_CLIENT_UPDATE_BYTES:
         raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
     return await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
+
+
+def absorb_room_on_commit(
+    praxis_id: int, values: dict[str, str], session: AsyncSession
+) -> None:
+    PRAXIS_ROOM_SERVER.absorb_on_commit(praxis_id, values, session)
 
 
 def loaded_room_values(praxis_id: int) -> dict[str, str]:
