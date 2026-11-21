@@ -75,7 +75,6 @@ export { default as DefaultEditCharacter } from "../src/pages/characterPaths/arc
 export { default as DefaultEditPraxis } from "../src/pages/editPraxis/archetypes/DefaultEditPraxis";
 export { default as DefaultFactionBody } from "../src/pages/factionDetail/archetypes/DefaultFactionBody";
 export { default as DefaultFactionHero } from "../src/components/factionHero/DefaultFactionHero";
-export { default as DefaultFactionsDirectory } from "../src/pages/factions/mobileArchetypes/DefaultFactionsDirectory";
 export { default as DefaultFeedFrame } from "../src/components/feed/DefaultFeedFrame";
 export { default as DefaultFieldDesk } from "../src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk";
 export { default as DefaultPointsRing } from "../src/components/factionMarks/DefaultPointsRing";
@@ -150,7 +149,6 @@ export { default as FactionFeedFrame } from "../src/components/feed/FactionFeedF
 export { default as FactionProfileBody } from "../src/pages/characterProfile/FactionProfileBody";
 export { default as FactionSelectCard } from "../src/components/selectCard/FactionSelectCard";
 export { default as FactionSigil } from "../src/components/sigil/FactionSigil";
-export { default as FactionsDirectoryView } from "../src/pages/factions/mobileArchetypes/FactionsDirectoryView";
 export { default as FeedArchiveButton } from "../src/components/feed/FeedArchiveButton";
 export { default as FeedBadge } from "../src/components/feed/FeedBadge";
 export { default as FeedBankFullModal } from "../src/components/feed/FeedBankFullModal";
