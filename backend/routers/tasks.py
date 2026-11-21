@@ -13,8 +13,9 @@ from dependencies import (
 )
 from models.account import Account
 from models.character import Character
-from schemas.task import ProposalOut, TaskCreate, TaskOut, TaskSignupOut
+from schemas.task import BackdoorOut, ProposalOut, TaskCreate, TaskOut, TaskSignupOut
 from services.auth import get_current_account
+from services.backdoor import list_open_backdoors
 from services.signup_eligibility import gather_signup_facts
 from services.task import (
     UNKNOWN_TASK_AUTHOR,
@@ -108,6 +109,18 @@ async def list_tasks(
         )
         for task in tasks
     ]
+
+
+@router.get("/backdoor", response_model=list[BackdoorOut])
+async def list_backdoors(
+    session: AsyncSession = Depends(get_db, scope="function"),
+    viewer: Optional[Character] = Depends(get_current_character_optional),
+):
+    # No docstring: it would be published in the public openapi.json.
+    # Not a 403 for outsiders: an empty list reveals nothing (#3848).
+    return await list_open_backdoors(
+        session, viewer.faction_slug if viewer is not None else None
+    )
 
 
 @router.get("/{task_id}/signups", response_model=list[TaskSignupOut])
