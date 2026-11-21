@@ -88,7 +88,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       >
         {children}
       </ShellContent>
-      <SiteFooter isMobile={isMobile} />
+      <SiteFooter />
       {isMobile && <MobileTabBar />}
     </div>
     </BackdropProvider>
