@@ -4,7 +4,7 @@
      script instead. backend/tests/test_adr_index.py fails if this file
      is out of step with docs/adr/. -->
 
-99 records, of which **90 still state a rule**.
+100 records, of which **91 still state a rule**.
 
 | Status | Meaning |
 |---|---|
@@ -115,3 +115,4 @@
 | [0097](0097-secret-faction-state-is-per-account-and-per-faction-slug.md) | Secret-faction state is per account and per faction slug | Accepted | — |
 | [0098](0098-moderation-hides-votes-deletion-keeps-them.md) | Moderation hides votes; deletion keeps them | Accepted | — |
 | [0099](0099-votes-credit-the-era-they-are-cast-in.md) | Votes credit the era they are cast in; a closed era is frozen | Accepted | — |
+| [0100](0100-rival-duel-bonus-snapshots-at-accept.md) | A Rival duel's winner takes a flat era bonus, fixed at accept | Accepted | — |

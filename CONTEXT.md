@@ -242,6 +242,13 @@ read and **only becomes final at era close**. Each side's `duel_win_modifier` /
 - **Forfeit** overrides the tally entirely — see **Forfeit**.
 _Avoid_: "the duel is decided/settled"; comparing "stars"; expecting an "X won the duel" event.
 
+**Rival duel**:
+A duel whose two players were **Rivals** (both foe edges) when it was accepted; stored once as
+`duel.rival_bonus` and never re-read. Whoever the **Duel outcome** names as winner, tie-break and
+forfeit included, adds the era's flat `rival_duel_bonus` after the multipliers. A true tie pays
+nobody. ADR-0100.
+_Avoid_: re-checking the edges later; feeding the bonus into who wins.
+
 **Forfeit** *(duel only; sticky and irreversible)*:
 Backing out of a **`live`** duel. Triggered by unsubmitting that side's praxis or by the ban /
 soft-delete of its character. The forfeiter takes their **loss** modifier, the foe takes their
