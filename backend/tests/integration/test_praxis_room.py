@@ -25,7 +25,7 @@ from pycrdt import (
     create_awareness_message,
     read_message,
 )
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.collab_consensus as collab_consensus
@@ -33,6 +33,7 @@ import services.praxis_room as praxis_room
 from config import settings
 from game_config import CURRENT_ERA
 from main import app as fastapi_app
+from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
@@ -1125,6 +1126,69 @@ async def test_a_refused_submit_absorbs_nothing(
             await rooms.server._flushers[room_name_for(praxis_id)].write()
 
         assert (await _proposal(rooms, praxis_id))[1] is None
+
+
+async def test_a_flush_between_the_commit_and_its_hook_keeps_the_proposal(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """A flush that lands after the row lock drops but before after_commit runs."""
+    praxis_id, character_id, other_id = collab.id, character.id, character2.id
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(praxis_id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(praxis_id, other_id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+            flusher = rooms.server._flushers[room_name_for(praxis_id)]
+            hook = flusher.absorb
+            held: list[dict[str, str]] = []
+            monkeypatch.setattr(flusher, "absorb", held.append)
+
+            await rooms.submit(praxis_id, character_id, doc_state=state)
+            await flusher.write()  # the window: committed, hook not yet run
+            assert (await _proposal(rooms, praxis_id))[1] is not None
+            hook(held[0])
+
+
+async def test_a_cooldown_refused_submit_absorbs_nothing(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """429 takes the same post-merge refusal path as the 422 above. It needs the
+    submitter to complete the praxis, so a lone member: an edit with others
+    present clears their approvals first and the cooldown never applies."""
+    praxis_id, character_id = collab.id, character.id
+    await db_session.execute(
+        delete(PraxisMember).where(PraxisMember.character_id == character2.id)
+    )
+    object.__setattr__(CURRENT_ERA, "praxis_post_cooldown_hours", 24)
+    account.last_praxis_posted_at = datetime.now(timezone.utc)
+    await db_session.commit()
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(praxis_id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+
+            with pytest.raises(HTTPException) as refused:
+                await rooms.submit(praxis_id, character_id, doc_state=state)
+            assert refused.value.status_code == 429
+            async with rooms.sessions() as session:
+                await session.rollback()  # get_db's answer to the raise
+
+            flusher = rooms.server._flushers[room_name_for(praxis_id)]
+            assert flusher._absorbed is None
 
 
 async def test_a_submit_that_changes_nothing_still_approves(
