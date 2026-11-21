@@ -93,10 +93,7 @@ async def forfeit_duels_for_characters(
     emit_taunts: bool = True,
 ) -> None:
     """Forfeit for several characters, re-scoring the union once, ascending."""
-    ids = set(character_ids)
-    rescore_ids: set[int] = set()
-    for character_id in sorted(ids):
-        rescore_ids |= await _forfeit_duels(character_id, session)
+    rescore_ids = await forfeit_duels_collect(character_ids, session)
     if rescore_ids:
         era_row = await get_current_era_row(session)
         # Ascending: votes lock stats in id order; another order can deadlock.
@@ -105,6 +102,16 @@ async def forfeit_duels_for_characters(
                 rescored_id, session, era, era_row=era_row, emit_taunts=emit_taunts
             )
         await session.flush()
+
+
+async def forfeit_duels_collect(
+    character_ids: Iterable[int], session: AsyncSession
+) -> set[int]:
+    """Forfeit without re-scoring; the caller re-scores the returned ids in one pass."""
+    rescore_ids: set[int] = set()
+    for character_id in sorted(set(character_ids)):
+        rescore_ids |= await _forfeit_duels(character_id, session)
+    return rescore_ids
 
 
 async def _forfeit_duels(character_id: int, session: AsyncSession) -> set[int]:

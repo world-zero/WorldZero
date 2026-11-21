@@ -20,11 +20,18 @@ from models.praxis import (
 )
 from models.character_block import CharacterBlock
 from models.relationship import Relationship, RelationshipType
-from models.task import Task
+from models.task import Task, TaskStatus
 from models.taunt_message import TauntMessage, TauntTriggerType
 from services.character_stats import recalculate_character_stats
 from services.collab_consensus import on_submit
 from services.era import apply_era_reset
+from tests.integration.factories import (
+    cast_vote,
+    make_character,
+    make_duel,
+    make_solo_praxis,
+    make_task,
+)
 from services.taunt_service import load_foe_edges
 
 # Recalc from no praxes drops this below a rival: the passive overtake.
@@ -392,6 +399,135 @@ async def test_mod_hide_and_restore_are_silent(
         )
 
     assert await _taunts(db_session) == []
+
+
+async def _watch_for_taunts(db_session, era, watcher: Character, target: Character):
+    """``watcher`` follows ``target`` and trails them: a rescore of target taunts."""
+    await _declare_foe(db_session, watcher, target)
+    await _set_score(db_session, watcher, era, 1)
+
+
+@pytest.mark.asyncio
+async def test_admin_task_edit_is_silent(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    character3: Character,
+):
+    from schemas.admin import AdminTaskPatch
+    from services.admin_service import admin_edit_task
+
+    task = await make_task(db_session, character, status=TaskStatus.pending)
+    await _seed_scored_praxis(db_session, character, task, "edit")
+    await _watch_for_taunts(db_session, era, character3, character)
+
+    await admin_edit_task(
+        task.id, AdminTaskPatch(point_value=500), db_session, character3.account_id
+    )
+
+    assert (await _stats(db_session, character, era)).score > 1
+    assert await _taunts(db_session) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path", ["ban", "suspend"])
+async def test_ban_and_suspend_vote_rescore_is_silent(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    path: str,
+):
+    praxis = await _seed_scored_praxis(db_session, character, active_task, "vote")
+    await cast_vote(db_session, praxis, character2, 5)
+    await _watch_for_taunts(db_session, era, character3, character)
+
+    await _ban_or_suspend(db_session, character2, path, character3.account_id)
+
+    assert (await _stats(db_session, character, era)).score > 1
+    assert await _taunts(db_session) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path", ["ban", "suspend"])
+async def test_ban_and_suspend_forfeit_rescore_is_silent(
+    db_session: AsyncSession,
+    era: Era,
+    character3: Character,
+    path: str,
+):
+    _, challenger, opponent = await make_duel(db_session, era, label="sil")
+    await _watch_for_taunts(db_session, era, character3, challenger)
+
+    await _ban_or_suspend(db_session, opponent, path, character3.account_id)
+
+    assert (await _stats(db_session, challenger, era)).score > 1
+    assert await _taunts(db_session) == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("path", ["ban", "suspend"])
+async def test_ban_and_suspend_rescore_locks_in_one_ascending_pass(
+    db_session: AsyncSession,
+    era: Era,
+    character3: Character,
+    active_task: Task,
+    monkeypatch: pytest.MonkeyPatch,
+    path: str,
+):
+    """Advisory locks last to commit, so two ascending passes can still deadlock."""
+    import services.character_stats as stats_module
+    import services.duel as duel_module
+
+    # Lower id than the duellists: a second pass over it would run backwards.
+    author = await make_character(db_session, era, username="lockauthor")
+    _, challenger, opponent = await make_duel(db_session, era, label="lock")
+    praxis = await make_solo_praxis(db_session, active_task, author)
+    await cast_vote(db_session, praxis, opponent, 5)
+
+    locked: list[int] = []
+    real = stats_module.recalculate_character_stats
+
+    async def spy(character_id, *args, **kwargs):
+        locked.append(character_id)
+        return await real(character_id, *args, **kwargs)
+
+    monkeypatch.setattr(stats_module, "recalculate_character_stats", spy)
+    monkeypatch.setattr(duel_module, "recalculate_character_stats", spy)
+
+    await _ban_or_suspend(db_session, opponent, path, character3.account_id)
+
+    assert locked == sorted({author.id, challenger.id, opponent.id})
+
+
+@pytest.mark.asyncio
+async def test_self_delete_forfeit_still_taunts(
+    db_session: AsyncSession,
+    era: Era,
+    character3: Character,
+):
+    """The one forfeit path that is the player's own act, so it is news."""
+    from services.character import soft_delete_character
+
+    _, challenger, opponent = await make_duel(db_session, era, label="sdel")
+    await _watch_for_taunts(db_session, era, character3, challenger)
+
+    await soft_delete_character(opponent.id, db_session)
+
+    assert await _taunts(db_session) != []
+
+
+async def _ban_or_suspend(db_session, character: Character, path: str, actor_id: int):
+    from services.admin_service import apply_ban, suspend_account
+
+    if path == "ban":
+        await apply_ban(character, True, db_session, actor_id=actor_id)
+    else:
+        await suspend_account(
+            character.account_id, True, db_session, actor_id=actor_id
+        )
 
 
 # Delivery surface
