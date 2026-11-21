@@ -1,8 +1,9 @@
 """The faction level-jump allowance (#811): sign up for tasks up to
 ``level_jump_reach`` levels above your own, once per level.
 
-Available iff ``level_jump_used_at_level != stats.level`` (levelling up or an era
-reset restores it; no counter). Spent on sign-up and never refunded, else it
+The stamp is a high-water mark: available iff never spent this era (``None``) or
+``stats.level > level_jump_used_at_level``. Levelling past it or an era reset
+restores it; a level dip never does. Spent on sign-up and never refunded, else it
 could be farmed. Gate and UI both read :func:`available_level_reach`.
 """
 from typing import Optional
@@ -29,7 +30,9 @@ def is_level_jump_available(
     level_jump_used_at_level: Optional[int],
 ) -> bool:
     """Whether the once-per-level allowance is unspent at ``character_level``."""
-    return level_jump_used_at_level != character_level
+    if level_jump_used_at_level is None:
+        return True
+    return character_level > level_jump_used_at_level
 
 
 def available_level_reach(
@@ -55,4 +58,6 @@ def consume_level_jump(stats: CharacterStats) -> None:
 
     Idempotent. Call only when the claim needed the jump (see ``create_praxis``).
     """
-    stats.level_jump_used_at_level = stats.level
+    stats.level_jump_used_at_level = max(
+        stats.level, stats.level_jump_used_at_level or 0
+    )
