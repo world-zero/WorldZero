@@ -1,5 +1,5 @@
 /**
- * The factions directory, both form factors (#743). Seam: each renderer fed a
+ * The factions directory, one responsive page (#3800). Seam: the component fed a
  * controlled state, since effects never fire in this harness.
  *
  * The "Recent Invitations" panel is gone (#2310); the load-bearing guard is
@@ -14,9 +14,7 @@ import i18n from '../../../i18n'
 import type { FactionOut, FactionPageOut, FactionStatusOut, InvitationLetterOut } from '../../../api/factions'
 import type { CurrentUser } from '../../../api/auth'
 import { AuthContext } from '../../../auth/AuthContext'
-import FactionsDirectoryView from '../mobileArchetypes/FactionsDirectoryView'
-import DefaultFactionsDirectory from '../mobileArchetypes/DefaultFactionsDirectory'
-import { DesktopFactions } from '../../Factions'
+import { FactionsDirectory } from '../../Factions'
 
 function render(element: ReactElement): { html: string; text: string } {
   const html = renderToStaticMarkup(<MemoryRouter>{element}</MemoryRouter>)
@@ -76,176 +74,88 @@ const LETTERS: InvitationLetterOut[] = [
   { faction_slug: 'coven', delivered_at: '2026-01-02T00:00:00Z' },
 ]
 
-function view(overrides: Partial<React.ComponentProps<typeof FactionsDirectoryView>> = {}) {
+const VIEWER = (faction_slug: string | null) => ({ character: { faction_slug } }) as unknown as CurrentUser
+
+function dir(
+  page: FactionPageOut | null,
+  over: { user?: CurrentUser | null; loading?: boolean; error?: unknown; factions?: FactionOut[] } = {},
+) {
   return render(
-    <FactionsDirectoryView
-      factions={FACTIONS}
-      factionPage={STATUS}
-      loading={false}
-      error={null}
-      unaffiliated={false}
-      onVisit={() => {}}
-      {...overrides}
-    />,
+    <AuthContext.Provider
+      value={{
+        user: over.user === undefined ? VIEWER('coven') : over.user,
+        loading: false,
+        refetch: async () => {},
+        applyUser: () => {},
+        signOut: async () => {},
+      }}
+    >
+      <FactionsDirectory
+        state={{ factions: over.factions ?? FACTIONS, factionPage: page, loading: over.loading ?? false, error: over.error ?? null }}
+      />
+    </AuthContext.Provider>,
   )
 }
 
+const rows = (page: FactionPageOut) => page.all_factions.map((r): [string, FactionStatusOut['status']] => [r.slug, r.status])
 
-describe('mobile factions directory — cards (#743)', () => {
+describe('factions directory', () => {
   it('draws one card per faction, na dropped', () => {
-    const { html } = view()
-    // One CTA button per card is the only <button on the page.
-    const cards = (html.match(/<button/g) ?? []).length
-
-    expect(cards, 'six cards').toBe(6)
+    expect((dir(STATUS).html.match(/<button/g) ?? []).length).toBe(6)
   })
 
-  it('keeps rainbow order, not desktop member-first sort', () => {
-    const { html } = view()
-    const bar = html
-    // Coven (member) would float first under a member-first sort. Ephemerists
-    // sit before S.N.I.D.E. since their hue moved to gold (#2078).
+  it('keeps rainbow order, not member-first', () => {
+    const { html } = dir(STATUS)
     const order = ['everymen', 'ua', 'ephemerists', 'snide', 'singularity', 'coven']
-    const positions = order.map((slug) => bar.indexOf(`faction-${slug}`))
-    for (const [index, pos] of positions.entries()) {
-      expect(pos, `${order[index]} present in bar`).toBeGreaterThan(-1)
-    }
-    const sorted = [...positions].sort((a, b) => a - b)
-    expect(positions, 'stripes ascend in rainbow order').toEqual(sorted)
-    expect(
-      bar.indexOf('faction-coven'),
-      'the member faction is not floated to the front',
-    ).toBeGreaterThan(bar.indexOf('faction-everymen'))
+    const positions = order.map((slug) => html.indexOf(`faction-${slug}`))
+    for (const pos of positions) expect(pos).toBeGreaterThan(-1)
+    expect(positions).toEqual([...positions].sort((a, b) => a - b))
   })
-})
 
-describe('mobile factions directory — real card state (#743)', () => {
-  it('renders each card in its true member/eligible/locked voice, not a uniform neutral', () => {
-    const { text } = view()
-    expect(text, 'Coven member line').toContain(statusLine('coven', 'member'))
-    expect(text, 'S.N.I.D.E. eligible line').toContain(statusLine('snide', 'eligible'))
-    expect(text, 'Everymen locked line').toContain(statusLine('everymen', 'locked'))
-    expect(text).not.toContain(statusLine('snide', 'member'))
+  it('reads member / eligible / locked from status alone, letters or not', () => {
+    const withLetters = dir(status(rows(STATUS), LETTERS))
+    expect(withLetters.text).toContain(statusLine('coven', 'member'))
+    expect(withLetters.text).toContain(statusLine('snide', 'eligible'))
+    expect(withLetters.text).toContain(statusLine('everymen', 'locked'))
+    expect(withLetters.text).not.toContain('Recent Invitations')
+    expect(withLetters.html).not.toContain('aria-expanded')
+    expect(dir(STATUS).text).toBe(withLetters.text)
   })
 
   it('falls back to locked when a faction has no status row', () => {
-    const { text } = view({ factionPage: status([]) })
-    expect(text, 'Coven falls back to locked').toContain(statusLine('coven', 'locked'))
-    expect(text).not.toContain(statusLine('coven', 'member'))
-    expect(text).not.toContain(statusLine('snide', 'eligible'))
-  })
-})
-
-describe('mobile factions directory — no invitation panel (#2310)', () => {
-  it('draws no panel even for a viewer holding letters', () => {
-    // The backend still sends letters; this surface just doesn't draw them.
-    const { html, text } = view({ factionPage: status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS) })
-    expect(text, 'no panel header').not.toContain('Recent Invitations')
-    expect(text, 'no INVITE badge').not.toContain('INVITE')
-    expect(text, 'no invite sentence').not.toContain('been invited to join')
-    // Cards navigate by handler, so any link here would be a letter row.
-    expect(html, 'no letter row linking to a detail page').not.toContain('href="/factions/')
-  })
-})
-
-describe('mobile factions directory — states (#743)', () => {
-  it('shows the loading line and no cards before data arrives', () => {
-    const { html, text } = view({ loading: true })
-    expect(text, 'loading copy shown').toContain('Loading')
-    expect(html, 'no cards while loading').not.toContain('<button')
+    const { text } = dir(status([]))
+    expect(text).toContain(statusLine('coven', 'locked'))
   })
 
-  it('surfaces a load error in place of the card stack', () => {
-    const { html, text } = view({ error: 'Boom', loading: false })
-    expect(text).toContain('Boom')
-    expect(html, 'no cards behind an error').not.toContain('<button')
+  it('dims a defected faction', () => {
+    const { html } = dir(status([['coven', 'defected']]))
+    expect(html).toContain('opacity:0.5')
   })
 
-  it('shows the unaffiliated banner only to a factionless viewer', () => {
-    expect(view({ unaffiliated: true }).html).toContain('sidebar-card')
-    expect(view({ unaffiliated: false }).html).not.toContain('sidebar-card')
-  })
-})
-
-/** The container: only proves it wires the view's chrome up. */
-describe('mobile factions directory — the container', () => {
-  it('renders the unaffiliated banner, no title of its own (Community owns it)', () => {
-    const { text } = render(
-      <DefaultFactionsDirectory
-        state={{ factions: [], factionPage: null, loading: true, error: null }}
-      />,
-    )
-    expect(text).not.toContain('Factions')
-    expect(text).toContain('Unaffiliated')
-  })
-})
-
-/** Desktop: the panel was behind `character &&`, so the viewer needs one. */
-describe('desktop factions grid — no invitation panel (#2310)', () => {
-  const VIEWER = { character: { faction_slug: 'coven' } } as unknown as CurrentUser
-
-  const desktop = (page: FactionPageOut) =>
-    render(
-      <AuthContext.Provider
-        value={{
-          user: VIEWER,
-          loading: false,
-          refetch: async () => {},
-          applyUser: () => {},
-          signOut: async () => {},
-        }}
-      >
-        <DesktopFactions state={{ factions: FACTIONS, factionPage: page, loading: false, error: null }} />
-      </AuthContext.Provider>,
-    )
-
-  it('draws no panel even for a viewer holding letters', () => {
-    const { html, text } = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS))
-    expect(text, 'no panel header').not.toContain('Recent Invitations')
-    expect(text, 'no INVITE badge').not.toContain('INVITE')
-    expect(text, 'no invite sentence').not.toContain('been invited to join')
-    expect(html, 'no expand/collapse triangle').not.toContain('aria-expanded')
+  it('shows loading and error states without cards', () => {
+    expect(dir(null, { loading: true }).html).not.toContain('<button')
+    const err = dir(STATUS, { error: new Error('Boom') })
+    expect(err.text).toContain('Unable to reach the server')
   })
 
-  it('still reads an invited faction as eligible with the letter arm gone', () => {
-    // Protects the deletion of `|| invitationBySlug[slug]`: the status map
-    // alone must keep an invited player's route in.
-    const { text } = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS))
-    expect(text, 'S.N.I.D.E. is eligible on its status alone').toContain(
-      statusLine('snide', 'eligible'),
-    )
-    expect(text, 'Coven still reads member').toContain(statusLine('coven', 'member'))
-    expect(text, 'Everymen stays locked').toContain(statusLine('everymen', 'locked'))
+  it('signed out: hint, no banner; no faction: banner; with faction: neither', () => {
+    const out = dir(null, { user: null })
+    expect(out.text).toContain(i18n.t('factions:index.loggedOutHint'))
+    expect(out.html).not.toContain('sidebar-card')
+    const none = dir(STATUS, { user: VIEWER(null) })
+    expect(none.html).toContain('sidebar-card')
+    expect(none.text).not.toContain(i18n.t('factions:index.loggedOutHint'))
+    const member = dir(STATUS)
+    expect(member.html).not.toContain('sidebar-card')
   })
 
-  it('reads the same with no letters on the payload at all', () => {
-    const withLetters = desktop(status(STATUS.all_factions.map((r) => [r.slug, r.status]), LETTERS)).text
-    const without = desktop(STATUS).text
-    expect(without).toBe(withLetters)
-  })
-
-  /** Calls pin to the card bottom (#3139), so every tile needs equal height. */
-  it('stretches the row and makes each tile\'s wrapper a column, so calls line up', () => {
-    const { html } = desktop(STATUS)
+  it('stretches the row and makes each tile wrapper a column, so calls line up (#3139)', () => {
+    const { html } = dir(STATUS)
     const at = html.indexOf('data-testid="faction-tile-row"')
-    expect(at, 'tile row rendered').toBeGreaterThan(-1)
+    expect(at).toBeGreaterThan(-1)
     const row = html.slice(html.lastIndexOf('<', at), html.indexOf('>', at) + 1)
     expect(row).toContain('flex-wrap:wrap')
     expect(row).toContain('align-items:stretch')
-    const wrappers = html.match(/<div style="display:flex;flex-direction:column;opacity:[^"]*">/g) ?? []
-    expect(STATUS.all_factions.length).toBeGreaterThan(0)
-    expect(wrappers).toHaveLength(STATUS.all_factions.length)
-  })
-})
-
-describe('mobile factions directory — the tile column centres its tiles (#2579)', () => {
-  /** The card maxes at 360px; without centring, wider screens left-strand it. */
-  it('centres the column so a tile narrower than the viewport is not left-stranded', () => {
-    const { html } = view()
-    const start = html.indexOf('data-testid="faction-tile-column"')
-    expect(start, 'tile column rendered').toBeGreaterThan(-1)
-    const openTag = html.slice(html.lastIndexOf('<', start), html.indexOf('>', start) + 1)
-    expect(openTag, 'column axis').toContain('flex-direction:column')
-    expect(openTag, 'tiles centred on the cross axis').toContain('align-items:center')
+    expect(html.match(/<div style="display:flex;flex-direction:column;opacity:[^"]*">/g) ?? []).toHaveLength(6)
   })
 })

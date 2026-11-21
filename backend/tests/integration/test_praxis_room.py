@@ -28,6 +28,7 @@ from pycrdt import (
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import services.collab_consensus as collab_consensus
 import services.praxis_room as praxis_room
 from config import settings
 from game_config import CURRENT_ERA
@@ -282,9 +283,11 @@ class _Rooms:
         """Harness-only: holds the session lock, since a submit races room tasks
         on the one shared session (production uses separate sessions)."""
         async with self.sessions() as session:
-            return await submit_praxis(
+            result = await submit_praxis(
                 praxis_id, character_id, session, doc_state=doc_state
             )
+            await session.commit()  # get_db's commit; the absorb hangs on it
+            return result
 
     def room_doc(self, praxis_id: int) -> Doc | None:
         room = self.server.rooms.get(room_name_for(praxis_id))
@@ -1088,6 +1091,40 @@ async def test_an_approve_without_doc_state_cancels_on_unflushed_socket_edits(
         assert result.status == PraxisStatus.pending
         approved = await _approved(rooms, collab.id)
         assert approved[character.id] and not approved[character2.id]
+
+
+async def test_a_refused_submit_absorbs_nothing(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """The refusal rolls the merge back, so the edit is still nobody's proposal."""
+    praxis_id, character_id, other_id = collab.id, character.id, character2.id
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(praxis_id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(praxis_id, other_id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+
+            async def no_proof(*_args: Any) -> bool:
+                return False
+
+            with monkeypatch.context() as patch:
+                patch.setattr(collab_consensus, "_has_proof", no_proof)
+                with pytest.raises(HTTPException) as refused:
+                    await rooms.submit(praxis_id, character_id, doc_state=state)
+            assert refused.value.status_code == 422
+            async with rooms.sessions() as session:
+                await session.rollback()  # get_db's answer to the raise
+
+            await rooms.server._flushers[room_name_for(praxis_id)].write()
+
+        assert (await _proposal(rooms, praxis_id))[1] is None
 
 
 async def test_a_submit_that_changes_nothing_still_approves(

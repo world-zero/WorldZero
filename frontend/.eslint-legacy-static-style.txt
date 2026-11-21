@@ -225,7 +225,6 @@ src/pages/factionDetail/archetypes/SingularityFactionBody.tsx
 src/pages/factionDetail/archetypes/SnideFactionBody.tsx
 src/pages/factionDetail/archetypes/UaFactionBody.tsx
 src/pages/factionDetail/archetypes/WowFactionBody.tsx
-src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx
 src/pages/fieldDesk/mobileArchetypes/CovenFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx
 src/pages/fieldDesk/mobileArchetypes/EphemeristsFieldDesk.tsx

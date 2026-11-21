@@ -7,7 +7,6 @@ import { useAuth, hadSessionLastVisit } from './auth/AuthContext'
 import { useAdminMode } from './auth/AdminModeContext'
 import { loadAppCopy, loadOnboardingCopy, withAppCopy } from './i18n'
 import { onboardingHandoffPending } from './utils/onboardingResume'
-import LoginNotice from './components/LoginNotice'
 import { importAccountDeleted } from './pages/accountDeletedLoader'
 
 /**
@@ -98,12 +97,7 @@ function Landing() {
   const { user } = useAuth()
   const [inFlow] = useState(() => !user?.character || onboardingHandoffPending())
   if (!inFlow) return <FieldDesk />
-  return (
-    <>
-      {!user && <LoginNotice />}
-      <Onboarding />
-    </>
-  )
+  return <Onboarding />
 }
 
 /** `/`: the welcome flow, except for a player with a character, who gets the desk. Exported for tests. */
