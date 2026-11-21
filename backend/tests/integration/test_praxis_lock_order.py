@@ -14,14 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.character_stats import CharacterStats
-from models.praxis import Praxis, PraxisInvite, PraxisStatus
+from models.praxis import Praxis, PraxisInvite, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from services import collab_consensus
 from services import praxis as praxis_service
 from services.character_stats import _STATS_LOCK_NAMESPACE
 from services.collab_consensus import _PRAXIS_LOCK_NAMESPACE
 from services.praxis import _SIGNUP_LOCK_NAMESPACE, PraxisSort
-from tests.integration.factories import make_solo_praxis
+from tests.integration.factories import make_character, make_duel, make_solo_praxis
 
 _PROBE = text("SELECT pg_try_advisory_xact_lock(:namespace, :key)")
 
@@ -328,3 +328,26 @@ async def test_leave_takes_leaver_and_survivor_stats_locks_ascending(
     assert left.status_code == 200, left.text
 
     assert taken[:2] == [character.id, character2.id]
+
+
+@pytest.mark.asyncio
+async def test_leave_locks_duel_opponents_in_the_same_ascending_pass(
+    db_session: AsyncSession, db_connection, era, character: Character
+):
+    """The opponent's id sorts between the survivor's and the leaver's."""
+    duel, survivor, opponent = await make_duel(db_session, era, label="lv")
+    leaver = await make_character(db_session, era, username="lvleaver")
+    praxis = await db_session.get(Praxis, duel.challenger_praxis_id)
+    praxis.type = PraxisType.collab
+    db_session.add(PraxisMember(praxis_id=praxis.id, character_id=leaver.id))
+    await db_session.flush()
+    ids = [survivor.id, opponent.id, leaver.id]
+    praxis_id = praxis.id
+    assert ids == sorted(ids)
+    db_session.expire_all()
+    taken = _stats_lock_spy(db_connection)
+
+    await praxis_service.leave_praxis(praxis_id, ids[2], db_session)
+
+    assert taken[:3] == ids
+    assert sorted(set(taken), key=taken.index) == sorted(set(taken))

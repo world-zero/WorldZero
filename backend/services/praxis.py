@@ -74,6 +74,7 @@ from services.praxis_duel import (
     discard_dissolved_duels_for_praxis,
     get_duel_for_praxis,
     maybe_settle_duel,
+    with_duel_opponents,
 )
 from services.praxis_room import (
     absorb_room_on_commit,
@@ -1357,8 +1358,15 @@ async def leave_praxis(
     _require_member(praxis, character_id, "leave")
 
     leaver = next(m for m in praxis.members if m.character_id == character_id)
-    # Leaver and survivors in one ascending pass: seal and conversion recalc survivors.
-    await lock_character_stats([m.character_id for m in praxis.members], session)
+    # Leaver, survivors and duel opponents in one ascending pass: the seal and
+    # conversion recalcs reach all of them, and nothing is locked after this.
+    side_ids = await with_duel_opponents({praxis_id}, session)
+    await lock_character_stats(
+        await session.scalars(
+            select(PraxisMember.character_id).where(PraxisMember.praxis_id.in_(side_ids))
+        ),
+        session,
+    )
     praxis.members.remove(leaver)
     # ADR-0073: close the room socket too.
     close_member_sockets(praxis_id, character_id)
