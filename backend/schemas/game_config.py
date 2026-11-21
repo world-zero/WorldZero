@@ -38,6 +38,7 @@ class GameConfigOut(WireModel):
     level_thresholds: list[int]
     duel_level_required: int
     collab_auto_submit_days: int
+    duel_challenge_lapse_days: int
     # Copy states this window; never hardcode it (#1695).
     pending_task_admin_review_hours: int
     # Days after a backdoor opens at which the console hint gets plainer (#3848).

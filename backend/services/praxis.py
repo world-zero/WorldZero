@@ -142,6 +142,12 @@ async def get_praxis(
     return praxis
 
 
+async def _settle_lapsed_duels(session: AsyncSession, era: EraConfig) -> None:
+    from services.duel import settle_lapsed_duels  # duel imports this module
+
+    await settle_lapsed_duels(session, era)
+
+
 async def get_praxis_settling_consensus(
     praxis_id: int,
     session: AsyncSession,
@@ -154,6 +160,7 @@ async def get_praxis_settling_consensus(
     ``list_praxes``). Use where the answer depends on real published-ness. Call
     **once** per request, at the head; the seal makes repeats no-ops.
     """
+    await _settle_lapsed_duels(session, era)
     praxis = await get_praxis(praxis_id, session, lock=lock)
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
     return praxis
@@ -416,6 +423,7 @@ async def list_praxes(
         # id tiebreak keeps pages disjoint on created_at ties (#3061).
         order = (Praxis.created_at.desc(), Praxis.id.desc())
     query = query.order_by(*order).limit(limit).offset(offset)
+    await _settle_lapsed_duels(session, era)
     result = await session.execute(query)
     praxes = list(result.scalars().all())
     # Ascending id: opposite-sorted lists must take the 0x5A1B locks in one order.

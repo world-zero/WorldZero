@@ -4,7 +4,7 @@ Two solo praxes linked by a Duel row: pending → active → settled, or decline
 Praxis-id-keyed helpers live in the leaf ``services.praxis_duel`` (#2872).
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -91,41 +91,112 @@ async def forfeit_duels_for_character(
             ),
         )
     )).scalars().all()
+    await _forfeit_duels([(duel, character_id) for duel in duels], session, era)
 
+
+async def _forfeit_duels(
+    forfeits: list[tuple[Duel, int]],
+    session: AsyncSession,
+    era: EraConfig,
+) -> None:
+    """The one forfeit path: ``(duel, forfeiter)`` pairs, re-scored once."""
     now = datetime.now(timezone.utc)
-    winner_ids: set[int] = set()
-    rescore = False
-    for duel in duels:
-        duel.forfeited_by_character_id = character_id
+    rescored: set[int] = set()
+    for duel, forfeiter_id in forfeits:
+        duel.forfeited_by_character_id = forfeiter_id
         duel.forfeited_at = now
         if duel.status == DuelStatus.pending:
             duel.status = DuelStatus.declined
             duel.declined_at = now
             continue
-        rescore = True
         challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
         challenger_character_id = (
             challenger_praxis.created_by_id if challenger_praxis else None
         )
         winner_id = (
             duel.opponent_character_id
-            if challenger_character_id == character_id
+            if challenger_character_id == forfeiter_id
             else challenger_character_id
         )
-        if winner_id is not None:
-            winner_ids.add(winner_id)
+        rescored |= {forfeiter_id} | ({winner_id} - {None})
         if duel.status == DuelStatus.active:
             await maybe_settle_duel(duel.challenger_praxis_id, session)
     await session.flush()
 
-    if rescore:
+    if rescored:
         era_row = await get_current_era_row(session)
         # Ascending: votes lock stats in id order; another order can deadlock.
-        for rescored_id in sorted(winner_ids | {character_id}):
+        for rescored_id in sorted(rescored):
             await recalculate_character_stats(
                 rescored_id, session, era, era_row=era_row
             )
         await session.flush()
+
+
+async def _challenge_unanswerable(
+    duel: Duel, session: AsyncSession, era: EraConfig
+) -> bool:
+    """A pending challenge the opponent could no longer accept (#3875)."""
+    opponent = await session.get(Character, duel.opponent_character_id)
+    task = await session.get(Task, duel.task_id)
+    if opponent is None or task is None:
+        return True
+    if task_status_closed(task, opponent, era):
+        return True
+    if await is_active_member_of_task(opponent, task, session, era):
+        return True
+    era_row = await get_current_era_row(session)
+    stats = await get_or_create_stats(session, opponent.id, era_row.id)
+    return not may_create_duel(stats.level, None, False, era)
+
+
+async def settle_lapsed_duels(
+    session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> None:
+    """Lazy-on-read timeouts, like the collab window (#3875). **This one writes.**
+
+    A pending challenge lapses to declined (unanswered for
+    ``duel_challenge_lapse_days``, or no longer acceptable); an accepted duel
+    whose opponent hasn't cast in ``duel_cast_lapse_days`` is their forfeit.
+    Rows lock in ascending id order (#3877).
+
+    ponytail: scans every live duel per call; add a deadline-column index or a
+    sweep job if the live-duel count ever stops being small.
+    """
+    live = (await session.execute(
+        select(Duel.id).where(
+            Duel.status.in_([DuelStatus.pending, DuelStatus.active])
+        )
+    )).scalars().all()
+    if not live:
+        return
+    duels = (await session.execute(
+        select(Duel)
+        .where(Duel.id.in_(live))
+        .order_by(Duel.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )).scalars().all()
+
+    now = datetime.now(timezone.utc)
+    forfeits: list[tuple[Duel, int]] = []
+    for duel in duels:
+        if duel.status == DuelStatus.pending:
+            lapsed = now >= duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
+            if lapsed or await _challenge_unanswerable(duel, session, era):
+                duel.status = DuelStatus.declined
+                duel.declined_at = now
+        elif duel.status == DuelStatus.active:
+            opponent_praxis = duel.opponent_praxis
+            if (
+                duel.accepted_at is not None
+                and now >= duel.accepted_at + timedelta(days=era.duel_cast_lapse_days)
+                and (opponent_praxis is None
+                     or opponent_praxis.status != PraxisStatus.submitted)
+            ):
+                forfeits.append((duel, duel.opponent_character_id))
+    await _forfeit_duels(forfeits, session, era)
+    await session.flush()
 
 
 async def get_duel(duel_id: int, session: AsyncSession, lock: bool = False) -> Duel:
@@ -153,6 +224,7 @@ async def get_duel_detail(
 ) -> DuelDetailOut:
     """Both sides' display info and live vote points, never a body (#308).
     ``viewer`` keys the per-side nudge state."""
+    await settle_lapsed_duels(session, era)
     duel = await get_duel(duel_id, session)
 
     challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
