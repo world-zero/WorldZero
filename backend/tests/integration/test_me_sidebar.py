@@ -83,6 +83,10 @@ async def test_sidebar_returns_all_three_panels(
     data = response.json()
 
     assert data["pending_requests_count"] == 1
+    counts = await activity_feed_service.pending_requests_counts(
+        [character.id], db_session
+    )
+    assert counts[character.id] == data["pending_requests_count"]
     # Membership, not equality: the panel also carries the era announcement.
     assert "global_task" in [item["type"] for item in data["global_activity"]]
     assert [praxis["id"] for praxis in data["active_praxes"]] == [mine.id]
