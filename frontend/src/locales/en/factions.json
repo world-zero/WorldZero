@@ -7,7 +7,7 @@
     "ephemerists": "The Ephemerists",
     "everymen": "Everymen",
     "singularity": "Singularity",
-    "albescent": "Albescent",
+    "albescent": "Chromagencia",
     "na": "Unaffiliated"
   },
   "descriptions": {
@@ -71,9 +71,9 @@
     },
     "letter": {
       "aria": "A correspondence",
-      "wordmark": "Albescent",
+      "wordmark": "Chromagencia",
       "headline": "You have been chosen",
-      "pitch": "Albescent is a secret society for those who have created meaningful contributions to all factions and transcended the factional competition. It's also a thank you to those who have played this game with dedication.",
+      "pitch": "Chromagencia is a secret society for those who have created meaningful contributions to all factions and transcended the factional competition. It's also a thank you to those who have played this game with dedication.",
       "perks": {
         "record": {
           "name": "Transcendence",

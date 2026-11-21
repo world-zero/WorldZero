@@ -108,7 +108,7 @@ describe("Albescent task detail — Default plus the light", () => {
     expect(text).toContain(BRIEF);
     // #1891: reads "Unaffiliated" to an uninvited viewer; only the word goes.
     expect(text).toContain(factionName("na"));
-    expect(text).not.toContain("Albescent");
+    expect(text).not.toContain("Chromagencia");
   });
 
   it("names the order once the viewer has been revealed to it (#1891)", () => {
@@ -116,7 +116,7 @@ describe("Albescent task detail — Default plus the light", () => {
     setAlbescentRevealed(true);
     try {
       const { text } = render(<AlbescentTaskDetail state={baseState()} />);
-      expect(text).toContain("Albescent");
+      expect(text).toContain("Chromagencia");
     } finally {
       setAlbescentRevealed(false);
     }
