@@ -22,6 +22,7 @@ from models.duel import Duel, DuelStatus
 from models.nudge import Nudge
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from schemas.nudge import NudgeOut, NudgeResultOut
+from services.block_service import blocked_by, refuse_if_blocked
 
 # A window, not a stored "next allowed at", so rows alone answer it.
 NUDGE_COOLDOWN = timedelta(days=1)
@@ -224,13 +225,21 @@ async def _send_nudges(
         # Duel sides are `solo` + a Duel row (ADR-0011); true solos 403 there.
         await _authorize_duel(praxis, from_character_id, session)
 
+    # A crew nudge skips whom the sender blocked; naming one is refused upstream.
+    blocked = (
+        await blocked_by(from_character_id, session)
+        if to_character_ids is None
+        else set()
+    )
     recipients = (
         to_character_ids
         if to_character_ids is not None
         else [
             character_id
             for character_id, member in members.items()
-            if not member.has_approved and character_id != from_character_id
+            if not member.has_approved
+            and character_id != from_character_id
+            and character_id not in blocked
         ]
     )
 
@@ -290,6 +299,7 @@ async def send_nudge(
 
     ``praxis_id`` is the praxis the **recipient** owes (the rival's side for a duel).
     """
+    await refuse_if_blocked(from_character_id, to_character_id, session)
     result = (
         await _send_nudges(praxis_id, from_character_id, [to_character_id], session)
     )[0]

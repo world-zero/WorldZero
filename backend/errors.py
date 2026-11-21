@@ -153,6 +153,9 @@ class ErrorCode(str, enum.Enum):
     #: ADR-0077: the block route's only refusal. Any other refusal would
     #: announce the block.
     block_self = "BLOCK_SELF"
+    #: 403 to the BLOCKER only (#3867): they may not invite, challenge or nudge
+    #: whom they blocked. The blocked party's requests are swallowed instead.
+    contact_blocked = "CONTACT_BLOCKED"
 
     # -- Activity feed ------------------------------------------------------
     feed_item_key_unknown = "FEED_ITEM_KEY_UNKNOWN"

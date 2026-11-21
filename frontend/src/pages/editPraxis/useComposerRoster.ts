@@ -21,6 +21,7 @@ import { nudgeTheCrew, sendNudge, type NudgeResultOut } from "../../api/nudge";
 import { listCharacters, type CharacterOut } from "../../api/characters";
 import { listRelationships } from "../../api/relationships";
 import { useAuth } from "../../auth/AuthContext";
+import { useBlockedIds } from "../../hooks/useBlockedIds";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
 
@@ -100,6 +101,7 @@ export function useComposerRoster(options: {
   const [inviting, setInviting] = useState(false);
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
   const [crewNudge, setCrewNudge] = useState<CrewNudgeResult | null>(null);
+  const blockedIds = useBlockedIds();
 
   useEffect(() => {
     if (!user?.character) return;
@@ -142,7 +144,8 @@ export function useComposerRoster(options: {
           (c) =>
             c.id !== user?.character?.id &&
             !memberIds.has(c.id) &&
-            !pendingInviteIds.has(c.id),
+            !pendingInviteIds.has(c.id) &&
+            !blockedIds.has(c.id),
         );
         // Duel mode: foes first (soft ordering).
         if (pickingOpponent && foeIds.size > 0) {
@@ -162,7 +165,14 @@ export function useComposerRoster(options: {
       cancelled = true;
     };
     // Narrowed to the id (#1390).
-  }, [inviteQuery, praxis, user?.character?.id, duelPaneOpen, foeIds]);
+  }, [
+    inviteQuery,
+    praxis,
+    user?.character?.id,
+    duelPaneOpen,
+    foeIds,
+    blockedIds,
+  ]);
 
   const clearPicker = useCallback(() => {
     setInviteQuery("");

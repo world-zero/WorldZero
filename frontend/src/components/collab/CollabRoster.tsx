@@ -26,6 +26,7 @@ import { deriveCollabGate } from './collabGate'
 import { RosterAvatar } from './RosterAvatar'
 import { buildRosterRows, isRowDone } from './rosterRows'
 import { formatClockTime } from '../../utils/dates'
+import { useBlockedIds } from '../../hooks/useBlockedIds'
 import type { RosterRow, RosterRowState } from './rosterRows'
 
 // Re-exported so existing importers keep this path.
@@ -182,6 +183,8 @@ export function CollabRoster({
 
   // Backend nudge rule (#1083): a member who has CAST may nudge one who has not.
   const canNudge = onNudge != null && viewerIsMember && gate.iCast
+  // The server refuses a nudge to whom the viewer blocked; a crew nudge skips them.
+  const blockedIds = useBlockedIds(canNudge)
 
   /**
    * How many one press would REACH: authorised, outstanding, and outside the
@@ -193,7 +196,8 @@ export function CollabRoster({
           (m) =>
             !m.has_approved &&
             m.character_id !== currentCharacterId &&
-            m.nudged_at == null,
+            m.nudged_at == null &&
+            !blockedIds.has(m.character_id),
         ).length
       : 0
   const showCrewNudge = reachableCrew >= 2
@@ -402,7 +406,11 @@ export function CollabRoster({
 
               {/* Disabled state is server-owned `nudged_at` (#1083), so a reload
                   can't un-nudge. */}
-              {canNudge && row.member != null && !isMe && !done && (
+              {canNudge &&
+                row.member != null &&
+                !isMe &&
+                !done &&
+                !blockedIds.has(row.member.character_id) && (
                 <button
                   type="button"
                   disabled={row.member.nudged_at != null}

@@ -75,7 +75,7 @@ describe('the confirm names the consequence, not "are you sure"', () => {
     expect(request.body.toLowerCase()).toContain('unblock')
     // A block is silent: copy must not promise the other party sees a label.
     expect(request.body).not.toContain(common.relationships.blocked)
-    expect(request.body.toLowerCase()).toContain('not told')
+    expect(request.body.toLowerCase()).toContain("aren't told")
   })
 
   it('carries no raw catalog keys', () => {

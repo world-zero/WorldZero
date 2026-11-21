@@ -281,10 +281,13 @@ export function normalizeFeedItem(
             : 'feed:row.action.commentedOnYours',
         ),
         badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
-        // Quoted like a taunt; the backend caps it at 140 chars.
-        headline: p.excerpt ?? null,
+        // Quoted like a taunt; the backend caps it at 140 chars. Censored
+        // (#3867): the server sent no excerpt, so the label stands in, unquoted.
+        headline: p.is_censored
+          ? i18n.t('common:relationships.censoredComment')
+          : (p.excerpt ?? null),
         headlineHref: commentTargetHref(p),
-        headlineQuoted: true,
+        headlineQuoted: !p.is_censored,
         points: null,
         level: null,
         actions: buildCommentActions(p, commentGate),

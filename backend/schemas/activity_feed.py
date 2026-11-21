@@ -170,6 +170,8 @@ class CommentPayload(FeedPayloadBase):
     praxis_id: Optional[int] = None
     task_id: Optional[int] = None
     excerpt: str
+    #: The viewer blocked the author (#3867); ``excerpt`` is then empty.
+    is_censored: bool = False
 
 
 class CollaboratorSubmittedPayload(FeedPayloadBase):

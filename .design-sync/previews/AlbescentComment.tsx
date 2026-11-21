@@ -21,6 +21,7 @@ const comment: CommentOut = {
   praxis_id: 501,
   task_id: null,
   admin_note: null,
+  is_censored: false,
   body_text:
     'Walked the long way round the reservoir for this one. The light was gone by the time I got the last frame, which turned out to be the frame.',
   is_edited: false,

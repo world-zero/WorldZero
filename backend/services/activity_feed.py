@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from sqlalchemy import (
     Select,
     Integer,
+    Label,
     String,
     and_,
     case,
@@ -41,7 +42,7 @@ from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
-from services.block_service import blocked_counterpart_ids
+from services.block_service import blocked_counterpart_ids, has_blocked
 from services.era_gates import meets_vote_level
 from services.meta_task import character_sees_metatasks
 from services.vote_tally import counted_votes
@@ -238,13 +239,11 @@ async def _get_related_ids(
 ) -> dict[RelationshipType, list[int]]:
     """The characters this one has declared, per edge type, in one round trip.
 
-    Minus blocks in either direction (ADR-0077), as a subquery because the
-    statement count is pinned (``test_activity_feed_query_count``).
+    Blocks don't subtract (#3867): you still see what a blocked player does.
     """
     result = await session.execute(
         select(Relationship.type, Relationship.to_character_id).where(
             Relationship.from_character_id == character_id,
-            Relationship.to_character_id.not_in(blocked_counterpart_ids(character_id)),
         )
     )
     related: dict[RelationshipType, list[int]] = {kind: [] for kind in RelationshipType}
@@ -640,6 +639,8 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
         .where(
             PraxisInvite.invitee_id == ctx.character_id,
             Praxis.type == PraxisType.collab,
+            # Swallowed (#3867): never shown, counted or declined.
+            ~has_blocked(ctx.character_id, PraxisInvite.inviter_id),
         )
     )
     if ctx.unanswered_requests_only:
@@ -694,7 +695,10 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
         .join(Praxis, Duel.challenger_praxis_id == Praxis.id)
         .join(Task, Duel.task_id == Task.id)
         .join(Character, Praxis.created_by_id == Character.id)
-        .where(Duel.opponent_character_id == ctx.character_id)
+        .where(
+            Duel.opponent_character_id == ctx.character_id,
+            ~has_blocked(ctx.character_id, Character.id),
+        )
     )
     if ctx.unanswered_requests_only:
         query = query.where(Duel.status == DuelStatus.pending)
@@ -1003,6 +1007,11 @@ _COMMENT_COLUMNS = (
 )
 
 
+def _censored(ctx: FeedContext) -> Label[bool]:
+    """Viewer blocked the author (#3867): the item keeps its shape, not its text."""
+    return has_blocked(ctx.character_id, Comment.created_by_id).label("is_censored")
+
+
 def _mentions_the_viewer(ctx: FeedContext):
     """Does this comment name the viewer? Correlated on ``Comment.id``.
 
@@ -1019,7 +1028,7 @@ def _mentions_the_viewer(ctx: FeedContext):
 def _comment_mentions_query(ctx: FeedContext) -> Select:
     """Comments that @mention the current character (visible, non-withdrawn)."""
     query = (
-        select(*_COMMENT_COLUMNS)
+        select(*_COMMENT_COLUMNS, _censored(ctx))
         .join(CommentMention, CommentMention.comment_id == Comment.id)
         .join(Character, Comment.created_by_id == Character.id)
         .where(
@@ -1044,7 +1053,7 @@ def _comments_on_mine_query(ctx: FeedContext) -> Select:
     signal) stands. Visibility mirrors the mention query.
     """
     query = (
-        select(*_COMMENT_COLUMNS)
+        select(*_COMMENT_COLUMNS, _censored(ctx))
         .join(Praxis, Comment.praxis_id == Praxis.id)
         .join(Character, Comment.created_by_id == Character.id)
         .where(
@@ -1081,7 +1090,10 @@ def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]
                 # Exactly one is set (DB CHECK, migration 0005).
                 praxis_id=row.praxis_id,
                 task_id=row.task_id,
-                excerpt=row.body_text[:COMMENT_EXCERPT_LENGTH],
+                excerpt=(
+                    "" if row.is_censored else row.body_text[:COMMENT_EXCERPT_LENGTH]
+                ),
+                is_censored=row.is_censored,
             ),
         )
 
@@ -1252,6 +1264,7 @@ def _nudge_query(ctx: FeedContext) -> Select:
         )
         .where(
             Nudge.to_character_id == ctx.character_id,
+            ~has_blocked(ctx.character_id, Nudge.from_character_id),
             PraxisMember.has_approved.is_(False),
             Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
         )

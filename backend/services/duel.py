@@ -26,6 +26,7 @@ from models.praxis import (
 )
 from models.task import Task, TaskStatus
 from schemas.duel import DuelDetailOut, DuelSideOut
+from services.block_service import refuse_if_blocked
 from services.backdoor import settle_closed_backdoors
 from services.character import is_playable
 from services.relationship_service import are_rivals
@@ -437,6 +438,7 @@ async def issue_duel_challenge(
         raise_coded(
             404, ErrorCode.character_not_found, "Opponent character not found."
         )
+    await refuse_if_blocked(challenger_character_id, opponent_character_id, session)
 
     # Pass `era`: the predicate has the Double Dipper carve-out (#1511).
     if await is_active_member_of_task(opponent, task, session, era):

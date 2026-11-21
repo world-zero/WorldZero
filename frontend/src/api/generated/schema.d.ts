@@ -2718,6 +2718,11 @@ export interface components {
             created_at: string;
             /** Id */
             id: number;
+            /**
+             * Is Censored
+             * @default false
+             */
+            is_censored: boolean;
             /** Is Edited */
             is_edited: boolean;
             /**
@@ -2750,6 +2755,11 @@ export interface components {
             comment_id: number;
             /** Excerpt */
             excerpt: string;
+            /**
+             * Is Censored
+             * @default false
+             */
+            is_censored: boolean;
             /** Praxis Id */
             praxis_id: number | null;
             /** Task Id */
@@ -3517,6 +3527,11 @@ export interface components {
             flags: components["schemas"]["FlagOut"][];
             /** Id */
             id: number;
+            /**
+             * Is Censored
+             * @default false
+             */
+            is_censored: boolean;
             /** Is Edited */
             is_edited: boolean;
             /**

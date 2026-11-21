@@ -281,35 +281,3 @@ async def test_a_block_silences_the_pair_in_both_directions(
 
     taunts = (await db_session.execute(select(TauntMessage))).scalars().all()
     assert list(taunts) == []
-
-
-@pytest.mark.asyncio
-async def test_a_blocked_counterpart_leaves_the_feed_sources(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    auth_headers: dict,
-    auth_headers2: dict,
-    active_task: Task,
-):
-    """A block outranks an active edge without deleting it."""
-    from services.activity_feed import _get_related_ids
-
-    await _declare(db_session, character, character2, RelationshipType.friend)
-    assert (await _get_related_ids(character.id, db_session))[
-        RelationshipType.friend
-    ] == [character2.id]
-
-    db_session.add(
-        CharacterBlock(
-            blocker_character_id=character2.id, blocked_character_id=character.id
-        )
-    )
-    await db_session.flush()
-
-    assert (await _get_related_ids(character.id, db_session))[
-        RelationshipType.friend
-    ] == []
-    surviving = (await db_session.execute(select(Relationship))).scalars().all()
-    assert len(list(surviving)) == 1
