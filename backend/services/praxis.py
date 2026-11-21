@@ -44,6 +44,7 @@ from schemas.praxis import (
     MediaUploadResultOut,
 )
 from services import collab_consensus
+from services.block_service import refuse_if_blocked
 from services.albescent_reveal import is_albescent_revealed
 from services.backdoor import may_use_door
 from services.character import is_playable
@@ -1106,6 +1107,7 @@ async def invite_to_praxis(
 
     if invitee_id == inviter_id:
         raise_coded(400, ErrorCode.invite_self, "Cannot invite yourself.")
+    await refuse_if_blocked(inviter_id, invitee_id, session)
     if invitee_id in {member.character_id for member in praxis.members}:
         raise_coded(
             409, ErrorCode.invite_already_member, "Player is already a member."

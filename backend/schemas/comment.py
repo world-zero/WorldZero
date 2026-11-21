@@ -64,3 +64,5 @@ class CommentOut(WireModel):
     mentions: list[CommentMentionOut] = []
     #: Set only when the viewer is the comment's author and it was removed.
     admin_note: Optional[str] = None
+    #: The viewer blocked the author (#3867): body and mentions are withheld.
+    is_censored: bool = False
