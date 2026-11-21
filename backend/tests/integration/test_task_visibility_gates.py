@@ -76,7 +76,7 @@ async def _ids(client: AsyncClient, query: str, headers: dict | None) -> set[int
     return {row["id"] for row in response.json()}
 
 
-#: Task Vision factions see the archive (and cheap pending tasks) from level 0. Found by the perk,
+#: Task Vision factions see archive + cheap pending from level 0. Found by the perk,
 #: not named (#2708); sentinels dropped since no character can join them.
 TASK_VISION_CASES = [
     (0, slug, True, True)
