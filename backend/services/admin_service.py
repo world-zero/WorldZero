@@ -741,6 +741,7 @@ async def admin_edit_task(
             select(PraxisMember.character_id)
             .where(PraxisMember.praxis_id.in_(doers))
             .distinct()
+            .order_by(PraxisMember.character_id)
         )
         for character_id in member_ids.all():
             await recalculate_character_stats(
