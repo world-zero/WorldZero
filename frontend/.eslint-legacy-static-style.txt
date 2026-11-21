@@ -74,7 +74,6 @@ src/components/feed/FeedCardEraAnnouncement.tsx
 src/components/feed/FeedCardInvitationLetter.tsx
 src/components/feed/FeedChassisBand.tsx
 src/components/feed/FeedDateDivider.tsx
-src/components/feed/FeedEmptyState.tsx
 src/components/feed/FeedItemSlot.tsx
 src/components/feed/FeedRowActions.tsx
 src/components/feed/FeedRowContent.tsx
