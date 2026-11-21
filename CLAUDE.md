@@ -114,7 +114,7 @@ turns what it labelled into PRs, and `/foreman:merge-bot` (Bot Bros) lands them 
 once Test is green on `main`; production takes a `v*` tag behind a required reviewer.
 
 ### Issue tracker
-Work lives in **GitHub Issues** on `pixieofhugs/WorldZeroPlayground`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
+Work lives in **GitHub Issues** on `world-zero/WorldZero`, managed via the `gh` CLI. External PRs are **not** a triage surface. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 Default vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
