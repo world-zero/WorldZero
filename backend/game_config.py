@@ -197,7 +197,7 @@ class EraConfig:
     duel_level_required: int
     # None = never lapses: a duel waits for the era close (ADR-0052).
     duel_challenge_lapse_days: int | None  # unanswered challenge → declined (#3875)
-    duel_cast_lapse_days: int | None       # accepted, never cast → forfeit (#3875)
+    duel_cast_lapse_days: int | None       # days after the first cast the other side forfeits
     rival_duel_bonus: int                 # flat, to a Rival duel's winner (ADR-0100)
     collaboration_level_required: int
     collab_auto_submit_days: int          # silence-is-consent days (ADR-0012)

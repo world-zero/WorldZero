@@ -2,6 +2,7 @@
 
 Seam: ``settle_lapsed_duels`` and the public praxis visibility it unblocks.
 """
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -10,6 +11,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, detail_code
+from eras.era_1 import ERA_1
 from game_config import CURRENT_ERA
 from models.character_stats import CharacterStats
 from models.duel import DuelStatus
@@ -20,22 +22,11 @@ from models.task import Task, TaskStatus
 from services import collab_consensus
 from services import praxis as praxis_service
 from services.auth import create_jwt
-from services.duel import settle_lapsed_duels
+from services.duel import get_duel_detail, settle_lapsed_duels
 from services.praxis_visibility import duel_side_hidden_condition
 from tests.integration.factories import make_duel
 
-DAYS = 7
-
-
-@pytest.fixture(autouse=True)
-def _lapsing_era():
-    """Era 1 never lapses (None); these tests pin a 7-day window and restore it."""
-    saved = (CURRENT_ERA.duel_challenge_lapse_days, CURRENT_ERA.duel_cast_lapse_days)
-    object.__setattr__(CURRENT_ERA, "duel_challenge_lapse_days", DAYS)
-    object.__setattr__(CURRENT_ERA, "duel_cast_lapse_days", DAYS)
-    yield
-    object.__setattr__(CURRENT_ERA, "duel_challenge_lapse_days", saved[0])
-    object.__setattr__(CURRENT_ERA, "duel_cast_lapse_days", saved[1])
+DAYS = CURRENT_ERA.duel_challenge_lapse_days
 
 
 async def _duel(db_session, era, label, *, status, age_days):
@@ -58,9 +49,9 @@ async def _duel(db_session, era, label, *, status, age_days):
         await db_session.execute(delete(Praxis).where(Praxis.id == orphan_id))
     else:
         duel.accepted_at = then
-    (await db_session.get(Praxis, duel.challenger_praxis_id)).status = (
-        PraxisStatus.submitted
-    )
+    challenger_praxis = await db_session.get(Praxis, duel.challenger_praxis_id)
+    challenger_praxis.status = PraxisStatus.submitted
+    challenger_praxis.submitted_at = then
     if duel.opponent_praxis_id is not None:
         (await db_session.get(Praxis, duel.opponent_praxis_id)).status = (
             PraxisStatus.in_progress
@@ -115,7 +106,7 @@ async def test_missing_cast_forfeits_the_opponent_and_settles(
     duel, challenger, opponent = await _duel(
         db_session, era, "lp2", status=DuelStatus.active,
         age_days=CURRENT_ERA.duel_cast_lapse_days + 1,
-    )
+    )  # the challenger cast first, at acceptance
 
     await settle_lapsed_duels(db_session, CURRENT_ERA)
 
@@ -327,11 +318,119 @@ async def test_a_none_window_never_lapses(
     duel, *_ = await _duel(
         db_session, era, f"nv{status.value}", status=status, age_days=400
     )
-    object.__setattr__(CURRENT_ERA, "duel_challenge_lapse_days", None)
-    object.__setattr__(CURRENT_ERA, "duel_cast_lapse_days", None)
+    never = replace(
+        CURRENT_ERA, duel_challenge_lapse_days=None, duel_cast_lapse_days=None
+    )
 
-    await settle_lapsed_duels(db_session, CURRENT_ERA)
+    await settle_lapsed_duels(db_session, never)
 
     await db_session.refresh(duel)
     assert duel.status == status
     assert duel.forfeited_by_character_id is None
+
+
+def test_era_1_duels_lapse_in_seven_days():
+    assert CURRENT_ERA.duel_challenge_lapse_days == ERA_1.duel_challenge_lapse_days
+    assert ERA_1.duel_challenge_lapse_days is not None
+    assert ERA_1.duel_cast_lapse_days is not None
+
+
+@pytest.mark.asyncio
+async def test_an_accepted_duel_nobody_cast_never_lapses(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, *_ = await _duel(
+        db_session, era, "cc1", status=DuelStatus.active,
+        age_days=CURRENT_ERA.duel_cast_lapse_days * 10,
+    )
+    (await db_session.get(Praxis, duel.challenger_praxis_id)).status = (
+        PraxisStatus.in_progress
+    )
+    await db_session.commit()
+
+    await settle_lapsed_duels(db_session, CURRENT_ERA)
+
+    await db_session.refresh(duel)
+    assert duel.status == DuelStatus.active
+    assert duel.forfeited_by_character_id is None
+
+
+@pytest.mark.asyncio
+async def test_the_clock_starts_at_the_first_cast_not_acceptance(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, *_ = await _duel(
+        db_session, era, "cc2", status=DuelStatus.active,
+        age_days=CURRENT_ERA.duel_cast_lapse_days * 10,
+    )
+    (await db_session.get(Praxis, duel.challenger_praxis_id)).submitted_at = (
+        datetime.now(timezone.utc) - timedelta(days=1)
+    )
+    await db_session.commit()
+
+    await settle_lapsed_duels(db_session, CURRENT_ERA)
+
+    await db_session.refresh(duel)
+    assert duel.forfeited_by_character_id is None
+
+
+@pytest.mark.asyncio
+async def test_opponent_casting_first_makes_the_challenger_forfeit(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, challenger, opponent = await _duel(
+        db_session, era, "cc3", status=DuelStatus.active,
+        age_days=CURRENT_ERA.duel_cast_lapse_days + 1,
+    )
+    (await db_session.get(Praxis, duel.challenger_praxis_id)).status = (
+        PraxisStatus.in_progress
+    )
+    cast = await db_session.get(Praxis, duel.opponent_praxis_id)
+    cast.status = PraxisStatus.submitted
+    cast.submitted_at = datetime.now(timezone.utc) - timedelta(
+        days=CURRENT_ERA.duel_cast_lapse_days + 1
+    )
+    await db_session.commit()
+
+    await settle_lapsed_duels(db_session, CURRENT_ERA)
+
+    await db_session.refresh(duel)
+    assert duel.forfeited_by_character_id == challenger.id
+    assert duel.status == DuelStatus.settled
+
+
+@pytest.mark.asyncio
+async def test_a_challenger_cast_while_pending_starts_its_clock_at_acceptance(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, _, opponent = await _duel(
+        db_session, era, "cc4", status=DuelStatus.active,
+        age_days=CURRENT_ERA.duel_cast_lapse_days + 1,
+    )
+    (await db_session.get(Praxis, duel.challenger_praxis_id)).submitted_at = (
+        datetime.now(timezone.utc) - timedelta(days=500)
+    )
+    await db_session.commit()
+
+    await settle_lapsed_duels(db_session, CURRENT_ERA)
+
+    await db_session.refresh(duel)
+    assert duel.forfeited_by_character_id == opponent.id
+
+
+@pytest.mark.asyncio
+async def test_detail_reports_the_clock_only_while_one_side_has_cast(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, *_ = await _duel(
+        db_session, era, "cc5", status=DuelStatus.active, age_days=1
+    )
+    detail = await get_duel_detail(duel.id, None, db_session, CURRENT_ERA)
+    assert detail.cast_clock_started_at is not None
+
+    (await db_session.get(Praxis, duel.challenger_praxis_id)).status = (
+        PraxisStatus.in_progress
+    )
+    await db_session.commit()
+    detail = await get_duel_detail(duel.id, None, db_session, CURRENT_ERA)
+    assert detail.cast_clock_started_at is None

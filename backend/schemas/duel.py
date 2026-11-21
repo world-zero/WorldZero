@@ -55,6 +55,8 @@ class DuelDetailOut(WireModel):
     task_id: int
     status: DuelStatus
     forfeited_by_character_id: Optional[int]
+    # When the not-yet-cast side's ``duel_cast_lapse_days`` began; NULL = no clock.
+    cast_clock_started_at: Optional[datetime] = None
     challenger: DuelSideOut
     opponent: DuelSideOut
     # Frozen at era close (ADR-0052); NULL while live. A resolved duel with a

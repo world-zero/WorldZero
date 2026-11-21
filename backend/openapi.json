@@ -2124,6 +2124,18 @@
       "DuelDetailOut": {
         "description": "Both sides' display info and tallies in one call.",
         "properties": {
+          "cast_clock_started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cast Clock Started At"
+          },
           "challenger": {
             "$ref": "#/components/schemas/DuelSideOut"
           },
@@ -2191,6 +2203,7 @@
           "task_id",
           "status",
           "forfeited_by_character_id",
+          "cast_clock_started_at",
           "challenger",
           "opponent",
           "winner_character_id",
@@ -4153,6 +4166,17 @@
             "title": "Collab Auto Submit Days",
             "type": "integer"
           },
+          "duel_cast_lapse_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duel Cast Lapse Days"
+          },
           "duel_challenge_lapse_days": {
             "anyOf": [
               {
@@ -4222,6 +4246,7 @@
           "duel_level_required",
           "collab_auto_submit_days",
           "duel_challenge_lapse_days",
+          "duel_cast_lapse_days",
           "pending_task_admin_review_hours",
           "backdoor_hint_stage_days",
           "level_to_see_pending_tasks",
