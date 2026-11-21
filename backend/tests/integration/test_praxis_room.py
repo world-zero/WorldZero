@@ -28,6 +28,7 @@ from pycrdt import (
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import services.collab_consensus as collab_consensus
 import services.praxis_room as praxis_room
 from config import settings
 from game_config import CURRENT_ERA
@@ -45,7 +46,6 @@ from models.praxis import (
 )
 from models.praxis_room import PraxisRoomUpdate
 from models.task import Task
-import services.collab_consensus as collab_consensus
 from services.auth import create_jwt
 from services.character_stats import recalculate_character_stats
 from services.praxis import (

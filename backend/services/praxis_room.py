@@ -608,7 +608,7 @@ class PraxisRoomServer(WebsocketServer):
     def absorb_on_commit(
         self, praxis_id: int, values: dict[str, str], session: AsyncSession
     ) -> None:
-        """Absorb only if the submit's transaction commits; a rollback un-proposes it."""
+        """Absorb only if the submit commits; a rollback un-proposes it."""
         name = room_name_for(praxis_id)
 
         def absorb() -> None:
