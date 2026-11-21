@@ -27,6 +27,7 @@ vi.mock('../../api/me', () => ({
   setActiveCharacter: async () => ({}),
 }))
 
+import ShellContent from '../layout/ShellContent'
 import ConfirmDialog from '../confirm/ConfirmDialog'
 import FeedBankFullModal from '../feed/FeedBankFullModal'
 import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
@@ -140,6 +141,13 @@ describe('sheet paint (rule bodies)', () => {
     const above = body(css, '.sheet-above-tabs > .sheet-panel')
     expect(above).toMatch(/bottom:\s*var\(--tab-bar-clearance\)/)
     expect(above).toMatch(/padding-bottom:\s*var\(--space-sm\)/)
+  })
+
+  it('pays the top inset once: the strip holds it, the phone region drops it while the strip is up', () => {
+    expect(body(css, 'html[data-mod-strip]')).toMatch(/--region-inset-top:\s*0px/)
+    expect(renderToStaticMarkup(<ShellContent isMobile sidebarCollapsed={false} onToggleSidebar={() => {}}>x</ShellContent>)).toContain(
+      'var(--space-lg) + var(--region-inset-top, env(safe-area-inset-top))',
+    )
   })
 
   it('pays the top inset on the mod strip', () => {
