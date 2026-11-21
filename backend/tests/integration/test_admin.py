@@ -130,6 +130,7 @@ async def test_admin_list_flagged_praxes(
         headers=auth_headers,
     )
     praxis_id = sub_resp.json()["id"]
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
 
     await client.post(
         f"/praxes/{praxis_id}/flag",
@@ -862,6 +863,7 @@ async def test_remove_flagged_hides_only_the_authors_flagged_posts(
             headers=auth_headers,
         )
         ids.append(created.json()["id"])
+        await client.post(f"/praxes/{ids[-1]}/submit", headers=auth_headers)
     for praxis_id in ids[:2]:
         flagged = await client.post(
             f"/praxes/{praxis_id}/flag", json={"reason": "spam"}, headers=auth_headers2

@@ -37,6 +37,7 @@ async def test_bulk_remove_carries_the_note_and_keeps_an_old_one_when_none(
             "/praxes", json={"task_id": task.id, "title": title}, headers=auth_headers
         )
         ids.append(created.json()["id"])
+        await client.post(f"/praxes/{ids[-1]}/submit", headers=auth_headers)
         await client.post(
             f"/praxes/{ids[-1]}/flag", json={"reason": "spam"}, headers=auth_headers2
         )

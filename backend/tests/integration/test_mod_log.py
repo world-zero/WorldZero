@@ -82,6 +82,9 @@ async def test_praxis_and_bulk_remove_each_log_once(
             "/praxes", json={"task_id": task.id, "title": title}, headers=auth_headers
         )
         ids.append(created.json()["id"])
+        # Drafts are private and cannot be flagged (#4017).
+        submitted = await client.post(f"/praxes/{ids[-1]}/submit", headers=auth_headers)
+        assert submitted.status_code == 200, submitted.text
     for praxis_id in ids[:2]:
         await client.post(
                 f"/praxes/{praxis_id}/flag",
