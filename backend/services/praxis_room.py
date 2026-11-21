@@ -20,7 +20,6 @@ ASGI WebSocket route in this app (``main.py``). Server-side rules:
    first.
 """
 
-import asyncio
 import base64
 import binascii
 import logging
@@ -80,6 +79,7 @@ _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
 # RFC 6455 policy violation = "do not come back"; the only close code sent.
 # ``roomReconnect.ts`` stops redialling on it (#1804).
 _WS_POLICY_VIOLATION = 1008
+_WS_TRY_AGAIN_LATER = 1013  # the client retries anything but 1008
 
 _DISCONNECTED: dict[str, Any] = {"type": "websocket.disconnect", "code": 1000}
 
@@ -508,11 +508,16 @@ class PraxisRoomServer(WebsocketServer):
         # The store observer is subscribed by a task; an update applied before it
         # runs reaches memory but never the rows. Caller holds ``_open_lock``.
         try:
-            await asyncio.wait_for(room.ydoc_observed.wait(), _OBSERVER_WAIT_SECONDS)
+            with anyio.fail_after(_OBSERVER_WAIT_SECONDS):
+                await room.ydoc_observed.wait()
         except TimeoutError:
-            # Evicted, or the half-open room would keep ``ready`` and make every
-            # later caller wait out the timeout again.
-            await self._evict_locked(name, room)
+            # Dropped, or the half-open room would keep ``ready`` and make every
+            # later caller wait out the timeout again. Sockets are not revoked:
+            # 1008 reads as the room ending, and this one is worth a retry.
+            flusher = self._flushers.pop(name, None)
+            if flusher is not None:
+                flusher.abandon()
+            await self.delete_room(room=room)
             raise_coded(
                 503, ErrorCode.praxis_room_unavailable, _ROOM_UNAVAILABLE
             )
@@ -846,12 +851,17 @@ class PraxisRoomASGIServer(ASGIServer):
             ),
         )
         self.rooms.register(connection)
+        unavailable = False
         try:
             await self.rooms.serve(connection.channel)
+        except* HTTPException:  # the task group wraps it
+            unavailable = True
         finally:
             await self.rooms.release(connection)
             if connection.revoked:
                 await self._refuse(send)
+            elif unavailable:
+                await self._refuse(send, _WS_TRY_AGAIN_LATER)
 
     async def _refuse(
         self,

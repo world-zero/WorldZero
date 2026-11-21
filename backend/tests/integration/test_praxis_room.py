@@ -1935,7 +1935,7 @@ async def test_a_submit_on_an_unopened_room_stores_its_text(
         if socket_holds_room:
             real = praxis_room.PostgresYStore.apply_updates
 
-            async def slow(self, doc):  # widens the open-vs-submit race
+            async def slow(self, doc):  # keeps the room loading while the submit lands
                 await asyncio.sleep(0.3)
                 return await real(self, doc)
 
@@ -1969,17 +1969,23 @@ async def test_a_submit_on_an_unopened_room_stores_its_text(
         assert (await _proposal(rooms, collab.id))[1] == proposed_at
 
 
+def shouldEndRoom(code: int) -> bool:
+    # Mirrors closeEndsRoom in frontend roomReconnect.ts: only 1008 ends a room.
+    return code == 1008
+
+
+async def _never_observes(self) -> None:
+    await asyncio.sleep(3600)
+
+
 async def test_a_room_that_never_observes_is_evicted_with_a_coded_error(
     db_session, collab, monkeypatch
 ) -> None:
-    async def never(awaitable, timeout):
-        awaitable.close()
-        raise TimeoutError
-
     async with running_rooms(db_session, monkeypatch) as rooms:
         name = room_name_for(collab.id)
         with monkeypatch.context() as patch:
-            patch.setattr(praxis_room.asyncio, "wait_for", never)
+            patch.setattr(praxis_room, "_OBSERVER_WAIT_SECONDS", 0.05)
+            patch.setattr(praxis_room.YRoom, "_watch_ready", _never_observes)
             with pytest.raises(HTTPException) as refused:
                 await rooms.server.get_room(name)
         assert refused.value.status_code == 503
@@ -1987,3 +1993,21 @@ async def test_a_room_that_never_observes_is_evicted_with_a_coded_error(
         assert name not in rooms.server.rooms
 
         assert (await rooms.server.get_room(name)).ready
+
+
+async def test_a_socket_whose_room_never_observes_is_told_to_retry(
+    db_session, collab, account, monkeypatch
+) -> None:
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        with monkeypatch.context() as patch:
+            patch.setattr(praxis_room, "_OBSERVER_WAIT_SECONDS", 0.05)
+            patch.setattr(praxis_room.YRoom, "_watch_ready", _never_observes)
+            socket = await rooms.open(collab.id, account.id)
+            await _wait_for(socket.closed.is_set, "the socket to be turned away")
+        assert socket.close_code == 1013
+        assert not shouldEndRoom(socket.close_code)
+        assert room_name_for(collab.id) not in rooms.server.rooms
+        assert not rooms.server._flushers
+
+        retry = await rooms.open(collab.id, account.id)
+        assert not retry.closed.is_set()
