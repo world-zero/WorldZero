@@ -64,6 +64,7 @@ async def get_game_config(
         rules_revision=await rules_revision(session),
         level_thresholds=list(CURRENT_ERA.level_thresholds),
         duel_level_required=CURRENT_ERA.duel_level_required,
+        vote_requires_received_vote=CURRENT_ERA.vote_requires_received_vote,
         collab_auto_submit_days=CURRENT_ERA.collab_auto_submit_days,
         duel_challenge_lapse_days=CURRENT_ERA.duel_challenge_lapse_days,
         duel_cast_lapse_days=CURRENT_ERA.duel_cast_lapse_days,

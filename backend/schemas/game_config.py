@@ -37,6 +37,8 @@ class GameConfigOut(WireModel):
     rules_revision: int
     level_thresholds: list[int]
     duel_level_required: int
+    # Dialed (#4056): copy may state the received-vote lock only when it is real.
+    vote_requires_received_vote: bool
     collab_auto_submit_days: int
     duel_challenge_lapse_days: int | None  # None = waits for the era close
     duel_cast_lapse_days: int | None  # days after the first cast; None = never

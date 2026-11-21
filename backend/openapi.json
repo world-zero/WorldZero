@@ -4236,6 +4236,10 @@
           "rules_revision": {
             "title": "Rules Revision",
             "type": "integer"
+          },
+          "vote_requires_received_vote": {
+            "title": "Vote Requires Received Vote",
+            "type": "boolean"
           }
         },
         "required": [
@@ -4244,6 +4248,7 @@
           "rules_revision",
           "level_thresholds",
           "duel_level_required",
+          "vote_requires_received_vote",
           "collab_auto_submit_days",
           "duel_challenge_lapse_days",
           "duel_cast_lapse_days",
