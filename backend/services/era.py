@@ -488,6 +488,7 @@ async def apply_era_reset(
             era_id=new_era_row.id,
             score=0 if era.reset_score else (prev_stats.score if prev_stats else 0),
             level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
+            era_peak_level=0 if era.reset_level else (prev_stats.level if prev_stats else 0),
             votes_spent_this_era=0 if era.reset_vote_budget else (
                 prev_stats.votes_spent_this_era if prev_stats else 0
             ),
