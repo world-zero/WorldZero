@@ -22,9 +22,9 @@ test.use({ storageState: { cookies: [], origins: [] }, hasTouch: true, isMobile:
 
 for (const [route, selectors] of CASES) {
   test(`${route} · tap targets`, async ({ page }) => {
-    const res = await page.request.post(`${API}/auth/dev-login?key=shots&name=Shot%20Bot&level=3&faction=snide&draft_praxis=true&received_vote=true&invited=coven`)
+    const res = await page.request.post(`${API}/auth/dev-login?key=taptargets&name=Shot%20Bot&level=3&faction=snide&draft_praxis=true&received_vote=true&invited=coven`)
     const draft = (await res.json()).draft_praxis_id
-    const [first] = await (await page.request.get(`${API}/praxes?limit=1`)).json()
+    const first = (await (await page.request.get(`${API}/praxes?limit=20`)).json()).find((p: { status: string }) => p.status === 'submitted')
     await page.goto(route.replace('{draft}', String(draft)).replace('{praxis}', String(first?.id)))
     await settle(page)
     for (const selector of selectors) {
