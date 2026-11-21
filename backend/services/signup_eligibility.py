@@ -61,9 +61,9 @@ def task_status_closed(task: Task, character: Character, era: EraConfig = CURREN
         return character.faction_slug not in era.allow_praxis_on_retired_task_factions
     if task.status == TaskStatus.pending:
         ceiling = era.pending_task_praxis_points_below
-        return character.faction_slug not in era.allow_praxis_on_pending_task_factions or (
-            ceiling is not None and task.point_value >= ceiling
-        )
+        if character.faction_slug not in era.allow_praxis_on_pending_task_factions:
+            return True
+        return ceiling is not None and task.point_value >= ceiling
     return False
 
 

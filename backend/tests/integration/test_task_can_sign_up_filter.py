@@ -436,8 +436,12 @@ async def test_pending_perk_ceiling_is_strictly_below_and_visible_at_level_zero(
     ripe = datetime.now(timezone.utc) - timedelta(
         hours=perk_era.pending_task_admin_review_hours + 1
     )
-    cheap = await _make_task(db_session, character, title="29", status=TaskStatus.pending)
-    edge = await _make_task(db_session, character, title="30", status=TaskStatus.pending)
+    cheap = await _make_task(
+        db_session, character, title="29", status=TaskStatus.pending
+    )
+    edge = await _make_task(
+        db_session, character, title="30", status=TaskStatus.pending
+    )
     cheap.point_value, edge.point_value = 29, 30
     cheap.created_at = edge.created_at = ripe
     await db_session.commit()
