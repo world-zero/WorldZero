@@ -6,7 +6,7 @@ import '../../i18n'
 import type { CharacterOut } from '../../api/auth'
 
 const noPortrait = {
-  id: 7, username: 'wren', display_name: 'Wren', faction_slug: 'coven', avatar_url: null,
+  id: 7, username: 'wren', display_name: 'Ash', faction_slug: 'coven', avatar_url: null,
 } as unknown as CharacterOut
 
 vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => 'mobile' }))
@@ -27,6 +27,8 @@ describe('CharacterSwitcherSheet avatar', () => {
         <CharacterSwitcherSheet open activeCharacterId={7} onClose={() => {}} />
       </MemoryRouter>,
     )
+    // 'W' is the username initial; the old fallback drew display_name's ('A').
     expect(await screen.findByText('W')).toBeTruthy()
+    expect(screen.queryByText('A')).toBeNull()
   })
 })
