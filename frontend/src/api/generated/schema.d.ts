@@ -3852,6 +3852,8 @@ export interface components {
             backdoor_hint_stage_days: number[];
             /** Collab Auto Submit Days */
             collab_auto_submit_days: number;
+            /** Duel Challenge Lapse Days */
+            duel_challenge_lapse_days: number;
             /** Duel Level Required */
             duel_level_required: number;
             /** Era Id */

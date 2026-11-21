@@ -65,6 +65,7 @@ async def get_game_config(
         level_thresholds=list(CURRENT_ERA.level_thresholds),
         duel_level_required=CURRENT_ERA.duel_level_required,
         collab_auto_submit_days=CURRENT_ERA.collab_auto_submit_days,
+        duel_challenge_lapse_days=CURRENT_ERA.duel_challenge_lapse_days,
         pending_task_admin_review_hours=CURRENT_ERA.pending_task_admin_review_hours,
         backdoor_hint_stage_days=list(CURRENT_ERA.backdoor_hint_stage_days),
         level_to_see_pending_tasks=CURRENT_ERA.level_to_see_pending_tasks,

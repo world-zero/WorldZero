@@ -2500,8 +2500,18 @@ async def test_change_type_rejects_duel_side(
     auth_headers2: dict,
     db_session: AsyncSession,
 ):
+    from sqlalchemy import update
+
+    from game_config import CURRENT_ERA
+    from models.character_stats import CharacterStats
     from models.duel import Duel, DuelStatus
 
+    # A challenge the opponent can't accept declines on read (#3875).
+    await db_session.execute(
+        update(CharacterStats)
+        .where(CharacterStats.character_id == character.id)
+        .values(level=CURRENT_ERA.duel_level_required)
+    )
     create = await client.post(
         "/praxes", json={"task_id": active_task.id, "type": "solo"}, headers=auth_headers2
     )
