@@ -70,31 +70,19 @@ async def forfeit_duels_for_character(
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-    *,
-    emit_taunts: bool = True,
 ) -> None:
-    """End every duel this character can no longer play (ADR-0011, #3766).
+    """Self-delete's duel forfeit (ADR-0011, #3766): forfeit, then re-score.
 
-    Shared by ban, suspension and self-delete. Settled and active duels are
-    forfeited (an active one settles once the honest side submits); pending
-    challenges are declined. Sticky: the first forfeit stands. When any duel
-    is newly forfeited, the forfeiter and every winner are re-scored.
+    Admin ban/suspend use ``forfeit_duels_collect`` plus
+    ``recalculate_for_account_votes`` instead, silently (no taunts). Sticky: the
+    first forfeit stands.
     """
-    await forfeit_duels_for_characters(
-        [character_id], session, era, emit_taunts=emit_taunts
+    await _rescore(
+        await forfeit_duels_collect([character_id], session),
+        session,
+        era,
+        emit_taunts=True,
     )
-
-
-async def forfeit_duels_for_characters(
-    character_ids: Iterable[int],
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-    *,
-    emit_taunts: bool = True,
-) -> None:
-    """Forfeit for several characters, re-scoring the union once, ascending."""
-    rescore_ids = await forfeit_duels_collect(character_ids, session)
-    await _rescore(rescore_ids, session, era, emit_taunts=emit_taunts)
 
 
 async def forfeit_duels_collect(

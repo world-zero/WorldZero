@@ -378,8 +378,8 @@ async def apply_ban(
 ) -> None:
     """Ban or un-ban a character on behalf of a moderator (#1577).
 
-    Banning forfeits the character's duels (ADR-0011 §Forfeit), via the same
-    function as self-delete and suspension. Un-banning does not un-forfeit.
+    Banning forfeits the character's duels (ADR-0011 §Forfeit), via
+    ``forfeit_duels_collect``. Un-banning does not un-forfeit.
 
     Un-banning refuses a departed life: ``departed_at`` is written only by the
     player's own ``soft_delete_character``; ``status`` alone can't tell them apart.
