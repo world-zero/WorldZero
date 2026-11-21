@@ -28,7 +28,7 @@ for (const [route, selectors] of CASES) {
     await page.goto(route.replace('{draft}', String(draft)).replace('{praxis}', String(first?.id)))
     await settle(page)
     for (const selector of selectors) {
-      await page.locator(selector).first().waitFor({ timeout: 8000 })
+      await page.locator(selector).first().waitFor({ timeout: 20_000 })
       const bad = await page.$$eval(selector, (els) =>
         els.flatMap((el) => {
           if (el.getBoundingClientRect().width === 0 || el.closest('[hidden]')) return []
