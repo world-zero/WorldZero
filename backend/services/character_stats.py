@@ -309,7 +309,7 @@ async def recalculate_members_stats(
     *,
     era_row: Era | None = None,
 ) -> None:
-    """Recalculate stats for every member of ``praxis`` and its duel opponents, then flush (#492).
+    """Recalculate every member of ``praxis`` and its duel opponents, then flush (#492).
 
     The member set is the unit of recalculation for anything that changes a
     praxis's worth: recalculating only ``created_by_id`` strands collab members
