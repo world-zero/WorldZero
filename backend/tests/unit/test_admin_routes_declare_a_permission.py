@@ -5,7 +5,7 @@ from routers import admin, copy
 PLAIN_ADMIN_ROUTES = {("GET", "/overview"), ("GET", "/mod-log")}
 OWNER_ROUTES = {
     ("GET", "/admins"),
-    ("POST", "/admins"),
+    ("PUT", "/admins/{username}/permissions/{permission}"),
     ("DELETE", "/admins/{username}"),
 }
 SECRET_ROUTES = {("POST", "/cli-token")}
