@@ -13,7 +13,9 @@ from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.character import Character
 from models.duel import Duel, DuelStatus
+from models.account import Account
 from models.era import Era
+from models.faction import Faction
 from models.invitation_letter import InvitationLetter
 from models.praxis import (
     Praxis,
@@ -28,6 +30,7 @@ from models.vote import Vote
 from services.activity_feed import REQUEST_ITEM_TYPES
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 from tests.integration.query_capture import capture_selects
+from tests.integration.test_multi_character import _add_character
 
 #: Any live faction other than the fixtures' default; derived, never named (#2708).
 OTHER_FACTION_SLUG = next(
@@ -114,6 +117,62 @@ async def test_sidebar_stays_inside_its_query_budget(
     assert response.status_code == 200
 
     assert len(selects) == SIDEBAR_SELECT_BUDGET, (
+        f"/me/sidebar ran {len(selects)} SELECTs"
+    )
+
+
+#: SELECTs for one rail read when the account has ONE sibling life holding a
+#: pending request (measured): 27 (the no-sibling read, which already pays the
+#: sibling-list query) + 6 `_build_fetch_context` round trips for the sibling
+#: + 1 UNION count = 34. Each further sibling adds 6.
+SIDEBAR_ONE_SIBLING_SELECT_BUDGET = 34
+
+
+@pytest.mark.asyncio
+async def test_sidebar_with_one_pending_sibling_stays_inside_its_budget(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    era: Era,
+    some_faction: Faction,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """The sibling pre-fetch costs per life (#3988); a second sibling adds more."""
+    collab = Praxis(
+        task_id=active_task.id,
+        created_by_id=character2.id,
+        type=PraxisType.collab,
+        status=PraxisStatus.in_progress,
+        title="Collab",
+        body_text="x",
+    )
+    db_session.add(collab)
+    await db_session.flush()
+    db_session.add(
+        PraxisInvite(
+            praxis_id=collab.id,
+            inviter_id=character2.id,
+            invitee_id=character.id,
+            status=PraxisInviteStatus.pending,
+        )
+    )
+    carried = await _add_character(
+        db_session, account, era, username="carriedlife", level=5
+    )
+    await db_session.commit()
+    await client.post(
+        "/me/active-character", json={"character_id": carried.id}, headers=auth_headers
+    )
+
+    with capture_selects() as selects:
+        response = await client.get("/me/sidebar", headers=auth_headers)
+    assert response.status_code == 200
+    assert len(response.json()["other_lives_pending"]) == 1
+
+    assert len(selects) == SIDEBAR_ONE_SIBLING_SELECT_BUDGET, (
         f"/me/sidebar ran {len(selects)} SELECTs"
     )
 
