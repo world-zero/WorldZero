@@ -305,8 +305,8 @@ async def test_batch_path_is_constant_query_count(
         event.remove(db_connection.sync_connection, "before_cursor_execute", record)
 
     assert large_query_count == small_query_count
-    # account roll-up, duel rows, live tally, previous era (#823), factions (#748)
-    assert small_query_count <= 5, statements
+    # account roll-up, duel rows, live tally, previous era, factions, stamps
+    assert small_query_count <= 6, statements
 
     assert small[one_challenger.id].is_duel_winner is True
     assert small[one_opponent.id].is_duel_winner is False

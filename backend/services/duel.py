@@ -300,6 +300,30 @@ async def get_duel_detail(
     )
     opponent_nudged_at = await _nudged_at(opponent_character, duel.opponent_praxis_id)
 
+    # Stakes shown use the faction held at the seal, as the score did (#3873).
+    stamped = {
+        (pid, cid): slug
+        for pid, cid, slug in (
+            await session.execute(
+                select(
+                    PraxisMember.praxis_id,
+                    PraxisMember.character_id,
+                    PraxisMember.faction_slug,
+                ).where(
+                    PraxisMember.praxis_id.in_(praxis_ids),
+                    PraxisMember.faction_slug.isnot(None),
+                )
+            )
+        ).all()
+    }
+
+    def _held(character: Optional[Character], praxis_id: Optional[int]) -> str:
+        if character is not None:
+            slug = stamped.get((praxis_id, character.id))
+            if slug:
+                return slug
+        return _faction_slug_of(character)
+
     def _side(
         character: Optional[Character],
         praxis: Optional[Praxis],
@@ -307,12 +331,18 @@ async def get_duel_detail(
         nudged_at: Optional[datetime] = None,
         *,
         opponent_character: Optional[Character] = None,
+        foe_praxis_id: Optional[int] = None,
     ) -> DuelSideOut:
         own_slug = _faction_slug_of(character)
-        foe_slug = _faction_slug_of(opponent_character)
 
         def _multiplier(is_winner: bool, is_tied: bool) -> float:
-            return compute_duel_multiplier(own_slug, foe_slug, is_winner, is_tied, era)
+            return compute_duel_multiplier(
+                _held(character, praxis_id),
+                _held(opponent_character, foe_praxis_id),
+                is_winner,
+                is_tied,
+                era,
+            )
 
         return DuelSideOut(
             praxis_id=praxis_id,
@@ -343,6 +373,7 @@ async def get_duel_detail(
             duel.challenger_praxis_id,
             challenger_nudged_at,
             opponent_character=opponent_character,
+            foe_praxis_id=duel.opponent_praxis_id,
         ),
         opponent=_side(
             opponent_character,
@@ -350,6 +381,7 @@ async def get_duel_detail(
             duel.opponent_praxis_id,
             opponent_nudged_at,
             opponent_character=challenger_character,
+            foe_praxis_id=duel.challenger_praxis_id,
         ),
         winner_character_id=duel.winner_character_id,
         challenger_final_points=duel.challenger_final_points,
