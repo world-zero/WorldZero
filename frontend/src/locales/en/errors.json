@@ -96,6 +96,7 @@
     "RELATIONSHIP_NOT_DECLARER": "Only the declaring party can delete a relationship.",
     "BLOCK_SELF": "You cannot block your own character.",
     "CONTACT_BLOCKED": "You blocked this player, so you can't reach them.",
+    "CONTACT_RATE_LIMITED": "Too many messages from your network. Try again later.",
 
     "FEED_ITEM_KEY_UNKNOWN": "Unknown feed item key: {{item_key}}",
     "FEED_ITEM_KEY_MALFORMED": "Malformed feed item key: {{item_key}}",

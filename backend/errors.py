@@ -156,6 +156,7 @@ class ErrorCode(str, enum.Enum):
     #: 403 to the BLOCKER only (#3867): they may not invite, challenge or nudge
     #: whom they blocked. The blocked party's requests are swallowed instead.
     contact_blocked = "CONTACT_BLOCKED"
+    contact_rate_limited = "CONTACT_RATE_LIMITED"
 
     # -- Activity feed ------------------------------------------------------
     feed_item_key_unknown = "FEED_ITEM_KEY_UNKNOWN"

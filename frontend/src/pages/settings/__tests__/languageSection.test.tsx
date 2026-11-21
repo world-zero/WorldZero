@@ -93,6 +93,7 @@ describe('the request body', () => {
       name: 'WZ Pilgrim',
       email: 'pilgrim@example.com',
       message: 'Language request: Portuguese (Brazil)',
+      website: '',
     })
   })
 

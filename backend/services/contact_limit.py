@@ -1,7 +1,9 @@
 import time
 from collections import defaultdict, deque
 
-from fastapi import HTTPException, Request
+from fastapi import Request
+
+from errors import ErrorCode, raise_coded
 
 CONTACT_LIMIT = 5
 CONTACT_WINDOW_SECONDS = 3600
@@ -29,9 +31,10 @@ def hit_contact_limit(request: Request) -> None:
         hits.popleft()
     if len(hits) >= CONTACT_LIMIT:
         retry = int(CONTACT_WINDOW_SECONDS - (now - hits[0])) + 1
-        raise HTTPException(
-            status_code=429,
-            detail="Too many messages. Try again later.",
+        raise_coded(
+            429,
+            ErrorCode.contact_rate_limited,
+            "Too many messages. Try again later.",
             headers={"Retry-After": str(retry)},
         )
     hits.append(now)
