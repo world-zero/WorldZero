@@ -167,11 +167,9 @@ async def get_praxis_settling_consensus(
     ``list_praxes``). Use where the answer depends on real published-ness. Call
     **once** per request, at the head; the seal makes repeats no-ops.
     """
-    # Lock order (#3655): praxis lock (0x5A1B, taken by the seal too) before any
-    # Duel FOR UPDATE, so the sweep runs last.
+    # #3655: praxis lock (0x5A1B) before any Duel FOR UPDATE; sweep last, reload.
     praxis = await get_praxis(praxis_id, session, lock=lock)
     await collab_consensus.settle_if_window_lapsed(praxis, session, era)
-    # The sweep drops eager loads on joined praxes: reload.
     if await _settle_lapsed_duels(session, era):
         praxis = await get_praxis(praxis_id, session, lock=lock, refresh=True)
     return praxis
@@ -439,7 +437,6 @@ async def list_praxes(
     # Ascending id: opposite-sorted lists must take the 0x5A1B locks in one order.
     for praxis in sorted(praxes, key=lambda p: p.id):
         await collab_consensus.settle_if_window_lapsed(praxis, session, era)
-    # After every 0x5A1B above: the duel sweep never precedes a praxis lock.
     if await _settle_lapsed_duels(session, era):
         # Visibility may have moved and eager loads were dropped: read the page again.
         result = await session.execute(
