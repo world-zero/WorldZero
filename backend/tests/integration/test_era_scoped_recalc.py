@@ -360,7 +360,9 @@ async def test_cast_response_tally_matches_the_closed_era_card(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("rescore_closed", [False, True])
 async def test_past_era_recalc_delivers_no_invitation(
+    rescore_closed: bool,
     db_session: AsyncSession,
     character: Character,
     character3: Character,
@@ -409,7 +411,9 @@ async def test_past_era_recalc_delivers_no_invitation(
             task=task,
         )
 
-    await recalculate_character_stats(character.id, db_session, era_row=prior_era)
+    await recalculate_character_stats(
+        character.id, db_session, era_row=prior_era, rescore_closed=rescore_closed
+    )
     await recalculate_character_stats(character3.id, db_session)
     await db_session.commit()
 

@@ -2,12 +2,10 @@
 
 import dataclasses
 from decimal import Decimal
-from typing import Any
 
 from fastapi import HTTPException
 from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
 
 from faction_slugs import CROSS_FACTION_SLUG, UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
@@ -57,26 +55,24 @@ _NON_INVITE_FACTION_SLUGS: frozenset[str] = frozenset(
 def _era_window_condition(
     era_row: Era,
     next_era_row: Era | None,
-    timestamp_column: InstrumentedAttribute[Any] = Praxis.submitted_at,
 ) -> ColumnElement[bool]:
-    """``[era.started_at, next_era.started_at)`` on ``timestamp_column`` (#1345).
+    """``[era.started_at, next_era.started_at)`` on ``Praxis.submitted_at`` (#1345).
 
     Same bound as :class:`services.praxis.PraxisEraScope` (#1362). A NULL
     timestamp counts for the live era only, so corrupt rows cannot zero a score
-    or score once per era. The vote budget passes ``Vote.created_at``: it is a
-    cast-time fact.
+    or score once per era.
 
     ponytail: seal time, as Praxis has no era column; collapses to
     ``Praxis.era_id == era_row.id`` once #1398 stamps it (votes still need this).
     """
     if next_era_row is None:
         return or_(
-            timestamp_column.is_(None),
-            timestamp_column >= era_row.started_at,
+            Praxis.submitted_at.is_(None),
+            Praxis.submitted_at >= era_row.started_at,
         )
     return and_(
-        timestamp_column >= era_row.started_at,
-        timestamp_column < next_era_row.started_at,
+        Praxis.submitted_at >= era_row.started_at,
+        Praxis.submitted_at < next_era_row.started_at,
     )
 
 
@@ -291,6 +287,10 @@ async def recalculate_character_stats(
             old_level=previous_level,
             new_level=stats.level,
         )
+
+    # A closed era is history: no new letters or stamps stamped with it.
+    if rescore_closed:
+        return
 
     await deliver_earned_invitations(
         author, all_praxes, contributions, session, era, era_row
