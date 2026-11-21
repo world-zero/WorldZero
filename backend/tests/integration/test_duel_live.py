@@ -178,7 +178,11 @@ async def test_push_goes_once_to_each_eligible_recipient(
     muted = await _subscribed(db_session, era, "dl4m", by_push=False)
     newbie = await _subscribed(db_session, era, "dl4n", peak_level=0)
     blocked = await _subscribed(db_session, era, "dl4k")
+    alt = await _subscribed(
+        db_session, era, "dl4alt", account=await _account_of(db_session, opponent)
+    )
     db_session.add_all([
+        _edge(alt, challenger),
         _edge(friend, challenger),
         _edge(both, challenger),
         _edge(both, opponent, RelationshipType.foe),
@@ -201,6 +205,38 @@ async def test_push_goes_once_to_each_eligible_recipient(
     )
     assert {p["tag"] for p in queued} == {f"duel_live:{duel.id}"}
     assert {p["url"] for p in queued} == {f"/duel/{duel.id}"}
+
+
+@pytest.mark.asyncio
+async def test_block_with_either_duelist_hides_the_row_from_an_edge_to_the_other(
+    db_session: AsyncSession, era
+):
+    duel, challenger, opponent = await _active_duel(db_session, era, "dl6")
+    viewer = await _viewer(db_session, era, "dl6viewer")
+    db_session.add_all([
+        _edge(viewer, opponent),
+        CharacterBlock(
+            blocker_character_id=viewer.id, blocked_character_id=challenger.id
+        ),
+    ])
+    await db_session.flush()
+    await _go_live(db_session, duel)
+    assert await _duel_live_items(db_session, viewer.id) == []
+
+
+@pytest.mark.asyncio
+async def test_a_duel_forfeited_after_going_live_still_shows(
+    db_session: AsyncSession, era
+):
+    duel, challenger, opponent = await _active_duel(db_session, era, "dl7")
+    viewer = await _viewer(db_session, era, "dl7viewer")
+    db_session.add(_edge(viewer, challenger))
+    await db_session.flush()
+    await _go_live(db_session, duel)
+    duel.forfeited_by_character_id = opponent.id
+    duel.forfeited_at = datetime.now(timezone.utc)
+    await db_session.flush()
+    assert len(await _duel_live_items(db_session, viewer.id)) == 1
 
 
 @pytest.mark.asyncio

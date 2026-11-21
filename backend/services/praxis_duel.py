@@ -1,7 +1,8 @@
 """Duel lookups keyed by ``praxis_id`` (ADR-0011).
 
-A leaf (reads only ``Duel``/``Praxis``) so ``services.praxis``, ``.vote`` and
-``.duel`` can import it without a cycle (``duel`` imports ``praxis``; #2872).
+Calls ``notify_duel_live`` (``services.push``), so it must not be imported by
+``services.push`` or anything push imports (``activity_feed``,
+``notification_prefs``, ...), or the cycle returns (#2872, #4019).
 """
 
 from datetime import datetime, timezone
