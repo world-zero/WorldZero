@@ -18,6 +18,7 @@ declare module 'i18next' {
       feed: typeof import('./locales/en/feed.json')
       forms: typeof import('./locales/en/forms.json')
       home: typeof import('./locales/en/home.json')
+      install: typeof import('./locales/en/install.json')
       onboarding: typeof import('./locales/en/onboarding.json')
       praxis: typeof import('./locales/en/praxis.json')
       progression: typeof import('./locales/en/progression.json')

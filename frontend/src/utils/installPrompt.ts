@@ -1,23 +1,4 @@
-/** The install nudge's platform facts, kept off the component so a test can drive them. */
-
-export const INSTALL_DISMISSED_KEY = 'wz:installNudgeDismissed'
-
-// ponytail: localStorage, not per account; no settings field exists. Move server-side if one lands.
-export function installDismissed(): boolean {
-  try {
-    return localStorage.getItem(INSTALL_DISMISSED_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-export function dismissInstall(): void {
-  try {
-    localStorage.setItem(INSTALL_DISMISSED_KEY, '1')
-  } catch {
-    // Refused storage: the card may return next load.
-  }
-}
+/** The install asks' platform facts, kept off the components so a test can drive them. */
 
 export interface InstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -45,6 +26,15 @@ export function subscribeInstallPrompt(l: () => void): () => void {
 }
 
 export const heldInstallPrompt = (): InstallPromptEvent | null => held
+
+/** Chrome lets a held event prompt once, accepted or not; spend it here so callers fall back to the ⋮ steps. */
+export function promptInstall(): Promise<void> {
+  const e = held
+  if (!e) return Promise.reject(new Error('no install prompt held'))
+  held = null
+  listeners.forEach((l) => l())
+  return e.prompt()
+}
 
 export function isStandalone(): boolean {
   return (

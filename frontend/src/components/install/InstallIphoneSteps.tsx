@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import './installNudge.css'
+import './installCopy'
+import './installSteps.css'
 
 const ICON = {
   width: 26,
@@ -12,7 +13,7 @@ const ICON = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
   'aria-hidden': true,
-  className: 'install-nudge-icon',
+  className: 'install-step-icon',
 }
 
 const ICONS: ReactNode[] = [
@@ -33,7 +34,7 @@ const ICONS: ReactNode[] = [
 
 /** Share, Add to Home Screen, Add. #3703's "Show me how" opens this too. */
 export default function InstallIphoneSteps() {
-  const { t } = useTranslation('home')
+  const { t } = useTranslation('install')
   return (
     <ol className="install-steps">
       {ICONS.map((icon, i) => (
@@ -46,7 +47,7 @@ export default function InstallIphoneSteps() {
           </span>
           {icon}
           <span className="install-step-text">
-            <Trans t={t} i18nKey={`install.steps.${i + 1}` as 'install.steps.1'} components={{ b: <strong /> }} />
+            <Trans t={t} i18nKey={`steps.iphone.${i + 1}` as 'steps.iphone.1'} components={{ b: <strong /> }} />
           </span>
         </li>
       ))}

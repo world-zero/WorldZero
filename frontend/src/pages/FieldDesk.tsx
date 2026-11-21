@@ -23,7 +23,7 @@ import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
 import { ErrorBanner } from "../components/ui/ErrorBanner";
 
-const InstallNudge = lazy(() => import('../components/install/InstallNudge'))
+const HomeInstallAsks = lazy(() => import('../components/install/HomeInstallAsks'))
 
 /**
  * FieldDesk — the authenticated home at `/` (#274). On a phone with a carried
@@ -95,7 +95,7 @@ export default function FieldDesk() {
     return (
       <>
         <Suspense fallback={null}>
-          <InstallNudge />
+          <HomeInstallAsks />
         </Suspense>
         <Skin state={homeState} />
       </>

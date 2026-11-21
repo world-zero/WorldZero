@@ -1,0 +1,110 @@
+{
+  "steps": {
+    "iphone": {
+      "1": "Tap <b>Share</b> in Safari's toolbar",
+      "2": "Scroll down, tap <b>Add to Home Screen</b>",
+      "3": "Tap <b>Add</b>, then open World Zero from its new icon"
+    },
+    "android": {
+      "1": "Tap <b>⋮</b> at the top right of Chrome",
+      "2": "Tap <b>Install app</b> (some phones say <b>Add to Home screen</b>)"
+    }
+  },
+  "settings": {
+    "action": "Put World Zero on your home screen",
+    "install": "Install it now"
+  },
+  "poke": "Poke the wisp",
+  "ask": {
+    "kicker": "Home screen",
+    "title": "Can I live on your home screen?",
+    "bodyIphone": "Right now I just hover near your browser tabs. Give me an icon and I'll keep a door open: one tap back in, the whole screen, and the only way an iPhone lets me <b>knock when someone rates your praxis</b>.",
+    "bodyAndroid": "Right now I just hover near your browser tabs. Give me an icon and I'll keep a door open: one tap back in, the whole screen, and a way to <b>knock when someone rates your praxis</b>.",
+    "say": "Psst. I don't live anywhere.",
+    "showMe": "Show me how",
+    "moveIn": "Move me in",
+    "notYet": "Not yet",
+    "footIphone": "Three taps in Safari. I'll do the pointing.",
+    "footChrome": "One tap. Chrome asks you to confirm.",
+    "footManual": "Two taps in Chrome's menu. I'll do the pointing."
+  },
+  "share": {
+    "kicker": "Step 1 of 3",
+    "title": "Tap Share",
+    "body": "The square with an arrow, in Safari's bar at the bottom. On newer iPhones it hides under <b>•••</b> first.",
+    "next": "Found it",
+    "say": "Down there! Follow the crumbs."
+  },
+  "add": {
+    "kicker": "Step 2 of 3",
+    "title": "Tap Add to Home Screen",
+    "body": "Scroll the share list down a little. It's the row with a plus in a square.",
+    "next": "Tapped it",
+    "row": "Add to Home Screen",
+    "say": "That one. With the plus."
+  },
+  "tapAdd": {
+    "kicker": "Step 3 of 3",
+    "title": "Tap Add",
+    "body": "Top right of the next screen. Then look for me on your home screen.",
+    "next": "Added",
+    "say": "Oh. Oh, it's roomy."
+  },
+  "done": {
+    "kicker": "See you there",
+    "title": "Open me from your home screen",
+    "body": "This browser tab can go. Next time, come in through my door.",
+    "next": "Done",
+    "restart": "It didn't work. Start over."
+  },
+  "manual": {
+    "kicker": "Two taps",
+    "title": "Tap ⋮, then Install app",
+    "body": "The three dots sit at the top right of Chrome. Some phones call it <b>Add to Home screen</b> instead.",
+    "next": "Done it",
+    "say": "Up there, in the corner!"
+  },
+  "installed": {
+    "kicker": "Moved in",
+    "title": "I'm the WØ on your home screen",
+    "body": "Chrome's own Install box comes up between the last screen and this one. Open me from the icon next time.",
+    "next": "Done"
+  },
+  "back": "Back",
+  "iconLabel": "World Zero",
+  "later": {
+    "title": "No rush.",
+    "body": "It waits in <b>Settings › Notifications</b>, whenever you want it.",
+    "say": "okay. i'll be around.",
+    "close": "Got it"
+  },
+  "reask": {
+    "kicker": "While you were out",
+    "title": "Someone rated your praxis. I knocked.",
+    "body": "Nobody heard. {{why}} Move me onto your home screen and next time <b>you'll hear it</b>.",
+    "whyIphone": "Safari won't open the door for me.",
+    "whyAndroid": "I can only knock from the home screen.",
+    "say": "Knock knock. Knock?",
+    "moveIn": "Move me in",
+    "stop": "Stop asking",
+    "foot": "Last time I'll ask. Promise.",
+    "stopTitle": "Got it. I won't ask again.",
+    "stopBody": "The door stays in <b>Settings › Notifications</b>.",
+    "stopSay": "okay. no more knocking.",
+    "close": "Close"
+  },
+  "welcome": {
+    "kicker": "Moved in",
+    "title": "Oh, it's NICE in here.",
+    "body": "Thanks for the room, {{name}}. Now I can actually knock: when someone rates your praxis, I'll <b>tap on the glass</b>.",
+    "bodyNoName": "Thanks for the room. Now I can actually knock: when someone rates your praxis, I'll <b>tap on the glass</b>.",
+    "yes": "Yes, knock",
+    "no": "Not now",
+    "foot": "Your phone asks right after this. That one is the real switch.",
+    "yesTitle": "Knock knock.",
+    "yesBody": "That's the sound. Only for things about you, like a rating or a letter.",
+    "noTitle": "Fair. I'll sit by the door.",
+    "noBody": "Knocks turn on any time in <b>Settings › Notifications</b>.",
+    "toDesk": "To my field desk"
+  }
+}
