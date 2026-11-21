@@ -42,6 +42,7 @@ describe('phone breakpoint', () => {
     expect(detailCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --detail-row-align`)
     expect(praxisCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --praxis-section-gap`)
     expect(layoutCss).toContain(`@media ${MOBILE_QUERY} {\n  .wz-settings-title {`)
+    expect(layoutCss).toContain('footer.site-footer {\n    padding-bottom: calc(var(--space-md) + var(--tab-bar-clearance)')
     expect(adminCss).toContain(`@media ${MOBILE_QUERY} {\n  .adm-levelup-frame {`)
   })
 })

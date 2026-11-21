@@ -14,10 +14,6 @@ export default function SiteFooter() {
   return (
     <footer
       className="relative site-footer font-body text-xs flex gap-6 flex-wrap max-w-5xl mx-auto w-full px-4 sm:px-6 py-4 mt-8"
-      style={{
-        color: 'var(--color-text-tertiary)',
-        zIndex: 5,
-      }}
     >
       <Link to="/about" className="hit-y hit-pad hover:underline">{t('footer.about')}</Link>
       <Link to="/contact" className="hit-y hit-pad hover:underline">{t('footer.contact')}</Link>

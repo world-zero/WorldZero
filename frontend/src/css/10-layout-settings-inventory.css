@@ -54,6 +54,10 @@
 .wz-settings-title {
   font-size: var(--text-display);
 }
+footer.site-footer {
+  color: var(--color-text-tertiary);
+  z-index: 5;
+}
 @media (max-width: 767px) and (pointer: coarse) {
   .wz-settings-title {
     font-size: var(--text-heading);
