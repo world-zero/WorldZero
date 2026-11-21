@@ -276,7 +276,9 @@ async def test_sibling_life_pending_requests_are_counted_across_lives(
     auth_headers: dict,
 ):
     """#3776: a collab invite to the life you aren't carrying still shows up."""
-    carried = await _add_character(db_session, account, era, username="carriedlife", level=5)
+    carried = await _add_character(
+        db_session, account, era, username="carriedlife", level=5
+    )
     collab = Praxis(
         task_id=active_task.id,
         created_by_id=character2.id,
@@ -318,7 +320,9 @@ async def test_sibling_life_pending_requests_are_counted_across_lives(
     ]
 
     await client.post(
-        "/me/active-character", json={"character_id": character.id}, headers=auth_headers
+        "/me/active-character",
+        json={"character_id": character.id},
+        headers=auth_headers,
     )
     sidebar = (await client.get("/me/sidebar", headers=auth_headers)).json()
     assert sidebar["pending_requests_count"] == 1
