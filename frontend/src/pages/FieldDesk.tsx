@@ -11,7 +11,6 @@ import CredentialCard from '../components/CredentialCard'
 import AlbescentInvitation from '../components/AlbescentInvitation'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
-import { mediaUrl } from '../utils/media'
 import FactionAvatar from '../components/avatar/FactionAvatar'
 import { resolveVariant } from '../utils/factionDispatch'
 import { formatPoints } from '../utils/points'
@@ -230,7 +229,7 @@ export function RosterLifeCard({
           factionSlug={life.faction_slug}
           level={life.level}
           score={life.score}
-          avatarUrl={mediaUrl(life.avatar_url)}
+          character={life}
           rotation={rotation}
         />
       </button>
