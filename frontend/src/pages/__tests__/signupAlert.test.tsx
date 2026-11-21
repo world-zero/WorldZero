@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** A failed card sign-up is announced: every surface that shows `signupMsg` wraps it in role=alert. Seam: the page + its banner. */
 import { render, screen, cleanup } from '@testing-library/react'
+import type { ReactElement } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -58,7 +59,7 @@ afterEach(() => {
   signup.msg = null
 })
 
-const SURFACES: [string, () => JSX.Element][] = [
+const SURFACES: [string, () => ReactElement][] = [
   ['Tasks', () => <Tasks />],
   ['FactionDetail', () => <FactionDetail slug="everymen" />],
   ['CharacterProfile', () => <CharacterProfile />],
