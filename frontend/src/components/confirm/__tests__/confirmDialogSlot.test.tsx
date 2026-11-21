@@ -2,6 +2,7 @@
  * #2161 — `confirmDisabled` and `children` on the shared dialog. Truly `disabled`,
  * not `aria-disabled`: a click that gets through here is unrecoverable.
  */
+import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
@@ -73,5 +74,20 @@ describe('the content slot', () => {
       />,
     )
     expect(bare).not.toContain('This ends')
+  })
+})
+
+describe('a tall sheet scrolls to its title (#3993)', () => {
+  it('scrolls the overlay and anchors by auto margin, not align-items', () => {
+    const html = markup()
+    expect(html).toContain('fixed inset-0 z-50 flex overflow-y-auto overscroll-contain')
+    expect(html).not.toContain('align-items')
+    expect(html).toContain('margin:var(--sheet-margin, auto)')
+  })
+
+  it('phones anchor the sheet to the bottom by top margin only', () => {
+    const css = readFileSync(new URL('../../../css/09-component-shared.css', import.meta.url), 'utf8')
+    expect(css).toContain('--sheet-margin: auto 0 0;')
+    expect(css).not.toContain('--sheet-align')
   })
 })

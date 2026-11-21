@@ -132,3 +132,27 @@ describe('CollabSuccess render', () => {
     expect(html).not.toContain('+')
   })
 })
+
+describe('a long crew on a short phone (#3993)', () => {
+  const html = renderToStaticMarkup(
+    <CollabSuccess
+      members={Array.from({ length: 8 }, (_, i) => member(i + 1, `Crew ${i + 1}`, true))}
+      currentCharacterId={1}
+      factionSlug="ua"
+      taskPointValue={10}
+      onContinue={() => {}}
+    />,
+  )
+
+  it('scrolls the overlay and centres the panel with auto margins', () => {
+    expect(html).toContain('overflow-y-auto overscroll-contain')
+    expect(html).not.toMatch(/fixed inset-0[^"]*items-center/)
+    expect(html).toContain('class="m-auto ')
+  })
+
+  it('never fixes the takeover height, so the panel can outgrow the screen', () => {
+    const panel = /class="m-auto [^"]*" style="([^"]*)"/.exec(html)?.[1] ?? ''
+    expect(panel).toContain('min-height:var(--takeover-height, auto)')
+    expect(panel).not.toMatch(/(^|;)height:/)
+  })
+})
