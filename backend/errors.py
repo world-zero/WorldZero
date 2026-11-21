@@ -211,9 +211,6 @@ class ErrorCode(str, enum.Enum):
     username_taken = "USERNAME_TAKEN"
 
     admin_unknown_username = "ADMIN_UNKNOWN_USERNAME"
-    #: The service is idempotent; this tells a typo from a real grant.
-    admin_already_admin = "ADMIN_ALREADY_ADMIN"
-    #: 404, the mirror of the grant's 409.
     admin_not_an_admin = "ADMIN_NOT_AN_ADMIN"
     #: The owner cannot be demoted from the page.
     admin_cannot_revoke_owner = "ADMIN_CANNOT_REVOKE_OWNER"

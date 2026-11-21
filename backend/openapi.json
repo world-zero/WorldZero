@@ -133,17 +133,17 @@
         "title": "ActivityFeedResponse",
         "type": "object"
       },
-      "AdminGrantIn": {
+      "AdminPermissionIn": {
         "properties": {
-          "username": {
-            "title": "Username",
-            "type": "string"
+          "on": {
+            "title": "On",
+            "type": "boolean"
           }
         },
         "required": [
-          "username"
+          "on"
         ],
-        "title": "AdminGrantIn",
+        "title": "AdminPermissionIn",
         "type": "object"
       },
       "AdminRow": {
@@ -157,6 +157,17 @@
             "title": "Is Owner",
             "type": "boolean"
           },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "suspended": {
+            "title": "Suspended",
+            "type": "boolean"
+          },
           "username": {
             "title": "Username",
             "type": "string"
@@ -165,7 +176,9 @@
         "required": [
           "username",
           "display_name",
-          "is_owner"
+          "is_owner",
+          "suspended",
+          "permissions"
         ],
         "title": "AdminRow",
         "type": "object"
@@ -5504,6 +5517,22 @@
         "title": "PendingTaskOut",
         "type": "object"
       },
+      "Permission": {
+        "description": "The nine admin checkboxes (ADR-0101); a tenth widens the CHECK.",
+        "enum": [
+          "handle_reports",
+          "ban_suspend",
+          "review_proposals",
+          "manage_tasks",
+          "delete_import_tasks",
+          "read_messages",
+          "edit_copy",
+          "small_world",
+          "roll_era"
+        ],
+        "title": "Permission",
+        "type": "string"
+      },
       "PickerPollOut": {
         "properties": {
           "state": {
@@ -8680,69 +8709,6 @@
         "tags": [
           "admin"
         ]
-      },
-      "post": {
-        "description": "Owner-only: grant admin to the account behind a character username.",
-        "operationId": "admin_grant_admin_admin_admins_post",
-        "parameters": [
-          {
-            "in": "cookie",
-            "name": "access_token",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Access Token"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminGrantIn"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminRow"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Admin Grant Admin",
-        "tags": [
-          "admin"
-        ]
       }
     },
     "/admin/admins/{username}": {
@@ -8797,6 +8763,81 @@
           }
         ],
         "summary": "Admin Revoke Admin",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/admins/{username}/permissions/{permission}": {
+      "put": {
+        "description": "Owner-only: tick or untick one box; the first tick makes an admin.",
+        "operationId": "admin_set_permission_admin_admins__username__permissions__permission__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "username",
+            "required": true,
+            "schema": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "permission",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Permission"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminPermissionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Set Permission",
         "tags": [
           "admin"
         ]
