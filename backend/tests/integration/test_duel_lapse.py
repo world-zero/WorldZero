@@ -17,6 +17,8 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus
+from services import collab_consensus
+from services import praxis as praxis_service
 from services.auth import create_jwt
 from services.duel import settle_lapsed_duels
 from services.praxis_visibility import duel_side_hidden_condition
@@ -222,3 +224,35 @@ async def test_a_sticky_forfeit_survives_the_lapse_sweep(
     await db_session.refresh(duel)
     assert duel.forfeited_by_character_id == challenger.id
     assert duel.forfeited_at == stamped
+
+
+@pytest.mark.asyncio
+async def test_the_duel_sweep_runs_after_the_collab_seal(
+    db_session: AsyncSession, era: Era, some_faction: Faction, monkeypatch
+):
+    """Lock order (#3655): 0x5A1B (seal) before any Duel FOR UPDATE."""
+    duel, *_ = await _duel(
+        db_session, era, "lp10", status=DuelStatus.pending, age_days=0
+    )
+    calls: list[str] = []
+    real_seal = collab_consensus.settle_if_window_lapsed
+    real_sweep = praxis_service._settle_lapsed_duels
+
+    async def seal(*args, **kwargs):
+        calls.append("seal")
+        return await real_seal(*args, **kwargs)
+
+    async def sweep(*args, **kwargs):
+        calls.append("sweep")
+        return await real_sweep(*args, **kwargs)
+
+    monkeypatch.setattr(collab_consensus, "settle_if_window_lapsed", seal)
+    monkeypatch.setattr(praxis_service, "_settle_lapsed_duels", sweep)
+
+    await praxis_service.get_praxis_settling_consensus(
+        duel.challenger_praxis_id, db_session, CURRENT_ERA
+    )
+    assert calls == ["seal", "sweep"]
+    calls.clear()
+    await praxis_service.list_praxes(db_session, era=CURRENT_ERA)
+    assert calls and calls[-1] == "sweep" and "sweep" not in calls[:-1]

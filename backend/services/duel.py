@@ -191,13 +191,14 @@ async def _challenge_unanswerable(
 
 async def settle_lapsed_duels(
     session: AsyncSession, era: EraConfig = CURRENT_ERA
-) -> None:
+) -> bool:
     """Lazy-on-read timeouts, like the collab window (#3875). **This one writes.**
 
     A pending challenge lapses to declined (unanswered for
     ``duel_challenge_lapse_days``, or no longer acceptable); an accepted duel
     whose opponent hasn't cast in ``duel_cast_lapse_days`` is their forfeit.
-    Rows lock in ascending id order (#3877).
+    Rows lock in ascending id order (#3877). Returns whether it loaded live duels
+    (that refreshes the praxes they join, so callers reload).
 
     ponytail: scans every live duel per call; add a deadline-column index or a
     sweep job if the live-duel count ever stops being small.
@@ -208,7 +209,7 @@ async def settle_lapsed_duels(
         )
     )).scalars().all()
     if not live:
-        return
+        return False
     duels = (await session.execute(
         select(Duel)
         .where(Duel.id.in_(live))
@@ -240,6 +241,7 @@ async def settle_lapsed_duels(
         await _apply_forfeits(forfeits, session), session, era, emit_taunts=False
     )
     await session.flush()
+    return True
 
 
 async def get_duel(duel_id: int, session: AsyncSession, lock: bool = False) -> Duel:
