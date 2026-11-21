@@ -8,7 +8,7 @@
  *     base × mult      the multiplier is a CHIP on the base line
  *     ──────────       the subtotal rule
  *       subtotal       base × mult
- *     + meta / + votes / + habit
+ *     + meta / + votes / + habit / + rival
  *     ━━━━━━━━━━       the separating rule (ADR-0076), gated on `base !== null`
  *     [total mark]     the faction's own device, last
  */
@@ -21,6 +21,8 @@ export interface ScoredPraxis {
   points_from_votes: number;
   /** UA's habit bonus — flat, outside the multiplier (#1617). */
   habit_bonus_points: number;
+  /** Rival duel winner's bonus — flat, outside the multiplier (ADR-0100). */
+  rival_bonus_points: number;
   score: number;
 }
 
@@ -37,6 +39,8 @@ interface ScoreBreakdown {
   meta: number | null;
   /** Null at `≤ 0` (#1617). Flat: never inside the multiplied group. */
   habit: number | null;
+  /** Null at `≤ 0`. Flat, like habit. */
+  rival: number | null;
   /** Null at `≤ 0` (ADR-0076: no votes reads as the total alone). */
   votes: number | null;
   /**
@@ -54,7 +58,7 @@ interface ScoreBreakdown {
  * something the total mark doesn't:
  *  - base: unless it would restate the total (#1131)
  *  - mult: `display_multiplier !== 1`
- *  - meta / habit (#1617) / votes (ADR-0076): `> 0`
+ *  - meta / habit (#1617) / rival / votes (ADR-0076): `> 0`
  *  - subtotal: `mult !== null` (#2634)
  *  - total: formatted by `formatPoints` at the render sites (#1866)
  *
@@ -65,9 +69,11 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
   const rawMult = praxis.display_multiplier ?? 1;
   const rawMeta = praxis.metatask_points ?? 0;
   const rawHabit = praxis.habit_bonus_points ?? 0;
+  const rawRival = praxis.rival_bonus_points ?? 0;
   const mult = rawMult !== 1 ? rawMult : null;
   const meta = rawMeta > 0 ? rawMeta : null;
   const habit = rawHabit > 0 ? rawHabit : null;
+  const rival = rawRival > 0 ? rawRival : null;
   const rawVotes = praxis.points_from_votes ?? 0;
   const votes = rawVotes > 0 ? rawVotes : null;
   const total = praxis.score ?? 0;
@@ -77,13 +83,14 @@ export function scoreBreakdown(praxis: ScoredPraxis): ScoreBreakdown {
    * legible rather than collapse into the total mark.
    */
   const baseRestatesTotal =
-    mult === null && meta === null && habit === null && votes === null && total === rawBase;
+    mult === null && meta === null && habit === null && rival === null && votes === null && total === rawBase;
 
   return {
     base: baseRestatesTotal ? null : rawBase,
     mult,
     meta,
     habit,
+    rival,
     votes,
     /* `rawBase` is safe: a live `mult` means `baseRestatesTotal` is false. */
     subtotal: mult !== null ? rawBase * mult : null,

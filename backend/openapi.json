@@ -3479,6 +3479,11 @@
             "title": "Points From Votes",
             "type": "integer"
           },
+          "rival_bonus_points": {
+            "default": 0,
+            "title": "Rival Bonus Points",
+            "type": "integer"
+          },
           "room_generation": {
             "title": "Room Generation",
             "type": "integer"
@@ -3606,6 +3611,7 @@
           "display_multiplier",
           "points_from_votes",
           "habit_bonus_points",
+          "rival_bonus_points",
           "voter_count",
           "is_top_for_task",
           "duel_id",
@@ -5866,6 +5872,11 @@
             "title": "Points From Votes",
             "type": "integer"
           },
+          "rival_bonus_points": {
+            "default": 0,
+            "title": "Rival Bonus Points",
+            "type": "integer"
+          },
           "score": {
             "title": "Score",
             "type": "number"
@@ -5991,6 +6002,7 @@
           "display_multiplier",
           "points_from_votes",
           "habit_bonus_points",
+          "rival_bonus_points",
           "voter_count",
           "is_top_for_task",
           "applied_metatasks",
@@ -6363,6 +6375,11 @@
             "title": "Points From Votes",
             "type": "integer"
           },
+          "rival_bonus_points": {
+            "default": 0,
+            "title": "Rival Bonus Points",
+            "type": "integer"
+          },
           "room_generation": {
             "title": "Room Generation",
             "type": "integer"
@@ -6490,6 +6507,7 @@
           "display_multiplier",
           "points_from_votes",
           "habit_bonus_points",
+          "rival_bonus_points",
           "voter_count",
           "is_top_for_task",
           "duel_id",

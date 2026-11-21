@@ -122,6 +122,7 @@ async def build_praxis_out(
         display_multiplier,
         points_from_votes,
         habit_bonus_points,
+        rival_bonus_points,
         score,
     ) = _resolve_card_scoring(contribution, task_point_value, tally.points_from_votes)
 
@@ -213,6 +214,7 @@ async def build_praxis_out(
         display_multiplier=display_multiplier,
         points_from_votes=points_from_votes,
         habit_bonus_points=habit_bonus_points,
+        rival_bonus_points=rival_bonus_points,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         duel_id=duel_id,
@@ -409,14 +411,15 @@ async def duel_opponents_for(
 
 def _resolve_card_scoring(
     contribution: Optional[Contribution], task_point_value: int, tally_votes_points: int
-) -> tuple[int, float, int, int, float]:
+) -> tuple[int, float, int, int, int, float]:
     """Resolve the score fields from a Contribution (ADR-0053).
 
     Returns ``(metatask_points, display_multiplier, points_from_votes,
-    habit_bonus_points, score)`` for every praxis type, upholding::
+    habit_bonus_points, rival_bonus_points, score)`` for every praxis type, upholding::
 
         score = task_point_value × display_multiplier
                 + metatask_points + points_from_votes + habit_bonus_points
+                + rival_bonus_points
 
     ``display_multiplier`` = faction × duel, base only (ADR-0086). A duel side's
     is live and provisional (ADR-0052).
@@ -428,6 +431,7 @@ def _resolve_card_scoring(
             1.0,
             tally_votes_points,
             0,
+            0,
             float(task_point_value + tally_votes_points),
         )
 
@@ -436,6 +440,7 @@ def _resolve_card_scoring(
         contribution.faction_multiplier * contribution.duel_multiplier,
         contribution.points_from_votes,
         contribution.habit_bonus_points,
+        contribution.rival_bonus_points,
         contribution.total,
     )
 
@@ -530,6 +535,7 @@ async def build_praxis_card_out(
         display_multiplier,
         points_from_votes,
         habit_bonus_points,
+        rival_bonus_points,
         score,
     ) = _resolve_card_scoring(contribution, task_point_value, tally.points_from_votes)
 
@@ -583,6 +589,7 @@ async def build_praxis_card_out(
         display_multiplier=display_multiplier,
         points_from_votes=points_from_votes,
         habit_bonus_points=habit_bonus_points,
+        rival_bonus_points=rival_bonus_points,
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         applied_metatasks=praxis_metatasks,

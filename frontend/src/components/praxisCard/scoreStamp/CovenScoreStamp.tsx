@@ -54,7 +54,7 @@ function value(strong: boolean, color: string): CSSProperties {
 export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, rival, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   /** One ✦-bulleted line of the working. */
@@ -131,6 +131,11 @@ export default function CovenScoreStamp({ praxis, showCrown }: ScoreStampProps) 
   if (habit !== null) {
     rows.push(
       row("habit", t("card.stamp.habit"), <span style={value(false, INK)}>+{habit}</span>, {}),
+    );
+  }
+  if (rival !== null) {
+    rows.push(
+      row("rival", t("card.stamp.rival"), <span style={value(false, INK)}>+{rival}</span>, {}),
     );
   }
 

@@ -467,6 +467,7 @@ function duelPraxis(taskSlug: string | null, overrides: Partial<PraxisOut> = {})
     duel_id: 44,
     flagged_at: null,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
     id: 601,
     invites: [],
     is_top_for_task: false,

@@ -63,6 +63,7 @@ const slipPraxis = {
   display_multiplier: 1,
   points_from_votes: 0,
   habit_bonus_points: 0,
+  rival_bonus_points: 0,
   score: 20,
 } as unknown as PraxisOut;
 

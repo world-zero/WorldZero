@@ -3662,6 +3662,11 @@ export interface components {
              * @default 0
              */
             points_from_votes: number;
+            /**
+             * Rival Bonus Points
+             * @default 0
+             */
+            rival_bonus_points: number;
             /** Room Generation */
             room_generation: number;
             /** Score */
@@ -4626,6 +4631,11 @@ export interface components {
              * @default 0
              */
             points_from_votes: number;
+            /**
+             * Rival Bonus Points
+             * @default 0
+             */
+            rival_bonus_points: number;
             /** Score */
             score: number;
             status: components["schemas"]["PraxisStatus"];
@@ -4827,6 +4837,11 @@ export interface components {
              * @default 0
              */
             points_from_votes: number;
+            /**
+             * Rival Bonus Points
+             * @default 0
+             */
+            rival_bonus_points: number;
             /** Room Generation */
             room_generation: number;
             /** Score */

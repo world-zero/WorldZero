@@ -9,6 +9,7 @@
  *     + meta
  *     + votes
  *     + habit
+ *     + rival
  *     ━━━━━━━━━━       the SEPARATING rule (ADR-0076), gated on `base !== null`
  *     [total mark]
  *
@@ -41,6 +42,7 @@ function praxis(overrides: Record<string, unknown>): PraxisCardOut {
     metatask_points: 0,
     points_from_votes: 0,
     habit_bonus_points: 0,
+    rival_bonus_points: 0,
     score: 12,
     ...overrides,
   } as PraxisCardOut
@@ -56,6 +58,7 @@ const LABEL = {
   meta: i18n.t('praxis:card.stamp.meta'),
   votes: i18n.t('praxis:card.stamp.votes'),
   habit: i18n.t('praxis:card.stamp.habit'),
+  rival: i18n.t('praxis:card.stamp.rival'),
 }
 
 /* ========================================================================== *
@@ -138,12 +141,13 @@ const EVERYTHING = praxis({
   metatask_points: 20,
   points_from_votes: 4,
   habit_bonus_points: 5,
-  score: 38.6,
+  rival_bonus_points: 5,
+  score: 43.6,
 })
 
 describe('every skin prints the working in ONE order (#2634)', () => {
   for (const { name, render, mark } of SKINS) {
-    it(`${name} reads base, subtotal, meta, votes, habit, then its mark`, () => {
+    it(`${name} reads base, subtotal, meta, votes, habit, rival, then its mark`, () => {
       const markup = renderToStaticMarkup(render(EVERYTHING))
       const flat = text(markup)
       const at = (needle: string) => {
@@ -157,6 +161,7 @@ describe('every skin prints the working in ONE order (#2634)', () => {
         ['meta', at(LABEL.meta)],
         ['votes', at(LABEL.votes)],
         ['habit', at(LABEL.habit)],
+        ['rival', at(LABEL.rival)],
       ]
       // Labels are positioned on TEXT: style tokens like `-row-base` would match markup.
       expect(markup.indexOf(mark), `${name} draws its own total mark`).toBeGreaterThan(-1)
@@ -188,8 +193,9 @@ describe('every skin prints the working in ONE order (#2634)', () => {
         flat.indexOf(LABEL.meta),
         flat.indexOf(LABEL.votes),
         flat.indexOf(LABEL.habit),
+        flat.indexOf(LABEL.rival),
       )
-      expect(flat.indexOf(formatPoints(38.6), lastLabel)).toBeGreaterThan(lastLabel)
+      expect(flat.indexOf(formatPoints(43.6), lastLabel)).toBeGreaterThan(lastLabel)
     })
 
     it(`${name} draws no chip, no rule and no subtotal without a multiplier`, () => {
@@ -202,6 +208,7 @@ describe('every skin prints the working in ONE order (#2634)', () => {
               metatask_points: 20,
               points_from_votes: 4,
               habit_bonus_points: 5,
+              rival_bonus_points: 0,
               score: 41,
             }),
           ),
@@ -240,6 +247,7 @@ describe('the ledger speaks in one register (#2634 ruling 4)', () => {
         'base',
         'meta',
         'habit',
+        'rival',
         'votes',
         'total',
         'subtotal',
@@ -257,6 +265,7 @@ describe('the ledger speaks in one register (#2634 ruling 4)', () => {
       const flat = text(renderToStaticMarkup(render(EVERYTHING)))
       expect(flat).toContain(LABEL.votes)
       expect(flat).toContain(LABEL.habit)
+      expect(flat).toContain(LABEL.rival)
       expect(flat, 'no prose survivor').not.toContain('from votes')
       expect(flat, 'no prose survivor').not.toContain('habit bonus')
       expect(flat, 'and no untranslated key').not.toContain('card.stamp.')

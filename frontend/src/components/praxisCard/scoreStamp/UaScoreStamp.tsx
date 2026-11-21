@@ -61,7 +61,7 @@ function MultChip({ children }: { children: ReactNode }) {
 export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
   const { t } = useTranslation("praxis");
   if (praxis.score === null || praxis.score === undefined) return null;
-  const { base, mult, meta, habit, votes, subtotal, total } = scoreBreakdown(praxis);
+  const { base, mult, meta, habit, rival, votes, subtotal, total } = scoreBreakdown(praxis);
   const crowned = praxis.is_top_for_task && showCrown !== false;
 
   return (
@@ -194,6 +194,19 @@ export default function UaScoreStamp({ praxis, showCrown }: ScoreStampProps) {
               }}
             >
               + {habit} {t("card.stamp.habit")}
+            </div>
+          )}
+
+          {rival !== null && (
+            <div
+              style={{
+                ...workingStyle,
+                color: "var(--leaf-score-stamp-accent)",
+                // eslint-disable-next-line local/no-raw-style-values -- ornament: the plate's lead between working lines.
+                marginTop: 3,
+              }}
+            >
+              + {rival} {t("card.stamp.rival")}
             </div>
           )}
         </div>

@@ -301,6 +301,7 @@ describe("the composer's shared seams (#1828)", () => {
         display_multiplier: 1,
         points_from_votes: 0,
         habit_bonus_points: 0,
+        rival_bonus_points: 0,
         is_top_for_task: false,
         ...over,
       } as unknown as PraxisOut,
