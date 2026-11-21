@@ -108,7 +108,7 @@
   },
   "propose": {
     "pageTitle": "Propose a Task",
-    "loginRequired": "You need to be logged in to propose a task.",
+    "loginRequired": "You need to be signed in to propose a task.",
     "levelGate": "You are not ready. But I believe you will be someday"
   },
   "startHere": {

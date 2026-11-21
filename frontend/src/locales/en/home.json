@@ -17,7 +17,7 @@
     "once": "We only ask once. Not now means not now, forever."
   },
   "signup": {
-    "error": "Could not sign up — make sure you are logged in."
+    "error": "Could not sign up — make sure you are signed in."
   },
   "signedIn": {
     "continue": {
