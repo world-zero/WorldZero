@@ -52,7 +52,7 @@ from services.character_stats import (
     recalculate_for_account_votes,
 )
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
-from services.duel import forfeit_duels_for_character
+from services.duel import forfeit_duels_for_character, forfeit_duels_for_characters
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.era import (
@@ -396,7 +396,9 @@ async def apply_ban(
 
     if banned:
         character.status = CharacterStatus.banned
-        await forfeit_duels_for_character(character.id, session, era)
+        await forfeit_duels_for_character(
+            character.id, session, era, emit_taunts=False
+        )
     else:
         character.status = CharacterStatus.active
 
@@ -587,10 +589,12 @@ async def suspend_account(
     await session.flush()
     if suspended:
         # Same as a ban; lifting the suspension does not undo it (#3766).
-        for character_id in (await session.scalars(
+        character_ids = (await session.scalars(
             select(Character.id).where(Character.account_id == account_id)
-        )).all():
-            await forfeit_duels_for_character(character_id, session, era)
+        )).all()
+        await forfeit_duels_for_characters(
+            character_ids, session, era, emit_taunts=False
+        )
     await log_mod_action(
         session,
         actor_id,
@@ -739,7 +743,9 @@ async def admin_edit_task(
             .distinct()
         )
         for character_id in member_ids.all():
-            await recalculate_character_stats(character_id, session, era)
+            await recalculate_character_stats(
+                character_id, session, era, emit_taunts=False
+            )
         await session.flush()
     await log_mod_action(session, actor_id, "task_edit", "task", task_id)
     await session.refresh(task)
