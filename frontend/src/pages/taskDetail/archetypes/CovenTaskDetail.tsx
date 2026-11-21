@@ -520,7 +520,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: desktop ? "var(--space-xl)" : "var(--space-lg)",
+          gap: "var(--detail-panel-space, var(--space-xl))",
           flexWrap: "wrap",
         }}
       >
@@ -540,9 +540,9 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   const brief = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--detail-section-gap, var(--space-2xl))" }}>
       {sectionHead(t("detail.brief.heading"))}
-      <div style={{ ...panel, padding: desktop ? "var(--space-xl)" : "var(--space-lg)" }}>
+      <div style={{ ...panel, padding: "var(--detail-panel-space, var(--space-xl))" }}>
         {task.description && (
           <p
             className="content-text"
@@ -565,7 +565,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   const gallery = (
-    <section style={{ marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)" }}>
+    <section style={{ marginBottom: "var(--detail-section-gap, var(--space-2xl))" }}>
       <div
         style={{
           display: "flex",
@@ -690,7 +690,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           margin: "0 auto",
           background: SLIP_SHEET,
           borderRadius: 18,
-          padding: desktop ? "var(--space-2xl)" : "var(--space-lg)",
+          padding: "var(--detail-pad, var(--space-2xl))",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -700,10 +700,10 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             position: "relative",
             zIndex: 1,
             display: "flex",
-            flexDirection: desktop ? "row" : "column",
-            alignItems: desktop ? "flex-start" : "stretch",
+            flexDirection: "var(--detail-row-direction, row)" as "row",
+            alignItems: "var(--detail-row-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: desktop ? "var(--space-2xl)" : "var(--space-xl)",
+            marginBottom: "var(--detail-section-gap, var(--space-2xl))",
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -715,7 +715,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             style={{
               ...actionColumnSize({ hasAction, width: size.plate }),
               maxWidth: "100%",
-              marginTop: desktop ? "var(--space-sm)" : 0,
+              marginTop: "var(--detail-action-top, var(--space-sm))",
             }}
           >
             {actionPlate}
