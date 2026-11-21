@@ -278,11 +278,13 @@ export function castClockLine(
   now: number = Date.now(),
 ): string | null {
   if (!duel.cast_clock_started_at || days == null) return null
-  if (me.is_submitted) return t('duelClock.theyHave', { name: foe.display_name, count: days })
   const left = Math.ceil(
     (Date.parse(duel.cast_clock_started_at) + days * 86_400_000 - now) / 86_400_000,
   )
-  return t('duelClock.youHave', { name: foe.display_name, count: Math.max(1, left) })
+  // Run out but not yet swept: say nothing rather than "0 days".
+  if (left < 1) return null
+  const key = me.is_submitted ? 'duelClock.theyHave' : 'duelClock.youHave'
+  return t(key, { name: foe.display_name, count: left })
 }
 
 /** The mode branch, once for every skin; a hook because the cost needs stakes. */
