@@ -16,7 +16,7 @@
     "emptyPendingHint": "A new proposal is admin-only for its first {{hours}} hours, so an admin can edit or reject it first. Anything newer than that isn't here yet.",
     "loadMore": "Load more",
     "filter": {
-      "searchPlaceholder": "Search titles, descriptions or authors…",
+      "searchPlaceholder": "Search tasks or authors…",
       "searchLabel": "Search tasks"
     }
   },
@@ -36,6 +36,7 @@
   },
   "detail": {
     "fetchError": "<0>Try refreshing.</0>",
+    "loadError": "Couldn't load this task.",
     "notFound": "Task not found.",
     "pageTitle": "Task",
     "levelJump": {
@@ -95,6 +96,15 @@
     "comments": {
       "heading": "Discussion"
     }
+  },
+  "proposalCard": {
+    "pendingReview": "Pending review",
+    "edit": "Edit",
+    "withdraw": "Withdraw",
+    "withdrawTitle": "Withdraw this proposal?",
+    "withdrawBody": "It leaves your Proposed tasks. A moderator can still restore it.",
+    "withdrawConfirm": "Withdraw it",
+    "withdrawFailed": "Couldn't withdraw that proposal."
   },
   "propose": {
     "pageTitle": "Propose a Task",

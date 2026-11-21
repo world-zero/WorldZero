@@ -70,7 +70,7 @@ offsite_push() {
          AWS_DEFAULT_REGION=$WZ_OFFSITE_REGION
   day=$(date +%F)
   for f in "$DB_FILE" "$MEDIA_FILE"; do
-    echo "==> off-box -> $WZ_OFFSITE_BUCKET/$ENVIRONMENT/$day/$(basename "$f")"
+    echo "==> off-box -> $WZ_OFFSITE_BUCKET/$ENVIRONMENT/$day/$(basename "$f")" >&3
     docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION \
       -v "$DEST:/data:ro" "$AWS_IMAGE" s3 cp --endpoint-url "$WZ_OFFSITE_ENDPOINT" \
       "/data/$(basename "$f")" "s3://$WZ_OFFSITE_BUCKET/$ENVIRONMENT/$day/$(basename "$f")" || return 1
@@ -78,6 +78,8 @@ offsite_push() {
 }
 
 if [ "$ENVIRONMENT" = prod ]; then
+  # fd 3 keeps the progress echo out of $err, whose line 2 wz-backup-pull reports.
+  exec 3>&1
   if err=$(offsite_push 2>&1); then
     echo "$err"
     rm -f "$DEST/offsite-failed.txt"

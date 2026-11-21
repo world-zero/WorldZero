@@ -42,6 +42,10 @@ async function openHide(status: string) {
   return (await screen.findByLabelText("Reason the author sees")) as HTMLTextAreaElement;
 }
 
+// The row's setState after moderate must land before the test ends, or it fires into a torn-down jsdom.
+const settled = () =>
+  waitFor(() => expect(screen.queryByLabelText("Reason the author sees")).toBeNull());
+
 beforeEach(() => {
   vi.clearAllMocks();
   window.matchMedia = ((query: string) => ({
@@ -61,6 +65,7 @@ describe("Praxis tab Hide note", () => {
       expect(api.moderate).toHaveBeenCalledWith(7, "hidden", "Not your photo."),
     );
     expect(api.get).not.toHaveBeenCalled();
+    await settled();
   });
 
   it("keeps a Not-met praxis's note unless edited", async () => {
@@ -71,5 +76,38 @@ describe("Praxis tab Hide note", () => {
     await waitFor(() =>
       expect(api.moderate).toHaveBeenCalledWith(7, "hidden", "No proof."),
     );
+    await settled();
+  });
+
+  it("prefills Fail on a Hidden praxis so the Hide reason survives", async () => {
+    api.get.mockResolvedValue({ admin_note: "Not your photo." });
+    api.list.mockResolvedValue([row("hidden")]);
+    render(
+      <MemoryRouter>
+        <PraxisTab />
+      </MemoryRouter>,
+    );
+    await screen.findAllByRole("button", { name: "restore" });
+    fireEvent.click(screen.getAllByRole("button", { name: "fail" }).at(-1)!);
+    const box = (await screen.findByRole("textbox", { name: /reason/i })) as HTMLTextAreaElement;
+    await waitFor(() => expect(box.value).toBe("Not your photo."));
+  });
+
+  it("drops a slow prefill from an earlier row", async () => {
+    let late: (v: { admin_note: string }) => void = () => {};
+    api.get.mockReturnValueOnce(new Promise((r) => (late = r)));
+    api.list.mockResolvedValue([row("failed"), { ...row("visible"), id: 8, title: "Other" }]);
+    render(
+      <MemoryRouter>
+        <PraxisTab />
+      </MemoryRouter>,
+    );
+    const hides = await screen.findAllByRole("button", { name: "hide" });
+    fireEvent.click(hides[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: "hide" }).at(-1)!);
+    late({ admin_note: "A's note" });
+    await new Promise((r) => setTimeout(r, 0));
+    const box = (await screen.findByLabelText("Reason the author sees")) as HTMLTextAreaElement;
+    expect(box.value).toBe("");
   });
 });

@@ -11,7 +11,7 @@ import CredentialCard from '../components/CredentialCard'
 import AlbescentInvitation from '../components/AlbescentInvitation'
 import PraxisCard from '../components/praxisCard/PraxisCard'
 import TaskCard from '../components/taskCard/TaskCard'
-import { mediaUrl } from '../utils/media'
+import FactionAvatar from '../components/avatar/FactionAvatar'
 import { resolveVariant } from '../utils/factionDispatch'
 import { formatPoints } from '../utils/points'
 import { praxisModeLabel } from '../utils/praxis'
@@ -21,6 +21,7 @@ import { useTaskSignup } from '../hooks/useTaskSignup'
 import { useSidebarPanels } from '../hooks/useSidebarPanels'
 import { rosterOffersAChoice } from '../hooks/useRosterChoice'
 import { useFieldDeskHome } from './fieldDesk/useFieldDeskHome'
+import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 const InstallNudge = lazy(() => import('../components/install/InstallNudge'))
 
@@ -108,11 +109,7 @@ export default function FieldDesk() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 'var(--space-sm)' }}>
           {active && lives !== null && (
             <div style={pillStyle}>
-              {active.avatar_url ? (
-                <img src={mediaUrl(active.avatar_url)} alt={active.display_name} style={pillAvatar} />
-              ) : (
-                <span style={{ ...pillAvatar, display: 'inline-block' }} />
-              )}
+              <FactionAvatar character={active} size={22} badge={false} />
               <span style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text-secondary)' }}>
                 @{active.username} ·{' '}
                 <b style={{ color: 'var(--color-text-primary)' }}>
@@ -170,9 +167,7 @@ export default function FieldDesk() {
       {/* "What do I do now?" (#1557) */}
       <div className="flex flex-col" style={{ gap: 'var(--space-2xl)', marginTop: 'var(--space-4xl)' }}>
         {signupMsg && (
-          <p className="font-body content-text border-2 danger-edge danger-text px-3 py-2">
-            {signupMsg}
-          </p>
+          <ErrorBanner message={signupMsg} />
         )}
         <ContinueSection />
         <BrowseSection onSignup={handleSignup} />
@@ -234,7 +229,7 @@ export function RosterLifeCard({
           factionSlug={life.faction_slug}
           level={life.level}
           score={life.score}
-          avatarUrl={mediaUrl(life.avatar_url)}
+          character={life}
           rotation={rotation}
         />
       </button>
@@ -509,13 +504,6 @@ const pillStyle: CSSProperties = {
   border: '1px solid var(--color-border)',
   borderRadius: 999,
   padding: 'var(--space-xs) var(--space-md) var(--space-xs) var(--space-xs)',
-}
-const pillAvatar: CSSProperties = {
-  width: 22,
-  height: 22,
-  borderRadius: '50%',
-  objectFit: 'cover',
-  background: 'var(--color-bg-surface-alt)',
 }
 // Size comes from .content-title.
 const dossierTitle: CSSProperties = {

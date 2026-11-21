@@ -47,6 +47,7 @@ touch "$tmp/upload-fail"
 run
 check "upload fails: exits non-zero"        test "$rc" != 0
 check "upload fails: marker left for pull"  grep -q '403 Forbidden' "$tmp/dest/offsite-failed.txt"
+check "upload fails: line 2 is the error"  test "$(sed -n 2p "$tmp/dest/offsite-failed.txt" | grep -c 403)" = 1
 check "upload fails: local dump is kept"    test -s "$tmp/dest/prod-db-$(date +%u).dump"
 rm "$tmp/upload-fail"
 run
