@@ -157,11 +157,24 @@ async def compute_owner_contributions(
         if owner_by_praxis[pid].id == member_id
     }
 
+    # Faction each member held on joining (#3873): defection never reprices the
+    # past. Null stamps (rows predating it) fall back to the live faction.
+    stamp_result = await session.execute(
+        select(
+            PraxisMember.praxis_id,
+            PraxisMember.character_id,
+            PraxisMember.faction_slug,
+        ).where(PraxisMember.praxis_id.in_(set(praxis_ids) | opponent_praxis_ids))
+    )
+    stamped_faction = {(pid, cid): f for pid, cid, f in stamp_result.all()}
+
     contributions: dict[int, Contribution] = {}
 
     for praxis in praxes:
         character = owner_by_praxis[praxis.id]
-        character_faction = character.faction_slug or UNAFFILIATED_FACTION_SLUG
+        character_faction = (
+            stamped_faction.get((praxis.id, character.id)) or character.faction_slug
+        ) or UNAFFILIATED_FACTION_SLUG
         task = tasks_by_id.get(praxis.task_id)
         if task is None:
             continue
@@ -193,7 +206,11 @@ async def compute_owner_contributions(
             if opp_praxis is not None:
                 opp_char = opp_characters_by_id.get(opp_praxis.created_by_id)
                 if opp_char is not None:
-                    opponent_faction = opp_char.faction_slug or UNAFFILIATED_FACTION_SLUG
+                    opponent_faction = (
+                        stamped_faction.get((opp_praxis.id, opp_char.id))
+                        or opp_char.faction_slug
+                        or UNAFFILIATED_FACTION_SLUG
+                    )
 
             faction_multiplier = compute_faction_multiplier(
                 character_faction, task_faction, era,
