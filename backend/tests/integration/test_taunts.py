@@ -369,6 +369,31 @@ async def test_admin_backfill_is_silent(
     assert await _taunts(db_session) == []
 
 
+@pytest.mark.asyncio
+async def test_mod_hide_and_restore_are_silent(
+    db_session: AsyncSession,
+    era: Era,
+    character: Character,
+    character3: Character,
+    active_task: Task,
+):
+    """ADR-0068: a moderator's recalc is not organic play."""
+    from services.praxis import moderate_praxis
+
+    await _declare_foe(db_session, character3, character)
+    await _declare_foe(db_session, character, character3)
+    await _set_score(db_session, character3, era, 1)
+    praxis = await _seed_scored_praxis(db_session, character, active_task, "mod")
+    await recalculate_character_stats(character.id, db_session, emit_taunts=False)
+
+    for status in ("hidden", "visible"):
+        await moderate_praxis(
+            praxis.id, status, None, db_session, actor_id=character3.account_id
+        )
+
+    assert await _taunts(db_session) == []
+
+
 # Delivery surface
 
 

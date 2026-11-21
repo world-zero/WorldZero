@@ -308,6 +308,7 @@ async def recalculate_members_stats(
     era: EraConfig = CURRENT_ERA,
     *,
     era_row: Era | None = None,
+    emit_taunts: bool = True,
 ) -> None:
     """Recalculate every member of ``praxis`` and its duel opponents, then flush (#492).
 
@@ -324,6 +325,7 @@ async def recalculate_members_stats(
         session,
         era,
         era_row,
+        emit_taunts=emit_taunts,
     )
 
 
@@ -333,6 +335,8 @@ async def _recalculate_with_duel_opponents(
     session: AsyncSession,
     era: EraConfig,
     era_row: Era,
+    *,
+    emit_taunts: bool = True,
 ) -> None:
     """Members of ``praxis_ids`` and their duel opponents, once, ascending id."""
     ids = await with_duel_opponents(praxis_ids, session)
@@ -341,7 +345,9 @@ async def _recalculate_with_duel_opponents(
     )
     character_ids = extra_character_ids | set(members.scalars().all())
     for character_id in sorted(character_ids):
-        await recalculate_character_stats(character_id, session, era, era_row=era_row)
+        await recalculate_character_stats(
+            character_id, session, era, era_row=era_row, emit_taunts=emit_taunts
+        )
     await session.flush()
 
 
@@ -353,6 +359,7 @@ async def recalculate_for_account_votes(
     """Re-score every praxis ``account_id`` voted on, after a moderation flip.
 
     Tallies skip moderated voters on read, so stored scores must follow.
+    Admin-driven, so silent (ADR-0068).
     """
     voted = await session.execute(
         select(Vote.praxis_id).where(Vote.voter_account_id == account_id)
@@ -361,7 +368,9 @@ async def recalculate_for_account_votes(
     if not praxis_ids:
         return
     live = await get_current_era_row(session)
-    await _recalculate_with_duel_opponents(praxis_ids, set(), session, era, live)
+    await _recalculate_with_duel_opponents(
+        praxis_ids, set(), session, era, live, emit_taunts=False
+    )
 
 
 @dataclasses.dataclass(frozen=True)

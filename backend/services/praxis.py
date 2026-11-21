@@ -1466,7 +1466,7 @@ async def moderate_praxis(
 
     await session.flush()
     await _apply_media_publication(praxis, session)
-    await recalculate_members_stats(praxis, session, era)
+    await recalculate_members_stats(praxis, session, era, emit_taunts=False)
     return await get_praxis(praxis_id, session)
 
 
