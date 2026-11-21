@@ -79,19 +79,17 @@ interface SizeSet {
   wordmarkDisc: number
   medallion: number
   ledgerWidth: number
-  /**
-   * Min height for a small control. Phone takes 44 and its rows wrap; pointer
-   * keeps the design's tighter chrome (`docs/agents/design-fidelity.md`).
-   */
-  tapTarget: number
-  cellPadding: string
-  briefPadding: string
   /** Where the ochre margin rule is struck down the gutter. */
   marginRule: number
-  titleSize: string
-  levelSize: string
-  pointsSize: string
 }
+
+const EPH_CELL_PAD = "var(--detail-card-pad, var(--space-lg))";
+const EPH_BRIEF_PAD = "var(--detail-eph-brief-pad, var(--space-xl) var(--space-xl) var(--space-lg) var(--space-3xl))";
+/** Phone takes 44 and its rows wrap; pointer keeps the design's tighter chrome (`docs/agents/design-fidelity.md`). */
+const EPH_TAP = "var(--detail-tap-min, 32px)";
+const EPH_TITLE = "var(--detail-hero-size, var(--text-display))";
+const EPH_LEVEL = "var(--detail-title-size, var(--text-heading))";
+const EPH_POINTS = "var(--detail-title-size, var(--text-heading))";
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
@@ -99,26 +97,14 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
     wordmarkDisc: 176,
     medallion: 104,
     ledgerWidth: 150,
-    tapTarget: 32,
-    cellPadding: "var(--space-lg)",
-    briefPadding: "var(--space-xl) var(--space-xl) var(--space-lg) var(--space-3xl)",
     marginRule: 26,
-    titleSize: "var(--text-display)",
-    levelSize: "var(--text-heading)",
-    pointsSize: "var(--text-heading)",
   },
   mobile: {
     masthead: 92,
     wordmarkDisc: 150,
     medallion: 88,
     ledgerWidth: 116,
-    tapTarget: 44,
-    cellPadding: "var(--space-md)",
-    briefPadding: "var(--space-lg) var(--space-lg) var(--space-md) var(--space-xl)",
     marginRule: 18,
-    titleSize: "var(--text-heading)",
-    levelSize: "var(--text-title)",
-    pointsSize: "var(--text-title)",
   },
 };
 
@@ -172,7 +158,7 @@ export default function EphemeristsTaskDetail({
   const cell: CSSProperties = {
     background: INNER,
     border: `1px solid ${LINE}`,
-    padding: size.cellPadding,
+    padding: EPH_CELL_PAD,
     boxSizing: "border-box",
   };
   /** The page-ground label voice: `-quiet` (a voice choice; `-caption` also clears AA). */
@@ -214,7 +200,7 @@ export default function EphemeristsTaskDetail({
     ...quietItalic,
     display: "inline-flex",
     alignItems: "center",
-    minHeight: size.tapTarget,
+    minHeight: EPH_TAP,
     background: "none",
     border: "none",
     borderBottom: `1px solid ${LINE}`,
@@ -310,7 +296,7 @@ export default function EphemeristsTaskDetail({
       <h1
         style={{
           fontFamily: DECO,
-          fontSize: size.titleSize,
+          fontSize: EPH_TITLE,
           lineHeight: 1.16,
           letterSpacing: "0.02em",
           margin: 0,
@@ -425,7 +411,7 @@ export default function EphemeristsTaskDetail({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)", lineHeight: 1 }}>
           <span style={eyebrow}>{t("detail.stats.level")}</span>
-          <span style={{ fontFamily: DECO, fontSize: size.levelSize, lineHeight: 0.8, color: INK }}>
+          <span style={{ fontFamily: DECO, fontSize: EPH_LEVEL, lineHeight: 0.8, color: INK }}>
             {task.level_required}
           </span>
           <Tally level={task.level_required} />
@@ -435,7 +421,7 @@ export default function EphemeristsTaskDetail({
           <Sign name="hourglass" size={15} color={BRASS} />
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)", lineHeight: 1 }}>
             <span style={eyebrow}>{t("detail.stats.inProgress")}</span>
-            <span style={{ fontFamily: DECO, fontSize: size.pointsSize, lineHeight: 0.8, color: INK }}>
+            <span style={{ fontFamily: DECO, fontSize: EPH_POINTS, lineHeight: 0.8, color: INK }}>
               {inProgressCount}
             </span>
           </div>
@@ -590,7 +576,7 @@ export default function EphemeristsTaskDetail({
             ...plate,
             position: "relative",
             isolation: "isolate",
-            padding: size.briefPadding,
+            padding: EPH_BRIEF_PAD,
           }}
         >
           <EphemerisNet opacity={0.17} />
@@ -632,7 +618,7 @@ export default function EphemeristsTaskDetail({
         ...SMALL_CAPS,
         display: "inline-flex",
         alignItems: "center",
-        minHeight: size.tapTarget,
+        minHeight: EPH_TAP,
         cursor: "pointer",
         border: "none",
         padding: "var(--space-xs) var(--space-md)",

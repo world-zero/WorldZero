@@ -63,48 +63,25 @@ const GALLERY_PREVIEW = 3;
 interface SizeSet {
   /** The action plate's width; dress. */
   plate: number;
-  title: string;
-  sectionHead: string;
-  statBig: string;
-  stat: string;
-  plaqueTotal: string;
-  base: string;
-  cta: string;
   /** Ornament geometry, exempt from the spacing scale (§4a). */
-  buntingGap: string;
-  panelPad: string;
-  boxPad: string;
-  sectionGap: string;
 }
+
+const WOW_TITLE = "var(--detail-hero-size, var(--text-display))";
+const WOW_SECTION_HEAD = "var(--detail-title-size, var(--text-heading))";
+const WOW_STAT_BIG = "var(--detail-title-size, var(--text-heading))";
+const WOW_STAT = "var(--detail-lead-size, var(--text-title))";
+const WOW_CTA = "var(--detail-btn-size, var(--text-content))";
+const WOW_BUNTING_GAP = "var(--detail-panel-space, var(--space-xl))";
+const WOW_PANEL_PAD = "var(--detail-pad, var(--space-xl))";
+const WOW_BOX_PAD = "var(--detail-card-pad, var(--space-lg))";
+const WOW_SECTION_GAP = "var(--detail-section-gap, var(--space-2xl))";
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     plate: 452,
-    title: "var(--text-display)",
-    sectionHead: "var(--text-heading)",
-    statBig: "var(--text-heading)",
-    stat: "var(--text-title)",
-    plaqueTotal: "var(--text-display)",
-    base: "var(--text-title)",
-    cta: "var(--text-content)",
-    buntingGap: "var(--space-xl)",
-    panelPad: "var(--space-xl)",
-    boxPad: "var(--space-lg)",
-    sectionGap: "var(--space-2xl)",
   },
   mobile: {
     plate: 452,
-    title: "var(--text-heading)",
-    sectionHead: "var(--text-title)",
-    statBig: "var(--text-title)",
-    stat: "var(--text-content)",
-    plaqueTotal: "var(--text-heading)",
-    base: "var(--text-content)",
-    cta: "var(--text-xl)",
-    buntingGap: "var(--space-lg)",
-    panelPad: "var(--space-lg)",
-    boxPad: "var(--space-md)",
-    sectionGap: "var(--space-xl)",
   },
 };
 
@@ -220,7 +197,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     background: INSET,
     border: `1.5px solid ${HAIR}`,
     borderRadius: 8,
-    padding: size.boxPad,
+    padding: WOW_BOX_PAD,
     boxSizing: "border-box",
   };
   const divider = (
@@ -240,7 +217,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         flexWrap: "wrap",
       }}
     >
-      <span style={{ fontFamily: MED, fontSize: size.sectionHead, lineHeight: 1.08, color: INK }}>
+      <span style={{ fontFamily: MED, fontSize: WOW_SECTION_HEAD, lineHeight: 1.08, color: INK }}>
         {label}
       </span>
       <Zig id={id} style={{ flex: 1 }} />
@@ -264,7 +241,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     textAlign: "center",
     textDecoration: "none",
     fontFamily: MED,
-    fontSize: size.cta,
+    fontSize: WOW_CTA,
     letterSpacing: "0.05em",
     color: PLUM,
     background: "transparent",
@@ -282,7 +259,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   /** A tier below a section head: the ~240px plate column breaks a 32px line three ways. */
   const plateHeading: CSSProperties = {
     fontFamily: MED,
-    fontSize: size.stat,
+    fontSize: WOW_STAT,
     lineHeight: 1.08,
     color: INK,
     marginBottom: "var(--space-md)",
@@ -439,7 +416,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       <h1
         style={{
           fontFamily: MED,
-          fontSize: size.title,
+          fontSize: WOW_TITLE,
           lineHeight: 1.08,
           margin: 0,
           marginBottom: "var(--space-lg)",
@@ -553,14 +530,14 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
           <span style={{ ...EYEBROW, color: LABEL }}>{t("detail.stats.level")}</span>
-          <span style={{ fontFamily: MED, fontSize: size.statBig, lineHeight: 0.8, color: INK }}>
+          <span style={{ fontFamily: MED, fontSize: WOW_STAT_BIG, lineHeight: 0.8, color: INK }}>
             {task.level_required}
           </span>
         </div>
         {divider}
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs)" }}>
           <span style={{ ...EYEBROW, color: LABEL }}>{t("detail.stats.inProgress")}</span>
-          <span style={{ fontFamily: MED, fontSize: size.stat, lineHeight: 0.8, color: INK }}>
+          <span style={{ fontFamily: MED, fontSize: WOW_STAT, lineHeight: 0.8, color: INK }}>
             {inProgressCount}
           </span>
         </div>
@@ -570,9 +547,9 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
 
   // The brief, in full. No clamp.
   const brief = (
-    <section style={{ marginBottom: size.sectionGap }}>
+    <section style={{ marginBottom: WOW_SECTION_GAP }}>
       {sectionHead("brief", t("detail.brief.heading"))}
-      <div style={{ ...framed, padding: size.panelPad }}>
+      <div style={{ ...framed, padding: WOW_PANEL_PAD }}>
         {task.description && (
           <p
             className="content-text"
@@ -593,7 +570,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
   );
 
   const gallery = (
-    <section style={{ marginBottom: size.sectionGap }}>
+    <section style={{ marginBottom: WOW_SECTION_GAP }}>
       <div
         style={{
           display: "flex",
@@ -604,7 +581,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         }}
       >
         <span
-          style={{ fontFamily: MED, fontSize: size.sectionHead, lineHeight: 1.08, color: INK }}
+          style={{ fontFamily: MED, fontSize: WOW_SECTION_HEAD, lineHeight: 1.08, color: INK }}
         >
           {t("detail.gallery.heading", { count: submissions.length })}
         </span>
@@ -650,7 +627,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...framed,
-            padding: size.panelPad,
+            padding: WOW_PANEL_PAD,
             display: "flex",
             alignItems: "center",
             gap: "var(--space-lg)",
@@ -716,7 +693,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           boxSizing: "border-box",
         }}
       >
-        <Bunting style={{ marginBottom: size.buntingGap }} />
+        <Bunting style={{ marginBottom: WOW_BUNTING_GAP }} />
 
         <div
           style={{
@@ -724,7 +701,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             flexDirection: "var(--detail-row-direction, row)" as "row",
             alignItems: "var(--detail-row-align, flex-start)",
             gap: "var(--space-xl)",
-            marginBottom: size.sectionGap,
+            marginBottom: WOW_SECTION_GAP,
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>

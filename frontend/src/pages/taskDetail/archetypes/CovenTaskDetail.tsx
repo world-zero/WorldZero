@@ -56,33 +56,24 @@ interface SizeSet {
   plate: number;
   /** Ward disc (WORLD_ZERO_STYLE §4a). */
   ward: number;
-  worthMin: number;
-  titleSize: string;
-  headingSize: string;
-  statSize: string;
-  substatSize: string;
   wardSize: string;
 }
+
+const COVEN_TITLE = "var(--detail-hero-size, var(--text-display))";
+const COVEN_STAT = "var(--detail-title-size, var(--text-heading))";
+const COVEN_SUBSTAT = "var(--detail-lead-size, var(--text-title))";
+const COVEN_HEADING = "var(--text-title)";
+const COVEN_WORTH_MIN = "var(--detail-worth-min-coven, 182px)";
 
 const SIZES: Record<"desktop" | "mobile", SizeSet> = {
   desktop: {
     plate: 452,
     ward: 120,
-    worthMin: 182,
-    titleSize: "var(--text-display)",
-    headingSize: "var(--text-title)",
-    statSize: "var(--text-heading)",
-    substatSize: "var(--text-title)",
     wardSize: "var(--text-heading)",
   },
   mobile: {
     plate: 452,
     ward: 96,
-    worthMin: 148,
-    titleSize: "var(--text-heading)",
-    headingSize: "var(--text-title)",
-    statSize: "var(--text-title)",
-    substatSize: "var(--text-content)",
     wardSize: "var(--text-title)",
   },
 };
@@ -202,7 +193,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           fontFamily: DISPLAY,
           fontWeight: 600,
-          fontSize: size.headingSize,
+          fontSize: COVEN_HEADING,
           lineHeight: 1.06,
           letterSpacing: "0.02em",
           color: INK,
@@ -345,7 +336,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           ...innerBox,
           flex: hasAction ? "0 0 auto" : "1 1 auto",
-          minWidth: size.worthMin,
+          minWidth: COVEN_WORTH_MIN,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -414,7 +405,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         style={{
           fontFamily: DISPLAY,
           fontWeight: 600,
-          fontSize: size.titleSize,
+          fontSize: COVEN_TITLE,
           lineHeight: 1.06,
           letterSpacing: "0.005em",
           margin: 0,
@@ -524,7 +515,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           flexWrap: "wrap",
         }}
       >
-        {stat(t("detail.stats.level"), task.level_required, size.statSize)}
+        {stat(t("detail.stats.level"), task.level_required, COVEN_STAT)}
         <span
           aria-hidden
           style={{
@@ -534,7 +525,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             background: "var(--faction-coven-ward-hair)",
           }}
         />
-        {stat(t("detail.stats.inProgress"), inProgressCount, size.substatSize)}
+        {stat(t("detail.stats.inProgress"), inProgressCount, COVEN_SUBSTAT)}
       </div>
     </div>
   );
@@ -579,7 +570,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           style={{
             fontFamily: DISPLAY,
             fontWeight: 600,
-            fontSize: size.headingSize,
+            fontSize: COVEN_HEADING,
             lineHeight: 1.06,
             letterSpacing: "0.02em",
             color: INK,
