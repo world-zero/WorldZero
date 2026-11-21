@@ -76,8 +76,8 @@ _OVERSIZED_DRAFT = (
 # Path below the ``main.py`` mount (``/rooms`` prefix belongs to the mount).
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
 
-# RFC 6455 policy violation = "do not come back"; the only close code sent.
-# ``roomReconnect.ts`` stops redialling on it (#1804).
+# RFC 6455 policy violation = "do not come back"; the only close code that ends
+# a room. ``roomReconnect.ts`` stops redialling on it (#1804).
 _WS_POLICY_VIOLATION = 1008
 _WS_TRY_AGAIN_LATER = 1013  # the client retries anything but 1008
 
@@ -514,6 +514,11 @@ class PraxisRoomServer(WebsocketServer):
             # Dropped, or the half-open room would keep ``ready`` and make every
             # later caller wait out the timeout again. Sockets are not revoked:
             # 1008 reads as the room ending, and this one is worth a retry.
+            logger.warning(
+                "praxis room %s never observed its store after %ss; dropped",
+                name,
+                _OBSERVER_WAIT_SECONDS,
+            )
             flusher = self._flushers.pop(name, None)
             if flusher is not None:
                 flusher.abandon()
@@ -868,7 +873,7 @@ class PraxisRoomASGIServer(ASGIServer):
         send: Callable[[dict[str, Any]], Any],
         code: int = _WS_POLICY_VIOLATION,
     ) -> None:
-        """Close the socket on policy grounds — before accept, or after revoke."""
+        """Close the socket with ``code`` — before accept, or after revoke."""
         try:
             await send({"type": "websocket.close", "code": code})
         except Exception:  # pragma: no cover — the client may already be gone

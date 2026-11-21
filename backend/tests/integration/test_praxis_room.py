@@ -1979,7 +1979,7 @@ async def _never_observes(self) -> None:
 
 
 async def test_a_room_that_never_observes_is_evicted_with_a_coded_error(
-    db_session, collab, monkeypatch
+    db_session, collab, monkeypatch, caplog
 ) -> None:
     async with running_rooms(db_session, monkeypatch) as rooms:
         name = room_name_for(collab.id)
@@ -1990,6 +1990,8 @@ async def test_a_room_that_never_observes_is_evicted_with_a_coded_error(
                 await rooms.server.get_room(name)
         assert refused.value.status_code == 503
         assert refused.value.detail["code"] == "PRAXIS_ROOM_UNAVAILABLE"
+        warned = [r for r in caplog.records if r.levelname == "WARNING"]
+        assert any(name in r.getMessage() and "0.05" in r.getMessage() for r in warned)
         assert name not in rooms.server.rooms
 
         assert (await rooms.server.get_room(name)).ready
