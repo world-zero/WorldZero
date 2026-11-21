@@ -10,6 +10,7 @@ import { useGameConfig } from '../hooks/useGameConfig'
 import { useAuth } from '../auth/AuthContext'
 import { extractError } from '../utils/errors'
 import { useFormFactor } from '../hooks/useFormFactor'
+import { FilterBarEmpty } from '../components/ui/FilterBar'
 import DesktopPlayers from './players/DesktopPlayers'
 import MobilePlayers from './players/MobilePlayers'
 import {
@@ -73,7 +74,7 @@ export default function Leaderboard() {
   if (characters.length === 0) {
     return (
       <div className="py-8">
-        <p className="font-body content-text text-muted">{t('leaderboard.empty')}</p>
+        <FilterBarEmpty title={t('leaderboard.empty')} />
       </div>
     )
   }
