@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import AliasChoices, ConfigDict, Field
 from schemas.base import WireModel
+from schemas.params import INT32_MAX
 
 from models.praxis import PraxisType
 from models.task import TaskStatus, TaskType
@@ -89,8 +90,8 @@ MAX_TASK_NOTES = 2000
 class TaskCreate(WireModel):
     title: str = Field(..., min_length=1, max_length=MAX_TASK_TITLE)
     description: Optional[str] = Field(None, max_length=MAX_TASK_DESCRIPTION)
-    point_value: int = Field(..., gt=0)
-    level_required: int = Field(0, ge=0)
+    point_value: int = Field(..., gt=0, le=INT32_MAX)
+    level_required: int = Field(0, ge=0, le=INT32_MAX)
     primary_faction_slug: Optional[str] = None
     # For the reviewing admin; also used by metatask proposals (same body).
     notes: Optional[str] = Field(None, max_length=MAX_TASK_NOTES)

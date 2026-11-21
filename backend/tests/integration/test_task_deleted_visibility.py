@@ -94,7 +94,7 @@ async def test_no_faction_allowance_reopens_a_deleted_task(
             viewer=character,
             can_sign_up=True,
             era=permissive,
-            limit=200,
+            limit=500,
         )
     }
     assert retired.id in ids

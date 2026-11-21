@@ -31,6 +31,7 @@ from models.praxis import MediaItem, Praxis, PraxisType
 from schemas.base import WireModel
 from schemas.comment import FlagIn
 from schemas.google_photos import GooglePhotosIngestIn
+from schemas.params import Id, Page
 from schemas.praxis import (
     MediaItemOut,
     MediaUploadResultOut,
@@ -107,9 +108,9 @@ router = APIRouter()
 
 @router.get("", response_model=list[PraxisCardOut])
 async def list_praxes_route(
-    task_id: Optional[int] = None,
-    character_id: Optional[int] = None,
-    member_id: Optional[int] = None,
+    task_id: Optional[Id] = None,
+    character_id: Optional[Id] = None,
+    member_id: Optional[Id] = None,
     type: Optional[str] = None,
     status: Optional[str] = None,
     moderation_status: Optional[str] = None,
@@ -118,8 +119,7 @@ async def list_praxes_route(
     sort: Optional[str] = None,
     era_scope: str = PraxisEraScope.this_era.value,
     voted: Optional[str] = None,
-    limit: int = 50,
-    offset: int = 0,
+    page: Page = Depends(),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
@@ -204,15 +204,15 @@ async def list_praxes_route(
         # Only the Albescent reveal flag is read (#2422); admins count as revealed.
         viewer_account=account,
         viewer_is_admin=viewer_is_admin,
-        limit=limit,
-        offset=offset,
+        limit=page.limit,
+        offset=page.offset,
     )
     return await build_praxis_cards(praxes, session, viewer)
 
 
 @router.get("/{praxis_id}", response_model=PraxisOut)
 async def get_praxis_route(
-    praxis_id: int,
+    praxis_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
 ):
@@ -248,7 +248,7 @@ async def create_praxis_route(
 
 @router.post("/{praxis_id}/change-type", response_model=PraxisOut)
 async def change_praxis_type_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: PraxisTypeChange,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -266,7 +266,7 @@ async def change_praxis_type_route(
 
 @router.delete("/{praxis_id}", status_code=204)
 async def delete_praxis_route(
-    praxis_id: int,
+    praxis_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -280,7 +280,7 @@ async def delete_praxis_route(
 
 @router.post("/{praxis_id}/unsubmit", response_model=PraxisOut)
 async def unsubmit_praxis_route(
-    praxis_id: int,
+    praxis_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -295,7 +295,7 @@ async def unsubmit_praxis_route(
 
 @router.post("/{praxis_id}/done", response_model=PraxisOut)
 async def set_done_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: PraxisDoneUpdate,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -311,7 +311,7 @@ async def set_done_route(
 
 @router.post("/{praxis_id}/submit", response_model=PraxisOut)
 async def submit_praxis_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: SubmitPraxisIn | None = None,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -328,7 +328,7 @@ async def submit_praxis_route(
 
 @router.post("/{praxis_id}/media", response_model=MediaItemOut, status_code=201)
 async def upload_media_route(
-    praxis_id: int,
+    praxis_id: Id,
     file: UploadFile = File(...),
     display_order: int = Form(0),
     character: Character = Depends(get_current_character),
@@ -354,7 +354,7 @@ async def upload_media_route(
     status_code=201,
 )
 async def ingest_google_photos_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: GooglePhotosIngestIn,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -380,7 +380,7 @@ async def ingest_google_photos_route(
     status_code=201,
 )
 async def upload_media_batch_route(
-    praxis_id: int,
+    praxis_id: Id,
     files: List[UploadFile] = File(...),
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -409,8 +409,8 @@ async def upload_media_batch_route(
 
 @router.delete("/{praxis_id}/media/{media_id}", status_code=204)
 async def delete_media_route(
-    praxis_id: int,
-    media_id: int,
+    praxis_id: Id,
+    media_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -427,7 +427,7 @@ async def delete_media_route(
 
 @router.post("/{praxis_id}/invite", response_model=PraxisInviteOut)
 async def invite_member_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: PraxisInviteCreate,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -445,8 +445,8 @@ async def invite_member_route(
 
 @router.post("/{praxis_id}/invite/{invite_id}/respond", response_model=InviteResponseOut)
 async def respond_to_invite_route(
-    praxis_id: int,
-    invite_id: int,
+    praxis_id: Id,
+    invite_id: Id,
     data: InviteResponse,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -464,8 +464,8 @@ async def respond_to_invite_route(
 
 @router.delete("/{praxis_id}/invite/{invite_id}", status_code=204)
 async def cancel_invite_route(
-    praxis_id: int,
-    invite_id: int,
+    praxis_id: Id,
+    invite_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -480,8 +480,8 @@ async def cancel_invite_route(
 
 @router.post("/{praxis_id}/nudge/{character_id}", response_model=NudgeOut)
 async def nudge_route(
-    praxis_id: int,
-    character_id: int,
+    praxis_id: Id,
+    character_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -500,7 +500,7 @@ async def nudge_route(
 
 @router.post("/{praxis_id}/nudge", response_model=List[NudgeResultOut])
 async def nudge_crew_route(
-    praxis_id: int,
+    praxis_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -519,8 +519,8 @@ async def nudge_crew_route(
 
 @router.post("/{praxis_id}/kick/{member_id}", response_model=PraxisOut)
 async def kick_member_route(
-    praxis_id: int,
-    member_id: int,
+    praxis_id: Id,
+    member_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -543,7 +543,7 @@ async def kick_member_route(
 
 @router.post("/{praxis_id}/leave", response_model=PraxisOut)
 async def leave_praxis_route(
-    praxis_id: int,
+    praxis_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -558,7 +558,7 @@ async def leave_praxis_route(
 
 @router.post("/{praxis_id}/flag", response_model=PraxisOut)
 async def flag_praxis_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: FlagIn,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -576,7 +576,7 @@ async def flag_praxis_route(
 
 @router.post("/{praxis_id}/vote", response_model=VoteCastOut)
 async def cast_vote_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: PraxisVoteIn,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -605,7 +605,7 @@ async def cast_vote_route(
 
 @router.post("/{praxis_id}/metatasks", response_model=PraxisOut, status_code=201)
 async def apply_metatask_route(
-    praxis_id: int,
+    praxis_id: Id,
     data: MetataskApply,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -623,8 +623,8 @@ async def apply_metatask_route(
 
 @router.delete("/{praxis_id}/metatasks/{task_id}", response_model=PraxisOut)
 async def remove_metatask_route(
-    praxis_id: int,
-    task_id: int,
+    praxis_id: Id,
+    task_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):

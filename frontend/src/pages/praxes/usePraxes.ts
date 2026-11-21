@@ -93,8 +93,8 @@ export function usePraxes(): PraxesFeedState {
   // Arrays are compared by identity in a dep list, so the union travels as a key.
   const factionKey = filters.factions.join(',')
 
-  const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
-    (limit) =>
+  const { data, loading, error, hasMore, loadMore } = usePagedResource(
+    (offset, limit) =>
       listPraxes({
         status: 'submitted',
         task_id: taskId ?? undefined,
@@ -105,6 +105,7 @@ export function usePraxes(): PraxesFeedState {
         era_scope: filters.eraScope,
         q: trimmedQuery || undefined,
         limit,
+        offset,
       }),
     [taskId, factionKey, voted, filters.sort, filters.eraScope, trimmedQuery],
     PAGE_LIMIT,
@@ -120,16 +121,13 @@ export function usePraxes(): PraxesFeedState {
       (previous) => nextFeedFilterParams(previous, patch),
       FEED_FILTER_NAV_OPTIONS,
     )
-    resetWindow()
   }
   const clearAllFilters = () => {
     setSearchParams(clearedFeedParams, FEED_FILTER_NAV_OPTIONS)
-    resetWindow()
   }
-  const setQuery = (next: string) => { setQueryState(next); resetWindow() }
+  const setQuery = (next: string) => { setQueryState(next) }
   const clearTaskFilter = () => {
     setSearchParams(withoutTaskIdParam, TASK_FILTER_NAV_OPTIONS)
-    resetWindow()
   }
 
   const items = data ?? []

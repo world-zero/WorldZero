@@ -9315,7 +9315,7 @@ export interface operations {
     list_my_relationships_relationships_get: {
         parameters: {
             query?: {
-                type?: string | null;
+                type?: components["schemas"]["RelationshipTypeEnum"] | null;
             };
             header?: never;
             path?: never;

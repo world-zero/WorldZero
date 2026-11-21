@@ -14,6 +14,7 @@ from dependencies import (
 from models.account import Account
 from models.character import Character, CharacterStatus
 from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
+from schemas.params import Id, Page
 from services.auth import get_current_account
 from services.badge import list_badges_for_character
 from services.character import (
@@ -35,10 +36,9 @@ router = APIRouter()
 async def list_characters(
     search: Optional[str] = None,
     faction: Optional[str] = None,
-    exclude_active_task_id: Optional[int] = None,
+    exclude_active_task_id: Optional[Id] = None,
     exclude_own_account: bool = False,
-    limit: int = 50,
-    offset: int = 0,
+    page: Page = Depends(),
     session: AsyncSession = Depends(get_db, scope="function"),
     viewer: Optional[Character] = Depends(get_current_character_optional),
     account: Optional[Account] = Depends(get_current_account_optional),
@@ -61,8 +61,8 @@ async def list_characters(
         # Only the Albescent reveal flag is read (#2422); admins count as revealed.
         viewer_account=account,
         viewer_is_admin=viewer_is_admin,
-        limit=limit,
-        offset=offset,
+        limit=page.limit,
+        offset=page.offset,
     )
     # Badges batched (#655).
     return await build_character_outs(rows, session)
@@ -70,7 +70,7 @@ async def list_characters(
 
 @router.get("/{character_id}", response_model=CharacterOut)
 async def get_character(
-    character_id: int,
+    character_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     result = await session.execute(
@@ -101,7 +101,7 @@ async def create_character_route(
 
 @router.put("/{character_id}", response_model=CharacterOut)
 async def update_character_route(
-    character_id: int,
+    character_id: Id,
     data: CharacterUpdate,
     current_character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -115,7 +115,7 @@ async def update_character_route(
 
 @router.delete("/{character_id}", status_code=204)
 async def delete_character_route(
-    character_id: int,
+    character_id: Id,
     current_character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -126,7 +126,7 @@ async def delete_character_route(
 
 @router.post("/{character_id}/avatar", response_model=CharacterOut)
 async def upload_avatar(
-    character_id: int,
+    character_id: Id,
     file: UploadFile = File(...),
     current_character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),

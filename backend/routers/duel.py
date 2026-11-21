@@ -10,6 +10,7 @@ from dependencies import get_current_character, get_current_character_optional
 from game_config import CURRENT_ERA
 from models.character import Character
 from schemas.duel import DuelChallengeIn, DuelDetailOut, DuelOut, DuelRespondIn
+from schemas.params import Id
 from schemas.praxis import PraxisOut
 from services.duel import (
     cancel_duel_challenge,
@@ -41,7 +42,7 @@ async def issue_challenge_route(
 
 @router.get("/{duel_id}/detail", response_model=DuelDetailOut)
 async def get_duel_detail_route(
-    duel_id: int,
+    duel_id: Id,
     viewer: Optional[Character] = Depends(get_current_character_optional),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
@@ -51,7 +52,7 @@ async def get_duel_detail_route(
 
 @router.post("/{duel_id}/respond", response_model=DuelOut)
 async def respond_to_challenge_route(
-    duel_id: int,
+    duel_id: Id,
     data: DuelRespondIn,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -69,7 +70,7 @@ async def respond_to_challenge_route(
 
 @router.post("/{duel_id}/cancel", response_model=DuelOut)
 async def cancel_challenge_route(
-    duel_id: int,
+    duel_id: Id,
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):

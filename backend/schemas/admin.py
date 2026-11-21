@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import ConfigDict, Field
 from schemas.base import WireModel
+from schemas.params import INT32_MAX
 
 from models.roles import Permission
 from schemas.comment import CommentOut
@@ -116,8 +117,8 @@ class ModerationAction(WireModel):
 class AdminTaskPatch(WireModel):
     title: str | None = Field(None, min_length=1, max_length=200)
     description: str | None = None
-    point_value: int | None = Field(None, ge=1)
-    level_required: int | None = Field(None, ge=0)
+    point_value: int | None = Field(None, ge=1, le=INT32_MAX)
+    level_required: int | None = Field(None, ge=0, le=INT32_MAX)
     #: The task's own faction (#1714); validated in ``admin_edit_task`` against
     #: era config. Not ``metatask_faction_slug``, which is a different question.
     primary_faction_slug: str | None = Field(None, min_length=1, max_length=50)

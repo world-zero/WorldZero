@@ -63,6 +63,7 @@ from schemas.admin import (
     TaskStatusAction,
     VoteRingOut,
 )
+from schemas.params import Id
 from schemas.task import TaskOut
 from schemas.praxis import PraxisCardOut, PraxisOut
 from schemas.comment import CommentModerationIn, CommentOut
@@ -139,7 +140,7 @@ async def admin_list_messages(
 
 @router.patch("/messages/{message_id}/archive", response_model=ContactMessageOut)
 async def admin_archive_message(
-    message_id: int,
+    message_id: Id,
     admin: Account = Depends(require_permission(Permission.read_messages)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> ContactMessageOut:
@@ -150,9 +151,9 @@ async def admin_archive_message(
 @router.get("/mod-log", response_model=ModActionPage)
 async def admin_mod_log(
     target_type: str | None = None,
-    target_id: int | None = None,
+    target_id: Optional[Id] = None,
     kind: Literal["reports", "tasks", "people", "rules"] | None = None,
-    actor: int | None = None,
+    actor: Optional[Id] = None,
     q: str | None = Query(None, max_length=100),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
@@ -190,7 +191,7 @@ async def admin_mod_log(
 
 @router.get("/accounts/{account_id}/vote-ring", response_model=VoteRingOut)
 async def admin_vote_ring(
-    account_id: int,
+    account_id: Id,
     _: Account = Depends(require_permission(Permission.ban_suspend)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> VoteRingOut:
@@ -248,7 +249,7 @@ async def admin_list_characters(
     "/accounts/{account_id}/suspend", response_model=SuspendActionOut, status_code=200
 )
 async def admin_suspend_account(
-    account_id: int,
+    account_id: Id,
     data: SuspendAction,
     admin: Account = Depends(require_permission(Permission.ban_suspend)),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -285,9 +286,9 @@ async def admin_cli_token(
 
 @router.get("/praxes", response_model=list[PraxisCardOut])
 async def admin_list_praxes(
-    task_id: Optional[int] = None,
-    character_id: Optional[int] = None,
-    member_id: Optional[int] = None,
+    task_id: Optional[Id] = None,
+    character_id: Optional[Id] = None,
+    member_id: Optional[Id] = None,
     type: Optional[PraxisType] = None,
     status: Optional[PraxisStatus] = None,
     moderation_status: Optional[ModerationStatus] = None,
@@ -369,7 +370,7 @@ async def admin_list_flagged_praxes(
 
 @router.patch("/praxes/{praxis_id}/moderate", response_model=PraxisOut)
 async def admin_moderate_praxis(
-    praxis_id: int,
+    praxis_id: Id,
     data: ModerationAction,
     admin: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -405,7 +406,7 @@ async def admin_list_flagged_comments(
 
 @router.patch("/comments/{comment_id}/moderate", response_model=CommentOut)
 async def admin_moderate_comment(
-    comment_id: int,
+    comment_id: Id,
     data: CommentModerationIn,
     admin: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -418,7 +419,7 @@ async def admin_moderate_comment(
 
 @router.patch("/tasks/{task_id}", response_model=TaskOut)
 async def admin_patch_task(
-    task_id: int,
+    task_id: Id,
     data: AdminTaskPatch,
     admin: Account = Depends(require_permission(Permission.manage_tasks)),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -429,7 +430,7 @@ async def admin_patch_task(
 
 @router.put("/tasks/{task_id}/status", response_model=TaskOut)
 async def admin_update_task_status(
-    task_id: int,
+    task_id: Id,
     data: TaskStatusAction,
     admin: Account = Depends(
         require_permission(
@@ -467,7 +468,7 @@ async def list_task_ids_with_history(
 
 @router.delete("/tasks/{task_id}", status_code=204)
 async def admin_delete_task(
-    task_id: int,
+    task_id: Id,
     admin: Account = Depends(require_permission(Permission.delete_import_tasks)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ) -> None:
@@ -519,7 +520,7 @@ async def list_pending_tasks(
     "/characters/{character_id}/ban", response_model=BanActionOut, status_code=200
 )
 async def ban_character(
-    character_id: int,
+    character_id: Id,
     data: BanAction,
     admin: Account = Depends(require_permission(Permission.ban_suspend)),
     session: AsyncSession = Depends(get_db, scope="function"),
@@ -536,7 +537,7 @@ async def ban_character(
     response_model=RemoveFlaggedOut,
 )
 async def remove_flagged_praxes(
-    character_id: int,
+    character_id: Id,
     data: RemoveFlaggedIn | None = None,
     admin: Account = Depends(require_permission(Permission.handle_reports)),
     session: AsyncSession = Depends(get_db, scope="function"),

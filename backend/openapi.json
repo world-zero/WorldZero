@@ -223,6 +223,7 @@
           "level_required": {
             "anyOf": [
               {
+                "maximum": 2147483647.0,
                 "minimum": 0.0,
                 "type": "integer"
               },
@@ -235,6 +236,7 @@
           "point_value": {
             "anyOf": [
               {
+                "maximum": 2147483647.0,
                 "minimum": 1.0,
                 "type": "integer"
               },
@@ -7318,6 +7320,7 @@
           },
           "level_required": {
             "default": 0,
+            "maximum": 2147483647.0,
             "minimum": 0.0,
             "title": "Level Required",
             "type": "integer"
@@ -7347,6 +7350,7 @@
           },
           "point_value": {
             "exclusiveMinimum": 0.0,
+            "maximum": 2147483647.0,
             "title": "Point Value",
             "type": "integer"
           },
@@ -8626,6 +8630,8 @@
             "name": "account_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Account Id",
               "type": "integer"
             }
@@ -8699,6 +8705,8 @@
             "name": "account_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Account Id",
               "type": "integer"
             }
@@ -9059,6 +9067,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -9132,6 +9142,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -9314,6 +9326,8 @@
             "name": "comment_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Comment Id",
               "type": "integer"
             }
@@ -9643,6 +9657,8 @@
             "name": "message_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Message Id",
               "type": "integer"
             }
@@ -9724,6 +9740,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -9762,6 +9780,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -9927,6 +9947,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -9943,6 +9965,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -9959,6 +9983,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -10206,6 +10232,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -10597,6 +10625,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -10651,6 +10681,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -10724,6 +10756,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -11447,6 +11481,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -11472,6 +11508,8 @@
             "required": false,
             "schema": {
               "default": 50,
+              "maximum": 200,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -11482,6 +11520,8 @@
             "required": false,
             "schema": {
               "default": 0,
+              "maximum": 2147483647,
+              "minimum": 0,
               "title": "Offset",
               "type": "integer"
             }
@@ -11611,6 +11651,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -11665,6 +11707,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -11705,6 +11749,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -11778,6 +11824,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -11851,6 +11899,8 @@
             "name": "comment_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Comment Id",
               "type": "integer"
             }
@@ -11905,6 +11955,8 @@
             "name": "comment_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Comment Id",
               "type": "integer"
             }
@@ -11978,6 +12030,8 @@
             "name": "comment_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Comment Id",
               "type": "integer"
             }
@@ -12313,6 +12367,8 @@
             "name": "duel_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Duel Id",
               "type": "integer"
             }
@@ -12377,6 +12433,8 @@
             "name": "duel_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Duel Id",
               "type": "integer"
             }
@@ -12441,6 +12499,8 @@
             "name": "duel_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Duel Id",
               "type": "integer"
             }
@@ -12876,6 +12936,8 @@
             "required": false,
             "schema": {
               "default": 50,
+              "maximum": 500,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -12886,6 +12948,8 @@
             "required": false,
             "schema": {
               "default": 0,
+              "maximum": 2147483647,
+              "minimum": 0,
               "title": "Offset",
               "type": "integer"
             }
@@ -13470,6 +13534,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -13486,6 +13552,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -13502,6 +13570,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -13642,6 +13712,8 @@
             "required": false,
             "schema": {
               "default": 50,
+              "maximum": 200,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -13652,6 +13724,8 @@
             "required": false,
             "schema": {
               "default": 0,
+              "maximum": 2147483647,
+              "minimum": 0,
               "title": "Offset",
               "type": "integer"
             }
@@ -13781,6 +13855,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -13835,6 +13911,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -13899,6 +13977,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -13972,6 +14052,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14037,6 +14119,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14110,6 +14194,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14184,6 +14270,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14258,6 +14346,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14331,6 +14421,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14340,6 +14432,8 @@
             "name": "invite_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Invite Id",
               "type": "integer"
             }
@@ -14397,6 +14491,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14406,6 +14502,8 @@
             "name": "invite_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Invite Id",
               "type": "integer"
             }
@@ -14479,6 +14577,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14488,6 +14588,8 @@
             "name": "member_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Member Id",
               "type": "integer"
             }
@@ -14551,6 +14653,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14614,6 +14718,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14688,6 +14794,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14766,6 +14874,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14843,6 +14953,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14852,6 +14964,8 @@
             "name": "media_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Media Id",
               "type": "integer"
             }
@@ -14909,6 +15023,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14983,6 +15099,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -14992,6 +15110,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -15056,6 +15176,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -15124,6 +15246,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -15133,6 +15257,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -15196,6 +15322,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -15276,6 +15404,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -15340,6 +15470,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -15414,6 +15546,8 @@
             "name": "praxis_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Praxis Id",
               "type": "integer"
             }
@@ -15596,7 +15730,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "$ref": "#/components/schemas/RelationshipTypeEnum"
                 },
                 {
                   "type": "null"
@@ -15854,6 +15988,8 @@
             "name": "character_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Character Id",
               "type": "integer"
             }
@@ -15911,6 +16047,8 @@
             "name": "relationship_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Relationship Id",
               "type": "integer"
             }
@@ -16014,6 +16152,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 2147483647,
+                  "minimum": 0,
                   "type": "integer"
                 },
                 {
@@ -16030,6 +16170,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 2147483647,
+                  "minimum": 0,
                   "type": "integer"
                 },
                 {
@@ -16046,6 +16188,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -16062,6 +16206,8 @@
             "schema": {
               "anyOf": [
                 {
+                  "maximum": 9223372036854775807,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -16125,6 +16271,8 @@
             "required": false,
             "schema": {
               "default": 50,
+              "maximum": 500,
+              "minimum": 1,
               "title": "Limit",
               "type": "integer"
             }
@@ -16135,6 +16283,8 @@
             "required": false,
             "schema": {
               "default": 0,
+              "maximum": 2147483647,
+              "minimum": 0,
               "title": "Offset",
               "type": "integer"
             }
@@ -16322,6 +16472,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -16376,6 +16528,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -16437,6 +16591,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -16510,6 +16666,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -16575,6 +16733,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -16648,6 +16808,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }
@@ -16712,6 +16874,8 @@
             "name": "task_id",
             "required": true,
             "schema": {
+              "maximum": 9223372036854775807,
+              "minimum": 1,
               "title": "Task Id",
               "type": "integer"
             }

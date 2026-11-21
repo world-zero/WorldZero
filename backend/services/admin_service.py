@@ -770,6 +770,17 @@ async def admin_edit_task(
             detail="Active tasks cannot be edited. Retire the task first.",
         )
     before = (task.point_value, task.primary_faction_slug)
+    if (
+        data.point_value is not None
+        and era.proposed_task_points_max is not None
+        and data.point_value > era.proposed_task_points_max
+    ):
+        raise_coded(
+            422,
+            ErrorCode.task_points_too_high,
+            f"A task may be worth at most {era.proposed_task_points_max} points.",
+            {"max": era.proposed_task_points_max},
+        )
     if data.primary_faction_slug is not None:
         # Config owns factions (ADR-0042; cross-faction sentinel is a key). Else FK 500.
         if data.primary_faction_slug not in era.factions:

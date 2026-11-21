@@ -108,6 +108,8 @@ class ErrorCode(str, enum.Enum):
     task_not_pending = "TASK_NOT_PENDING"
     #: A proposed ``point_value`` over ``EraConfig.proposed_task_points_max``.
     task_points_too_high = "TASK_POINTS_TOO_HIGH"
+    #: A proposed ``level_required`` above the live era's top level.
+    task_level_too_high = "TASK_LEVEL_TOO_HIGH"
     #: #3062. Delete is for import junk with no references; else retire.
     task_has_history = "TASK_HAS_HISTORY"
     #: #3062. A ``seed_key`` row would come back on the next deploy.

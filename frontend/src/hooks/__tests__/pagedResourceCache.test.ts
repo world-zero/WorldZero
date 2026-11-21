@@ -26,9 +26,9 @@ const VIEWER = '7:12'
 function harness(): {
   fetchPage: ReturnType<typeof vi.fn>
   cached: PagedCache<string>
-  read: (deps: unknown[], limit?: number) => Promise<string[]>
+  read: (deps: unknown[], offset?: number) => Promise<string[]>
 } {
-  const fetchPage = vi.fn((limit: number) => Promise.resolve([`rows-${limit}`]))
+  const fetchPage = vi.fn((offset: number) => Promise.resolve([`rows-${offset}`]))
   const cached: PagedCache<string> = {
     cache: createKeyedResourceCache<string[]>(AMBIENT_TTL_MS, createCacheEpoch()),
     viewer: VIEWER,
@@ -36,8 +36,8 @@ function harness(): {
   return {
     fetchPage,
     cached,
-    read: (deps, limit = DEFAULT_PAGE_SIZE) =>
-      loadPage(fetchPage, limit, DEFAULT_PAGE_SIZE, deps, cached),
+    read: (deps, offset = 0) =>
+      loadPage(fetchPage, offset, DEFAULT_PAGE_SIZE, deps, cached),
   }
 }
 
@@ -77,15 +77,15 @@ describe('the acceptance test: a filter round trip is one request, not two', () 
 })
 
 describe('loadPage — first page only', () => {
-  it('caches the first page and refetches every grown window', async () => {
+  it('caches the first page and refetches every later page', async () => {
     const { fetchPage, read } = harness()
     const deps = ['standard']
 
     await read(deps)
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
-    await read(deps, DEFAULT_PAGE_SIZE * 2)
-    await read(deps, DEFAULT_PAGE_SIZE * 2)
+    await read(deps, DEFAULT_PAGE_SIZE)
+    await read(deps, DEFAULT_PAGE_SIZE)
     expect(fetchPage).toHaveBeenCalledTimes(3)
 
     await read(deps)
@@ -93,9 +93,9 @@ describe('loadPage — first page only', () => {
   })
 
   it('an uncached caller (no PagedCache) is exactly the old bare fetch', async () => {
-    const fetchPage = vi.fn((limit: number) => Promise.resolve([`rows-${limit}`]))
-    await loadPage(fetchPage, DEFAULT_PAGE_SIZE, DEFAULT_PAGE_SIZE, ['standard'], undefined)
-    await loadPage(fetchPage, DEFAULT_PAGE_SIZE, DEFAULT_PAGE_SIZE, ['standard'], undefined)
+    const fetchPage = vi.fn((offset: number) => Promise.resolve([`rows-${offset}`]))
+    await loadPage(fetchPage, 0, DEFAULT_PAGE_SIZE, ['standard'], undefined)
+    await loadPage(fetchPage, 0, DEFAULT_PAGE_SIZE, ['standard'], undefined)
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
 })
@@ -106,8 +106,8 @@ describe('the rows are viewer-relative', () => {
     const fetchPage = vi.fn(() => Promise.resolve(['eligible-for-me']))
     const deps = ['standard', 'level', 'All', '', true, '', false]
 
-    await loadPage(fetchPage, 50, 50, deps, { cache, viewer: '7:12' })
-    await loadPage(fetchPage, 50, 50, deps, { cache, viewer: '9:31' })
+    await loadPage(fetchPage, 0, 50, deps, { cache, viewer: '7:12' })
+    await loadPage(fetchPage, 0, 50, deps, { cache, viewer: '9:31' })
     // `can_sign_up` etc. are computed per caller.
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
@@ -135,11 +135,11 @@ describe('the era epoch outranks the TTL', () => {
     const fetchPage = vi.fn(() => Promise.resolve(['task']))
 
     epoch.noteEraStamp(1)
-    await loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
+    await loadPage(fetchPage, 0, 50, ['standard'], { cache, viewer: VIEWER })
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
     epoch.noteEraStamp(2)
-    await loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
+    await loadPage(fetchPage, 0, 50, ['standard'], { cache, viewer: VIEWER })
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
 
@@ -152,12 +152,12 @@ describe('the era epoch outranks the TTL', () => {
     )
 
     epoch.noteEraStamp(1)
-    const inFlight = loadPage(fetchPage, 50, 50, ['standard'], { cache, viewer: VIEWER })
+    const inFlight = loadPage(fetchPage, 0, 50, ['standard'], { cache, viewer: VIEWER })
     epoch.noteEraStamp(2)
     release(['old-era-task'])
     await inFlight
 
-    const afterRollover = loadPage(fetchPage, 50, 50, ['standard'], {
+    const afterRollover = loadPage(fetchPage, 0, 50, ['standard'], {
       cache,
       viewer: VIEWER,
     })
@@ -173,13 +173,13 @@ describe('a write invalidates — no five-minute wait on your own action', () =>
     const fetchPage = vi.fn(() => Promise.resolve(['task']))
     const cached: PagedCache<string> = { cache, viewer: VIEWER }
 
-    await loadPage(fetchPage, 50, 50, ['standard'], cached)
-    await loadPage(fetchPage, 50, 50, ['standard'], cached)
+    await loadPage(fetchPage, 0, 50, ['standard'], cached)
+    await loadPage(fetchPage, 0, 50, ['standard'], cached)
     expect(fetchPage).toHaveBeenCalledTimes(1)
 
     dropCachesAfterWrite()
 
-    await loadPage(fetchPage, 50, 50, ['standard'], cached)
+    await loadPage(fetchPage, 0, 50, ['standard'], cached)
     expect(fetchPage).toHaveBeenCalledTimes(2)
   })
 
@@ -191,13 +191,13 @@ describe('a write invalidates — no five-minute wait on your own action', () =>
       () => new Promise<string[]>((resolve) => { release = resolve }),
     )
 
-    const inFlight = loadPage(fetchPage, 50, 50, ['standard'], cached)
+    const inFlight = loadPage(fetchPage, 0, 50, ['standard'], cached)
     dropCachesAfterWrite()
     release(['task-still-claimable'])
     await inFlight
 
     // No epoch advance here, so the cache's own generation is the guard.
-    const afterWrite = loadPage(fetchPage, 50, 50, ['standard'], cached)
+    const afterWrite = loadPage(fetchPage, 0, 50, ['standard'], cached)
     expect(fetchPage).toHaveBeenCalledTimes(2)
     release(['task-now-claimed'])
     expect(await afterWrite).toEqual(['task-now-claimed'])

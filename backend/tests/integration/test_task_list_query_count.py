@@ -180,7 +180,8 @@ async def test_batched_flags_equal_the_per_task_predicates(
 
     # Keep the retired and already-member rows on the page.
     response = await client.get(
-        "/tasks?limit=50&status=all&exclude_character_id=0", headers=auth_headers
+        "/tasks?limit=50&status=all&exclude_character_id=999999999",
+        headers=auth_headers,
     )
     assert response.status_code == 200
     rows = {row["id"]: row for row in response.json()}
