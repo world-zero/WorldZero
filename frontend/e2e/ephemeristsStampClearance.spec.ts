@@ -120,7 +120,6 @@ test.describe('Ephemerists stamp clearance (#2820)', () => {
       } else {
         expect(slip.fromStatus, 'slip: status row to stamp (S.N.I.D.E.)').toBeGreaterThanOrEqual(SLIP_CLEARANCE - 0.5)
       }
-      console.log('MEASURE', name, JSON.stringify(slip))
       expect(slip.overflow, 'slip overflows the viewport').toBe(false)
       await slipContext.close()
     })

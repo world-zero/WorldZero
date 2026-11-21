@@ -81,8 +81,7 @@ the phone skins. Character profile went the same way in #1319 (`*ProfileBody`).
 
 **Mobile-only screens**: `DefaultFieldDesk` / `WowFieldDesk` / `UaFieldDesk` / `SnideFieldDesk` …
 (`fielddesk`), plus the singleton `DefaultEditCharacter`.
-Players is the one surface still split by form factor: `MobilePlayers` and
-`DesktopPlayers`, each taking the same `playersProps` shape.
+Players is one component, `PlayersDirectory` (`playersProps`); the phone layout comes from `useFormFactor()`.
 
 **Character creation is faction-dispatched, not a singleton** (#2473): `characterpaths`
 ships nine skins — `DefaultCreateCharacter` (the `na` dress) plus `UaCreateCharacter`,

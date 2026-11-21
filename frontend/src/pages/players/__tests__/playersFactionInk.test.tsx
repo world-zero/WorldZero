@@ -28,10 +28,11 @@ vi.mock('../../../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'light' as const, toggle: () => {} }),
 }))
 
-import DesktopPlayers from '../DesktopPlayers'
-import MobilePlayers from '../MobilePlayers'
+import { DesktopPlayers, MobilePlayers } from './playersAt'
 import { NO_RELATIONSHIPS, rankPlayers, type PlayersViewProps } from '../playersData'
 import { readIndexCss } from '../../../test/indexCss'
+
+vi.mock('../../../hooks/useFormFactor', async () => (await import('./formFactorMock')).mockModule)
 
 // The two grounds, from index.css: `--color-bg-page`, and `--color-bg-surface`
 // (alpha, so composited over the page, #1413) for the viewer's own row. That

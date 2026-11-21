@@ -38,7 +38,7 @@ const classTokenSites = (source: string): number[] =>
 
 /**
  * The top-level component enclosing `at` (to the next column-one `}`). Scoped
- * by component, not file: `DesktopPlayers.tsx` has unrelated inline inks.
+ * by component, not file: `PlayersDirectory.tsx` has unrelated inline inks.
  */
 const enclosingComponent = (source: string, at: number): string => {
   const starts = [...source.slice(0, at).matchAll(/\n(?=(?:export )?(?:default )?(?:function|const) )/g)]
@@ -69,8 +69,7 @@ describe('the redaction mark reaches a slot that declares its own ink (#2646)', 
     // first. All `false`: the flag stopped earning its keep — a decision, not a tidy-up.
     expect(Object.fromEntries(mounts().map(({ path, inlineInk }) => [path, inlineInk]))).toEqual({
       'components/selectCard/DefaultSelectCard.tsx': true,
-      'pages/players/DesktopPlayers.tsx': false,
-      'pages/players/MobilePlayers.tsx': false,
+      'pages/players/PlayersDirectory.tsx': false,
     })
   })
 
