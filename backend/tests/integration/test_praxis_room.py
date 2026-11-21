@@ -586,15 +586,30 @@ async def test_kicked_member_socket_is_closed(
             assert kickee.close_code == 1008
 
 
-async def _close_via(action, rooms, collab, account, account2, character2, db_session):
-    """Run ``action`` against character2; return (their socket, the collaborator's)."""
+async def _close_via(action, rooms, collab, account, account2, *, closes: bool):
+    """Run ``action`` against character2; return (their socket, the collaborator's).
+
+    When it closes them, also prove their later edit never reaches ``body_text``.
+    """
     victim = await rooms.open(collab.id, account2.id)
     mate = await rooms.open(collab.id, account.id)
     async with client_doc(victim) as doc, client_doc(mate) as mate_doc:
         await _wait_for_body(doc, SEED_BODY, "the member about to lose access")
         await _wait_for_body(mate_doc, SEED_BODY, "the collaborator")
         await action()
-        await asyncio.sleep(0.3)
+        if closes:
+            await _wait_for(victim.closed.is_set, "the removed player's socket")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "ghost ")
+            # The mate's edit is the control: once it lands, a flush has run.
+            mate_doc.get(ROOM_BODY_KEY, type=Text).insert(0, "mate ")
+            await _wait_for_record(
+                rooms,
+                collab.id,
+                "the collaborator's flush",
+                body_text=f"mate {SEED_BODY}",
+            )
+        else:
+            await asyncio.sleep(0.3)
         return victim, mate
 
 
@@ -609,11 +624,12 @@ async def test_removing_a_player_closes_their_socket_not_the_collaborators(
         ),
         "delete": lambda: soft_delete_character(character2.id, db_session),
     }
-    async with running_rooms(db_session, monkeypatch) as rooms:
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=0.05
+    ) as rooms:
         victim, mate = await _close_via(
-            actions[path], rooms, collab, account, account2, character2, db_session
+            actions[path], rooms, collab, account, account2, closes=True
         )
-        assert victim.closed.is_set()
         assert victim.close_code == 1008
         assert not mate.closed.is_set()
 
@@ -624,7 +640,7 @@ async def test_unban_and_unsuspend_close_nothing(
     async with running_rooms(db_session, monkeypatch) as rooms:
         victim, _ = await _close_via(
             lambda: _lift(db_session, account, account2, character2),
-            rooms, collab, account, account2, character2, db_session,
+            rooms, collab, account, account2, closes=False,
         )
         assert not victim.closed.is_set()
 
