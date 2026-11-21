@@ -1,9 +1,4 @@
-"""Block record service (ADR-0077); independent of the friend/foe edge.
-
-A block is a contact barrier (ADR-0077 amendment, #3867): taunts and pushes stop
-both ways, the blocked party's requests to the blocker are swallowed, their
-comments are censored for the blocker, and the blocker may not reach them.
-"""
+"""Block record service; a contact barrier (ADR-0077 and its #3867 amendment)."""
 from typing import Union
 
 from sqlalchemy import ColumnElement, Exists, Select, case, delete, exists, or_, select
@@ -48,7 +43,6 @@ def has_blocked(
 
 
 async def blocked_by(character_id: int, session: AsyncSession) -> set[int]:
-    """The characters ``character_id`` has blocked (outgoing only)."""
     return set(
         (
             await session.scalars(
@@ -121,9 +115,8 @@ async def unblock_character(
     character_id: int,
     session: AsyncSession,
 ) -> None:
-    """Restores no edge (ADR-0077 ruling 5); swallowed requests still pending
-    show again, since every swallow is a read-time filter. No match is a no-op,
-    not a 404, so the blocked party learns nothing."""
+    """Restores no edge (ADR-0077 ruling 5). No match is a no-op, not a 404, so
+    the blocked party learns nothing."""
     await session.execute(
         delete(CharacterBlock).where(
             CharacterBlock.blocker_character_id == blocker.id,

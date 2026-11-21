@@ -96,6 +96,6 @@ describe('BlockedSection', () => {
 
   it('keeps the lead to ADR-0077 reach: silent, like the block confirm', () => {
     expect(common.settings.blocked.lead.toLowerCase()).toContain("aren't told")
-    expect(common.relationships.blockConfirm.body.toLowerCase()).toContain('not told')
+    expect(common.relationships.blockConfirm.body.toLowerCase()).toContain("aren't told")
   })
 })
