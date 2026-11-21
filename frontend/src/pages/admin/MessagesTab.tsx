@@ -75,9 +75,9 @@ export default function MessagesTab() {
                 style={{ opacity: m.is_archived ? 0.6 : 1 }}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="font-display text-lg font-bold">{m.name}</p>
-                    <p className="font-body text-xs text-muted">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display text-lg font-bold [overflow-wrap:anywhere]">{m.name}</p>
+                    <p className="font-body text-xs text-muted [overflow-wrap:anywhere]">
                       {m.email} &middot; {formatTimestamp(m.created_at)}
                     </p>
                   </div>
@@ -88,7 +88,7 @@ export default function MessagesTab() {
                     {m.is_archived ? t('moderation.messages.unarchive') : t('moderation.messages.archive')}
                   </button>
                 </div>
-                <p className="font-body content-text text-ink mt-2 whitespace-pre-wrap">{m.message}</p>
+                <p className="font-body content-text text-ink mt-2 whitespace-pre-wrap [overflow-wrap:anywhere]">{m.message}</p>
               </div>
             ))}
           </div>
