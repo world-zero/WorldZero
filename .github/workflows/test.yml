@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group:
 
 # One run per ref. A superseded push cancels its own in-flight jobs rather
 # than racing them to completion. main is exempt — see below.
