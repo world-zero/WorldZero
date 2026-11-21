@@ -236,6 +236,6 @@ async def _sweep_unclaimed_heic(
                 to_unlink.append(scanned.absolute_path)
             report.cleaned.append(f"{scanned.relative_path} (leftover, removed)")
         else:
-            report.failed.append(
-                (scanned.relative_path, "unreferenced; delete the file by hand")
-            )
+            held = scanned.absolute_path.startswith(_roots(media_root)[1] + os.sep)
+            fix = "delete the file by hand" if held else "run sweep_orphan_media.py"
+            report.failed.append((scanned.relative_path, f"unreferenced; {fix}"))

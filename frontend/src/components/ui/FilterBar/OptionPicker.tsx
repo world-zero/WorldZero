@@ -2,7 +2,7 @@ import { useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { useModal } from '../../../hooks/useModal'
-import { drawAtRoot } from '../drawAtRoot'
+import BottomSheet from '../BottomSheet'
 import { toggleOption, type FilterFacet } from './filterState'
 
 /** The trigger stacks at most three ornaments; the badge carries the rest. */
@@ -66,7 +66,7 @@ export default function OptionPicker({ facet }: { facet: FilterFacet }) {
  * The open panel. Exported so DOM-less tests can render it (`open` is
  * click-only state).
  *
- * The sheet draws at the document root (#1591, see `drawAtRoot`); the popover
+ * The sheet draws at the document root (#1591, see `BottomSheet`); the popover
  * is not portalled because it is `position: absolute` against its trigger.
  */
 export function OptionOverlay({
@@ -82,13 +82,8 @@ export function OptionOverlay({
   const { label, options, selected, onChange, renderOrnament } = facet
   const ref = useModal(onDone)
 
-  const panel = (
-    <div
-      ref={ref}
-      className={isSheet ? 'filter-factions__sheet' : 'filter-factions__popover'}
-      role="dialog"
-      aria-label={label}
-    >
+  const body = (
+    <>
       <div className="filter-factions__panel-head">
         <span className="label-heading">{label}</span>
         <button
@@ -131,20 +126,26 @@ export function OptionOverlay({
       <button type="button" className="filter-factions__done" onClick={onDone}>
         {t('filters.bar.done')}
       </button>
-    </div>
+    </>
   )
 
-  if (!isSheet) return panel
+  if (!isSheet) {
+    return (
+      <div ref={ref} className="filter-factions__popover" role="dialog" aria-label={label}>
+        {body}
+      </div>
+    )
+  }
 
-  return drawAtRoot(
-    <>
-      <button
-        type="button"
-        className="filter-factions__scrim"
-        aria-label={t('filters.bar.done')}
-        onClick={onDone}
-      />
-      {panel}
-    </>,
+  return (
+    <BottomSheet
+      label={label}
+      scrimLabel={t('filters.bar.done')}
+      onClose={onDone}
+      grab={false}
+      panelClass="filter-factions__sheet"
+    >
+      {body}
+    </BottomSheet>
   )
 }

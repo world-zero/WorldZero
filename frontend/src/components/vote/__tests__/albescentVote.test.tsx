@@ -104,7 +104,7 @@ describe('AlbescentVote markup', () => {
   it('renders the shared login gate for an anonymous viewer', () => {
     mocks.user = null
     const html = render()
-    expect(html.replace(/<[^>]*>/g, '')).toContain('Log in to vote')
+    expect(html.replace(/<[^>]*>/g, '')).toContain('Sign in to vote')
     expect(html).not.toContain('aria-label="Rate 1 of 5"')
   })
 

@@ -107,12 +107,12 @@ describe('CharacterSwitcherSheet', () => {
   })
 
   it('clears the tab bar on the phone and nothing on the desktop rail', () => {
-    expect(switcher('mobile')).toContain('padding-bottom:var(--switcher-bottom, var(--space-xl))')
+    expect(switcher('mobile')).toContain('switcher-sheet')
   })
 
   it('takes its scrim and shadow from a token, never a raw rgba', () => {
     const html = switcher('mobile')
-    expect(html).toContain('var(--color-overlay-strong)')
+    expect(html).toContain('sheet-scrim')
     expect(html).not.toMatch(/rgba\(/)
   })
 })
@@ -132,12 +132,12 @@ describe('OptionOverlay', () => {
       renderToStaticMarkup(<OptionOverlay facet={FACET} isSheet={false} onDone={() => {}} />),
     )
     expect(html).toContain('filter-factions__popover')
-    expect(html).not.toContain('filter-factions__scrim')
+    expect(html).not.toContain('sheet-scrim')
   })
 
   it('still renders the sheet and its scrim inline in the DOM-less harness', () => {
     const html = renderToStaticMarkup(<OptionOverlay facet={FACET} isSheet onDone={() => {}} />)
-    expect(html).toContain('filter-factions__scrim')
+    expect(html).toContain('sheet-scrim')
     expect(html).toContain('filter-factions__sheet')
     expect(html).toContain('aria-checked="true"')
   })

@@ -37,7 +37,7 @@ afterEach(() => {
 describe('onboarding beat 5', () => {
   it('gives an anonymous viewer the live control, and a cast sends nothing', async () => {
     const { view } = mount()
-    expect(view.container.textContent).not.toMatch(/log in to vote/i)
+    expect(view.container.textContent).not.toMatch(/sign in to vote/i)
     const stars = view.container.querySelectorAll('button[aria-pressed]')
     expect(stars).toHaveLength(5)
     await act(async () => {

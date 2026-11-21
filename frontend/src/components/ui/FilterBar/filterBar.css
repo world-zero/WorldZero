@@ -276,11 +276,6 @@
    context), so the tab bar strip is reserved here instead; max-height grows by
    the same clearance. The rows region scrolls so head and Done stay pinned. */
 .filter-factions__sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
   max-height: calc(70vh + var(--tab-bar-clearance));
   padding: var(--space-lg) var(--space-lg)
     calc(var(--space-lg) + var(--tab-bar-clearance));
@@ -291,17 +286,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-}
-
-.filter-factions__scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 39;
-  border: 0;
-  padding: 0;
-  /* One scrim for every overlay: --color-overlay-strong (as ConfirmDialog etc.). */
-  background: var(--color-overlay-strong);
-  cursor: pointer;
 }
 
 .filter-factions__panel-head {

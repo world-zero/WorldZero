@@ -918,8 +918,9 @@ const LEGACY_STATIC_STYLE_FILES = fs
  * rule, the array-param serialization FastAPI actually reads — and every one of
  * those failures is a 200 with the wrong answer rather than a crash. Cheaper as
  * a lint line than as a bug report.
+ * #3894: `createPortal` is banned too; overlays go through drawAtRoot.
  */
-const NO_AXIOS_IMPORT = [
+const RESTRICTED_IMPORTS = [
   'error',
   {
     paths: [
@@ -967,7 +968,7 @@ export default [
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
     rules: {
-      'no-restricted-imports': NO_AXIOS_IMPORT,
+      'no-restricted-imports': RESTRICTED_IMPORTS,
     },
   },
   {
@@ -1014,7 +1015,7 @@ export default [
       // on any surface — so unlike the tier arm it registers here (#2077).
       'local/no-faction-hue-as-ink': 'error',
       'sonarjs/no-identical-functions': 'error',
-      'no-restricted-imports': NO_AXIOS_IMPORT,
+      'no-restricted-imports': RESTRICTED_IMPORTS,
     },
   },
   {
@@ -1260,6 +1261,7 @@ export default [
       'no-restricted-imports': [
         'error',
         {
+          ...RESTRICTED_IMPORTS[1],
           patterns: [
             {
               group: ['**/factions', '**/factions/**', '**/utils/factions', '**/auth/**', '**/hooks/**'],

@@ -171,4 +171,16 @@ describe("MetataskRemoveConfirm", () => {
     expect(html).toContain(i18n.t("editPraxis.attach.removeTitle", { ns: "forms" }));
     expect(html).toContain(i18n.t("editPraxis.attach.removeConfirm", { ns: "forms" }));
   });
+
+  it("disables Confirm while this metatask's removal is in flight", () => {
+    const target = metatask(7, "coven", "Bless the work", 60);
+    const confirm = (applying: number | null) =>
+      render(
+        <MetataskRemoveConfirm
+          {...mkState({ metataskRemovalTarget: target, applyingMetatask: applying })}
+        />,
+      ).match(/<button[^>]*data-testid="confirm-accept"[^>]*>/)![0];
+    expect(confirm(7)).toContain("disabled");
+    expect(confirm(null)).not.toContain("disabled");
+  });
 });

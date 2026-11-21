@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import LoginNotice from '../../components/LoginNotice'
 import { useAuth } from '../../auth/AuthContext'
 import { acceptTerms } from '../../api/terms'
 import type { TaskOut } from '../../api/tasks'
@@ -363,6 +364,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
 
       {step === 'contract' && (
         <div className={screenCls}>
+          <LoginNotice />
           {loading || recording || contractOnFile ? (
             <div className="page font-body text-muted">{tc('loading')}</div>
           ) : (
