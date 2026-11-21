@@ -83,7 +83,6 @@
     "DefaultEditPraxis": "src/pages/editPraxis/archetypes/DefaultEditPraxis.tsx",
     "DefaultFactionBody": "src/pages/factionDetail/archetypes/DefaultFactionBody.tsx",
     "DefaultFactionHero": "src/components/factionHero/DefaultFactionHero.tsx",
-    "DefaultFactionsDirectory": "src/pages/factions/mobileArchetypes/DefaultFactionsDirectory.tsx",
     "DefaultFeedFrame": "src/components/feed/DefaultFeedFrame.tsx",
     "DefaultFieldDesk": "src/pages/fieldDesk/mobileArchetypes/DefaultFieldDesk.tsx",
     "DefaultPointsRing": "src/components/factionMarks/DefaultPointsRing.tsx",
@@ -158,7 +157,6 @@
     "FactionProfileBody": "src/pages/characterProfile/FactionProfileBody.tsx",
     "FactionSelectCard": "src/components/selectCard/FactionSelectCard.tsx",
     "FactionSigil": "src/components/sigil/FactionSigil.tsx",
-    "FactionsDirectoryView": "src/pages/factions/mobileArchetypes/FactionsDirectoryView.tsx",
     "FeedArchiveButton": "src/components/feed/FeedArchiveButton.tsx",
     "FeedBadge": "src/components/feed/FeedBadge.tsx",
     "FeedBankFullModal": "src/components/feed/FeedBankFullModal.tsx",
@@ -467,10 +465,6 @@
     "DefaultFactionHero": {
       "cardMode": "column"
     },
-    "DefaultFactionsDirectory": {
-      "cardMode": "single",
-      "viewport": "390x760"
-    },
     "DefaultFieldDesk": {
       "cardMode": "single",
       "viewport": "390x760"
@@ -590,10 +584,6 @@
     "FactionProfileBody": {
       "cardMode": "single",
       "viewport": "1200x900"
-    },
-    "FactionsDirectoryView": {
-      "cardMode": "single",
-      "viewport": "390x760"
     },
     "FeedBankFullModal": {
       "cardMode": "single",
