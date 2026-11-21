@@ -20,6 +20,7 @@ Perk names below must appear in this file (``tests/test_era_rules_modules.py``):
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,7 +33,7 @@ from models.task import Task, TaskStatus
 from seed import upsert_era_factions
 from services.character_stats import recalculate_character_stats
 from services.habit_bonus import stamp_habit_bonus
-from services.praxis import evaluate_signup
+from services.praxis import _check_create_preconditions, evaluate_signup
 from services.praxis_scoring import compute_contributions
 from tests.integration.eras._shared import (
     assert_albescent_alone_bypasses_metatask_level,
@@ -289,6 +290,35 @@ async def test_pending_perk_reaches_only_tasks_below_the_ceiling(
 
     eligibility = await evaluate_signup(member, task, db_session, ERA_1)
     assert eligibility.allowed is expected
+
+
+@pytest.mark.asyncio
+async def test_pending_perk_refuses_a_task_inside_the_first_look_window(
+    db_session: AsyncSession, era: Era
+):
+    await _seed_factions(db_session)
+    author = await make_character(db_session, era, username="pendauthor")
+    member = await make_character(
+        db_session, era, username="pendeph", faction_slug="ephemerists"
+    )
+    task = await make_task(
+        db_session, author, title="Secret Title", point_value=10,
+        status=TaskStatus.pending,
+    )
+
+    with pytest.raises(HTTPException) as refused:
+        await _check_create_preconditions(
+            task.id, PraxisType.solo, member.id, db_session, ERA_1
+        )
+
+    assert refused.value.status_code == 404
+    assert "Secret Title" not in str(refused.value.detail)
+
+    task.created_at -= timedelta(hours=ERA_1.pending_task_admin_review_hours + 1)
+    await db_session.flush()
+    await _check_create_preconditions(
+        task.id, PraxisType.solo, member.id, db_session, ERA_1
+    )
 
 
 # Snide: duel_win_modifier / duel_loss_modifier
