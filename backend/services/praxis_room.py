@@ -67,6 +67,7 @@ _FLUSH_DEBOUNCE_SECONDS = 2.0
 
 _MAX_CLIENT_UPDATE_BYTES = 2 * 1024 * 1024
 _INVALID_DRAFT = "That draft is not a valid document."
+_OVERSIZED_UPDATE = "That draft is too large to send."
 _OVERSIZED_DRAFT = (
     f"That post is too long: keep the title under {PRAXIS_TITLE_MAX} and the body "
     f"under {PRAXIS_BODY_MAX} characters."
@@ -228,12 +229,25 @@ class _RoomFlusher:
         self._changed = Event()
         self._pending = False
         self._absorbed: dict[str, str] | None = None
+        self._expected: dict[str, str] | None = None
         self._cancel_scope: anyio.CancelScope | None = None
+
+    def expect(self, values: dict[str, str]) -> None:
+        """A submit is merging ``values`` but has not committed. A flush that
+        snapshotted them must not cancel it in the gap before ``absorb``."""
+        self._expected = values
+
+    def forget(self) -> None:
+        """The submit rolled back. A flush in the window before this hook may
+        have matched ``_expected`` and skipped the edit event, so flush again."""
+        self._expected = None
+        self.mark_changed()
 
     def absorb(self, values: dict[str, str]) -> None:
         """``values`` is text a committed submit is proposing: that text alone
         must not cancel the proposal. Any later difference still does."""
         self._absorbed = values
+        self._expected = None
 
     def mark_changed(self) -> None:
         """The document moved. Safe from the observer: it only sets a flag."""
@@ -289,7 +303,7 @@ class _RoomFlusher:
             # Deferred: collab_consensus imports this module.
             from services.collab_consensus import on_room_edit
 
-            if values != self._absorbed:
+            if values not in (self._absorbed, self._expected):
                 await on_room_edit(self._praxis_id, session)
             await session.commit()
         # Only after commit, so a cancelled write still flushes on close.
@@ -302,13 +316,15 @@ _ABSORB = "praxis_room_absorb"
 
 @event.listens_for(Session, "after_commit")
 def _absorb_committed(session: Session) -> None:
-    if absorb := session.info.pop(_ABSORB, None):
-        absorb()
+    if pending := session.info.pop(_ABSORB, None):
+        flusher, values = pending
+        flusher.absorb(values)
 
 
 @event.listens_for(Session, "after_rollback")
 def _drop_absorb(session: Session) -> None:
-    session.info.pop(_ABSORB, None)
+    if pending := session.info.pop(_ABSORB, None):
+        pending[0].forget()
 
 
 def _header(scope: dict[str, Any], name: str) -> str | None:
@@ -535,26 +551,32 @@ class PraxisRoomServer(WebsocketServer):
             pass
         return doc
 
-    async def document_over_cap(self, praxis_id: int) -> bool:
-        name = room_name_for(praxis_id)
-        async with self._open_lock:
-            doc = await self._current_doc(name, self.rooms.get(name))
-        return _over_cap(_document_values(doc))
-
-    async def discard_document(self, praxis: Praxis, session: AsyncSession) -> None:
+    async def discard_document(
+        self, praxis: Praxis, session: AsyncSession, *, skip_over_cap: bool = False
+    ) -> bool:
         """Publish: the document becomes the record, and is then destroyed (#1745).
 
         Room stopped before its rows are deleted, all under ``_open_lock``, so
         nothing can write back or re-seed. Written via the entity (not Core) so
         the caller's sealed response isn't stale. All sockets are revoked, or a
         client's old doc would merge into the next seed (duplication).
+
+        Over cap: 413, or with ``skip_over_cap`` return False and discard
+        nothing, the check and the discard under one lock hold.
         """
         name = room_name_for(praxis.id)
         async with self._open_lock:
             room = self.rooms.get(name)
             doc = await self._current_doc(name, room)
             if _over_cap(_document_values(doc)):
-                raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
+                if skip_over_cap:
+                    return False
+                raise_coded(
+                    413,
+                    ErrorCode.praxis_doc_update_invalid,
+                    _OVERSIZED_DRAFT,
+                    {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
+                )
             flusher = self._flushers.pop(name, None)
             if flusher is not None:
                 flusher.abandon()
@@ -572,6 +594,7 @@ class PraxisRoomServer(WebsocketServer):
             )
             # The only place a document dies; clients key their offline copy on this.
             praxis.room_generation += 1
+            return True
 
     async def apply_client_update(
         self, praxis_id: int, update: bytes
@@ -585,11 +608,21 @@ class PraxisRoomServer(WebsocketServer):
         try:
             room.ydoc.apply_update(update)
         except Exception:
-            raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
+            raise_coded(
+                422,
+                ErrorCode.praxis_doc_update_invalid,
+                _INVALID_DRAFT,
+                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
+            )
         # The caller cancels on a difference; this text is the new proposal.
         values = _document_values(room.ydoc)
         if _over_cap(values):
-            raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
+            raise_coded(
+                413,
+                ErrorCode.praxis_doc_update_invalid,
+                _OVERSIZED_DRAFT,
+                {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
+            )
         return values
 
     def loaded_values(self, praxis_id: int) -> dict[str, str]:
@@ -609,13 +642,9 @@ class PraxisRoomServer(WebsocketServer):
         self, praxis_id: int, values: dict[str, str], session: AsyncSession
     ) -> None:
         """Absorb only if the submit commits; a rollback un-proposes it."""
-        name = room_name_for(praxis_id)
-
-        def absorb() -> None:
-            if flusher := self._flushers.get(name):
-                flusher.absorb(values)
-
-        session.info[_ABSORB] = absorb
+        if flusher := self._flushers.get(room_name_for(praxis_id)):
+            flusher.expect(values)
+            session.info[_ABSORB] = (flusher, values)
 
     def revoke(self, praxis_id: int, character_id: int) -> None:
         """Door two: close every socket this character holds on this praxis."""
@@ -746,26 +775,34 @@ PRAXIS_ROOM_SERVER = PraxisRoomServer()
 PRAXIS_ROOM_APP = PraxisRoomASGIServer(PRAXIS_ROOM_SERVER)
 
 
-async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
-    """Flatten the document into the praxis, then destroy it; seal's txn (#1745)."""
-    await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
+async def discard_room_document(
+    praxis: Praxis, session: AsyncSession, *, skip_over_cap: bool = False
+) -> bool:
+    """Flatten the document into the praxis, then destroy it; seal's txn (#1745).
 
-
-async def document_over_cap(praxis_id: int) -> bool:
-    """Would sealing now 413? Lazy seals skip such a praxis rather than raise."""
-    return await PRAXIS_ROOM_SERVER.document_over_cap(praxis_id)
+    False = over cap and ``skip_over_cap``: nothing discarded. Lazy seals skip
+    such a praxis rather than 413 on a read.
+    """
+    return await PRAXIS_ROOM_SERVER.discard_document(
+        praxis, session, skip_over_cap=skip_over_cap
+    )
 
 
 async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:
     """Decode a submit's base64 Yjs state and merge it; the merged column values."""
     if len(state_b64) > _MAX_CLIENT_UPDATE_BYTES * 4 // 3 + 4:
-        raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
+        raise_coded(413, ErrorCode.praxis_doc_update_too_large, _OVERSIZED_UPDATE)
     try:
         update = base64.b64decode(state_b64, validate=True)
     except binascii.Error:
-        raise_coded(422, ErrorCode.praxis_doc_update_invalid, _INVALID_DRAFT)
+        raise_coded(
+            422,
+            ErrorCode.praxis_doc_update_invalid,
+            _INVALID_DRAFT,
+            {"max_title": PRAXIS_TITLE_MAX, "max_body": PRAXIS_BODY_MAX},
+        )
     if len(update) > _MAX_CLIENT_UPDATE_BYTES:
-        raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
+        raise_coded(413, ErrorCode.praxis_doc_update_too_large, _OVERSIZED_UPDATE)
     return await PRAXIS_ROOM_SERVER.apply_client_update(praxis_id, update)
 
 

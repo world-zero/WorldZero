@@ -78,6 +78,8 @@ class ErrorCode(str, enum.Enum):
     praxis_needs_proof = "PRAXIS_NEEDS_PROOF"
     #: 413 too big, 422 not a Yjs update: the draft the browser sent with a submit.
     praxis_doc_update_invalid = "PRAXIS_DOC_UPDATE_INVALID"
+    #: 413: the draft's encoded state itself is over the byte cap.
+    praxis_doc_update_too_large = "PRAXIS_DOC_UPDATE_TOO_LARGE"
     #: 409: a submit carried a draft for a praxis that is already published.
     praxis_already_live = "PRAXIS_ALREADY_LIVE"
     #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).
