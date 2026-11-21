@@ -12,11 +12,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
+from models.era import Era
+from models.faction import Faction
 from models.flag import Flag
 from models.praxis import ModerationStatus, PraxisStatus
 from models.task import Task
 from services.character_stats import recalculate_character_stats
-from tests.integration.factories import make_admin, make_solo_praxis
+from tests.integration.factories import (
+    cast_vote,
+    make_admin,
+    make_duel,
+    make_solo_praxis,
+)
 
 ADMIN_LIST = "/admin/praxes"
 PUBLIC_LIST = "/praxes"
@@ -376,6 +383,7 @@ async def test_flag_on_a_failed_praxis_is_refused_and_the_ruling_stands(
     failed = await make_solo_praxis(
         db_session, active_task, character2, moderation_status=ModerationStatus.failed
     )
+    await cast_vote(db_session, failed, character, 5)
     await db_session.commit()
 
     seen = await client.get(f"/praxes/{failed.id}", headers=auth_headers)
@@ -398,6 +406,23 @@ async def test_flag_on_a_failed_praxis_is_refused_and_the_ruling_stands(
         return (await db_session.execute(q)).scalar_one()
 
     assert await score() == 0
+
+
+@pytest.mark.asyncio
+async def test_a_failed_praxis_leading_its_duel_does_not_win_it(
+    client: AsyncClient, db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    _, challenger, opponent = await make_duel(
+        db_session, era, label="adminfail", challenger_votes=5, opponent_votes=1,
+        challenger_moderation=ModerationStatus.failed, commit=True,
+    )
+
+    async def duelist(character: Character) -> bool:
+        badges = (await client.get(f"/characters/{character.id}")).json()["badges"]
+        return "duelist" in [badge["key"] for badge in badges]
+
+    assert not await duelist(challenger)
+    assert await duelist(opponent)
 
 
 @pytest.mark.asyncio
