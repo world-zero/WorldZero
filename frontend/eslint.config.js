@@ -928,6 +928,11 @@ const NO_AXIOS_IMPORT = [
         message:
           'axios was retired in #1400 — issue requests through api/client.ts (apiGet/apiPost/...).',
       },
+      {
+        name: 'react-dom',
+        importNames: ['createPortal'],
+        message: 'Portal overlays through drawAtRoot (components/ui/drawAtRoot) (#3894).',
+      },
     ],
   },
 ]
@@ -1243,6 +1248,10 @@ export default [
     rules: {
       'i18next/no-literal-string': 'off',
     },
+  },
+  {
+    files: ['src/components/ui/drawAtRoot.ts'],
+    rules: { 'no-restricted-imports': 'off' },
   },
   {
     // The select-card blocks branch on no faction (ADR-0090); an import is the only way one could get in.
