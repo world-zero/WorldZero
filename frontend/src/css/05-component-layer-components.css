@@ -502,5 +502,39 @@
     background-position: 0 0, 2px 1px;
   }
   /* `.snide-tape` is retired (#1708); `snideWearsNoTape.test.ts` keeps it so. */
+  .unaffiliated-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+  }
+  .unaffiliated-banner-disc {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    flex: none;
+    background: var(--color-bg-surface-alt);
+    border: 1px solid var(--color-border);
+  }
+  .unaffiliated-banner-title {
+    font-size: var(--text-content);
+    color: var(--color-text-primary);
+  }
+  .unaffiliated-banner-body {
+    font-size: var(--text-content);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-xs);
+    line-height: 1.4;
+  }
+  .faction-tile-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xl);
+    align-items: stretch;
+  }
+  .faction-tile {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
