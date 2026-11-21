@@ -20,6 +20,7 @@ ASGI WebSocket route in this app (``main.py``). Server-side rules:
    first.
 """
 
+import asyncio
 import base64
 import binascii
 import logging
@@ -87,6 +88,8 @@ _DISCONNECTED: dict[str, Any] = {"type": "websocket.disconnect", "code": 1000}
 # ceiling is document size (one big rewrite); upgrade to checkpoint rows plus a
 # tail of updates, like pycrdt's SQLiteYStore.
 _SQUASH_UPDATES_ABOVE = 200
+
+_OBSERVER_WAIT_SECONDS = 5.0
 
 # Session-level advisory lock key; arbitrary, readable in ``pg_locks``.
 _SINGLE_INSTANCE_LOCK_KEY = 17400073
@@ -479,6 +482,7 @@ class PraxisRoomServer(WebsocketServer):
             room = self.rooms.get(name)
             if room is not None:
                 await self.start_room(room)
+                await self._observed(room)
                 return room
 
             room = YRoom(
@@ -496,7 +500,14 @@ class PraxisRoomServer(WebsocketServer):
             await self._load_or_seed(room, name)
             self._start_flusher(room, name)
             room.ready = True
+            await self._observed(room)
             return room
+
+    @staticmethod
+    async def _observed(room: YRoom) -> None:
+        # The store observer is subscribed by a task; an update applied before it
+        # runs reaches memory but never the rows. Bounded so a dead task can't hang.
+        await asyncio.wait_for(room.ydoc_observed.wait(), _OBSERVER_WAIT_SECONDS)
 
     def _start_flusher(self, room: YRoom, name: str) -> None:
         """Copy document changes into the praxis (#1743); subscribed after the seed."""

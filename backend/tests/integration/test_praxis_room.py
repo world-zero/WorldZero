@@ -216,14 +216,23 @@ class _SharedSessionFactory:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self._lock = asyncio.Lock()
+        self._owner: asyncio.Task | None = None
 
     def __call__(self) -> Any:
         return self._context()
 
     @asynccontextmanager
     async def _context(self) -> AsyncIterator[AsyncSession]:
-        async with self._lock:
+        # Reentrant per task: a submit that opens the room reads rows inside it.
+        if self._owner is asyncio.current_task():
             yield self._session
+            return
+        async with self._lock:
+            self._owner = asyncio.current_task()
+            try:
+                yield self._session
+            finally:
+                self._owner = None
 
 
 class _Rooms:
@@ -1889,3 +1898,54 @@ async def test_era_close_leaves_a_lapsed_over_cap_collab_unsealed(
     assert sealed == set()
     assert collab.status == PraxisStatus.pending
     assert collab.submitted_at is None
+
+
+@pytest.mark.parametrize("socket_holds_room", [False, True])
+async def test_a_submit_on_an_unopened_room_stores_its_text(
+    db_session, collab, account, account2, character, character2, character3,
+    socket_holds_room, monkeypatch,
+) -> None:
+    """#3992: the first update into a freshly opened room must reach the rows."""
+    db_session.add(PraxisMember(praxis_id=collab.id, character_id=character3.id))
+    await db_session.commit()
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=0.05
+    ) as rooms:
+        seeder = await rooms.open(collab.id, account2.id)
+        async with client_doc(seeder) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the seed")
+        await seeder.disconnect()
+        await _wait_for(lambda: rooms.room_doc(collab.id) is None, "room to unload")
+        offline = Doc()
+        for update in await _stored_updates(rooms, collab.id):
+            offline.apply_update(update)
+        offline.get(ROOM_BODY_KEY, type=Text).insert(0, "PROPOSED ")
+        state = base64.b64encode(offline.get_update()).decode()
+        if socket_holds_room:
+            await rooms.open(collab.id, account.id)
+
+        await rooms.submit(collab.id, character.id, doc_state=state)
+        proposed_at = (await _proposal(rooms, collab.id))[1]
+        assert proposed_at is not None
+
+        async with asyncio.timeout(_TIMEOUT_SECONDS):
+            while await _update_count(rooms.sessions._session, collab.id) < 2:
+                await asyncio.sleep(0.02)
+        await _wait_for_record(
+            rooms, collab.id, "the flush", body_text=f"PROPOSED {SEED_BODY}"
+        )
+        name = room_name_for(collab.id)
+        async with rooms.server._open_lock:
+            await rooms.server._evict_locked(name, rooms.server.rooms.get(name))
+        reader = await rooms.open(collab.id, account2.id)
+        async with client_doc(reader) as doc:
+            await _wait_for_body(doc, f"PROPOSED {SEED_BODY}", "the reloaded room")
+            again = base64.b64encode(doc.get_update()).decode()
+            await rooms.submit(collab.id, character2.id, doc_state=again)
+
+        assert await _approved(rooms, collab.id) == {
+            character.id: True,
+            character2.id: True,
+            character3.id: False,
+        }
+        assert (await _proposal(rooms, collab.id))[1] == proposed_at
