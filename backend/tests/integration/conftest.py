@@ -91,6 +91,13 @@ def _no_post_cooldown(restore_live_era):
 
 
 @pytest.fixture(autouse=True)
+def _reset_contact_limit():
+    from services import contact_limit
+
+    contact_limit._hits.clear()
+
+
+@pytest.fixture(autouse=True)
 def proof_rule_off(request, monkeypatch):
     """Tests that POST /praxes then submit carry no media; only ``proof_rule`` tests
     (#3473) see the rule."""

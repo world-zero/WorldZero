@@ -1634,6 +1634,12 @@
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "website": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Website",
+            "type": "string"
           }
         },
         "required": [

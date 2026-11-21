@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 # Write-only cap, enforced in the service (ADR-0006, #1205); reads are uncapped
 # so older long comments stay readable. Changing it needs no migration.
 MAX_COMMENT_BODY = 500
+# Each mention is a push, so cap the fan-out per comment (anti-abuse, not a game rule).
+MAX_MENTIONS_PER_COMMENT = 5
 
 
 class Comment(TimestampMixin, Base):
