@@ -151,7 +151,7 @@ async def test_role_grant_and_revoke_log_once_and_noops_do_not(
 
 @pytest.mark.asyncio
 async def test_log_is_admin_only_newest_first_and_filterable(
-    client, account, account2, auth_headers, auth_headers2, db_session
+    client, account, account2, character2, auth_headers, auth_headers2, db_session
 ):
     denied = await client.get("/admin/mod-log", headers=auth_headers2)
     assert denied.status_code == 403
@@ -169,6 +169,26 @@ async def test_log_is_admin_only_newest_first_and_filterable(
         "/admin/mod-log?target_type=account&target_id=999999", headers=auth_headers
     )
     assert other.json()["items"] == []
+    mine = await client.get(
+        f"/admin/mod-log?target_type=account&target_id={account2.id}",
+        headers=auth_headers,
+    )
+    assert [item["action"] for item in mine.json()["items"]] == ["unsuspend", "suspend"]
+    await client.post(
+        f"/admin/characters/{character2.id}/ban",
+        json={"banned": True},
+        headers=auth_headers,
+    )
+    mine = await client.get(
+        f"/admin/mod-log?target_type=account&target_id={account2.id}",
+        headers=auth_headers,
+    )
+    assert mine.json()["total"] == 2
+    second = (
+        await client.get("/admin/mod-log?offset=1&limit=1", headers=auth_headers)
+    ).json()
+    assert second["total"] == 3
+    assert [item["action"] for item in second["items"]] == ["unsuspend"]
 
 
 @pytest.mark.asyncio
