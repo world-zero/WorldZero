@@ -238,7 +238,10 @@ class _RoomFlusher:
         self._expected = values
 
     def forget(self) -> None:
+        """The submit rolled back. A flush in the window before this hook may
+        have matched ``_expected`` and skipped the edit event, so flush again."""
         self._expected = None
+        self.mark_changed()
 
     def absorb(self, values: dict[str, str]) -> None:
         """``values`` is text a committed submit is proposing: that text alone

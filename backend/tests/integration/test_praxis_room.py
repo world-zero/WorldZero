@@ -1155,6 +1155,48 @@ async def test_a_flush_between_the_commit_and_its_hook_keeps_the_proposal(
             hook(held[0])
 
 
+async def test_a_flush_between_the_rollback_and_its_hook_still_cancels(
+    db_session, collab, account, character, character2, monkeypatch
+) -> None:
+    """The flush skips on_room_edit while the submit is in flight; once the
+    submit rolls back, the unseen text must still cancel the proposal."""
+    praxis_id, character_id, other_id = collab.id, character.id, character2.id
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30
+    ) as rooms:
+        socket = await rooms.open(praxis_id, account.id)
+        flusher = rooms.server._flushers[room_name_for(praxis_id)]
+        flusher._debounce_seconds = 1.0  # the edit's own flush lands after the checks
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the editor")
+            await rooms.submit(praxis_id, other_id)  # B proposes
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "unseen ")
+            await _wait_for_body(
+                rooms.room_doc(praxis_id), f"unseen {SEED_BODY}", "the room"
+            )
+            state = base64.b64encode(doc.get_update()).decode()
+            hook = flusher.forget
+            monkeypatch.setattr(flusher, "forget", lambda: None)
+
+            async def no_proof(*_args: Any) -> bool:
+                return False
+
+            with monkeypatch.context() as patch:
+                patch.setattr(collab_consensus, "_has_proof", no_proof)
+                with pytest.raises(HTTPException):
+                    await rooms.submit(praxis_id, character_id, doc_state=state)
+            async with rooms.sessions() as session:
+                await session.rollback()
+            await flusher.write()  # the window: rolled back, hook not yet run
+            assert (await _proposal(rooms, praxis_id))[1] is not None
+            hook()
+            for _ in range(100):
+                if (await _proposal(rooms, praxis_id))[1] is None:
+                    break
+                await asyncio.sleep(0.05)
+            assert (await _proposal(rooms, praxis_id))[1] is None
+
+
 async def test_a_cooldown_refused_submit_absorbs_nothing(
     db_session, collab, account, character, character2, monkeypatch
 ) -> None:
