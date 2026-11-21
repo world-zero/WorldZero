@@ -391,10 +391,6 @@
     .ob-sheet-outer {
       padding-inline: 0 !important; /* beats the card's inline padding */
     }
-    /* Phone drops the masthead floor (#2995 keeps it on desktop): an unmasthead kit left ~80px empty. */
-    [data-composer-head] {
-      min-height: 0 !important;
-    }
     .composer-slip,
     .profile-frame,
     .profile-header,

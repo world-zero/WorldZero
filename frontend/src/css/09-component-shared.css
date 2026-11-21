@@ -142,7 +142,8 @@
     --composer-pad-bottom: var(--space-xl);
     --composer-gap: var(--space-lg);
     --composer-title-size: var(--text-title);
-    --composer-head-height: 80px;
+    /* No masthead floor on a phone (#2995 keeps it on desktop): an unmasthead kit left ~80px empty. */
+    --composer-head-height: 0px;
     /* Tallest measured real heading (Ephemerists): no empty band, #2995 guard kept. */
     --composer-heading-height: 44px;
     --composer-sheet-padding: var(--space-lg) var(--space-md) var(--space-3xl);
