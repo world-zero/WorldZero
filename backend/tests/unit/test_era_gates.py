@@ -164,3 +164,8 @@ def test_reads_thresholds_off_the_era_argument() -> None:
     assert may_create_duel(9, None, False, strict_era) is False
     assert meets_albescent_level(9, None, False, strict_era) is False
     assert may_comment(2, None, False, strict_era) is True
+
+
+def test_pending_tasks_faction_perk_reaches_from_level_zero() -> None:
+    assert may_see_pending_tasks(0, "ephemerists", False, ERA_1) is True
+    assert may_see_pending_tasks(0, "wow", False, ERA_1) is False

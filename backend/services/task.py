@@ -508,6 +508,7 @@ def pending_visibility_clause(
     is_admin: bool,
     era: EraConfig = CURRENT_ERA,
     viewer_id: Optional[int] = None,
+    viewer_faction: Optional[str] = None,
 ):
     """The whole pending rule as one WHERE clause: level AND review window.
 
@@ -526,16 +527,16 @@ def pending_visibility_clause(
         return true()
     # The window withholds from *other* players; the author is exempt (#2126).
     own = false() if viewer_id is None else Task.created_by_id == viewer_id
-    # Same predicate as the ``/auth/me`` flag (#2868). It reads no faction
-    # (#2863); anonymous is level ``-1``.
-    if may_see_pending_tasks(viewer_level, None, is_admin, era):
-        return or_(
-            Task.status != TaskStatus.pending,
-            Task.created_at
-            <= datetime.now(timezone.utc)
-            - timedelta(hours=era.pending_task_admin_review_hours),
-            own,
+    # Same predicate as the ``/auth/me`` flag (#2868); anonymous is level ``-1``.
+    by_level = may_see_pending_tasks(viewer_level, None, is_admin, era)
+    if by_level or may_see_pending_tasks(viewer_level, viewer_faction, is_admin, era):
+        ripe = Task.created_at <= datetime.now(timezone.utc) - timedelta(
+            hours=era.pending_task_admin_review_hours
         )
+        ceiling = era.pending_task_praxis_points_below
+        if not by_level and ceiling is not None:
+            ripe = and_(ripe, Task.point_value < ceiling)
+        return or_(Task.status != TaskStatus.pending, ripe, own)
     return or_(Task.status != TaskStatus.pending, own)
 
 
@@ -590,7 +591,11 @@ async def get_task_for_viewer(
         select(Task.id).where(
             Task.id == task_id,
             pending_visibility_clause(
-                viewer_level, is_admin, era, viewer_id=viewer.id if viewer else None
+                viewer_level,
+                is_admin,
+                era,
+                viewer_id=viewer.id if viewer else None,
+                viewer_faction=viewer.faction_slug if viewer else None,
             ),
         )
     )
@@ -663,12 +668,19 @@ async def list_tasks(
         skip_level_check,
         era,
     )
-    viewer_sees_pending = may_see_pending_tasks(viewer_level, None, is_admin, era)
+    viewer_faction = viewer.faction_slug if viewer is not None else None
+    viewer_sees_pending = may_see_pending_tasks(
+        viewer_level, viewer_faction, is_admin, era
+    )
 
     # Unconditional: every status branch below is downstream of it.
     query = query.where(
         pending_visibility_clause(
-            viewer_level, is_admin, era, viewer_id=viewer.id if viewer else None
+            viewer_level,
+            is_admin,
+            era,
+            viewer_id=viewer.id if viewer else None,
+            viewer_faction=viewer_faction,
         )
     )
 
@@ -758,6 +770,13 @@ async def list_tasks(
             query = query.where(Task.status != TaskStatus.retired)
         if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:
             query = query.where(Task.status != TaskStatus.pending)
+        elif era.pending_task_praxis_points_below is not None:
+            query = query.where(
+                or_(
+                    Task.status != TaskStatus.pending,
+                    Task.point_value < era.pending_task_praxis_points_below,
+                )
+            )
         # Gate 5 = the exclude_character_id clause below. Default it ONLY here
         # (#2264), or a faction's task count would depend on the reader.
         if exclude_character_id is None:

@@ -44,7 +44,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
-from services.backdoor import may_use_door, settle_closed_backdoors
+from services.backdoor import may_use_door
 from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
@@ -95,6 +95,7 @@ from services.signup_eligibility import (
     is_active_member_of_task,
     meets_task_level,
 )
+from services.task import get_task_for_viewer
 from services.vote import void_account_vote_on_join
 from services.vote_tally import counted_votes
 
@@ -483,9 +484,13 @@ async def _check_create_preconditions(
     Returns the task and the stats row the gates judged, so the caller needn't
     re-read (#2873).
     """
-    await settle_closed_backdoors(session)
-    task = await session.get(Task, task_id)
     character = await session.get(Character, character_id)
+    # One visibility rule for reads and writes: a task withheld from this
+    # character (deleted, closed backdoor, pending inside the #1695 window)
+    # looks nonexistent, so a refusal never leaks its title.
+    task = await get_task_for_viewer(session, task_id, character, era=era)
+    if task is None and await session.get(Task, task_id) is not None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     # Deleted tasks (#3305) look nonexistent, and so does a backdoor closed to
     # this character: a refusal that named it would give it away (#3848).
     hidden = task is not None and (

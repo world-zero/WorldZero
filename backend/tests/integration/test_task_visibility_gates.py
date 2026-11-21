@@ -76,10 +76,10 @@ async def _ids(client: AsyncClient, query: str, headers: dict | None) -> set[int
     return {row["id"] for row in response.json()}
 
 
-#: Retired-task-perk factions see the archive from level 0. Found by the perk,
+#: Task Vision factions see archive + cheap pending from level 0. Found by the perk,
 #: not named (#2708); sentinels dropped since no character can join them.
 TASK_VISION_CASES = [
-    (0, slug, True, False)
+    (0, slug, True, True)
     for slug in sorted(CURRENT_ERA.allow_praxis_on_retired_task_factions)
     if slug in real_faction_slugs(CURRENT_ERA)
 ]
