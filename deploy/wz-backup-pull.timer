@@ -1,6 +1,6 @@
 [Unit]
 Description=Daily pull of World Zero backups
-Documentation=https://github.com/pixieofhugs/WorldZeroPlayground/issues/3043
+Documentation=https://github.com/world-zero/WorldZero/issues/3043
 
 [Timer]
 # backup.sh runs on the box at 04:00. Pull well after it, not alongside it.

@@ -24,10 +24,10 @@ DEST=${WZ_BACKUP_DIR:-$HOME/wz-backups}
 # would flap on a few minutes of drift.
 MAX_AGE_HOURS=${WZ_MAX_AGE_HOURS:-26}
 
-RESTORE=https://github.com/pixieofhugs/WorldZeroPlayground/blob/main/deploy/RESTORE.md
+RESTORE=https://github.com/world-zero/WorldZero/blob/main/deploy/RESTORE.md
 # Installed outside any checkout, so gh has no repo to infer; and it runs under
 # a timer, so it must fail rather than ask.
-export GH_REPO=${GH_REPO:-pixieofhugs/WorldZeroPlayground}
+export GH_REPO=${GH_REPO:-world-zero/WorldZero}
 export GH_PROMPT_DISABLED=1
 
 problems=()
