@@ -95,7 +95,7 @@ export default function ChallengeInviteButtons({
           scrimLabel={t("relationships.pickClose")}
           onClose={() => setMode(null)}
         >
-          <p className="font-body" style={{ margin: "0 0 var(--space-md)" }}>
+          <p className="font-body mb-3">
             {title}
           </p>
           {list?.length === 0 && (
@@ -109,17 +109,7 @@ export default function ChallengeInviteButtons({
           {list?.map((p) => (
             <button
               key={p.id}
-              className="font-body"
-              style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "var(--space-sm) 0",
-                borderBottom: "1px solid var(--color-border)",
-              }}
+              className="font-body block w-full cursor-pointer border-0 border-b border-solid border-[var(--color-border)] bg-transparent py-2 text-left"
               onClick={() =>
                 navigate(
                   `/praxis/${p.id}/edit?${new URLSearchParams({ mode, with: targetDisplayName })}`,
