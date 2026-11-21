@@ -13,6 +13,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
+from models.roles import Permission
 from scripts.era_reset import reset_era
 from services.era import get_current_era_row_safe
 from tests.integration.factories import make_admin
@@ -152,3 +153,22 @@ async def test_a_confirmed_run_ends_bound_to_what_it_wrote(
         await db_session.execute(select(Era).order_by(Era.id.desc()).limit(1))
     ).scalar_one()
     assert game_config.CURRENT_ERA.config_key == new_era.config_key
+
+
+@pytest.mark.asyncio
+async def test_an_admin_without_roll_era_is_refused(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    some_faction: Faction,
+):
+    await make_admin(
+        db_session, account, permissions=[Permission.handle_reports], commit=False
+    )
+    eras_before = await _era_count(db_session)
+
+    exit_code = await reset_era(db_session, character.username, confirmed=True)
+
+    assert exit_code == 1
+    assert await _era_count(db_session) == eras_before

@@ -149,7 +149,7 @@ Three layers, each in exactly one place:
 | Layer | Where | Example |
 |---|---|---|
 | Authentication (who is this?) | `services/auth.py::get_current_account` (FastAPI dependency) | Every authed route depends on `get_current_account` or `get_current_character`. |
-| Role check (are they admin?) | `dependencies.require_admin` | Admin routers add `Depends(require_admin)` to the router or handler. |
+| Permission check (may they do this admin thing?) | `dependencies.require_permission` | Admin routers add `Depends(require_permission(Permission.x))`; plain `require_admin` is for the overview and mod log only (ADR-0101). |
 | Domain authorization (can this *Character* do this *thing*?) | Inside services | Ownership checks, level gates, faction-rejoin rules, anti-self-vote, task-signup cap. |
 
 Anything that needs to know about game state (level, faction, era) belongs in
