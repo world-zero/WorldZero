@@ -1,6 +1,6 @@
 [Unit]
 Description=Pull World Zero backups off the box and check they are fresh
-Documentation=https://github.com/pixieofhugs/WorldZeroPlayground/issues/3043
+Documentation=https://github.com/world-zero/WorldZero/issues/3043
 
 [Service]
 Type=oneshot

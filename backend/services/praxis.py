@@ -44,6 +44,7 @@ from schemas.praxis import (
 )
 from services import collab_consensus
 from services.albescent_reveal import is_albescent_revealed
+from services.backdoor import may_use_door, settle_closed_backdoors
 from services.character import is_playable
 from services.character_stats import (
     recalculate_character_stats,
@@ -416,7 +417,8 @@ async def list_praxes(
     query = query.order_by(*order).limit(limit).offset(offset)
     result = await session.execute(query)
     praxes = list(result.scalars().all())
-    for praxis in praxes:
+    # Ascending id: opposite-sorted lists must take the 0x5A1B locks in one order.
+    for praxis in sorted(praxes, key=lambda p: p.id):
         await collab_consensus.settle_if_window_lapsed(praxis, session, era)
     return praxes
 
@@ -480,12 +482,25 @@ async def _check_create_preconditions(
     Returns the task and the stats row the gates judged, so the caller needn't
     re-read (#2873).
     """
+    await settle_closed_backdoors(session)
     task = await session.get(Task, task_id)
-    # Deleted tasks (#3305) look nonexistent.
-    if task is None or task.status == TaskStatus.deleted:
-        raise HTTPException(status_code=404, detail="Task not found.")
-
     character = await session.get(Character, character_id)
+    # Deleted tasks (#3305) look nonexistent, and so does a backdoor closed to
+    # this character: a refusal that named it would give it away (#3848).
+    hidden = task is not None and (
+        task.status == TaskStatus.deleted
+        or (
+            task.status == TaskStatus.backdoor
+            and (
+                character is None
+                or not may_use_door(task, character.faction_slug, era)
+            )
+        )
+    )
+    if hidden:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found.")
     if character is None:
         raise HTTPException(status_code=404, detail="Character not found.")
 
@@ -638,19 +653,9 @@ async def unsubmit_praxis(
 
     # #307: first forfeit sticks; the winner is recalculated below.
     duel = await get_duel_for_praxis(praxis_id, session)
-    forfeit_winner_character_id: Optional[int] = None
     if duel is not None and duel.status == DuelStatus.settled:
         if duel.forfeited_by_character_id is None:
             duel.forfeited_by_character_id = character_id
-        winner_praxis_id = (
-            duel.opponent_praxis_id
-            if duel.challenger_praxis_id == praxis_id
-            else duel.challenger_praxis_id
-        )
-        if winner_praxis_id is not None:
-            winner_praxis = await session.get(Praxis, winner_praxis_id)
-            if winner_praxis is not None:
-                forfeit_winner_character_id = winner_praxis.created_by_id
 
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
@@ -660,9 +665,6 @@ async def unsubmit_praxis(
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
     await recalculate_members_stats(praxis, session, era)
-    if forfeit_winner_character_id is not None:
-        await recalculate_character_stats(forfeit_winner_character_id, session, era)
-        await session.flush()
     return await get_praxis(praxis_id, session)
 
 
@@ -934,9 +936,10 @@ async def account_already_flagged(
 
 
 class FlagDenialReason(str, Enum):
-    """Why a viewer may not flag a praxis (#328). The four rules, one each."""
+    """Why a viewer may not flag a praxis (#328). One rule each."""
 
     hidden = "hidden"
+    failed = "failed"
     own_praxis = "own_praxis"
     already_flagged = "already_flagged"
     below_level = "below_level"
@@ -956,6 +959,9 @@ async def _flag_denial(
     # #3257: flagging hidden content would put it back on the public list.
     if praxis.moderation_status == ModerationStatus.hidden:
         return FlagDenialReason.hidden
+    # A flag would overwrite the moderator's "Not met" and score the praxis again.
+    if praxis.moderation_status == ModerationStatus.failed:
+        return FlagDenialReason.failed
     author_account_id = await _praxis_author_account_id(praxis, session)
     if author_account_id is not None and author_account_id == viewer.account_id:
         return FlagDenialReason.own_praxis
@@ -999,6 +1005,12 @@ async def flag_praxis(
     denial = await _flag_denial(flagged_by, praxis, session, era)
     if denial is FlagDenialReason.hidden:
         raise_coded(404, ErrorCode.praxis_not_found, "Praxis not found.")
+    if denial is FlagDenialReason.failed:
+        raise_coded(
+            409,
+            ErrorCode.praxis_already_ruled,
+            "A moderator has already ruled on this praxis.",
+        )
     if denial is FlagDenialReason.own_praxis:
         # Account-scoped anti-self-flag (#328).
         raise HTTPException(status_code=403, detail="Cannot flag your own praxis.")
@@ -1167,9 +1179,10 @@ async def respond_to_invite(
             await _lock_signups_for_character(character_id, session)
             await _lock_praxis(invite.praxis_id, session)
 
-    praxis = await session.get(Praxis, invite.praxis_id, populate_existing=True)
-    if praxis is None:
-        raise HTTPException(status_code=404, detail="Praxis no longer exists.")
+    # Settles a lapsed window, so a sealed collab refuses the join below.
+    praxis = await get_praxis_settling_consensus(
+        invite.praxis_id, session, era, lock=True
+    )
 
     if praxis.status == PraxisStatus.submitted:
         raise_coded(
@@ -1435,11 +1448,6 @@ async def moderate_praxis(
     await session.flush()
     await _apply_media_publication(praxis, session)
     await recalculate_members_stats(praxis, session, era)
-
-    opponent_character_id = await _duel_opponent_character_id(praxis_id, session)
-    if opponent_character_id is not None:
-        await recalculate_character_stats(opponent_character_id, session, era)
-        await session.flush()
     return await get_praxis(praxis_id, session)
 
 
@@ -1465,19 +1473,3 @@ async def _apply_media_publication(praxis: Praxis, session: AsyncSession) -> Non
         withdraw_media_from_mount(stored_paths)
     else:
         restore_media_to_mount(stored_paths)
-
-
-async def _duel_opponent_character_id(
-    praxis_id: int, session: AsyncSession
-) -> Optional[int]:
-    """The other side's character in ``praxis_id``'s live duel, or None.
-
-    None for non-duels, frozen duels (ADR-0052), or no opponent praxis yet.
-    """
-    duel = await get_duel_for_praxis(praxis_id, session)
-    if duel is None:
-        return None
-    if duel.challenger_praxis_id == praxis_id:
-        return duel.opponent_character_id
-    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
-    return challenger_praxis.created_by_id if challenger_praxis else None

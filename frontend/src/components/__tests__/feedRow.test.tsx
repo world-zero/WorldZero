@@ -225,7 +225,7 @@ describe('normalizeFeedItem', () => {
     expect(row.badge?.label).toBe('Your Stuff')
     expect(row.headline).toBe('the second half is yours @ada')
     expect(row.headlineQuoted).toBe(true)
-    expect(row.headlineHref).toBe('/praxis/12')
+    expect(row.headlineHref).toBe('/praxis/12#comment-11')
     expect(row.points).toBeNull()
     expect(row.level).toBeNull()
   })
@@ -241,7 +241,7 @@ describe('normalizeFeedItem', () => {
         excerpt: 'thought of you for this one',
       }),
     )!
-    expect(row.headlineHref).toBe('/tasks/5')
+    expect(row.headlineHref).toBe('/tasks/5#comment-12')
   })
 
   it('offers exactly one CTA on a mention, into the page holding the thread', () => {
@@ -251,7 +251,7 @@ describe('normalizeFeedItem', () => {
       item('comment_mention', { comment_id: 11, praxis_id: 12, excerpt: 'hi' }),
     )!
     expect(row.actions.map((action) => action.id)).toEqual(['reply'])
-    expect(row.actions[0].href).toBe('/praxis/12')
+    expect(row.actions[0].href).toBe('/praxis/12#comment-11')
     expect(row.actions[0].call).toBeUndefined()
   })
 
@@ -288,9 +288,9 @@ describe('normalizeFeedItem', () => {
     expect(row.badge?.label).toBe('Your Stuff')
     expect(row.headline).toBe('the render came out beautifully')
     expect(row.headlineQuoted).toBe(true)
-    expect(row.headlineHref).toBe('/praxis/12')
+    expect(row.headlineHref).toBe('/praxis/12#comment-21')
     expect(row.actions.map((action) => action.id)).toEqual(['reply'])
-    expect(row.actions[0].href).toBe('/praxis/12')
+    expect(row.actions[0].href).toBe('/praxis/12#comment-21')
   })
 
   it('has an actorless system row for a global task', () => {
@@ -379,7 +379,7 @@ describe('FeedRowContent', () => {
       <MemoryRouter><FeedRowContent row={mention} avatarUrl={null} /></MemoryRouter>,
     )
     expect(mentionHtml).toContain('“over to you”')
-    expect(mentionHtml).toContain('href="/praxis/12"')
+    expect(mentionHtml).toContain('href="/praxis/12#comment-11"')
     expect(mentionHtml).toContain('Reply')
 
     const taunt = normalizeFeedItem(

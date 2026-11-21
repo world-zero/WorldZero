@@ -95,13 +95,13 @@ function buildAwaitingActions(payload: Record<string, any>): FeedRowAction[] {
 }
 
 /**
- * A comment has exactly one target (DB CHECK, migration 0005). No per-comment
- * anchor: the thread rows carry no ids, so `#comment-{id}` would resolve to
- * nothing; the target page is the deep link.
+ * A comment has exactly one target (DB CHECK, migration 0005); `#comment-{id}`
+ * is the row's id in `CommentThread`, which scrolls to it once the rows load.
  */
 function commentTargetHref(payload: Record<string, any>): string | null {
-  if (payload.praxis_id != null) return `/praxis/${payload.praxis_id}`
-  if (payload.task_id != null) return `/tasks/${payload.task_id}`
+  const anchor = payload.comment_id != null ? `#comment-${payload.comment_id}` : ''
+  if (payload.praxis_id != null) return `/praxis/${payload.praxis_id}${anchor}`
+  if (payload.task_id != null) return `/tasks/${payload.task_id}${anchor}`
   return null
 }
 

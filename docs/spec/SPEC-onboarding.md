@@ -3,7 +3,7 @@
 The arc from scanning a QR code in the real world to standing at level 1.
 
 Charted decision-by-decision on the wayfinder map
-[Onboarding: from a scanned QR code to level 1](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1732).
+[Onboarding: from a scanned QR code to level 1](https://github.com/world-zero/WorldZero/issues/1732).
 Each section below cites the ticket that settled it; the ticket holds the reasoning, this
 holds the outcome.
 
@@ -26,7 +26,7 @@ players voting. **Onboarding was never a rules problem. It is a legibility probl
 The flow's stops are: the title, seven beats, the contract, sign-in, character creation and
 the arrival page. The first six of those are the flow; the task and level 1 are the existing
 app it lands in. Someone who already plays gets one more view, the "Welcome back" sign-in, in
-place of the whole run. ([#1738](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1738))
+place of the whole run. ([#1738](https://github.com/world-zero/WorldZero/issues/1738))
 
 | Stop | Status |
 |---|---|
@@ -38,7 +38,7 @@ place of the whole run. ([#1738](https://github.com/pixieofhugs/WorldZeroPlaygro
 | The onboarding task | Existing; gains a derived mark |
 | Field Stamp at level 1 | Existing; untouched |
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* was "three net-new cards, then the flow ends" with a hand-off to another
+*2026-11-18, [#3457](https://github.com/world-zero/WorldZero/issues/3457):* was "three net-new cards, then the flow ends" with a hand-off to another
 route. The approved design keeps going through creation and arrival.
 
 **One flow, two entrances.** The flow is the home page: `/` shows it to a guest and to a signed-in
@@ -46,7 +46,7 @@ account with no character; a player with a character gets the Field Desk. The QR
 `/start`, which renders the same flow (no redirect), as a path segment that can later take
 `/start/<theme>`. The old marketing Home is deleted. Not two explanations of the same game.
 
-*2026-11-19, [#3541](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3541):* was "Home's logged-out CTA leads into it". OAuth returns to `/` and resumes the flow in place.
+*2026-11-19, [#3541](https://github.com/world-zero/WorldZero/issues/3541):* was "Home's logged-out CTA leads into it". OAuth returns to `/` and resumes the flow in place.
 
 **A door, not a wall.** Tasks, praxis, factions, leaderboard and character profiles are
 already public — no `ProtectedRoute`. Every stop keeps "let me just look around" available.
@@ -62,14 +62,14 @@ The one exception is the approved prototype (below).
 
 ### What the intro must land — six things, over a short run of beats
 
-([#1735](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1735))
+([#1735](https://github.com/world-zero/WorldZero/issues/1735))
 
 1. This is a game.
 2. The tasks happen in the real world, away from the screen.
 3. You photograph what you did, as proof.
 4. Other players rate that proof, and that is how you score. Voting is not part of
    the pitch's promise: it unlocks only after another player has voted on your proof, not
-   at level 1 ([#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)).
+   at level 1 ([#3475](https://github.com/world-zero/WorldZero/issues/3475)).
    A beat that shows the player voting must not say they can do it from the start.
 5. It is free.
 6. A person made this; it is small and a bit silly.
@@ -81,7 +81,7 @@ reach or choose. Naming them as a destination would sell what the game cannot de
 a long time.
 
 The intro is a **short sequence of beats** (seven, per the epic
-[#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457)), and together they
+[#3457](https://github.com/world-zero/WorldZero/issues/3457)), and together they
 land all six things above. The ask is **front-loaded, never buried**: the conversion cost
 is accepted deliberately.
 
@@ -90,15 +90,15 @@ the shipped default (#3457, standing rule 8), replacing the "never lift the prot
 wording" rule above for that prototype. That wording lives in
 `frontend/src/locales/en/onboarding.json`, and the owner still owns every string in it.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the reviewed prototype wording is the shipped default, and the
+*2026-11-18, [#3457](https://github.com/world-zero/WorldZero/issues/3457):* the reviewed prototype wording is the shipped default, and the
 "never invent final copy" placeholder rule no longer applies to it; ownership of
 the strings is unchanged.
 
-The approved prototype was vendored for the build as `.design-sync/onboarding-arc/` and deleted once the flow shipped ([#3598](https://github.com/pixieofhugs/WorldZeroPlayground/pull/3598), commit aaf79e3f). The shipped flow under `frontend/src/pages/onboarding/` is now the reference the copy exception covers.
+The approved prototype was vendored for the build as `.design-sync/onboarding-arc/` and deleted once the flow shipped ([#3598](https://github.com/world-zero/WorldZero/pull/3598), commit aaf79e3f). The shipped flow under `frontend/src/pages/onboarding/` is now the reference the copy exception covers.
 
-- **The revision must mention the deleted-account record** ([#3451](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3451)): per ADR-0081, a salted hash of the sign-in ID is kept for a limited time. Wording is the owner's, still owed.
+- **The revision must mention the deleted-account record** ([#3451](https://github.com/world-zero/WorldZero/issues/3451)): per ADR-0081, a salted hash of the sign-in ID is kept for a limited time. Wording is the owner's, still owed.
 
-*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "one paragraph, not three beats" with factions cut. The owner
+*2026-11-18, [#3452](https://github.com/world-zero/WorldZero/issues/3452):* was "one paragraph, not three beats" with factions cut. The owner
 approved the seven-beat prototype, so this section now describes a sequence and allows a
 faction tease. #3452 is the decision record. Knock-on from #3475: voting unlocks only
 after another player has voted on your proof; the era file and #3475 hold the rule.
@@ -151,7 +151,7 @@ Three rules the flow's build depends on:
 **`/start` keeps the app's normal top nav.** The flow is not full-bleed: the owner ruled that
 the site's navigation stays visible above it.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* added the three rules and the top-nav ruling for the approved
+*2026-11-18, [#3457](https://github.com/world-zero/WorldZero/issues/3457):* added the three rules and the top-nav ruling for the approved
 prototype build.
 
 ## Authentication
@@ -161,7 +161,7 @@ prototype build.
 auth card is the first surface in the app to offer one.
 
 **Nothing rides on the wire.**
-([#1899](https://github.com/pixieofhugs/WorldZeroPlayground/pull/1899)) A successful OAuth
+([#1899](https://github.com/world-zero/WorldZero/pull/1899)) A successful OAuth
 callback redirects to a constant, and that is deliberate rather than a gap. The flow remembers
 its own place client-side: a session-scoped boolean written the moment before the auth card
 hands the browser to a provider, acted on by the root landing route only once a session exists,
@@ -171,7 +171,7 @@ mechanism and its failure modes live in `frontend/src/utils/onboardingResume.ts`
 same visit interrupted, not a new scan — see *Coming back*.
 
 **The server is not asked to decide.**
-([#1734](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1734) — superseded) The
+([#1734](https://github.com/world-zero/WorldZero/issues/1734) — superseded) The
 rejected design would have had the server derive the destination: `create_or_get_account` runs
 before the callback builds its redirect, so it can distinguish a new account from a returning
 one without being told. **That is the wrong predicate.** The rule this flow runs on is
@@ -187,7 +187,7 @@ arc**, which has exactly one destination.
 
 ## Terms
 
-([#1737](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1737))
+([#1737](https://github.com/world-zero/WorldZero/issues/1737))
 
 - **The document is the existing Disclaimer, revised** — not a second parallel Terms page.
   It already carries the clause that matters for this game: players are solely responsible
@@ -211,13 +211,13 @@ arc**, which has exactly one destination.
   account, the version, and the time. Existing accounts have no rows, which is the honest
   record.
 
-*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* was "accepted after auth, before character creation". The
+*2026-11-18, [#3452](https://github.com/world-zero/WorldZero/issues/3452):* was "accepted after auth, before character creation". The
 approved flow puts the contract before sign-in, and the owner accepts it. #3452 is the
 decision record.
 
 ## The hand-off
 
-([#1736](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1736))
+([#1736](https://github.com/world-zero/WorldZero/issues/1736))
 
 **The flow lands the player on the task page, framed. It never claims on their behalf** — a
 claim enters the task bank (`max_task_signups`), and unwinding it means finding the withdraw
@@ -248,13 +248,13 @@ needed; and admin is an account-level role while the mark is a character-level d
 (ADR-0041 keeps that boundary clean). The seeded `pixie` character is unaffiliated at level
 0 with no onboarding praxis, so the only current admin carries the mark. That is honest.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* was "the flow ends there and does not resume" at a hand-off to
+*2026-11-18, [#3457](https://github.com/world-zero/WorldZero/issues/3457):* was "the flow ends there and does not resume" at a hand-off to
 `CreateCharacter`. Creation and arrival are now steps of the flow; the never-claims rule, the
 derived mark and the outside-`/start` landing are unchanged.
 
 ## Coming back
 
-([#1856](https://github.com/pixieofhugs/WorldZeroPlayground/issues/1856))
+([#1856](https://github.com/world-zero/WorldZero/issues/1856))
 
 **A scan always re-runs the flow from the top.** No resume, no bookmark. The contract simply
 shows again and writes another row; the append-only log absorbs the duplicate. The one exception is
@@ -278,9 +278,9 @@ contract, with the held contract click carried through the redirect.
 else, for a person who has a character already. The flow cannot tell a returner before
 sign-in (a scan always re-runs from the top), so the view is reached from the header's Sign in
 on the title and the beats while signed out (#3461; #3514's `toSignIn` goes to step `'signin'`).
-*2026-11-19, [#3649](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3649), owner ruling:* a returning player (signed in, has a character) can skip the contract and any step of the tutorial. A Skip control shows for them on every step; a new player gets none past the existing beat Skip. Skipping the contract writes no row, so it is allowed only when `CurrentUser.has_accepted_terms` (a row for the current terms version) is true; otherwise they still see the contract.
+*2026-11-19, [#3649](https://github.com/world-zero/WorldZero/issues/3649), owner ruling:* a returning player (signed in, has a character) can skip the contract and any step of the tutorial. A Skip control shows for them on every step; a new player gets none past the existing beat Skip. Skipping the contract writes no row, so it is allowed only when `CurrentUser.has_accepted_terms` (a row for the current terms version) is true; otherwise they still see the contract.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457); #3452:* was written when sign-in came before the terms. The order is
+*2026-11-18, [#3457](https://github.com/world-zero/WorldZero/issues/3457); #3452:* was written when sign-in came before the terms. The order is
 now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens
 `/start` cold skips only the sign-in step; the OAuth resume lands past the title, beats and contract.
 
@@ -298,22 +298,22 @@ character with no praxis (the mark).
 
 The existing **Field Stamp** pop-up, unchanged apart from that — it already fires at the right moment and
 announces rank `trailhead` and its unlocks. Its `vote` unlock (`backend/eras/era_1.py`)
-shows [#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)'s lock
+shows [#3475](https://github.com/world-zero/WorldZero/issues/3475)'s lock
 explanation: the level gate stays and the received-vote condition is added. No bespoke ending: by then the player has done a
 real thing in the world and photographed it, which does not need a surface congratulating
 them for it.
 
 Voting is not among the level-1 unlocks to promise. It unlocks only after another player
-has voted on your proof ([#3475](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3475)),
+has voted on your proof ([#3475](https://github.com/world-zero/WorldZero/issues/3475)),
 so any beat that shows the first level-up must not imply the player can vote at level 1.
 The rule's values live in the era file and #3475, not here.
 
 The arrival page celebrates the **character**, not the level. Level 1 is reached later, by
 doing the task, and the Field Stamp marks it.
 
-*2026-11-18, [#3457](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3457):* the arrival-page line is new; the Field Stamp is unchanged.
+*2026-11-18, [#3457](https://github.com/world-zero/WorldZero/issues/3457):* the arrival-page line is new; the Field Stamp is unchanged.
 
-*2026-11-18, [#3452](https://github.com/pixieofhugs/WorldZeroPlayground/issues/3452):* added with the vote-unlock knock-on. #3452 is the decision record.
+*2026-11-18, [#3452](https://github.com/world-zero/WorldZero/issues/3452):* added with the vote-unlock knock-on. #3452 is the decision record.
 
 ## Before this can ship
 

@@ -35,7 +35,7 @@ from services.character_stats import (
 )
 from services.era import get_current_era_row
 from services.habit_bonus import stamp_habit_bonus
-from services.praxis_room import discard_room_document
+from services.praxis_room import discard_room_document, document_over_cap
 from services.taunt_service import fan_out_taunt
 
 
@@ -132,11 +132,13 @@ async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) ->
     """Seal a collab to Live and recalc members. Used by timeout and leave.
 
     No one completes these seals, so the daily cap neither gates nor charges them.
-    A collab with no proof stays unsealed (a read path must not raise).
+    A collab with no proof or an over-cap draft stays unsealed (reads must not raise).
     ``ponytail:`` timeout seals dodge the cap; charge the proposer if that is abused.
     """
     member_ids = [member.character_id for member in praxis.members]
     if not await _has_proof(praxis, member_ids, session):
+        return
+    if await document_over_cap(praxis.id):
         return
     await _apply_seal(praxis, session, era)
     await session.flush()
@@ -196,7 +198,7 @@ async def seal_lapsed_at_era_close(
     """Seal every lapsed collab window into the closing era, stamped at its deadline.
 
     Returns the sealed members' character ids; the caller re-scores them in the
-    closing era. A collab with no proof stays unsealed, as on the lazy path.
+    closing era. A collab with no proof or an over-cap draft stays unsealed, as lazily.
     """
     window = timedelta(days=closing_era.collab_auto_submit_days)
     lapsed = (
@@ -213,6 +215,8 @@ async def seal_lapsed_at_era_close(
     for praxis in lapsed:
         member_ids = [m.character_id for m in praxis.members]
         if not await _has_proof(praxis, member_ids, session):
+            continue
+        if await document_over_cap(praxis.id):
             continue
         deadline = praxis.submit_proposed_at + window
         await _apply_seal(

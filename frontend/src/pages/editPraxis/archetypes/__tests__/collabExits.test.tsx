@@ -27,6 +27,7 @@ function member(id: number): PraxisMemberOut {
     is_done: false,
     joined_at: "2026-01-01T00:00:00Z",
     nudged_at: null,
+    nudge_again_at: null,
     approved_at: null,
   };
 }
@@ -164,7 +165,7 @@ describe("Drop clears the phone tap floor even when a skin zeroes its padding (#
     const html = renderToStaticMarkup(
       <DropButton
         {...praxisState({ currentCharacterId: CREATOR_ID, type: "solo", memberIds: [CREATOR_ID] })}
-        skin={{ style: { padding: 0 } }}
+        skin={{ style: { minHeight: 0, minWidth: 0 } }}
       />,
     );
     expect(html).toMatch(/min-height:\s*44px/);

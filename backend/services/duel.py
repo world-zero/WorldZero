@@ -26,10 +26,11 @@ from models.praxis import (
 )
 from models.task import Task, TaskStatus
 from schemas.duel import DuelDetailOut, DuelSideOut
+from services.backdoor import settle_closed_backdoors
 from services.character import is_playable
 from services.scoring import compute_duel_multiplier
 from services.character_stats import recalculate_character_stats
-from services.nudge import latest_nudge_at
+from services.nudge import latest_nudge_at, nudge_again_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_create_duel
@@ -212,6 +213,7 @@ async def get_duel_detail(
             ),
             is_submitted=praxis is not None and praxis.status == PraxisStatus.submitted,
             nudged_at=nudged_at,
+            nudge_again_at=nudge_again_at(nudged_at),
             win_multiplier=_multiplier(True, False),
             loss_multiplier=_multiplier(False, False),
             tie_multiplier=_multiplier(False, True),
@@ -381,8 +383,12 @@ async def respond_to_duel_challenge(
     ):
         raise_coded(400, ErrorCode.duel_self_challenge, SELF_DUEL_DETAIL)
 
+    await settle_closed_backdoors(session)
     task = await session.get(Task, duel.task_id)
     if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
+    # Same 404 a deleted task gets: a refusal must not name the backdoor (#3848).
+    if task.status == TaskStatus.backdoor and task_status_closed(task, opponent, era):
         raise_coded(404, ErrorCode.task_not_found, "Task no longer exists.")
 
     # The challenge may outlive the task's status (era close, mod action). Level
@@ -484,7 +490,8 @@ async def cancel_duel_challenge(
 
     # A side may already be scored with the duel multiplier; revert both.
     era_row = await get_current_era_row(session)
-    for participant_id in {challenger_character_id, duel.opponent_character_id}:
+    participant_ids = {challenger_character_id, duel.opponent_character_id} - {None}
+    for participant_id in sorted(participant_ids):
         if participant_id is not None:
             await recalculate_character_stats(
                 participant_id, session, era, era_row=era_row

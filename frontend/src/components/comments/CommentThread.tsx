@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import type { CharacterOut } from '../../api/auth'
 import {
   type CommentOut,
@@ -259,9 +259,12 @@ function CommentRow({
 }) {
   const Variant = resolveVariant(surfaceMap('comment'), comment.author.faction_slug)
   const { t } = useTranslation('praxis')
+  // The deep-link target: a push or feed row links `#comment-{id}` (see CommentThread's scroll).
   return (
     <>
-      <Variant mode="row" comment={comment} onEdited={onEdited} onWithdrawn={onWithdrawn} />
+      <div id={`comment-${comment.id}`}>
+        <Variant mode="row" comment={comment} onEdited={onEdited} onWithdrawn={onWithdrawn} />
+      </div>
       {comment.admin_note && (
         <p className="card-meta" role="note">
           {t('comments.removedNote', { note: comment.admin_note })}
@@ -365,6 +368,14 @@ export default function CommentThread({
       active = false
     }
   }, [target, targetId])
+
+  // The browser's own hash jump fires before the rows exist, so jump once they land.
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (!loading && hash.startsWith('#comment-')) {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'center' })
+    }
+  }, [loading, hash])
 
   const handlePost = async (body: string) => {
     const created = await createComment(target, targetId, body)

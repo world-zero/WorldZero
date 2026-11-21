@@ -37,7 +37,7 @@ function preloadWelcomeFlow(): Plugin {
   }
 }
 
-// public/sw.js can't read the i18n bundle, so the build bakes src/locales/en/push.json into the copied worker.
+// public/sw.js can't read the i18n bundle, so the build bakes src/locales/en/push.json and the faction names into the copied worker.
 function bakePushStrings(): Plugin {
   let outDir = 'dist'
   return {
@@ -47,11 +47,13 @@ function bakePushStrings(): Plugin {
       outDir = c.build.outDir
     },
     closeBundle() {
-      const strings = readFileSync('src/locales/en/push.json', 'utf8')
+      const strings = JSON.parse(readFileSync('src/locales/en/push.json', 'utf8'))
+      const { names } = JSON.parse(readFileSync('src/locales/en/factions.json', 'utf8'))
+      if (!names || !Object.keys(names).length) throw new Error('factions.json lost its names, so the letter push has no faction to say')
       const file = join(outDir, 'sw.js')
       const js = readFileSync(file, 'utf8')
       if (!js.includes('const PUSH_STRINGS = null')) throw new Error('sw.js lost its PUSH_STRINGS placeholder')
-      writeFileSync(file, js.replace('const PUSH_STRINGS = null', () => `const PUSH_STRINGS = ${JSON.stringify(JSON.parse(strings))}`))
+      writeFileSync(file, js.replace('const PUSH_STRINGS = null', () => `const PUSH_STRINGS = ${JSON.stringify({ ...strings, factions: names })}`))
     },
   }
 }

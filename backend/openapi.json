@@ -168,6 +168,30 @@
       },
       "AdminTaskPatch": {
         "properties": {
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "description": {
             "anyOf": [
               {
@@ -355,6 +379,41 @@
           "task_level_required"
         ],
         "title": "AwaitingSubmissionPayload",
+        "type": "object"
+      },
+      "BackdoorOut": {
+        "description": "One open door, as the Array's console hints at it (#3848): task fields only.",
+        "properties": {
+          "backdoor_opens_at": {
+            "format": "date-time",
+            "title": "Backdoor Opens At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "level_required": {
+            "title": "Level Required",
+            "type": "integer"
+          },
+          "point_value": {
+            "title": "Point Value",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "point_value",
+          "level_required",
+          "backdoor_opens_at"
+        ],
+        "title": "BackdoorOut",
         "type": "object"
       },
       "BadgeOut": {
@@ -2403,6 +2462,18 @@
             "title": "Loss Multiplier",
             "type": "number"
           },
+          "nudge_again_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nudge Again At"
+          },
           "nudged_at": {
             "anyOf": [
               {
@@ -2450,6 +2521,7 @@
           "points_from_votes",
           "is_submitted",
           "nudged_at",
+          "nudge_again_at",
           "win_multiplier",
           "loss_multiplier",
           "tie_multiplier"
@@ -3972,6 +4044,13 @@
       },
       "GameConfigOut": {
         "properties": {
+          "backdoor_hint_stage_days": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Backdoor Hint Stage Days",
+            "type": "array"
+          },
           "collab_auto_submit_days": {
             "title": "Collab Auto Submit Days",
             "type": "integer"
@@ -4034,6 +4113,7 @@
           "duel_level_required",
           "collab_auto_submit_days",
           "pending_task_admin_review_hours",
+          "backdoor_hint_stage_days",
           "level_to_see_pending_tasks",
           "max_task_signups",
           "factions",
@@ -5148,6 +5228,30 @@
             "title": "Allowed Modes",
             "type": "array"
           },
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "can_sign_up": {
             "default": false,
             "title": "Can Sign Up",
@@ -5305,6 +5409,8 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "backdoor_opens_at",
+          "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -5780,6 +5886,7 @@
           "body_text": {
             "anyOf": [
               {
+                "maxLength": 20000,
                 "type": "string"
               },
               {
@@ -5795,6 +5902,7 @@
           "title": {
             "anyOf": [
               {
+                "maxLength": 200,
                 "type": "string"
               },
               {
@@ -5952,6 +6060,18 @@
             "title": "Joined At",
             "type": "string"
           },
+          "nudge_again_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nudge Again At"
+          },
           "nudged_at": {
             "anyOf": [
               {
@@ -5979,7 +6099,8 @@
           "is_done",
           "approved_at",
           "joined_at",
-          "nudged_at"
+          "nudged_at",
+          "nudge_again_at"
         ],
         "title": "PraxisMemberOut",
         "type": "object"
@@ -6292,6 +6413,61 @@
           "value"
         ],
         "title": "PraxisVoteIn",
+        "type": "object"
+      },
+      "ProposalOut": {
+        "description": "A proposer's own form fields; ``notes`` is private, so it is not on TaskOut.",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "level_required": {
+            "title": "Level Required",
+            "type": "integer"
+          },
+          "metatask_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metatask Faction Slug"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "point_value": {
+            "title": "Point Value",
+            "type": "integer"
+          },
+          "primary_faction_slug": {
+            "title": "Primary Faction Slug",
+            "type": "string"
+          },
+          "task_type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "notes",
+          "point_value",
+          "level_required",
+          "primary_faction_slug",
+          "task_type",
+          "metatask_faction_slug"
+        ],
+        "title": "ProposalOut",
         "type": "object"
       },
       "PushKeysIn": {
@@ -6949,6 +7125,30 @@
             "title": "Allowed Modes",
             "type": "array"
           },
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "can_sign_up": {
             "default": false,
             "title": "Can Sign Up",
@@ -7096,6 +7296,8 @@
           "primary_faction_slug",
           "metatask_faction_slug",
           "created_at",
+          "backdoor_opens_at",
+          "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
           "created_by_avatar_url",
@@ -7163,19 +7365,45 @@
           "pending",
           "active",
           "retired",
-          "deleted"
+          "deleted",
+          "backdoor"
         ],
         "title": "TaskStatus",
         "type": "string"
       },
       "TaskStatusAction": {
         "properties": {
+          "backdoor_closes_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Closes At"
+          },
+          "backdoor_opens_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backdoor Opens At"
+          },
           "status": {
             "enum": [
               "pending",
               "active",
               "retired",
-              "deleted"
+              "deleted",
+              "backdoor"
             ],
             "title": "Status",
             "type": "string"
@@ -14923,7 +15151,6 @@
         ]
       },
       "post": {
-        "description": "Idempotent on endpoint. A device belongs to whoever subscribed last: a browser\nholds one subscription per origin, so a shared phone must not keep pushing the\nprevious account's events.",
         "operationId": "subscribe_push_subscriptions_post",
         "parameters": [
           {
@@ -15650,7 +15877,119 @@
         ]
       }
     },
+    "/tasks/backdoor": {
+      "get": {
+        "operationId": "list_backdoors_tasks_backdoor_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackdoorOut"
+                  },
+                  "title": "Response List Backdoors Tasks Backdoor Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Backdoors",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
     "/tasks/{task_id}": {
+      "delete": {
+        "operationId": "withdraw_proposal_route_tasks__task_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Withdraw Proposal Route",
+        "tags": [
+          "tasks"
+        ]
+      },
       "get": {
         "operationId": "get_task_tasks__task_id__get",
         "parameters": [
@@ -15708,6 +16047,77 @@
           }
         ],
         "summary": "Get Task",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "put": {
+        "operationId": "edit_proposal_route_tasks__task_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edit Proposal Route",
         "tags": [
           "tasks"
         ]
@@ -15848,6 +16258,69 @@
         "summary": "Create Task Comment",
         "tags": [
           "comments"
+        ]
+      }
+    },
+    "/tasks/{task_id}/proposal": {
+      "get": {
+        "operationId": "get_own_proposal_route_tasks__task_id__proposal_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Own Proposal Route",
+        "tags": [
+          "tasks"
         ]
       }
     },

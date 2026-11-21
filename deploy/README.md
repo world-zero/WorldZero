@@ -197,7 +197,7 @@ so a compromised app never holds the bucket key:
 | `WZ_OFFSITE_KEY_ID`, `WZ_OFFSITE_SECRET` | the bucket-scoped key pair |
 
 Owner, once: create a private bucket; create a key limited to that bucket with
-**write and list, no delete**; set a **lifecycle rule expiring objects after 30
+**write and list, no delete**; create a separate **read key** (or plan to mint one in the vendor console at restore time) and keep it, the endpoint, bucket and region off the box, in your password manager, since the write key cannot read on B2 and `offsite.env` dies with the box; set a **lifecycle rule expiring objects after 30
 days** (this is the remote retention, chosen over a prune step so the box's key
 cannot erase history); copy `offsite.env.example` to that path and fill in the five keys; run
 `/srv/worldzero/backup.sh prod` once by hand and see the objects appear.

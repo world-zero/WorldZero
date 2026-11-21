@@ -405,7 +405,11 @@ async def retire_board_at_era_close(session: AsyncSession) -> int:
     result = await session.execute(
         update(Task)
         .where(*tasks_retired_at_era_close())
-        .values(status=TaskStatus.retired)
+        .values(
+            status=TaskStatus.retired,
+            backdoor_opens_at=None,
+            backdoor_closes_at=None,
+        )
     )
     return result.rowcount
 
@@ -458,7 +462,7 @@ async def apply_era_reset(
             participants |= {d.opponent_character_id for d in duels} | set(
                 challenger_ids
             )
-        for character_id in participants:
+        for character_id in sorted(participants):
             await recalculate_character_stats(
                 character_id,
                 session,

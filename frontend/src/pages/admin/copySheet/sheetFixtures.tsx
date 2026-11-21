@@ -47,6 +47,8 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     primary_faction_slug: 'ua',
     metatask_faction_slug: null,
     created_at: NOW,
+    backdoor_opens_at: null,
+    backdoor_closes_at: null,
     in_progress_count: 0,
     created_by_display_name: '',
     created_by_avatar_url: '',
@@ -184,6 +186,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     joined_at: EARLIER,
     approved_at: NOW,
     nudged_at: null,
+    nudge_again_at: null,
   },
   {
     id: 2,
@@ -196,6 +199,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     joined_at: EARLIER,
     approved_at: null,
     nudged_at: null,
+    nudge_again_at: null,
   },
 ]
 
@@ -554,6 +558,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       points_from_votes: 42,
       is_submitted: true,
       nudged_at: null,
+      nudge_again_at: null,
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,
@@ -567,6 +572,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       points_from_votes: 28,
       is_submitted: false,
       nudged_at: null,
+      nudge_again_at: null,
       win_multiplier: 1,
       loss_multiplier: 1,
       tie_multiplier: 1,

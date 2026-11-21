@@ -166,9 +166,11 @@ shortcut around them — the steps below are only the ones the restore adds.
    every deploy. Copy it from the repo into `/srv/worldzero/<env>/`, or run a
    deploy first and let CI place it. Without this, step 4 fails with
    `no configuration file provided: not found`.
-3. **Put `.env` back** in `/srv/worldzero/<env>/`, `chmod 600`. It is in no
+3. **Put `.env` and `offsite.env` back** in `/srv/worldzero/<env>/`, `chmod 600`
+   (without `offsite.env` the first 04:00 `backup.sh` exits 1 and raises `backup-red`).
+   `.env` It is in no
    backup and not in this repo. Its `SECRET_KEY` is what makes existing session
-   cookies valid; a new one logs everybody out once.
+   cookies valid; a new one logs everybody out once. Neither is in any backup or in this repo.
 4. The restore above.
 5. **Bring up the edge stack** (README §5). `bootstrap.sh` creates the `edge`
    *network*, not Caddy: `edge.docker-compose.yml` and the `Caddyfile` are

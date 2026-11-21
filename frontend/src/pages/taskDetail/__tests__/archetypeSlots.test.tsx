@@ -161,6 +161,18 @@ describe("task-detail content-slot invariant", () => {
       );
     });
 
+    it(`${slug} gives drop a 44px floor both ways`, () => {
+      const { html } = render(
+        <Archetype state={baseState({ isInProgress: true, inProgressPraxisId: 99 })} />,
+      );
+      const drop = [...html.matchAll(/<button[^>]*>[\s\S]*?<\/button>/g)]
+        .map((match) => match[0])
+        .find((button) => /drop/i.test(button.replace(/<[^>]*>/g, "")));
+      expect(drop, "drop button").toBeDefined();
+      expect(drop).toContain("min-height:44px");
+      expect(drop).toContain("min-width:44px");
+    });
+
     /**
      * Drop is a live <button> and never struck through (#2215, #2214). Checked
      * on the whole render: `line-through` is wrong on any control here.

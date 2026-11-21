@@ -111,3 +111,9 @@ describe('an unbreakable title stays inside its column (#2556)', () => {
     expect(style, 'and still yields rather than push the stamp off').toContain('min-width:0')
   })
 })
+
+describe('a list-card title clamps to 3 lines', () => {
+  it('the title carries the clamp class (`.card-title`, 3 lines)', () => {
+    expect(body({ title: 'word '.repeat(80) })).toMatch(/<h2 class="[^"]*\bcard-title\b/)
+  })
+})

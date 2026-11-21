@@ -45,7 +45,7 @@ run() {  # run <max age hours>; sets $rc and $out
   # If this ever fails, the real rsync ran. Stop before anything else does.
   [[ $(calls rsync) == 1 ]] || { echo "FAIL the rsync stub was not used"; exit 1; }
 }
-dispatches() { calls 'gh api repos/pixieofhugs/WorldZeroPlayground/dispatches'; }
+dispatches() { calls 'gh api repos/world-zero/WorldZero/dispatches'; }
 
 echo dump >"$tmp/dest/prod-db-1.dump"
 touch -d '3 hours ago' "$tmp/dest/prod-db-1.dump"

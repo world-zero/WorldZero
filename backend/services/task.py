@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Collection, Optional
 
 from fastapi import HTTPException
-from sqlalchemy import and_, exists, false, func, or_, select, true
+from sqlalchemy import and_, exists, false, func, literal, or_, select, true
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
@@ -15,9 +15,15 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
-from schemas.task import TaskCreate, TaskOut, TaskSignupOut
+from schemas.task import ProposalOut, TaskCreate, TaskOut, TaskSignupOut
 from seed import ONBOARDING_TASK_SEED_KEY
 from services.albescent_reveal import is_albescent_revealed
+from services.backdoor import (
+    door_open_clause,
+    may_use_door,
+    reader_slugs,
+    settle_closed_backdoors,
+)
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -32,6 +38,7 @@ from services.era_gates import (
 from services.faction_service import hidden_faction_slugs, refuse_hidden_faction
 from services.level_jump import available_level_reach
 from services.meta_task import character_sees_metatasks
+from services.mod_log import log_mod_action
 from services.scoring import compute_faction_multiplier
 from services.signup_eligibility import (
     SignupFacts,
@@ -47,15 +54,14 @@ from services.signup_eligibility import (
 )
 
 
-async def propose_task(
+async def _validate_proposal(
     character: Character,
     data: TaskCreate,
     session: AsyncSession,
-    skip_level_check: bool = False,
-    era: EraConfig = CURRENT_ERA,
-) -> Task:
-    """Propose a pending task; ``task_type`` picks the level gate. Metatasks need
-    ``metatask_faction_slug``."""
+    skip_level_check: bool,
+    era: EraConfig,
+) -> TaskType:
+    """Every propose gate, shared by propose and edit so they can't drift."""
     era_row = await get_current_era_row(session)
     stats = await get_or_create_stats(session, character.id, era_row.id)
 
@@ -100,6 +106,21 @@ async def propose_task(
     await refuse_hidden_faction(
         session, data.primary_faction_slug, data.metatask_faction_slug
     )
+    return task_type
+
+
+async def propose_task(
+    character: Character,
+    data: TaskCreate,
+    session: AsyncSession,
+    skip_level_check: bool = False,
+    era: EraConfig = CURRENT_ERA,
+) -> Task:
+    """Propose a pending task; ``task_type`` picks the level gate. Metatasks need
+    ``metatask_faction_slug``."""
+    task_type = await _validate_proposal(
+        character, data, session, skip_level_check, era
+    )
 
     task = Task(
         title=data.title,
@@ -119,6 +140,79 @@ async def propose_task(
     await session.flush()
     await session.refresh(task)
     return task
+
+
+async def _own_pending_task(
+    task_id: int, character: Character, session: AsyncSession
+) -> Task:
+    task = await session.get(Task, task_id)
+    if task is None:
+        raise_coded(404, ErrorCode.task_not_found, "Task not found.")
+    if task.created_by_id != character.id:
+        raise_coded(403, ErrorCode.task_not_yours, "That isn't your proposal.")
+    if task.status != TaskStatus.pending:
+        raise_coded(
+            409, ErrorCode.task_not_pending, "Only a pending proposal can change."
+        )
+    return task
+
+
+async def get_own_proposal(
+    task_id: int, character: Character, session: AsyncSession
+) -> ProposalOut:
+    """The proposer's own form fields, notes included, which TaskOut never carries."""
+    task = await _own_pending_task(task_id, character, session)
+    return ProposalOut(
+        title=task.title,
+        description=task.description,
+        notes=task.notes,
+        point_value=task.point_value,
+        level_required=task.level_required,
+        primary_faction_slug=task.primary_faction_slug,
+        task_type=task.task_type,
+        metatask_faction_slug=task.metatask_faction_slug,
+    )
+
+
+async def edit_proposal(
+    task_id: int,
+    character: Character,
+    data: TaskCreate,
+    session: AsyncSession,
+    skip_level_check: bool = False,
+    era: EraConfig = CURRENT_ERA,
+) -> Task:
+    """Rewrite a pending proposal. ``created_at`` is untouched, so the review
+    window doesn't restart."""
+    task = await _own_pending_task(task_id, character, session)
+    task_type = await _validate_proposal(
+        character, data, session, skip_level_check, era
+    )
+    task.title = data.title
+    task.description = data.description or ""
+    task.notes = data.notes or ""
+    task.point_value = data.point_value
+    task.level_required = data.level_required
+    task.primary_faction_slug = data.primary_faction_slug or CROSS_FACTION_SLUG
+    task.metatask_faction_slug = (
+        data.metatask_faction_slug if task_type == TaskType.metatask else None
+    )
+    task.task_type = task_type
+    await session.flush()
+    await session.refresh(task)
+    return task
+
+
+async def withdraw_proposal(
+    task_id: int, character: Character, session: AsyncSession
+) -> None:
+    """Soft-delete via the existing ``deleted`` status; a mod can restore it."""
+    task = await _own_pending_task(task_id, character, session)
+    task.status = TaskStatus.deleted
+    await session.flush()
+    await log_mod_action(
+        session, character.account_id, "task_withdraw", "task", task_id
+    )
 
 
 @dataclass(frozen=True)
@@ -214,6 +308,8 @@ async def build_task_out(
         primary_faction_slug=task.primary_faction_slug,
         metatask_faction_slug=task.metatask_faction_slug,
         created_at=task.created_at,
+        backdoor_opens_at=task.backdoor_opens_at,
+        backdoor_closes_at=task.backdoor_closes_at,
         in_progress_count=in_progress_count,
         created_by_display_name=author.display_name,
         created_by_avatar_url=author.avatar_url,
@@ -443,6 +539,23 @@ def pending_visibility_clause(
     return or_(Task.status != TaskStatus.pending, own)
 
 
+async def _may_see_backdoor(
+    session: AsyncSession, task: Task, viewer: Optional[Character], era: EraConfig
+) -> bool:
+    """A reader of the array while the door is open, or anyone on a praxis for it."""
+    if viewer is None:
+        return False
+    if may_use_door(task, viewer.faction_slug, era):
+        return True
+    member = await session.scalar(
+        select(PraxisMember.id)
+        .join(Praxis, Praxis.id == PraxisMember.praxis_id)
+        .where(Praxis.task_id == task.id, PraxisMember.character_id == viewer.id)
+        .limit(1)
+    )
+    return member is not None
+
+
 async def get_task_for_viewer(
     session: AsyncSession,
     task_id: int,
@@ -457,9 +570,15 @@ async def get_task_for_viewer(
     Only ``pending`` (and ``deleted`` for non-admins) is withheld: the retired
     level gate covers the archive browse, not links to a retired task.
     """
+    await settle_closed_backdoors(session)
     task = await session.get(Task, task_id)
-    if task is not None and task.status is TaskStatus.deleted and not is_admin:
-        return None
+    if task is not None and not is_admin:
+        if task.status is TaskStatus.deleted:
+            return None
+        if task.status is TaskStatus.backdoor and not await _may_see_backdoor(
+            session, task, viewer, era
+        ):
+            return None
     if task is None or task.status is not TaskStatus.pending:
         return task
     viewer_level = -1
@@ -518,6 +637,7 @@ async def list_tasks(
     ``faction`` is a union of slugs; empty = no filter. ``sort`` None =
     ``TaskSort.level``.
     """
+    await settle_closed_backdoors(session)
     hidden_slugs = await hidden_faction_slugs(session)
 
     query = select(Task)
@@ -552,9 +672,11 @@ async def list_tasks(
         )
     )
 
-    # Deleted tasks are admin-only on every door (#3305).
+    # Deleted (#3305) and backdoor (#3848) tasks are admin-only on every door.
     if not is_admin:
-        query = query.where(Task.status != TaskStatus.deleted)
+        query = query.where(
+            Task.status.notin_([TaskStatus.deleted, TaskStatus.backdoor])
+        )
 
     if status and status != "all":
         try:
@@ -596,7 +718,9 @@ async def list_tasks(
         query = query.where(Task.task_type == TaskType.standard)
 
     if not skip_level_check:
-        if not character_sees_metatasks(viewer_level, era):
+        if not character_sees_metatasks(
+            viewer_level, viewer.faction_slug if viewer is not None else None, era
+        ):
             query = query.where(Task.task_type != TaskType.metatask)
 
     # evaluate_signup's gates restated as SQL (per-row call = N+1).
@@ -621,6 +745,15 @@ async def list_tasks(
         query = query.where(Task.level_required <= viewer_stats.level + level_reach)
         # Gates 3-4: exclusions, so a new enum status isn't silently opted in.
         query = query.where(Task.status != TaskStatus.deleted)
+        query = query.where(
+            or_(
+                Task.status != TaskStatus.backdoor,
+                and_(
+                    door_open_clause(),
+                    literal(viewer.faction_slug).in_(reader_slugs(era)),
+                ),
+            )
+        )
         if viewer.faction_slug not in era.allow_praxis_on_retired_task_factions:
             query = query.where(Task.status != TaskStatus.retired)
         if viewer.faction_slug not in era.allow_praxis_on_pending_task_factions:

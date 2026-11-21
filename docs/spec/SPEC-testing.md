@@ -199,8 +199,8 @@ artifact. It is deliberately not on the PR-blocking path; the one e2e spec that 
 
 ## GitHub Actions CI
 
-The PR-blocking suite is **four required checks** on `main`: three jobs of
-`.github/workflows/test.yml`, plus `contrast` from `.github/workflows/contrast.yml`:
+The PR-blocking suite is **four required checks** on `main`: three of
+`.github/workflows/test.yml`'s four jobs (`comments` runs but is not required), plus `contrast` from `.github/workflows/contrast.yml`:
 
 - `test` — a Postgres service, `alembic upgrade head`, then `pytest --cov --cov-fail-under=96`
 - `frontend` — lint, `tsc --noEmit`, the `/design-sync` typecheck, vitest, `vite build`,
