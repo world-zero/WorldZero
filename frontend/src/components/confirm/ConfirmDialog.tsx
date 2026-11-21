@@ -9,9 +9,9 @@
  * Settings' delete-account uses `children` + `confirmDisabled` (#2161).
  */
 import { useEffect, useId, useRef, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { useModal } from '../../hooks/useModal'
+import { drawAtRoot } from '../ui/drawAtRoot'
 import { factionCssVar } from '../../utils/factions'
 
 /** One confirm, fully worded. */
@@ -173,8 +173,6 @@ export default function ConfirmDialog({
   )
 
   // Portalled: a transformed ancestor (e.g. a rotated composer panel) would anchor
-  // `position: fixed` to itself. Inline when there's no document (static tests).
-  return typeof document === 'undefined'
-    ? dialog
-    : createPortal(dialog, document.body)
+  // `position: fixed` to itself.
+  return drawAtRoot(dialog)
 }

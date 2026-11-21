@@ -27,6 +27,8 @@ vi.mock('../../api/me', () => ({
   setActiveCharacter: async () => ({}),
 }))
 
+import ConfirmDialog from '../confirm/ConfirmDialog'
+import FeedBankFullModal from '../feed/FeedBankFullModal'
 import CharacterSwitcherSheet from '../CharacterSwitcherSheet'
 import { OptionOverlay } from '../ui/FilterBar/OptionPicker'
 import { drawAtRoot } from '../ui/drawAtRoot'
@@ -138,5 +140,35 @@ describe('OptionOverlay', () => {
     expect(html).toContain('filter-factions__scrim')
     expect(html).toContain('filter-factions__sheet')
     expect(html).toContain('aria-checked="true"')
+  })
+})
+
+describe('modals', () => {
+  const confirm = (
+    <ConfirmDialog
+      request={{ kind: 'k', title: 'T', body: 'B', confirmLabel: 'Go' }}
+      factionSlug={null}
+      onConfirm={() => {}}
+      onDismiss={() => {}}
+    />
+  )
+  const bankFull = (
+    <FeedBankFullModal
+      title="Full"
+      body="B"
+      cancelLabel="No"
+      options={[]}
+      busy={false}
+      error=""
+      onDismiss={() => {}}
+    />
+  )
+
+  it.each([
+    ['ConfirmDialog', confirm, 'role="dialog"'],
+    ['FeedBankFullModal', bankFull, 'role="dialog"'],
+  ])('%s portals with a document and renders inline without one', (_n, el, marker) => {
+    expect(() => withDocument(() => renderToStaticMarkup(el))).toThrow(/[Pp]ortal/)
+    expect(renderToStaticMarkup(el)).toContain(marker)
   })
 })
