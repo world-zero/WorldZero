@@ -4301,6 +4301,15 @@ export interface components {
             /** To Character Id */
             to_character_id: number;
         };
+        /** OtherLifePending */
+        OtherLifePending: {
+            /** Character Id */
+            character_id: number;
+            /** Display Name */
+            display_name: string;
+            /** Pending Requests Count */
+            pending_requests_count: number;
+        };
         /** OverviewStats */
         OverviewStats: {
             /** Accounts */
@@ -4942,6 +4951,50 @@ export interface components {
             /** Votes Back Of */
             votes_back_of: number;
         };
+        /**
+         * RosterCharacterOut
+         * @description ``/me/characters`` only: the owner's view adds the life's waiting requests.
+         */
+        RosterCharacterOut: {
+            /** All Time Score */
+            all_time_score: number;
+            /** Avatar Url */
+            avatar_url: string;
+            /** Badges */
+            badges: components["schemas"]["BadgeOut"][];
+            /** Bio */
+            bio: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Faction Slug */
+            faction_slug: string;
+            /** Id */
+            id: number;
+            /** Invitations */
+            invitations: string[];
+            /** Level */
+            level: number;
+            /** Location */
+            location: string;
+            /**
+             * Pending Requests Count
+             * @default 0
+             */
+            pending_requests_count: number;
+            /** Score */
+            score: number;
+            /** Status */
+            status: string;
+            /** Tagline */
+            tagline: string;
+            /** Username */
+            username: string;
+        };
         /** RulesChangeEntry */
         RulesChangeEntry: {
             /** Dial Key */
@@ -5016,6 +5069,11 @@ export interface components {
             global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Global Activity Count */
             global_activity_count: number;
+            /**
+             * Other Lives Pending
+             * @default []
+             */
+            other_lives_pending: components["schemas"]["OtherLifePending"][];
             /** Pending Requests Count */
             pending_requests_count: number;
         };
@@ -7869,7 +7927,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CharacterOut"][];
+                    "application/json": components["schemas"]["RosterCharacterOut"][];
                 };
             };
             /** @description Validation Error */

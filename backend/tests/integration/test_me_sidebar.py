@@ -92,7 +92,8 @@ async def test_sidebar_returns_all_three_panels(
 #: more fan-out, or a badge count the rail never draws, breaks the exact pin.
 #: +3 (#3456): collab, duel and letter now also fetch their answered rows.
 #: +1 (#3766): duel_forfeited.
-SIDEBAR_SELECT_BUDGET = 26
+#: +1 (#3776): the sibling-lives list; counts only run when a sibling exists.
+SIDEBAR_SELECT_BUDGET = 27
 
 
 @pytest.mark.asyncio
@@ -132,6 +133,7 @@ async def test_sidebar_without_a_character_is_empty(
     assert response.status_code == 200
     assert response.json() == {
         "pending_requests_count": 0,
+        "other_lives_pending": [],
         "global_activity": [],
         "global_activity_count": 0,
         "active_praxes": [],

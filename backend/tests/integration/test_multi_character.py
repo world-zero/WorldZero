@@ -13,6 +13,13 @@ from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
+from models.praxis import (
+    Praxis,
+    PraxisInvite,
+    PraxisInviteStatus,
+    PraxisStatus,
+    PraxisType,
+)
 from models.task import Task
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
@@ -254,3 +261,68 @@ async def test_second_life_collaborates_on_praxis(
         f"expected {second.id} in {member_ids}."
     )
     assert member_ids == {character2.id, second.id}
+
+
+@pytest.mark.asyncio
+async def test_sibling_life_pending_requests_are_counted_across_lives(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    era: Era,
+    some_faction: Faction,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """#3776: a collab invite to the life you aren't carrying still shows up."""
+    carried = await _add_character(db_session, account, era, username="carriedlife", level=5)
+    collab = Praxis(
+        task_id=active_task.id,
+        created_by_id=character2.id,
+        type=PraxisType.collab,
+        status=PraxisStatus.in_progress,
+        title="Collab",
+        body_text="x",
+    )
+    db_session.add(collab)
+    await db_session.flush()
+    db_session.add(
+        PraxisInvite(
+            praxis_id=collab.id,
+            inviter_id=character2.id,
+            invitee_id=character.id,
+            status=PraxisInviteStatus.pending,
+        )
+    )
+    await db_session.commit()
+    await client.post(
+        "/me/active-character", json={"character_id": carried.id}, headers=auth_headers
+    )
+
+    roster = {
+        c["id"]: c
+        for c in (await client.get("/me/characters", headers=auth_headers)).json()
+    }
+    assert roster[character.id]["pending_requests_count"] == 1
+    assert roster[carried.id]["pending_requests_count"] == 0
+
+    sidebar = (await client.get("/me/sidebar", headers=auth_headers)).json()
+    assert sidebar["pending_requests_count"] == 0
+    assert sidebar["other_lives_pending"] == [
+        {
+            "character_id": character.id,
+            "display_name": character.display_name,
+            "pending_requests_count": 1,
+        }
+    ]
+
+    await client.post(
+        "/me/active-character", json={"character_id": character.id}, headers=auth_headers
+    )
+    sidebar = (await client.get("/me/sidebar", headers=auth_headers)).json()
+    assert sidebar["pending_requests_count"] == 1
+    assert sidebar["other_lives_pending"] == []
+
+    public = await client.get(f"/characters/{character.id}")
+    assert "pending_requests_count" not in public.json()
