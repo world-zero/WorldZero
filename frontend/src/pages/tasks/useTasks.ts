@@ -284,7 +284,7 @@ export function useTasks(): TasksState {
   const trimmedQuery = debouncedQuery.trim()
   // `getAll` returns a fresh array each render, so the dep is the joined string.
   const factionKey = selectedFactions.join(',')
-  const { data, loading, error, hasMore, loadMore, resetWindow } = usePagedResource(
+  const { data, loading, error, hasMore, loadMore } = usePagedResource(
     (offset, limit) =>
       viewerPending
         ? Promise.resolve<TaskOut[]>([])
@@ -314,7 +314,6 @@ export function useTasks(): TasksState {
     build: (previous: URLSearchParams) => URLSearchParams,
   ): void => {
     setSearchParams(build, FILTER_NAV_OPTIONS)
-    resetWindow()
   }
   const setAxis = (key: string, value: string, defaultValue: string): void =>
     writeParams((previous) => nextFilterParams(previous, key, value, defaultValue))
@@ -334,7 +333,7 @@ export function useTasks(): TasksState {
       next ? CAN_SIGN_UP_ON : CAN_SIGN_UP_OFF,
       '',
     )
-  const setQuery = (next: string) => { setQueryState(next); resetWindow() }
+  const setQuery = (next: string) => { setQueryState(next) }
   const clearFilters = () =>
     writeParams((previous) => clearedFilterParams(previous, eligibilityDefault))
 
