@@ -93,7 +93,7 @@ export default function SnideTaskCard({
           background: groundIsBusy ? WALL_PLAIN : WALL,
           border: "1px solid var(--faction-snide-note-wall-edge)",
           boxShadow: "var(--faction-snide-note-wall-shadow)",
-          transform: "rotate(-0.4deg)",
+          rotate: "-0.4deg",
         }}
       >
         <SnideBand />
