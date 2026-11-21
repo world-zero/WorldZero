@@ -39,6 +39,8 @@ export interface GameConfigOut {
   collab_auto_submit_days: number
   /** Days an unanswered duel challenge waits before it lapses (#3875). */
   duel_challenge_lapse_days: number | null // null = waits for the era close
+  /** Days after the first cast that the other side forfeits (#4005); null = never. */
+  duel_cast_lapse_days: number | null
   /** Hours a fresh proposal stays admin-only (#1695). */
   pending_task_admin_review_hours: number
   level_to_see_pending_tasks: number

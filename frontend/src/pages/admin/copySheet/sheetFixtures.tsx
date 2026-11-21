@@ -555,6 +555,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
     task_id: 101,
     status: 'active',
     forfeited_by_character_id: null,
+    cast_clock_started_at: null,
     challenger: {
       praxis_id: 601,
       character_id: 7,
