@@ -57,7 +57,7 @@ def modifiers_of(character: Character, era=CURRENT_ERA):
 
 
 def assert_invariant(payload) -> None:
-    """score = base × mult + meta + votes + habit + rival — every type (ADR-0053/0086)."""
+    """score = base × mult + meta + votes + habit + rival, every type (ADR-0053)."""
     expected = (
         payload.task_point_value * payload.display_multiplier
         + payload.metatask_points
