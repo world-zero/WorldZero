@@ -5,24 +5,19 @@
  * No drop cap: slicing the body's first character broke a leading `@mention`; the
  * ochre margin rule marks the note instead. `-brass` is a rule colour, never an ink.
  */
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import FactionAvatar from "../../avatar/FactionAvatar";
-import { formatCommentTime } from "../../../utils/commentTime";
-import {
-  type CommentProps,
-  authorToCharacter,
-  ComposerControls,
-  MentionText,
-} from "../shared";
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import FactionAvatar from '../../avatar/FactionAvatar'
+import { formatCommentTime } from '../../../utils/commentTime'
+import { type CommentProps, authorToCharacter, ComposerControls, MentionText } from '../shared'
 import {
   CommentEditor,
   OwnerControls,
   useOwnerEdit,
   useOwnerReveal,
-} from "../OwnerControls";
-import { CommentFlagControl, canFlagComment } from "../FlagControl";
-import { useAuth } from "../../../auth/AuthContext";
+} from '../OwnerControls'
+import { CommentFlagControl, canFlagComment } from '../FlagControl'
+import { useAuth } from '../../../auth/AuthContext'
 import {
   BRASS_LIGHT,
   CAPS,
@@ -37,18 +32,18 @@ import {
   SHADOW,
   SMALL_CAPS,
   WASH,
-} from "../../factionMarks/ephemeristsPlate";
-import { factionBodyVars } from "../../../utils/factionBodyFace";
+} from '../../factionMarks/ephemeristsPlate'
+import { factionBodyVars } from '../../../utils/factionBodyFace'
 
 /** The plate's CTA pair, measured as a pair. Not `-brass` (no text on it), not `-band` (near-black in dark). */
-const CTA_BG = "var(--faction-ephemerists-plate-cta-bg)";
-const CTA_INK = "var(--faction-ephemerists-plate-cta-ink)";
+const CTA_BG = 'var(--faction-ephemerists-plate-cta-bg)'
+const CTA_INK = 'var(--faction-ephemerists-plate-cta-ink)'
 
 const LABEL = {
   ...SMALL_CAPS,
-  fontSize: "var(--text-md)",
+  fontSize: 'var(--text-md)',
   color: CAPTION,
-} as const;
+} as const
 
 /** The leaf both modes sit on, so a thread reads as one stack of notes. */
 function Leaf({
@@ -56,19 +51,12 @@ function Leaf({
   children,
   containerProps,
 }: {
-  avatar: React.ReactNode;
-  children: React.ReactNode;
-  containerProps?: React.ComponentPropsWithoutRef<"div">;
+  avatar: React.ReactNode
+  children: React.ReactNode
+  containerProps?: React.ComponentPropsWithoutRef<'div'>
 }) {
   return (
-    <div
-      style={{
-        ...factionBodyVars("ephemerists"),
-        display: "flex",
-        gap: "var(--space-md)",
-        alignItems: "flex-start",
-      }}
-    >
+    <div style={{ ...factionBodyVars("ephemerists"), display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' }}>
       {avatar}
       <div
         {...containerProps}
@@ -82,35 +70,24 @@ function Leaf({
         }}
       >
         {/* No head band (#2210). No `overflow: hidden`: it would clip the @mention listbox. */}
-        <div
-          style={{
-            padding: "var(--space-md) var(--space-lg)",
-            background: WASH,
-          }}
-        >
+        <div style={{ padding: 'var(--space-md) var(--space-lg)', background: WASH }}>
           {children}
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /** The note beside an ochre margin rule (a flex sibling, so it stretches to height). */
 function Marginalia({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "var(--space-md)",
-        marginTop: "var(--space-sm)",
-      }}
-    >
+    <div style={{ display: 'flex', gap: 'var(--space-md)', marginTop: 'var(--space-sm)' }}>
       <span
         aria-hidden="true"
         style={{
           width: 1,
           flexShrink: 0,
-          alignSelf: "stretch",
+          alignSelf: 'stretch',
           background: OCHRE,
           opacity: 0.55,
         }}
@@ -123,22 +100,22 @@ function Marginalia({ children }: { children: React.ReactNode }) {
           fontFamily: READING,
           color: INK,
           lineHeight: 1.6,
-          overflowWrap: "anywhere",
+          overflowWrap: 'anywhere',
         }}
       >
         {children}
       </div>
     </div>
-  );
+  )
 }
 
 export default function EphemeristsComment(props: CommentProps) {
-  const { t } = useTranslation("praxis");
-  const { user } = useAuth();
-  const reveal = useOwnerReveal();
+  const { t } = useTranslation('praxis')
+  const { user } = useAuth()
+  const reveal = useOwnerReveal()
 
-  if (props.mode === "composer") {
-    const { character, value, onChange, onSubmit, submitting } = props;
+  if (props.mode === 'composer') {
+    const { character, value, onChange, onSubmit, submitting } = props
     return (
       <Leaf avatar={<FactionAvatar character={character} size="sm" />}>
         <div aria-busy={submitting}>
@@ -153,47 +130,42 @@ export default function EphemeristsComment(props: CommentProps) {
               // The panel cell, so the field reads as inset.
               bg={INNER}
               text={INK}
-              hint={<span style={LABEL}>{t("comments.mentionHint")}</span>}
+              hint={<span style={LABEL}>{t('comments.mentionHint')}</span>}
             />
           </Marginalia>
         </div>
       </Leaf>
-    );
+    )
   }
 
-  const { comment, onEdited, onWithdrawn } = props;
-  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn });
-  const canFlag = canFlagComment(comment, user?.character?.id);
-  const showControls = !owner.editing && (owner.isOwner || canFlag);
+  const { comment, onEdited, onWithdrawn } = props
+  const owner = useOwnerEdit({ comment, onEdited, onWithdrawn })
+  const canFlag = canFlagComment(comment, user?.character?.id)
+  const showControls = !owner.editing && (owner.isOwner || canFlag)
   // The foot rule is never gated (#2733); `<OwnerControls reveal>` gates itself.
 
   return (
     <Leaf
-      avatar={
-        <FactionAvatar
-          character={authorToCharacter(comment.author)}
-          size="sm"
-        />
-      }
+      avatar={<FactionAvatar character={authorToCharacter(comment.author)} size="sm" />}
       containerProps={reveal.containerProps}
     >
       <div
         style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "var(--space-sm)",
-          flexWrap: "wrap",
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: 'var(--space-sm)',
+          flexWrap: 'wrap',
         }}
       >
         <Link
           to={`/characters/${comment.author.id}`}
           style={{
             fontFamily: CAPS,
-            fontSize: "var(--text-content)",
+            fontSize: 'var(--text-content)',
             fontWeight: 600,
-            letterSpacing: "0.06em",
+            letterSpacing: '0.06em',
             color: INK,
-            textDecoration: "none",
+            textDecoration: 'none',
           }}
         >
           {comment.author.display_name}
@@ -204,7 +176,7 @@ export default function EphemeristsComment(props: CommentProps) {
         {comment.is_edited && (
           <span style={{ ...LABEL, color: QUIET }}>
             <span aria-hidden="true">· </span>
-            {t("comments.edited")}
+            {t('comments.edited')}
           </span>
         )}
       </div>
@@ -219,24 +191,19 @@ export default function EphemeristsComment(props: CommentProps) {
             text={INK}
           />
         ) : (
-          <MentionText
-            body={comment.body_text}
-            censored={comment.is_censored}
-            mentions={comment.mentions}
-            accent={BRASS_LIGHT}
-          />
+          <MentionText body={comment.body_text} mentions={comment.mentions} censored={comment.is_censored} accent={BRASS_LIGHT} />
         )}
       </Marginalia>
 
       {showControls && (
         <div
           style={{
-            display: "flex",
-            alignItems: "baseline",
-            flexWrap: "wrap",
-            gap: "var(--space-md)",
-            marginTop: "var(--space-md)",
-            paddingTop: "var(--space-sm)",
+            display: 'flex',
+            alignItems: 'baseline',
+            flexWrap: 'wrap',
+            gap: 'var(--space-md)',
+            marginTop: 'var(--space-md)',
+            paddingTop: 'var(--space-sm)',
             borderTop: `1px solid ${LINE}`,
           }}
         >
@@ -245,5 +212,5 @@ export default function EphemeristsComment(props: CommentProps) {
         </div>
       )}
     </Leaf>
-  );
+  )
 }

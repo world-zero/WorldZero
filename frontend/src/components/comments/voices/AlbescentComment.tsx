@@ -1,9 +1,6 @@
-import { DefaultComment } from "../CommentThread";
-import type { CommentProps } from "../shared";
-import {
-  ALBESCENT_FACTION_SLUG,
-  isFactionRedacted,
-} from "../../../utils/factions";
+import { DefaultComment } from '../CommentThread'
+import type { CommentProps } from '../shared'
+import { ALBESCENT_FACTION_SLUG, isFactionRedacted } from '../../../utils/factions'
 
 /**
  * Albescent's comment voice — reveal-gated wrapper (#2732, ADR-0088 §3). Revealed:
@@ -17,13 +14,12 @@ import {
  */
 export default function AlbescentComment(props: CommentProps) {
   // The constant, not the payload's slug, so no caller can make it dress a foreign leaf.
-  if (isFactionRedacted(ALBESCENT_FACTION_SLUG))
-    return <DefaultComment {...props} />;
+  if (isFactionRedacted(ALBESCENT_FACTION_SLUG)) return <DefaultComment {...props} />
   return (
     <DefaultComment
       {...props}
       // Shared ring (#2407); all paint is the class's.
       edge={<span aria-hidden="true" className="alb-comment-edge" />}
     />
-  );
+  )
 }
