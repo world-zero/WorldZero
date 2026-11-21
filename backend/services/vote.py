@@ -295,8 +295,10 @@ async def _pending_invite_praxis_ids(
     return set(result.scalars().all())
 
 
-async def _duel_participant_account_ids(duel: Duel, session: AsyncSession) -> set[int]:
-    """Both duelists' accounts; a swallowed challenge (#3867) leaves the opponent out."""
+async def _duel_participant_account_ids(
+    duel: Duel, session: AsyncSession
+) -> set[int]:
+    """Both duelists' accounts; a swallowed challenge (#3867) drops the opponent."""
     challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
     challenger = (
         await session.get(Character, challenger_praxis.created_by_id)

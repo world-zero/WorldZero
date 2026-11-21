@@ -1008,7 +1008,7 @@ _COMMENT_COLUMNS = (
 
 
 def _censored(ctx: FeedContext) -> Label[bool]:
-    """The viewer blocked the author (#3867): the item keeps its shape, loses its text."""
+    """Viewer blocked the author (#3867): the item keeps its shape, not its text."""
     return has_blocked(ctx.character_id, Comment.created_by_id).label("is_censored")
 
 
@@ -1090,7 +1090,9 @@ def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]
                 # Exactly one is set (DB CHECK, migration 0005).
                 praxis_id=row.praxis_id,
                 task_id=row.task_id,
-                excerpt="" if row.is_censored else row.body_text[:COMMENT_EXCERPT_LENGTH],
+                excerpt=(
+                    "" if row.is_censored else row.body_text[:COMMENT_EXCERPT_LENGTH]
+                ),
                 is_censored=row.is_censored,
             ),
         )

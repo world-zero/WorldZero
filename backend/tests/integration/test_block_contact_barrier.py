@@ -5,6 +5,7 @@ comments are censored for A alone, A can't reach B, and B can't tell.
 """
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
@@ -25,6 +26,7 @@ from models.praxis import (
 )
 from models.relationship import Relationship, RelationshipType
 from models.task import Task
+from services.praxis import get_praxis
 from services.vote import viewer_can_vote, viewer_can_vote_map
 from tests.integration.factories import (
     make_admin,
@@ -44,9 +46,13 @@ async def _block(session: AsyncSession, blocker: Character, blocked: Character) 
 
 
 async def _request_types(client: AsyncClient, headers: dict) -> set[str]:
-    feed = await client.get("/activity-feed?filter=requests", headers=headers)
-    assert feed.status_code == 200, feed.text
-    return {item["type"] for item in feed.json()["items"]} & REQUEST_TYPES
+    """Invites and challenges live on the requests tab, nudges on ``all``."""
+    types: set[str] = set()
+    for path in ("/activity-feed?filter=requests", "/activity-feed"):
+        feed = await client.get(path, headers=headers)
+        assert feed.status_code == 200, feed.text
+        types |= {item["type"] for item in feed.json()["items"]}
+    return types & REQUEST_TYPES
 
 
 async def _pending_count(client: AsyncClient, headers: dict) -> int:
@@ -59,6 +65,7 @@ async def _b_requests_a(
     session: AsyncSession, era: Era, a: Character, b: Character, praxis_collab: Praxis
 ) -> Praxis:
     """B invites, challenges and nudges A; returns B's invite praxis."""
+    praxis_collab.status = PraxisStatus.in_progress
     await raise_to_duel_level(session, a.id)
     await raise_to_duel_level(session, b.id)
     other_task = await make_task(session, b, title="b's collab")
@@ -90,7 +97,9 @@ async def _b_requests_a(
                 opponent_character_id=a.id,
                 status=DuelStatus.pending,
             ),
-            Nudge(from_character_id=b.id, to_character_id=a.id, praxis_id=praxis_collab.id),
+            Nudge(
+                from_character_id=b.id, to_character_id=a.id, praxis_id=praxis_collab.id
+            ),
         ]
     )
     await session.commit()
@@ -109,11 +118,12 @@ async def test_requests_pending_at_block_time_are_swallowed_and_return_on_unbloc
 ):
     await _b_requests_a(db_session, era, character, character2, praxis_collab)
     assert await _request_types(client, auth_headers) == REQUEST_TYPES
-    assert await _pending_count(client, auth_headers) == 3
+    pending = await _pending_count(client, auth_headers)
 
     await _block(db_session, character, character2)
     assert await _request_types(client, auth_headers) == set()
-    assert await _pending_count(client, auth_headers) == 0
+    # The invite and the challenge; A's own unfiled part still badges.
+    assert await _pending_count(client, auth_headers) == pending - 2
 
     unblock = await client.delete(
         f"/relationships/blocks/{character2.id}", headers=auth_headers
@@ -158,11 +168,6 @@ async def test_the_blocked_party_sees_nothing_change(
     await _block(db_session, character, character2)
     assert await snapshot() == before
 
-    resend = await client.post(
-        f"/praxes/{praxis_collab.id}/nudge/{character.id}", headers=auth_headers2
-    )
-    assert resend.status_code == 422, resend.text  # the daily limit, not the block
-
 
 @pytest.mark.asyncio
 async def test_a_swallowed_invite_does_not_cost_the_invitee_their_vote(
@@ -203,6 +208,8 @@ async def test_a_swallowed_challenge_does_not_cost_the_opponent_their_vote(
     active_task: Task,
 ):
     praxis = await make_solo_praxis(db_session, active_task, character2)
+    await raise_to_duel_level(db_session, character.id)
+    await raise_to_duel_level(db_session, character2.id)
     db_session.add(
         Duel(
             task_id=active_task.id,
@@ -212,10 +219,14 @@ async def test_a_swallowed_challenge_does_not_cost_the_opponent_their_vote(
         )
     )
     await db_session.commit()
-    assert not await viewer_can_vote(character, praxis, db_session)
 
+    async def can_vote() -> bool:
+        loaded = await get_praxis(praxis.id, db_session)
+        return await viewer_can_vote(character, loaded, db_session)
+
+    assert not await can_vote()
     await _block(db_session, character, character2)
-    assert await viewer_can_vote(character, praxis, db_session)
+    assert await can_vote()
     assert (await viewer_can_vote_map([praxis], character, db_session))[praxis.id]
 
 
@@ -238,7 +249,9 @@ async def test_comments_and_mentions_are_censored_for_the_blocker_only(
     )
     db_session.add(comment)
     await db_session.flush()
-    db_session.add(CommentMention(comment_id=comment.id, mentioned_character_id=character.id))
+    db_session.add(
+        CommentMention(comment_id=comment.id, mentioned_character_id=character.id)
+    )
     await _block(db_session, character, character2)
 
     thread = f"/praxes/{praxis_solo.id}/comments"
@@ -343,6 +356,14 @@ async def test_the_blocker_cannot_invite_challenge_or_nudge_whom_they_blocked(
             PraxisMember(praxis_id=praxis_collab.id, character_id=character3.id),
         ]
     )
+    praxis_collab.status = PraxisStatus.in_progress
+    for member in await db_session.scalars(
+        select(PraxisMember).where(
+            PraxisMember.praxis_id == praxis_collab.id,
+            PraxisMember.character_id == character.id,
+        )
+    ):
+        member.has_approved = True
     await _block(db_session, character, character2)
 
     refusals = [

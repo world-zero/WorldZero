@@ -1537,6 +1537,11 @@
             "title": "Id",
             "type": "integer"
           },
+          "is_censored": {
+            "default": false,
+            "title": "Is Censored",
+            "type": "boolean"
+          },
           "is_edited": {
             "title": "Is Edited",
             "type": "boolean"
@@ -1587,7 +1592,8 @@
           "updated_at",
           "author",
           "mentions",
-          "admin_note"
+          "admin_note",
+          "is_censored"
         ],
         "title": "CommentOut",
         "type": "object"
@@ -1607,6 +1613,11 @@
           "excerpt": {
             "title": "Excerpt",
             "type": "string"
+          },
+          "is_censored": {
+            "default": false,
+            "title": "Is Censored",
+            "type": "boolean"
           },
           "praxis_id": {
             "anyOf": [
@@ -1636,7 +1647,8 @@
           "character_id",
           "praxis_id",
           "task_id",
-          "excerpt"
+          "excerpt",
+          "is_censored"
         ],
         "title": "CommentPayload",
         "type": "object"
@@ -3324,6 +3336,11 @@
             "title": "Id",
             "type": "integer"
           },
+          "is_censored": {
+            "default": false,
+            "title": "Is Censored",
+            "type": "boolean"
+          },
           "is_edited": {
             "title": "Is Edited",
             "type": "boolean"
@@ -3375,6 +3392,7 @@
           "author",
           "mentions",
           "admin_note",
+          "is_censored",
           "flags"
         ],
         "title": "FlaggedCommentOut",

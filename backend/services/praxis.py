@@ -44,9 +44,9 @@ from schemas.praxis import (
     MediaUploadResultOut,
 )
 from services import collab_consensus
-from services.block_service import refuse_if_blocked
 from services.albescent_reveal import is_albescent_revealed
 from services.backdoor import may_use_door
+from services.block_service import refuse_if_blocked
 from services.character import is_playable
 from services.character_stats import (
     lock_character_stats,

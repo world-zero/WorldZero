@@ -67,7 +67,9 @@ async def refuse_if_blocked(
     the other way is swallowed, since a refusal would announce the block."""
     if await session.scalar(select(has_blocked(sender_id, recipient_id))):
         raise_coded(
-            403, ErrorCode.contact_blocked, "You blocked this player, so you can't reach them."
+            403,
+            ErrorCode.contact_blocked,
+            "You blocked this player, so you can't reach them.",
         )
 
 

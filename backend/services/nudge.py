@@ -17,12 +17,12 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from errors import ErrorCode, coded_error, detail_message
-from services.block_service import blocked_by
+from errors import detail_message
 from models.duel import Duel, DuelStatus
 from models.nudge import Nudge
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from schemas.nudge import NudgeOut, NudgeResultOut
+from services.block_service import blocked_by, refuse_if_blocked
 
 # A window, not a stored "next allowed at", so rows alone answer it.
 NUDGE_COOLDOWN = timedelta(days=1)
@@ -176,7 +176,6 @@ def _refuse(
     to_character_id: int,
     members: dict[int, PraxisMember],
     nudged_at: dict[int, datetime],
-    blocked: set[int],
 ) -> Optional[HTTPException]:
     """Why this one recipient may not be nudged, or None if they may.
 
@@ -188,10 +187,6 @@ def _refuse(
     if recipient is None:
         return HTTPException(
             status_code=403, detail="That player is not part of this praxis."
-        )
-    if to_character_id in blocked:
-        return coded_error(
-            403, ErrorCode.contact_blocked, "You blocked this player, so you can't reach them."
         )
     if recipient.has_approved:
         return HTTPException(
@@ -230,7 +225,12 @@ async def _send_nudges(
         # Duel sides are `solo` + a Duel row (ADR-0011); true solos 403 there.
         await _authorize_duel(praxis, from_character_id, session)
 
-    blocked = await blocked_by(from_character_id, session)
+    # A crew nudge skips whom the sender blocked; naming one is refused upstream.
+    blocked = (
+        await blocked_by(from_character_id, session)
+        if to_character_ids is None
+        else set()
+    )
     recipients = (
         to_character_ids
         if to_character_ids is not None
@@ -248,9 +248,7 @@ async def _send_nudges(
     refusals: dict[int, HTTPException] = {}
     created: dict[int, Nudge] = {}
     for to_character_id in recipients:
-        refusal = _refuse(
-            from_character_id, to_character_id, members, nudged_at, blocked
-        )
+        refusal = _refuse(from_character_id, to_character_id, members, nudged_at)
         if refusal is not None:
             refusals[to_character_id] = refusal
             continue
@@ -301,6 +299,7 @@ async def send_nudge(
 
     ``praxis_id`` is the praxis the **recipient** owes (the rival's side for a duel).
     """
+    await refuse_if_blocked(from_character_id, to_character_id, session)
     result = (
         await _send_nudges(praxis_id, from_character_id, [to_character_id], session)
     )[0]
