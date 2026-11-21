@@ -1194,7 +1194,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Unsubscribe Page
+         * @description A mail client without one-click opens the List-Unsubscribe URL with GET.
+         */
+        get: operations["unsubscribe_page_email_unsubscribe_get"];
         put?: never;
         /**
          * Unsubscribe
@@ -7755,6 +7759,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DuelOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_page_email_unsubscribe_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

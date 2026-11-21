@@ -12481,6 +12481,45 @@
       }
     },
     "/email/unsubscribe": {
+      "get": {
+        "description": "A mail client without one-click opens the List-Unsubscribe URL with GET.",
+        "operationId": "unsubscribe_page_email_unsubscribe_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe Page",
+        "tags": [
+          "email"
+        ]
+      },
       "post": {
         "description": "Turn off email for the one event that sent the mail. Idempotent; also the\ntarget of the one-click ``List-Unsubscribe-Post``.",
         "operationId": "unsubscribe_email_unsubscribe_post",

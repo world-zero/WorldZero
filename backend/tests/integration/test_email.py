@@ -189,3 +189,10 @@ async def test_a_bad_token_is_a_400_not_a_500(client: AsyncClient, path: str):
     resp = await client.post(f"/email/{path}?token=forged")
     assert resp.status_code == 400
     assert resp.json()["detail"]["code"] == "EMAIL_UNSUBSCRIBE_BAD_TOKEN"
+
+
+@pytest.mark.asyncio
+async def test_get_unsubscribe_redirects_to_the_frontend_page(client: AsyncClient):
+    resp = await client.get("/email/unsubscribe?token=abc", follow_redirects=False)
+    assert resp.status_code == 303
+    assert resp.headers["location"].endswith("/unsubscribe?token=abc")

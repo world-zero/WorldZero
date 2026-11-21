@@ -4,6 +4,8 @@ Seam: ``services.email`` (``build_message``, the token pair, ``email_available``
 No network: ``send_email`` is never called here.
 """
 
+import base64
+
 import pytest
 
 from config import settings
@@ -24,6 +26,9 @@ def test_token_round_trips_and_hides_nothing_readable():
     token = unsubscribe_token(41, "vote_on_mine")
     assert read_unsubscribe_token(token) == (41, "vote_on_mine")
     assert "@" not in token
+    for segment in token.replace("=", "").split("."):
+        raw = base64.urlsafe_b64decode(segment + "=" * (-len(segment) % 4))
+        assert b"41" not in raw and b"vote_on_mine" not in raw
 
 
 def test_a_tampered_or_foreign_token_is_rejected():

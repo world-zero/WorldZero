@@ -25,6 +25,7 @@ PUBLIC_NON_GET = {
 
 # GET is outside the no-token walk; listed so a rename fails the staleness check.
 PUBLIC_GET = {
+    ("GET", "/email/unsubscribe"),
     ("GET", "/auth/google"),
     ("GET", "/auth/google/callback"),
     ("GET", "/auth/discord"),

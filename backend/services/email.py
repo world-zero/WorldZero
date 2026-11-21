@@ -5,6 +5,8 @@ mail is rendered here, so the backend reads it by relative path. Mail queues on 
 session next to push (``services.push.notify``) and leaves only after the commit.
 """
 
+import base64
+import hashlib
 import html
 import json
 import logging
@@ -13,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from itsdangerous import BadSignature, URLSafeSerializer
+from cryptography.fernet import Fernet, InvalidToken
 
 from config import settings
 
@@ -64,24 +66,30 @@ async def send_email(
     response.raise_for_status()
 
 
-def _serializer() -> URLSafeSerializer:
-    return URLSafeSerializer(settings.SECRET_KEY, salt=_UNSUBSCRIBE_SALT)
+def _fernet() -> Fernet:
+    seed = f"{_UNSUBSCRIBE_SALT}:{settings.SECRET_KEY}".encode()
+    digest = hashlib.sha256(seed).digest()
+    return Fernet(base64.urlsafe_b64encode(digest))
 
 
 def unsubscribe_token(account_id: int, kind: str) -> str:
-    """Signed, never expires (an old mail must still work). Opaque to the reader."""
-    return _serializer().dumps([account_id, kind])
+    """Encrypted and authenticated, never expires (an old mail must still work)."""
+    return _fernet().encrypt(json.dumps([account_id, kind]).encode()).decode()
 
 
 def read_unsubscribe_token(token: str) -> Optional[tuple[int, str]]:
     """``(account_id, kind)``, or None for anything forged or malformed."""
     try:
-        account_id, kind = _serializer().loads(token)
-    except (BadSignature, TypeError, ValueError):
+        account_id, kind = json.loads(_fernet().decrypt(token.encode()))
+    except (InvalidToken, TypeError, ValueError):
         return None
     if not isinstance(account_id, int) or not isinstance(kind, str):
         return None
     return account_id, kind
+
+
+def unsubscribe_page_url(token: str) -> str:
+    return f"{settings.FRONTEND_URL.rstrip('/')}/unsubscribe?token={token}"
 
 
 @cache
@@ -120,7 +128,7 @@ def build_message(
     why = _fill(copy["footer"]["why"], setting=entry["setting"])
     site = settings.FRONTEND_URL.rstrip("/")
     open_url = f"{site}{url}"
-    stop_url = f"{site}/unsubscribe?token={token}"
+    stop_url = unsubscribe_page_url(token)
     settings_url = f"{site}/settings"
     api = settings.MEDIA_BASE_URL.rstrip("/").removesuffix("/media")
     esc = html.escape

@@ -1,13 +1,14 @@
 """Unsubscribe from notification email (#2164). No auth: the signed token is the key."""
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
 from errors import ErrorCode, raise_coded
 from models.account import Account
 from schemas.email import UnsubscribeOut
-from services.email import read_unsubscribe_token
+from services.email import read_unsubscribe_token, unsubscribe_page_url
 from services.notification_prefs import EVENTS_BY_KEY, apply_update
 
 router = APIRouter()
@@ -26,6 +27,12 @@ async def _owner(token: str, session: AsyncSession) -> tuple[Account, str]:
             "That unsubscribe link is not valid.",
         )
     return account, parsed[1]
+
+
+@router.get("/unsubscribe", status_code=303)
+async def unsubscribe_page(token: str) -> RedirectResponse:
+    """A mail client without one-click opens the List-Unsubscribe URL with GET."""
+    return RedirectResponse(unsubscribe_page_url(token), status_code=303)
 
 
 @router.post("/unsubscribe", response_model=UnsubscribeOut)
