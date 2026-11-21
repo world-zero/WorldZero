@@ -40,6 +40,14 @@ describe('pending duel seal copy', () => {
     expect(html).toContain('within 5 days')
   })
 
+  it('promises no lapse when the era never lapses duels', () => {
+    config = { ...loaded, duel_challenge_lapse_days: null } as unknown as GameConfigOut
+    const html = render()
+    expect(html).toContain('stays private until they answer')
+    expect(html).not.toContain('within')
+    expect(html).not.toContain('never answer')
+  })
+
   it('drops the number, not a hole, while /game-config is unloaded', () => {
     config = undefined
     const html = render()

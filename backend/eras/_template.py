@@ -167,6 +167,8 @@ ERA_N = EraConfig(
 
     duel_level_required=2,
 
+    # Days before an unanswered challenge declines / a missing cast forfeits.
+    # None = never; the duel waits for the era close.
     duel_challenge_lapse_days=7,
 
     duel_cast_lapse_days=7,

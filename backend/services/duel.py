@@ -187,6 +187,7 @@ async def settle_lapsed_duels(
     A pending challenge lapses to declined (unanswered for
     ``duel_challenge_lapse_days``, or no longer acceptable); an accepted duel
     whose opponent hasn't cast in ``duel_cast_lapse_days`` is their forfeit.
+    A ``None`` window never lapses (Era 1: duels wait for the era close).
     Candidates are picked lock-free; only those lock, in ascending id order (#3877),
     and are re-checked. Returns whether any row was re-read (callers reload).
 
@@ -197,13 +198,16 @@ async def settle_lapsed_duels(
 
     async def lapse(duel: Duel) -> Optional[str]:
         if duel.status == DuelStatus.pending:
-            deadline = duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
-            if now >= deadline or await _challenge_unanswerable(duel, session, era):
+            days = era.duel_challenge_lapse_days
+            if (
+                days is not None and now >= duel.created_at + timedelta(days=days)
+            ) or await _challenge_unanswerable(duel, session, era):
                 return "decline"
         elif (
             duel.status == DuelStatus.active
             and duel.forfeited_by_character_id is None
             and duel.accepted_at is not None
+            and era.duel_cast_lapse_days is not None
             and now >= duel.accepted_at + timedelta(days=era.duel_cast_lapse_days)
             and (duel.opponent_praxis is None
                  or duel.opponent_praxis.status != PraxisStatus.submitted)
@@ -504,8 +508,11 @@ async def respond_to_duel_challenge(
         )
 
     # No sweep here (signup lock came first, #3655): a lapsed one reads as resolved.
-    lapsed = duel.created_at + timedelta(days=era.duel_challenge_lapse_days)
-    if duel.status != DuelStatus.pending or datetime.now(timezone.utc) >= lapsed:
+    days = era.duel_challenge_lapse_days
+    lapsed = days is not None and (
+        datetime.now(timezone.utc) >= duel.created_at + timedelta(days=days)
+    )
+    if duel.status != DuelStatus.pending or lapsed:
         raise_coded(
             400,
             ErrorCode.duel_challenge_already_resolved,
