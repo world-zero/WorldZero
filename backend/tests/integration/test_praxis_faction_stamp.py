@@ -9,8 +9,9 @@ from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.faction import Faction, FactionStatus
 from models.praxis import PraxisMember, PraxisStatus
+from services.badge import _duel_winner_facts
 from services.character_stats import recalculate_character_stats
-from services.duel import respond_to_duel_challenge
+from services.duel import get_duel_detail, respond_to_duel_challenge
 from tests.integration.factories import (
     attach_proof,
     cast_vote,
@@ -107,6 +108,38 @@ async def test_accepter_defecting_does_not_reprice_the_challenger(
     before = await _score(db_session, ua, era)
     await _defect(db_session, snide)
     assert await _score(db_session, ua, era) == before
+
+
+async def test_badge_winner_survives_the_tie_taker_defecting(
+    db_session: AsyncSession, era: Era
+):
+    await _factions(db_session)
+    duel, snide, ua = await make_duel(
+        db_session, era, label="b", challenger_votes=3, opponent_votes=3,
+        challenger_faction="snide", opponent_faction="ua", commit=True,
+    )
+    ids = {snide.id, ua.id}
+    before = (await _duel_winner_facts(ids, db_session)).winners
+    assert before == {snide.id}
+    await _defect(db_session, snide)
+    assert (await _duel_winner_facts(ids, db_session)).winners == before
+
+
+async def test_duel_stakes_shown_match_the_faction_it_scored_under(
+    db_session: AsyncSession, era: Era
+):
+    await _factions(db_session)
+    duel, snide, ua = await make_duel(
+        db_session, era, label="s", challenger_votes=3, opponent_votes=3,
+        challenger_faction="snide", opponent_faction="ua", commit=True,
+    )
+    before = await get_duel_detail(duel.id, None, db_session)
+    assert before.challenger.tie_multiplier != before.opponent.tie_multiplier
+    await _defect(db_session, snide)
+    after = await get_duel_detail(duel.id, None, db_session)
+    assert after.challenger.tie_multiplier == before.challenger.tie_multiplier
+    assert after.opponent.tie_multiplier == before.opponent.tie_multiplier
+    assert after.challenger.win_multiplier == before.challenger.win_multiplier
 
 
 async def test_seal_stamps_the_faction_held_then(
