@@ -13,6 +13,11 @@ const detailCss = readFileSync(
   'utf8',
 )
 
+const adminCss = readFileSync(
+  new URL('../../pages/admin/adminConsole.css', import.meta.url),
+  'utf8',
+)
+
 const praxisCss = readFileSync(
   new URL('../../pages/praxisDetail/praxisDetail.css', import.meta.url),
   'utf8',
@@ -31,6 +36,7 @@ describe('phone breakpoint', () => {
     expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --sheet-align`)
     expect(detailCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --detail-row-align`)
     expect(praxisCss).toContain(`@media ${MOBILE_QUERY} {\n  :root {\n    --praxis-section-gap`)
+    expect(adminCss).toContain(`@media ${MOBILE_QUERY} {\n  .adm-levelup-frame {`)
   })
 })
 
