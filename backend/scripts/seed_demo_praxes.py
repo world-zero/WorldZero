@@ -309,7 +309,8 @@ async def seed_metatask_fixture(
         session.add(praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=owner.id, has_approved=True
+            praxis_id=praxis.id, character_id=owner.id, has_approved=True,
+            faction_slug=owner.faction_slug,
         ))
         _attach_proof(session, praxis, owner)
         session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=metatask.id))
@@ -341,7 +342,8 @@ async def seed_metatask_fixture(
         session.add(open_praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=open_praxis.id, character_id=owner.id, has_approved=False
+            praxis_id=open_praxis.id, character_id=owner.id, has_approved=False,
+            faction_slug=owner.faction_slug,
         ))
         print(f"  + in-progress praxis for the apply flow by {owner.display_name}")
     await session.flush()
@@ -389,7 +391,8 @@ async def seed_duel_fixture(
         session.add(praxis)
         await session.flush()
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=author.id, has_approved=True
+            praxis_id=praxis.id, character_id=author.id, has_approved=True,
+            faction_slug=author.faction_slug,
         ))
         _attach_proof(session, praxis, author)
         if metatask is not None:
@@ -461,7 +464,8 @@ async def seed_collab_fixture(
     await session.flush()
     for member in (author, second):
         session.add(PraxisMember(
-            praxis_id=praxis.id, character_id=member.id, has_approved=True
+            praxis_id=praxis.id, character_id=member.id, has_approved=True,
+            faction_slug=member.faction_slug,
         ))
     _attach_proof(session, praxis, author)
 
@@ -611,6 +615,7 @@ async def seed(session, era: EraConfig = CURRENT_ERA) -> None:
             character_id=author.id,
             has_approved=True,
             approved_at=now,
+            faction_slug=author.faction_slug,
         ))
         _attach_proof(session, praxis, author)
         voters = [c for c in players.values() if c.id != author.id][: len(stars)]

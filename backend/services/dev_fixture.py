@@ -73,7 +73,11 @@ async def seed_received_vote(character: Character, session: AsyncSession) -> Non
     )
     session.add(praxis)
     await session.flush()
-    session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    session.add(PraxisMember(
+        praxis_id=praxis.id,
+        character_id=character.id,
+        faction_slug=character.faction_slug,
+    ))
     session.add(
         Vote(
             praxis_id=praxis.id,
@@ -111,7 +115,11 @@ async def seed_draft_praxis(character: Character, session: AsyncSession) -> int:
     )
     session.add(praxis)
     await session.flush()
-    session.add(PraxisMember(praxis_id=praxis.id, character_id=character.id))
+    session.add(PraxisMember(
+        praxis_id=praxis.id,
+        character_id=character.id,
+        faction_slug=character.faction_slug,
+    ))
     await session.flush()
     return praxis.id
 
