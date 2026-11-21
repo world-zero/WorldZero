@@ -291,10 +291,9 @@ export function useDuelSealCopy(
     heading: t('duelSeal.heading'),
     body:
       duel.status === 'pending'
-        ? t('duelSeal.bodyPending', {
-            name: foe.display_name,
-            days: lapseDays ?? '',
-          })
+        ? lapseDays === undefined
+          ? t('duelSeal.bodyPendingNoDays', { name: foe.display_name })
+          : t('duelSeal.bodyPending', { name: foe.display_name, days: lapseDays })
         : t('duelSeal.bodyActive', { name: foe.display_name }),
     // Until the foe casts nothing is stuck; only once live.
     note:

@@ -256,3 +256,27 @@ async def test_the_duel_sweep_runs_after_the_collab_seal(
     calls.clear()
     await praxis_service.list_praxes(db_session, era=CURRENT_ERA)
     assert calls and calls[-1] == "sweep" and "sweep" not in calls[:-1]
+
+
+@pytest.mark.asyncio
+async def test_a_sweep_with_nothing_lapsed_takes_no_row_lock(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    from sqlalchemy import event
+
+    await _duel(db_session, era, "lp11", status=DuelStatus.pending, age_days=0)
+    await _duel(db_session, era, "lp12", status=DuelStatus.active, age_days=0)
+    statements: list[str] = []
+    sync_engine = db_session.bind.sync_engine
+
+    def spy(conn, cursor, statement, *args):
+        statements.append(statement)
+
+    event.listen(sync_engine, "before_cursor_execute", spy)
+    try:
+        changed = await settle_lapsed_duels(db_session, CURRENT_ERA)
+    finally:
+        event.remove(sync_engine, "before_cursor_execute", spy)
+
+    assert changed is False
+    assert not [s for s in statements if "FOR UPDATE" in s]
