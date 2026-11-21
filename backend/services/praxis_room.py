@@ -20,7 +20,6 @@ ASGI WebSocket route in this app (``main.py``). Server-side rules:
    first.
 """
 
-import asyncio
 import base64
 import binascii
 import logging
@@ -67,6 +66,7 @@ _FLUSH_DEBOUNCE_SECONDS = 2.0
 
 _MAX_CLIENT_UPDATE_BYTES = 2 * 1024 * 1024
 _INVALID_DRAFT = "That draft is not a valid document."
+_ROOM_UNAVAILABLE = "The shared draft is not ready yet. Try again in a moment."
 _OVERSIZED_UPDATE = "That draft is too large to send."
 _OVERSIZED_DRAFT = (
     f"That post is too long: keep the title under {PRAXIS_TITLE_MAX} and the body "
@@ -76,9 +76,10 @@ _OVERSIZED_DRAFT = (
 # Path below the ``main.py`` mount (``/rooms`` prefix belongs to the mount).
 _ROOM_PATH = re.compile(r"^/praxis/(?P<praxis_id>\d+)/?$")
 
-# RFC 6455 policy violation = "do not come back"; the only close code sent.
-# ``roomReconnect.ts`` stops redialling on it (#1804).
+# RFC 6455 policy violation = "do not come back"; the only close code that ends
+# a room. ``roomReconnect.ts`` stops redialling on it (#1804).
 _WS_POLICY_VIOLATION = 1008
+_WS_TRY_AGAIN_LATER = 1013  # the client retries anything but 1008
 
 _DISCONNECTED: dict[str, Any] = {"type": "websocket.disconnect", "code": 1000}
 
@@ -482,7 +483,7 @@ class PraxisRoomServer(WebsocketServer):
             room = self.rooms.get(name)
             if room is not None:
                 await self.start_room(room)
-                await self._observed(room)
+                await self._observed(name, room)
                 return room
 
             room = YRoom(
@@ -500,14 +501,31 @@ class PraxisRoomServer(WebsocketServer):
             await self._load_or_seed(room, name)
             self._start_flusher(room, name)
             room.ready = True
-            await self._observed(room)
+            await self._observed(name, room)
             return room
 
-    @staticmethod
-    async def _observed(room: YRoom) -> None:
+    async def _observed(self, name: str, room: YRoom) -> None:
         # The store observer is subscribed by a task; an update applied before it
-        # runs reaches memory but never the rows. Bounded so a dead task can't hang.
-        await asyncio.wait_for(room.ydoc_observed.wait(), _OBSERVER_WAIT_SECONDS)
+        # runs reaches memory but never the rows. Caller holds ``_open_lock``.
+        try:
+            with anyio.fail_after(_OBSERVER_WAIT_SECONDS):
+                await room.ydoc_observed.wait()
+        except TimeoutError:
+            # Dropped, or the half-open room would keep ``ready`` and make every
+            # later caller wait out the timeout again. Sockets are not revoked:
+            # 1008 reads as the room ending, and this one is worth a retry.
+            logger.warning(
+                "praxis room %s never observed its store after %ss; dropped",
+                name,
+                _OBSERVER_WAIT_SECONDS,
+            )
+            flusher = self._flushers.pop(name, None)
+            if flusher is not None:
+                flusher.abandon()
+            await self.delete_room(room=room)
+            raise_coded(
+                503, ErrorCode.praxis_room_unavailable, _ROOM_UNAVAILABLE
+            )
 
     def _start_flusher(self, room: YRoom, name: str) -> None:
         """Copy document changes into the praxis (#1743); subscribed after the seed."""
@@ -838,19 +856,24 @@ class PraxisRoomASGIServer(ASGIServer):
             ),
         )
         self.rooms.register(connection)
+        unavailable = False
         try:
             await self.rooms.serve(connection.channel)
+        except* HTTPException:  # the task group wraps it
+            unavailable = True
         finally:
             await self.rooms.release(connection)
             if connection.revoked:
                 await self._refuse(send)
+            elif unavailable:
+                await self._refuse(send, _WS_TRY_AGAIN_LATER)
 
     async def _refuse(
         self,
         send: Callable[[dict[str, Any]], Any],
         code: int = _WS_POLICY_VIOLATION,
     ) -> None:
-        """Close the socket on policy grounds — before accept, or after revoke."""
+        """Close the socket with ``code`` — before accept, or after revoke."""
         try:
             await send({"type": "websocket.close", "code": code})
         except Exception:  # pragma: no cover — the client may already be gone
