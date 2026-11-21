@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
-    Boolean,
     BigInteger,
+    Boolean,
     DateTime,
     ForeignKey,
     Identity,
@@ -124,6 +124,11 @@ class OAuthProvider(TimestampMixin, Base):
     account: Mapped["Account"] = relationship(
         "Account", back_populates="oauth_providers", lazy="raise"
     )
+
+
+#: Retention of a deleted account's hashed OAuth identity (ADR-0081); lives here
+#: so services.character can read it without importing account_deletion.
+TOMBSTONE_RETENTION_DAYS = 90
 
 
 class AccountTombstone(CreatedAtMixin, Base):

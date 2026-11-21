@@ -15,7 +15,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account, AccountStatus, AccountTombstone, OAuthProvider
+from models.account import (
+    TOMBSTONE_RETENTION_DAYS,
+    Account,
+    AccountStatus,
+    AccountTombstone,
+    OAuthProvider,
+)
 from models.character import Character
 from models.comment import Comment
 from models.praxis import MediaItem, Praxis
@@ -24,11 +30,9 @@ from models.push_subscription import PushSubscription
 from services.character import has_mod_banned_life, soft_delete_character
 from services.media import delete_stored_media
 
-#: Retention of a deleted account's hashed OAuth identity for the returning-player
-#: gate (#2162), enforced purge-on-access in :func:`resolve_account_tombstone`.
-#: ponytail: an unvisited tombstone outlives 90 days; add a periodic DELETE with
-#: the same predicate once a job runner exists.
-TOMBSTONE_RETENTION_DAYS = 90
+# Retention is enforced purge-on-access in :func:`resolve_account_tombstone`.
+# ponytail: an unvisited tombstone outlives 90 days; add a periodic DELETE with
+# the same predicate once a job runner exists.
 
 #: Not an i18n key: it lands in a free-text column rendered verbatim (ADR-0031).
 REMOVED_BODY_MARKER = "[removed]"

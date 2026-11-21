@@ -16,7 +16,12 @@ from faction_slugs import (
     faction_filter_slugs,
 )
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account, AccountStatus, AccountTombstone
+from models.account import (
+    TOMBSTONE_RETENTION_DAYS,
+    Account,
+    AccountStatus,
+    AccountTombstone,
+)
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.faction_defection_history import FactionDefectionHistory
@@ -36,9 +41,6 @@ MOD_BANNED = and_(
 )
 
 def _mod_banned_exists(account_id: int):
-    # Lazy: services.account_deletion imports this module.
-    from services.account_deletion import TOMBSTONE_RETENTION_DAYS
-
     # A ban that outlived its account rides a live tombstone (ADR-0081).
     live_since = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
     return or_(
