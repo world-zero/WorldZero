@@ -69,8 +69,6 @@ describe("the rail's character card holds one door, not two (#2354)", () => {
   })
 
   it('mounts no bottom sheet on the desktop rail', () => {
-    // The sheet's phone-only top radius must reach no desktop.
-    const html = render()
-    expect(html).not.toContain('22px 22px 0 0')
+    expect(render()).not.toContain('sheet-panel')
   })
 })

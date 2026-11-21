@@ -83,7 +83,7 @@ export default function ConfirmDialog({
         className="flex flex-col"
         style={{
           gap: 'var(--space-md)',
-          padding: 'var(--space-lg)',
+          padding: 'var(--space-lg) var(--space-lg) calc(var(--space-lg) + var(--sheet-inset, 0px))',
           width: 'var(--sheet-full, min(440px, 100%))',
           background: 'var(--color-bg-page)',
           border: `var(--sheet-border, 2px solid ${accent})`,
