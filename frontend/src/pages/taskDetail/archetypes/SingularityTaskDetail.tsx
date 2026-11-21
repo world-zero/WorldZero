@@ -148,6 +148,7 @@ export default function SingularityTaskDetail({
   };
   const primaryButton: CSSProperties = {
     display: "block",
+    boxSizing: "border-box",
     width: "100%",
     cursor: "pointer",
     textAlign: "center",
@@ -486,8 +487,11 @@ export default function SingularityTaskDetail({
               to={`/praxis/${inProgressPraxisId}/edit`}
               style={{
                 ...primaryButton,
-                flex: 1,
+                flex: "1 1 8rem",
                 width: "auto",
+                minWidth: 0,
+                padding: "var(--space-md) var(--space-xs)",
+                overflowWrap: "anywhere",
                 // Outlined, not lit: not the page's one bright action.
                 color: BRIGHT,
                 background: "transparent",
