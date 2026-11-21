@@ -2811,6 +2811,11 @@ export interface components {
             message: string;
             /** Name */
             name: string;
+            /**
+             * Website
+             * @default
+             */
+            website: string;
         };
         /**
          * CopyOverrideIn

@@ -40,7 +40,7 @@ export function languageRequestBody(
   const email = user?.email?.trim() ?? ''
   const wanted = language.trim().slice(0, LANGUAGE_REQUEST_MAX)
   if (!name || !email || !wanted) return null
-  return { name, email, message: `${MESSAGE_PREFIX}${wanted}` }
+  return { name, email, message: `${MESSAGE_PREFIX}${wanted}`, website: '' }
 }
 
 /** The design's value pill in tokens. ponytail: duplicated in `AccountSection`;

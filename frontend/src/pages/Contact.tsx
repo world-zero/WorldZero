@@ -4,12 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { apiPost } from '../api/client'
 import PageTitle from '../components/ui/PageTitle'
 
-type FormState = { name: string; email: string; message: string }
+type FormState = { name: string; email: string; message: string; website: string }
 
 export default function Contact() {
   const { t } = useTranslation('common')
   useDocumentTitle(t('contact.title'))
-  const [form, setForm] = useState<FormState>({ name: '', email: '', message: '' })
+  const [form, setForm] = useState<FormState>({ name: '', email: '', message: '', website: '' })
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -103,6 +103,17 @@ export default function Contact() {
             className="w-full border-2 border-border bg-card font-body content-text px-3 py-2 focus:outline-hidden focus:shadow-sketch-sm disabled:opacity-50 resize-y"
           />
           <span className={`font-body text-xs ${form.message.length >= 4500 ? 'warning-text' : 'text-muted'}`} style={{ textAlign: 'right', display: 'block' }}>{form.message.length}/5000</span>
+        </div>
+
+        <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px' }}>
+          <input
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={form.website}
+            onChange={handleChange}
+          />
         </div>
 
         {error && (

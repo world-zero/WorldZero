@@ -14,7 +14,12 @@ from dependencies import account_has_admin_role
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from game_config import CURRENT_ERA, EraConfig
 from models.character import Character
-from models.comment import MAX_COMMENT_BODY, Comment, CommentMention
+from models.comment import (
+    MAX_COMMENT_BODY,
+    MAX_MENTIONS_PER_COMMENT,
+    Comment,
+    CommentMention,
+)
 from models.flag import Flag, FlagReason
 from models.praxis import ModerationStatus, Praxis
 from models.task import Task, TaskStatus
@@ -83,7 +88,8 @@ async def _resolve_mentions(
     body_text: str, author: Character, session: AsyncSession
 ) -> list[Character]:
     """Resolve @username handles to Characters, case-insensitive, excluding self."""
-    handles = {handle.lower() for handle in MENTION_RE.findall(body_text)}
+    ordered = dict.fromkeys(h.lower() for h in MENTION_RE.findall(body_text))
+    handles = set(list(ordered)[:MAX_MENTIONS_PER_COMMENT])
     if not handles:
         return []
     result = await session.execute(
