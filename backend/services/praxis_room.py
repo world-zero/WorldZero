@@ -505,6 +505,27 @@ class PraxisRoomServer(WebsocketServer):
                         await flusher.close()
                     await self.delete_room(room=room)
 
+    async def _current_doc(self, name: str, room: Any) -> Doc:
+        if room is not None:
+            return room.ydoc
+        # After a restart the store may hold over-cap text the flusher
+        # skipped; the delete in discard_document would silently drop it.
+        doc = Doc()
+        store = PostgresYStore(
+            name, log=self.log, session_factory=self._session_factory
+        )
+        try:
+            await store.apply_updates(doc)
+        except YDocNotFound:
+            pass
+        return doc
+
+    async def document_over_cap(self, praxis_id: int) -> bool:
+        name = room_name_for(praxis_id)
+        async with self._open_lock:
+            doc = await self._current_doc(name, self.rooms.get(name))
+        return _over_cap(_document_values(doc))
+
     async def discard_document(self, praxis: Praxis, session: AsyncSession) -> None:
         """Publish: the document becomes the record, and is then destroyed (#1745).
 
@@ -516,19 +537,7 @@ class PraxisRoomServer(WebsocketServer):
         name = room_name_for(praxis.id)
         async with self._open_lock:
             room = self.rooms.get(name)
-            if room is not None:
-                doc = room.ydoc
-            else:
-                # After a restart the store may hold over-cap text the flusher
-                # skipped; the delete below would silently drop it.
-                doc = Doc()
-                store = PostgresYStore(
-                    name, log=self.log, session_factory=self._session_factory
-                )
-                try:
-                    await store.apply_updates(doc)
-                except YDocNotFound:
-                    pass
+            doc = await self._current_doc(name, room)
             if _over_cap(_document_values(doc)):
                 raise_coded(413, ErrorCode.praxis_doc_update_invalid, _OVERSIZED_DRAFT)
             flusher = self._flushers.pop(name, None)
@@ -716,6 +725,11 @@ PRAXIS_ROOM_APP = PraxisRoomASGIServer(PRAXIS_ROOM_SERVER)
 async def discard_room_document(praxis: Praxis, session: AsyncSession) -> None:
     """Flatten the document into the praxis, then destroy it; seal's txn (#1745)."""
     await PRAXIS_ROOM_SERVER.discard_document(praxis, session)
+
+
+async def document_over_cap(praxis_id: int) -> bool:
+    """Would sealing now 413? Lazy seals skip such a praxis rather than raise."""
+    return await PRAXIS_ROOM_SERVER.document_over_cap(praxis_id)
 
 
 async def merge_client_state(praxis_id: int, state_b64: str) -> dict[str, str]:

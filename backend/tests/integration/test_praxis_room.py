@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 import services.praxis_room as praxis_room
 from config import settings
+from game_config import CURRENT_ERA
 from main import app as fastapi_app
 from models.character import Character
 from models.praxis import (
@@ -1541,3 +1542,28 @@ async def test_publishing_after_a_restart_cannot_drop_an_over_cap_document(
             await rooms.server.discard_document(solo, db_session)
         assert refused.value.status_code == 413
         assert len(await _stored_updates(rooms, solo.id)) == 1
+
+
+async def test_a_lapsed_collab_with_an_over_cap_draft_stays_unsealed(
+    db_session, active_task, character, monkeypatch
+) -> None:
+    """A read path's lazy seal must skip the 413, not raise it on every read."""
+    import services.collab_consensus as collab_consensus
+
+    collab = await _over_cap_solo(db_session, active_task, character)
+    collab.type = PraxisType.collab
+    collab.status = PraxisStatus.pending
+    db_session.add(
+        PraxisRoomUpdate(praxis_id=collab.id, update=_over_cap_doc().get_update())
+    )
+    await db_session.commit()
+
+    async def _proof(*_args: Any) -> bool:
+        return True
+
+    monkeypatch.setattr(collab_consensus, "_has_proof", _proof)
+    async with running_rooms(db_session, monkeypatch):
+        await db_session.refresh(collab, ["members"])
+        await collab_consensus.seal_to_live(collab, db_session, CURRENT_ERA)
+        assert collab.status == PraxisStatus.pending
+        assert collab.submitted_at is None
