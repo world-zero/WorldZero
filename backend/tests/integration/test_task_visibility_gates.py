@@ -268,7 +268,7 @@ async def test_the_detail_door_is_shut_to_the_anonymous_web(
         response = await client.get(f"/tasks/{task.id}")
         assert response.status_code == 404, response.text
         # Same body as a genuinely absent id.
-        assert response.json()["detail"] == "Task not found."
+        assert response.json()["detail"]["code"] == "TASK_NOT_FOUND"
 
     for task in (active, retired):
         assert (await client.get(f"/tasks/{task.id}")).status_code == 200

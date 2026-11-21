@@ -7,7 +7,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * `DefaultPraxisDetail`.
  */
 import { useTranslation } from 'react-i18next'
-import { Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { usePraxisDetail } from './praxisDetail/usePraxisDetail'
 import { resolveVariant } from '../utils/factionDispatch'
 import { surfaceMap } from '../factions'
@@ -26,7 +26,12 @@ export default function PraxisDetail() {
         <button onClick={() => window.location.reload()} className="underline">{t('detail.retry')}</button></>} />
     </div>
   )
-  if (!state.praxis) return <div className="py-8 font-body text-muted">{t('detail.notFound')}</div>
+  if (!state.praxis) return (
+    <div className="py-8 font-body text-muted">
+      {t('detail.notFound')}{' '}
+      <Link to="/praxis" className="underline">{t('detail.backToPraxis')}</Link>
+    </div>
+  )
 
   // ADR-0062: detail is published-only; drafts (`in_progress`) and collabs
   // mid-consensus (`pending`, collab-ONLY — a cast duel side is `submitted`)

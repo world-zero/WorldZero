@@ -71,6 +71,7 @@ const Disclaimer = lazy(() => withAppCopy(import('./pages/Disclaimer')))
 const Attributions = lazy(() => withAppCopy(import('./pages/Attributions')))
 const Donate = lazy(() => withAppCopy(import('./pages/Donate')))
 const AccountDeleted = lazy(importAccountDeleted)
+const NotFound = lazy(() => withAppCopy(import('./pages/NotFound')))
 const Unsubscribe = lazy(() => withAppCopy(import('./pages/Unsubscribe')))
 const Onboarding = lazy(importOnboarding)
 const ReturningCard = lazy(() => withOnboardingCopy(import('./pages/onboarding/ReturningCard')))
@@ -244,6 +245,7 @@ function PlayerRoutes() {
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/attributions" element={<Attributions />} />
           <Route path="/donate" element={<Donate />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
       <ModStripMount />
