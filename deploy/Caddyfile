@@ -15,8 +15,11 @@ worldzero.org, www.worldzero.org {
 
 api.worldzero.org {
 	# reverse_proxy upgrades WebSockets transparently, which is what the praxis
-	# room needs (ADR-0073). Caddy has no default request-body limit, so media
-	# uploads pass through unconfigured.
+	# room needs (ADR-0073). Caddy has no default request-body limit, so cap
+	# it above the 100 MB per-file limit plus multipart overhead (#3944).
+	request_body {
+		max_size 120MB
+	}
 	reverse_proxy worldzero-prod-backend:8000
 }
 
@@ -29,5 +32,8 @@ dev.worldzero.org {
 
 api.dev.worldzero.org {
 	header X-Robots-Tag noindex
+	request_body {
+		max_size 120MB
+	}
 	reverse_proxy worldzero-dev-backend:8000
 }

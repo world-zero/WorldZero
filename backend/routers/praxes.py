@@ -393,7 +393,7 @@ async def upload_media_batch_route(
 
     Limits: 100 MB per file (``MEDIA_MAX_BYTES``, per-file 413); 1000 files per
     request (Starlette ``max_files``, whole-request 400); no app-level total cap
-    (parts spool to temp files); edge proxy limit unknown, so clients chunk.
+    (parts spool to temp files); Caddy 413s a body over 120 MB, so clients chunk.
     """
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character.id, "add media to", session, CURRENT_ERA
