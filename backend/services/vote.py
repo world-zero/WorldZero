@@ -22,7 +22,7 @@ from models.praxis import (
 )
 from models.vote import Vote
 from services.block_service import has_blocked
-from services.character_stats import recalculate_members_stats
+from services.character_stats import lock_members_stats, recalculate_members_stats
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import vote_lock_reason
 from services.praxis_duel import get_duel_for_praxis
@@ -133,6 +133,8 @@ async def cast_or_update_vote(
     await session.execute(
         select(func.pg_advisory_xact_lock(_VOTE_LOCK_NAMESPACE, voter.id))
     )
+    # Voter's row joins the recipients' ascending order, or A->B / B->A deadlock.
+    await lock_members_stats(praxis, [voter.id], session)
     stats = await get_or_create_stats(session, voter.id, era_row.id)
     await session.refresh(stats)
 
@@ -240,6 +242,7 @@ async def void_account_vote_on_join(
     if vote is None:
         return False
 
+    await lock_members_stats(praxis, [vote.voter_character_id], session)
     await refund_vote_budget(vote, session)
 
     # Not via ``praxis.votes``: it is ``lazy="raise"``.

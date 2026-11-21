@@ -354,16 +354,38 @@ async def _recalculate_with_duel_opponents(
     emit_taunts: bool = True,
 ) -> None:
     """Members of ``praxis_ids`` and their duel opponents, once, ascending id."""
-    ids = await with_duel_opponents(praxis_ids, session)
-    members = await session.execute(
-        select(PraxisMember.character_id).where(PraxisMember.praxis_id.in_(ids))
+    character_ids = await _members_with_duel_opponents(
+        praxis_ids, extra_character_ids, session
     )
-    character_ids = extra_character_ids | set(members.scalars().all())
     for character_id in sorted(character_ids):
         await recalculate_character_stats(
             character_id, session, era, era_row=era_row, emit_taunts=emit_taunts
         )
     await session.flush()
+
+
+async def _members_with_duel_opponents(
+    praxis_ids: set[int], extra_character_ids: set[int], session: AsyncSession
+) -> set[int]:
+    ids = await with_duel_opponents(praxis_ids, session)
+    members = await session.execute(
+        select(PraxisMember.character_id).where(PraxisMember.praxis_id.in_(ids))
+    )
+    return extra_character_ids | set(members.scalars().all())
+
+
+async def lock_members_stats(
+    praxis: Praxis,
+    extra_character_ids: Iterable[int],
+    session: AsyncSession,
+) -> None:
+    """Take the stats lock, ascending, for everything ``recalculate_members_stats``
+    will touch plus ``extra_character_ids``, before any stats row is written (#3978).
+    """
+    ids = await _members_with_duel_opponents(
+        {praxis.id}, {m.character_id for m in praxis.members}, session
+    )
+    await lock_character_stats(ids | set(extra_character_ids), session)
 
 
 async def recalculate_for_account_votes(
