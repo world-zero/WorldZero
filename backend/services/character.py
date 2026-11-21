@@ -28,6 +28,7 @@ from services.secret_faction import has_stamp, set_stamp
 from services.era import get_current_era_row, get_current_era_row_safe, get_or_create_stats
 from services.era_gates import meets_albescent_level
 from services.media import delete_stored_avatar
+from services.praxis_room import close_character_sockets
 
 # A life a moderator banned, as opposed to one its player left (``departed_at``).
 MOD_BANNED = and_(
@@ -637,6 +638,7 @@ async def soft_delete_character(
     from services.duel import forfeit_duels_for_character
 
     await forfeit_duels_for_character(character_id, session, era)
+    close_character_sockets(character_id)
 
     # No-op for remote URLs or another character's file (player-written column).
     delete_stored_avatar(erased_avatar_url, character.id)

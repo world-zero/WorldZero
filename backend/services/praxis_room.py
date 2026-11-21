@@ -49,7 +49,6 @@ from models.account import Account, AccountStatus
 from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, Praxis, PraxisStatus
 from models.praxis_room import PraxisRoomUpdate
 from services.auth import decode_jwt
-from services.character import resolve_active_character
 
 logger = logging.getLogger(__name__)
 
@@ -655,6 +654,12 @@ class PraxisRoomServer(WebsocketServer):
             ):
                 connection.revoke()
 
+    def revoke_character(self, character_id: int) -> None:
+        """Close every socket this character holds, on any praxis."""
+        for connection in list(self._connections):
+            if connection.character_id == character_id:
+                connection.revoke()
+
     async def authorize(self, scope: dict[str, Any], praxis_id: int) -> int | None:
         """Door one: the character id, or ``None`` for any refusal (no leak)."""
         if not origin_allowed(_header(scope, "origin")):
@@ -675,6 +680,9 @@ class PraxisRoomServer(WebsocketServer):
             )
             if account is None or account.status != AccountStatus.active:
                 return None
+            # Deferred: services.character imports this module.
+            from services.character import resolve_active_character
+
             character = await resolve_active_character(account, session)
             if character is None:
                 return None
@@ -819,6 +827,11 @@ def loaded_room_values(praxis_id: int) -> dict[str, str]:
 def close_member_sockets(praxis_id: int, character_id: int) -> None:
     """Door two, for kick and leave. Pre-commit; a rollback just costs a reconnect."""
     PRAXIS_ROOM_SERVER.revoke(praxis_id, character_id)
+
+
+def close_character_sockets(character_id: int) -> None:
+    """Door two for ban, suspend and deletion: every praxis, not just one."""
+    PRAXIS_ROOM_SERVER.revoke_character(character_id)
 
 
 async def acquire_single_instance_lock(

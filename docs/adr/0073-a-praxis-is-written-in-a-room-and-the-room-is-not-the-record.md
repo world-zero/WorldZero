@@ -215,3 +215,9 @@ credential to mint, expire and track.
 ## Amendment (2026-11-19, #3426): the freeze is retired
 
 "Submitting **freezes** the document read-only for everyone" (and the close code that went with it) is gone: ADR-0079 retired the pending-freeze. `pending` is writable; typing during a proposal cancels it after a first-keystroke confirm. Nothing in `services/praxis_room.py` or `editPraxis/roomReconnect.ts` freezes or closes a room. The publish-time flatten-and-destroy rule stands.
+
+## Amendment (#3950, 2026-11-21)
+
+Door two (the revoke close) now also fires on a mod ban, an account suspend and a
+character or account self-deletion, not only kick and leave. Each closes that
+player's sockets in the room with 1008; collaborators stay connected.
