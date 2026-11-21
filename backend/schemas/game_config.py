@@ -39,6 +39,7 @@ class GameConfigOut(WireModel):
     duel_level_required: int
     collab_auto_submit_days: int
     duel_challenge_lapse_days: int | None  # None = waits for the era close
+    duel_cast_lapse_days: int | None  # days after the first cast; None = never
     # Copy states this window; never hardcode it (#1695).
     pending_task_admin_review_hours: int
     # Days after a backdoor opens at which the console hint gets plainer (#3848).

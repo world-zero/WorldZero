@@ -60,6 +60,7 @@ function makeConfig(overrides: Partial<GameConfigOut> = {}): GameConfigOut {
     duel_level_required: 3,
     collab_auto_submit_days: 7,
     duel_challenge_lapse_days: 7,
+    duel_cast_lapse_days: 7,
     pending_task_admin_review_hours: 48,
     level_to_see_pending_tasks: 3,
     max_task_signups: 3,

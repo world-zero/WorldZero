@@ -179,15 +179,39 @@ async def _challenge_unanswerable(
     return not may_create_duel(stats.level, None, False, era)
 
 
+async def _opponent_praxis(duel: Duel, session: AsyncSession) -> Optional[Praxis]:
+    if duel.opponent_praxis_id is None:
+        return None
+    return await session.get(Praxis, duel.opponent_praxis_id)
+
+
+def _cast_clock(
+    duel: Duel, challenger: Optional[Praxis], opponent: Optional[Praxis]
+) -> Optional[tuple[Praxis, datetime]]:
+    """``(the side that cast, when the other's clock started)``: only while an
+    accepted duel has exactly one side cast. Unsubmitting stops it; the next
+    cast restarts it, since ``submitted_at`` is re-stamped on every seal."""
+    if duel.status != DuelStatus.active or duel.accepted_at is None:
+        return None
+    cast = [
+        p for p in (challenger, opponent)
+        if p is not None and p.status == PraxisStatus.submitted
+    ]
+    if len(cast) != 1:
+        return None
+    return cast[0], max(duel.accepted_at, cast[0].submitted_at or duel.accepted_at)
+
+
 async def settle_lapsed_duels(
     session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> bool:
     """Lazy-on-read timeouts, like the collab window (#3875). **This one writes.**
 
     A pending challenge lapses to declined (unanswered for
-    ``duel_challenge_lapse_days``, or no longer acceptable); an accepted duel
-    whose opponent hasn't cast in ``duel_cast_lapse_days`` is their forfeit.
-    A ``None`` window never lapses (Era 1: duels wait for the era close).
+    ``duel_challenge_lapse_days``, or no longer acceptable). In an accepted duel
+    the cast clock starts at the first cast (or acceptance, if later); the side
+    that hasn't cast ``duel_cast_lapse_days`` later forfeits, whichever side it
+    is. Neither side cast, or both: no clock. A ``None`` window never lapses.
     Candidates are picked lock-free; only those lock, in ascending id order (#3877),
     and are re-checked. Returns whether any row was re-read (callers reload).
 
@@ -196,23 +220,29 @@ async def settle_lapsed_duels(
     """
     now = datetime.now(timezone.utc)
 
-    async def lapse(duel: Duel) -> Optional[str]:
+    async def lapse(duel: Duel) -> Optional[tuple[str, Optional[int]]]:
         if duel.status == DuelStatus.pending:
             days = era.duel_challenge_lapse_days
             if (
                 days is not None and now >= duel.created_at + timedelta(days=days)
             ) or await _challenge_unanswerable(duel, session, era):
-                return "decline"
+                return "decline", None
         elif (
             duel.status == DuelStatus.active
             and duel.forfeited_by_character_id is None
             and duel.accepted_at is not None
             and era.duel_cast_lapse_days is not None
-            and now >= duel.accepted_at + timedelta(days=era.duel_cast_lapse_days)
-            and (duel.opponent_praxis is None
-                 or duel.opponent_praxis.status != PraxisStatus.submitted)
         ):
-            return "forfeit"
+            challenger = await session.get(Praxis, duel.challenger_praxis_id)
+            opponent = await _opponent_praxis(duel, session)
+            clock = _cast_clock(duel, challenger, opponent)
+            if clock and now >= clock[1] + timedelta(days=era.duel_cast_lapse_days):
+                late = (
+                    duel.opponent_character_id
+                    if clock[0] is challenger
+                    else challenger.created_by_id
+                )
+                return "forfeit", late
         return None
 
     live = (await session.execute(
@@ -232,11 +262,13 @@ async def settle_lapsed_duels(
     forfeits: list[tuple[Duel, int]] = []
     for duel in duels:
         verdict = await lapse(duel)
-        if verdict == "decline":
+        if verdict is None:
+            continue
+        if verdict[0] == "decline":
             duel.status = DuelStatus.declined
             duel.declined_at = now
-        elif verdict == "forfeit":
-            forfeits.append((duel, duel.opponent_character_id))
+        else:
+            forfeits.append((duel, verdict[1]))
     await _rescore(
         await _apply_forfeits(forfeits, session), session, era, emit_taunts=False
     )
@@ -273,11 +305,7 @@ async def get_duel_detail(
     duel = await get_duel(duel_id, session)
 
     challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
-    opponent_praxis = (
-        await session.get(Praxis, duel.opponent_praxis_id)
-        if duel.opponent_praxis_id is not None
-        else None
-    )
+    opponent_praxis = await _opponent_praxis(duel, session)
     challenger_character = (
         await session.get(Character, challenger_praxis.created_by_id)
         if challenger_praxis is not None
@@ -367,10 +395,14 @@ async def get_duel_detail(
             rival_bonus=era.rival_duel_bonus if duel.rival_bonus else 0,
         )
 
+    clock = _cast_clock(duel, challenger_praxis, opponent_praxis)
     return DuelDetailOut(
         id=duel.id,
         task_id=duel.task_id,
         status=duel.status,
+        cast_clock_started_at=(
+            clock[1] if clock and duel.forfeited_by_character_id is None else None
+        ),
         forfeited_by_character_id=duel.forfeited_by_character_id,
         challenger=_side(
             challenger_character,

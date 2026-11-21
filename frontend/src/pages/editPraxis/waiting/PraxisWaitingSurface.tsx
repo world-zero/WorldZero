@@ -11,8 +11,8 @@
  *
  * Nudges (#1083) are server-written and rate-limited; disabled state reads
  * `nudged_at`. Crew nudge (#1418) is one request and may be partly refused.
- * Deliberately absent: a duel countdown (nothing backs one, `waitingClock.ts`)
- * and "Forfeit" (forfeit starts only once settled, ADR-0011 §Forfeit).
+ * A duel names its cast window in words (#4005), never a ring. Deliberately
+ * absent: "Forfeit" (forfeit starts only once settled, ADR-0011 §Forfeit).
  *
  * `phase === "completed"` (#1164): roster all in, confirmation, read-only
  * write-up, a Read link, no exits (owner ruling: no locked composer, no
@@ -29,7 +29,7 @@ import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
 import { RosterAvatar } from "../../../components/collab/RosterAvatar";
 import { waitingOnHeading } from "../../../components/collab/waitingHeading";
-import { duelSides } from "../../../components/duel/shared";
+import { castClockLine, duelSides } from "../../../components/duel/shared";
 import { useGameConfig } from "../../../hooks/useGameConfig";
 import { factionCssVar } from "../../../utils/factions";
 import { relativeTime } from "../../../utils/dates";
@@ -423,6 +423,7 @@ export default function PraxisWaitingSurface({
   now,
 }: PraxisWaitingSurfaceProps) {
   const { t } = useTranslation("forms");
+  const { t: tPraxis } = useTranslation("praxis");
   const blockedIds = useBlockedIds(duel != null);
   const sizes = useComposerSizes();
   const config = useGameConfig();
@@ -527,7 +528,6 @@ export default function PraxisWaitingSurface({
               {collabCopy(slug, isDuel ? "duelCompletedBody" : "completedBody")}
             </p>
           ) : isDuel && sides ? (
-            /* Elapsed, not a countdown: duels have no deadline (ADR-0011). */
             <p className="content-text" style={dress.bodyStyle}>
               {collabCopy(
                 slug,
@@ -536,6 +536,14 @@ export default function PraxisWaitingSurface({
                   elapsed: stamped,
                   name: sides.foe.display_name,
                 },
+              )}{" "}
+              {castClockLine(
+                duel!,
+                sides.me,
+                sides.foe,
+                config?.duel_cast_lapse_days,
+                tPraxis,
+                now,
               )}
             </p>
           ) : (

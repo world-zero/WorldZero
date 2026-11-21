@@ -285,6 +285,7 @@ export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => ({
   task_id: 7,
   status: 'settled',
   forfeited_by_character_id: null,
+  cast_clock_started_at: null,
   challenger: aDuelSide(),
   opponent: aDuelSide({ praxis_id: 2, character_id: 4, display_name: 'Rax' }),
   winner_character_id: null,

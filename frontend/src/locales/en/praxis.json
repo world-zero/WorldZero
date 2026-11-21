@@ -233,6 +233,12 @@
     "rivalBonus": "Rival duel: whoever wins, tiebreak included, takes {{points}} more on top.",
     "soloFallback": "Nothing is at stake yet. If {{name}} declines, this scores as an ordinary praxis worth {{points}}."
   },
+  "duelClock": {
+    "theyHave_one": "{{name}} has {{count}} day to submit, or forfeits.",
+    "theyHave_other": "{{name}} has {{count}} days to submit, or forfeits.",
+    "youHave_one": "{{name}} has submitted. You have {{count}} day left, or you forfeit.",
+    "youHave_other": "{{name}} has submitted. You have {{count}} days left, or you forfeit."
+  },
   "duelRoster": {
     "you": "You",
     "sealed": "submitted ✓",

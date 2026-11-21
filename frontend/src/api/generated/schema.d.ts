@@ -3068,6 +3068,8 @@ export interface components {
          * @description Both sides' display info and tallies in one call.
          */
         DuelDetailOut: {
+            /** Cast Clock Started At */
+            cast_clock_started_at: string | null;
             challenger: components["schemas"]["DuelSideOut"];
             /** Challenger Final Points */
             challenger_final_points: number | null;
@@ -3913,6 +3915,8 @@ export interface components {
             backdoor_hint_stage_days: number[];
             /** Collab Auto Submit Days */
             collab_auto_submit_days: number;
+            /** Duel Cast Lapse Days */
+            duel_cast_lapse_days: number | null;
             /** Duel Challenge Lapse Days */
             duel_challenge_lapse_days: number | null;
             /** Duel Level Required */

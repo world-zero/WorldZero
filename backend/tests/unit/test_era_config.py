@@ -194,9 +194,6 @@ def test_era_2_inherits_every_other_rule_from_era_1():
         "allow_praxis_on_retired_task_factions",
         "allow_praxis_on_pending_task_factions",
         "pending_task_praxis_points_below",
-        # Era 1 duels wait for the era close; Era 2 lapses them (#3875).
-        "duel_challenge_lapse_days",
-        "duel_cast_lapse_days",
     }
 
 

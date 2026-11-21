@@ -15,6 +15,7 @@
  */
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { formatPoints } from '../../utils/points'
@@ -267,6 +268,25 @@ interface DuelSealCopy {
   danger: boolean
 }
 
+/** What the cast clock means to this viewer; `null` while it isn't running (#4005). */
+export function castClockLine(
+  duel: DuelDetailOut,
+  me: DuelSideOut,
+  foe: DuelSideOut,
+  days: number | null | undefined,
+  t: TFunction<'praxis'>,
+  now: number = Date.now(),
+): string | null {
+  if (!duel.cast_clock_started_at || days == null) return null
+  const left = Math.ceil(
+    (Date.parse(duel.cast_clock_started_at) + days * 86_400_000 - now) / 86_400_000,
+  )
+  // Run out but not yet swept: say nothing rather than "0 days".
+  if (left < 1) return null
+  const key = me.is_submitted ? 'duelClock.theyHave' : 'duelClock.youHave'
+  return t(key, { name: foe.display_name, count: left })
+}
+
 /** The mode branch, once for every skin; a hook because the cost needs stakes. */
 export function useDuelSealCopy(
   mode: DuelSealMode,
@@ -276,7 +296,8 @@ export function useDuelSealCopy(
 ): DuelSealCopy {
   const { t } = useTranslation('praxis')
   const { me, foe } = duelSides(duel, viewerCharacterId)
-  const lapseDays = useGameConfig()?.duel_challenge_lapse_days
+  const config = useGameConfig()
+  const lapseDays = config?.duel_challenge_lapse_days
   // Unconditional: hooks may not sit behind the mode branch.
   const stakes = duelStakes(me, taskPointValue)
 
@@ -305,7 +326,12 @@ export function useDuelSealCopy(
         ? lapseDays == null
           ? t('duelSeal.bodyPendingNoDays', { name: foe.display_name })
           : t('duelSeal.bodyPending', { name: foe.display_name, days: lapseDays })
-        : t('duelSeal.bodyActive', { name: foe.display_name }),
+        : [
+            t('duelSeal.bodyActive', { name: foe.display_name }),
+            castClockLine(duel, me, foe, config?.duel_cast_lapse_days, t),
+          ]
+            .filter(Boolean)
+            .join(' '),
     // Until the foe casts nothing is stuck; only once live.
     note:
       duel.status === 'active' && !foe.is_submitted
