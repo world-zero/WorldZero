@@ -235,10 +235,12 @@ async def get_or_create_metatask_owner(
             era_id=era_row.id,
             score=score,
             level=level,
+            era_peak_level=level,
             votes_spent_this_era=0,
         ))
     else:
         stats.level = level
+        stats.era_peak_level = max(stats.era_peak_level, level)
         stats.score = max(stats.score, score)
     existing.all_time_score = max(existing.all_time_score, score)
     record_level_reached(existing, level)

@@ -428,6 +428,7 @@ async def set_character_stats(
 
     if patch.level is not None:
         stats.level = patch.level
+        stats.era_peak_level = max(stats.era_peak_level, patch.level)
         character = await session.get(Character, character_id)
         if character is not None:
             record_level_reached(character, patch.level)
