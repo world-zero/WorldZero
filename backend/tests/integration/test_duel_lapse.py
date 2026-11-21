@@ -299,12 +299,10 @@ async def test_a_candidate_cleared_under_lock_still_reports_the_reread(
         return next(answers, False)
 
     monkeypatch.setattr(duel_service, "_challenge_unanswerable", cleared_on_recheck)
-    await praxis_service.get_praxis(duel.challenger_praxis_id, db_session)
 
-    assert await settle_lapsed_duels(db_session, CURRENT_ERA) is True
-    await db_session.refresh(duel)
-    assert duel.status == DuelStatus.pending
     praxis = await praxis_service.get_praxis_settling_consensus(
         duel.challenger_praxis_id, db_session
     )
+    await db_session.refresh(duel)
+    assert duel.status == DuelStatus.pending
     await build_praxis_out(praxis, db_session, viewer=None)

@@ -4,6 +4,10 @@ Backfilled from the defection history: the faction a character left after the
 praxis was submitted, else their current one. Unsealed rows get the current
 faction, which the seal overwrites.
 
+Known gap, accepted pre-launch: defect_to_faction writes no history row when
+leaving `na`, so a praxis submitted while unaffiliated, by someone whose first
+join wasn't recorded, takes the later faction instead of `na`.
+
 Revision ID: 0053_praxis_member_faction_slug
 Revises: 0052_task_activated_at
 Create Date: 2026-11-21
