@@ -8201,7 +8201,6 @@
             "schema": {
               "anyOf": [
                 {
-                  "format": "date-time",
                   "type": "string"
                 },
                 {

@@ -1,12 +1,15 @@
 """/activity-feed end to end; ORM query errors only show up at runtime."""
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
-from models.task import Task
+from models.era import Era
+from models.task import Task, TaskStatus
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 _TAB_TO_COUNT_KEY = {
@@ -390,7 +393,7 @@ async def test_a_malformed_before_cursor_is_a_422_not_a_500(
 
     good = await client.get(
         "/activity-feed",
-        params={"before": "2999-01-01T00:00:00+00:00"},
+        params={"before": "2999-01-01T00:00:00+00:00|global_task|1"},
         headers=auth_headers,
     )
     assert good.status_code == 200, good.text
@@ -557,3 +560,61 @@ async def test_friend_signup_carries_the_task_level(
     items = [i for i in response.json()["items"] if i["type"] == "friend_signup"]
     assert len(items) == 1, f"the friend_signup item was dropped: {response.json()}"
     assert items[0]["payload"]["task_level_required"] == 3
+
+
+async def _walk(client: AsyncClient, headers: dict, limit: int) -> list[str]:
+    keys: list[str] = []
+    cursor = None
+    for _ in range(50):
+        params = {"filter": "global", "limit": limit}
+        if cursor:
+            params["before"] = cursor
+        response = await client.get("/activity-feed", params=params, headers=headers)
+        body = response.json()
+        keys += [item["item_key"] for item in body["items"]]
+        cursor = body["next_cursor"]
+        if cursor is None:
+            return keys
+    raise AssertionError("cursor never ended")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("limit", [3, 5, 10])
+@pytest.mark.parametrize("with_era_tie", [False, True])
+async def test_load_more_walks_items_sharing_one_timestamp(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    auth_headers: dict,
+    limit: int,
+    with_era_tie: bool,
+):
+    """Seam: /activity-feed cursor; a batch activation shares one `now()`."""
+    moment = datetime.now(timezone.utc) + timedelta(hours=1)
+    db_session.add_all(
+        Task(
+            title=f"Batch {n}",
+            description="d",
+            point_value=10,
+            level_required=0,
+            status=TaskStatus.active,
+            activated_at=moment,
+            created_by_id=character.id,
+            primary_faction_slug=DEFAULT_FACTION_SLUG,
+        )
+        for n in range(12)
+    )
+    if with_era_tie:
+        db_session.add(
+            Era(
+                name="Tie",
+                config_key="era_1",
+                started_at=moment,
+                started_by_id=character.id,
+            )
+        )
+    await db_session.commit()
+
+    everything = await _walk(client, auth_headers, 100)
+    assert len(everything) == len(set(everything)) >= 12 + with_era_tie
+    assert await _walk(client, auth_headers, limit) == everything
