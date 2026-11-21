@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
@@ -16,6 +16,7 @@ import { markOnboardingHandoff, onboardingHandoffPending } from '../utils/onboar
 import MobileTabBar from './layout/MobileTabBar'
 import ShellContent from './layout/ShellContent'
 import SiteFooter from './layout/SiteFooter'
+import { FlowChromeContext } from './layout/FlowChrome'
 
 /**
  * The app shell (ADR-0035). Desktop and phone chromes are SIBLINGS of the page
@@ -27,6 +28,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isMobile = useFormFactor() === 'mobile'
+  // Phones only, signed out: the flow is full-bleed there (no bar to clear); desktop keeps its top nav.
+  const [inFlow, setInFlow] = useState(false)
+  const flowOnPhone = isMobile && inFlow
   // Held here: `ShellContent` is called as a plain function by tests, so owns no hook (#1191).
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
 
@@ -67,7 +71,11 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <BackdropProvider>
-    <div className="min-h-screen flex flex-col relative">
+    <FlowChromeContext.Provider value={setInFlow}>
+    <div
+      className="min-h-screen flex flex-col relative"
+      style={flowOnPhone ? ({ '--tab-bar-clearance': 'env(safe-area-inset-bottom)' } as CSSProperties) : undefined}
+    >
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:p-2 bg-[var(--color-surface)]"
@@ -89,8 +97,9 @@ export default function Layout({ children }: { children: ReactNode }) {
         {children}
       </ShellContent>
       <SiteFooter />
-      {isMobile && <MobileTabBar />}
+      {isMobile && !flowOnPhone && <MobileTabBar />}
     </div>
+    </FlowChromeContext.Provider>
     </BackdropProvider>
   )
 }
