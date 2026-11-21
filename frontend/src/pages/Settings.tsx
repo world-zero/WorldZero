@@ -201,11 +201,10 @@ export default function Settings() {
         {/* Rule matches the title's width (#3097). */}
         <div style={{ width: 'fit-content', maxWidth: '100%' }}>
           <h1
-            className="font-display"
+            className="font-display wz-settings-title"
             style={{
               margin: 'var(--space-xs) 0 var(--space-sm)',
               fontWeight: 600,
-              fontSize: isMobile ? 'var(--text-heading)' : 'var(--text-display)',
               lineHeight: 1.1,
               color: 'var(--color-text-primary)',
             }}

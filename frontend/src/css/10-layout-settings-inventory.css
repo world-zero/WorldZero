@@ -51,6 +51,19 @@
   }
 }
 
+.wz-settings-title {
+  font-size: var(--text-display);
+}
+@media (max-width: 767px) and (pointer: coarse) {
+  .wz-settings-title {
+    font-size: var(--text-heading);
+  }
+  /* The fixed tab bar sits over the bottom edge. */
+  footer.site-footer {
+    padding-bottom: calc(var(--space-md) + var(--tab-bar-clearance) + (44px - 1lh) / 2);
+  }
+}
+
 /* Phone press: one squash-and-spring for every tappable. The tab selectors cover
    the current bar and #3876's `.tabbar__tab`. Vote components keep their own. */
 @media (pointer: coarse) {

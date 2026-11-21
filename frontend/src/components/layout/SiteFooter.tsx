@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
  * Chrome only — see {@link ShellContent} for why the shells no longer wrap the
  * page (#1116).
  */
-export default function SiteFooter({ isMobile = false }: { isMobile?: boolean }) {
+export default function SiteFooter() {
   const { t } = useTranslation('common')
   return (
     <footer
@@ -17,7 +17,6 @@ export default function SiteFooter({ isMobile = false }: { isMobile?: boolean })
       style={{
         color: 'var(--color-text-tertiary)',
         zIndex: 5,
-        ...(isMobile && { paddingBottom: 'calc(var(--space-md) + var(--tab-bar-clearance) + (44px - 1lh) / 2)' }),
       }}
     >
       <Link to="/about" className="hit-y hit-pad hover:underline">{t('footer.about')}</Link>
