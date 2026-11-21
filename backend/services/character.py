@@ -1,6 +1,6 @@
 import dataclasses
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -16,7 +16,7 @@ from faction_slugs import (
     faction_filter_slugs,
 )
 from game_config import CURRENT_ERA, EraConfig
-from models.account import Account, AccountStatus
+from models.account import Account, AccountStatus, AccountTombstone
 from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.faction_defection_history import FactionDefectionHistory
@@ -36,7 +36,19 @@ MOD_BANNED = and_(
 )
 
 def _mod_banned_exists(account_id: int):
-    return exists().where(Character.account_id == account_id, MOD_BANNED)
+    # Lazy: services.account_deletion imports this module.
+    from services.account_deletion import TOMBSTONE_RETENTION_DAYS
+
+    # A ban that outlived its account rides a live tombstone (ADR-0081).
+    live_since = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
+    return or_(
+        exists().where(Character.account_id == account_id, MOD_BANNED),
+        exists().where(
+            AccountTombstone.account_id == account_id,
+            AccountTombstone.mod_banned.is_(True),
+            AccountTombstone.created_at > live_since,
+        ),
+    )
 
 
 # The rule is "not banned"; a set so a future life state needs no rewrite.

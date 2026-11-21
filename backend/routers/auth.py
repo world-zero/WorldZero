@@ -14,7 +14,7 @@ from config import settings
 from db import get_db
 from errors import ErrorCode, coded_error, detail_code, raise_coded
 from game_config import CURRENT_ERA
-from models.account import Account, AuthProvider
+from models.account import Account, AccountTombstone, AuthProvider
 from schemas.auth import (
     CurrentUser,
     DevLoginOut,
@@ -23,7 +23,10 @@ from schemas.auth import (
     StartFreshOut,
 )
 from schemas.character import CharacterCreate
-from services.account_deletion import resolve_account_tombstone
+from services.account_deletion import (
+    hash_provider_user_id,
+    resolve_account_tombstone,
+)
 from services.auth import (
     ReturningPlayerConsentRequired,
     create_jwt,
@@ -324,6 +327,7 @@ async def confirm_returning_player(
 
     # Must go before create_or_get_account so it takes the stranger path.
     tombstone = await resolve_account_tombstone(provider, provider_user_id, session)
+    ban_since = tombstone.created_at if tombstone and tombstone.mod_banned else None
     if tombstone is not None:
         await session.delete(tombstone)
         await session.flush()
@@ -335,6 +339,20 @@ async def confirm_returning_player(
         email_verified=True,
         session=session,
     )
+
+    if ban_since is not None:
+        # Same deletion time, so the 90 days don't restart; sign-in finds the
+        # OAuth row first, so this tombstone never re-triggers the gate (ADR-0081).
+        session.add(
+            AccountTombstone(
+                account_id=account.id,
+                provider=provider,
+                provider_user_hash=hash_provider_user_id(provider, provider_user_id),
+                mod_banned=True,
+                created_at=ban_since,
+            )
+        )
+        await session.flush()
 
     # The question has been answered; a second POST is an ordinary 404.
     del request.session[_PENDING_SIGNUP_KEY]

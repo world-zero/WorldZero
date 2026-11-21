@@ -21,7 +21,7 @@ from models.comment import Comment
 from models.praxis import MediaItem, Praxis
 from models.praxis_room import PraxisRoomUpdate
 from models.push_subscription import PushSubscription
-from services.character import soft_delete_character
+from services.character import has_mod_banned_life, soft_delete_character
 from services.media import delete_stored_media
 
 #: Retention of a deleted account's hashed OAuth identity for the returning-player
@@ -54,6 +54,11 @@ def hash_provider_user_id(provider: str, provider_user_id: str) -> str:
     return hashlib.sha256(salted).hexdigest()
 
 
+def _is_live(tombstone: AccountTombstone) -> bool:
+    expiry = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
+    return tombstone.created_at > expiry
+
+
 async def resolve_account_tombstone(
     provider: str, provider_user_id: str, session: AsyncSession
 ) -> AccountTombstone | None:
@@ -74,8 +79,7 @@ async def resolve_account_tombstone(
     if tombstone is None:
         return None
 
-    expiry = datetime.now(timezone.utc) - timedelta(days=TOMBSTONE_RETENTION_DAYS)
-    if tombstone.created_at <= expiry:
+    if not _is_live(tombstone):
         await session.delete(tombstone)
         await session.flush()
         return None
@@ -99,6 +103,8 @@ async def delete_account(
         )
     ).scalars().all()
     character_ids = [character.id for character in characters]
+    # Before soft_delete_character: the tombstone is what outlives these rows.
+    was_mod_banned = await has_mod_banned_life(account_id, session)
 
     # Read before deletion: the stored path is the only record of the bytes.
     doomed_media = await _uploaded_media(character_ids, session)
@@ -115,7 +121,9 @@ async def delete_account(
     if character_ids:
         await _blank_authored_content(character_ids, session)
 
-    await _replace_oauth_identity_with_a_tombstone(account, session)
+    await _replace_oauth_identity_with_a_tombstone(
+        account, session, was_mod_banned
+    )
 
     await session.execute(
         delete(PushSubscription).where(PushSubscription.account_id == account.id)
@@ -206,7 +214,7 @@ async def _blank_authored_content(
 
 
 async def _replace_oauth_identity_with_a_tombstone(
-    account: Account, session: AsyncSession
+    account: Account, session: AsyncSession, mod_banned: bool
 ) -> None:
     """Delete the OAuth rows; keep provider + a salted digest of each identifier."""
     providers = (
@@ -217,7 +225,19 @@ async def _replace_oauth_identity_with_a_tombstone(
 
     for row in providers:
         digest = hash_provider_user_id(row.provider, row.provider_user_id)
-        # Delete-rejoin-delete within retention: replace the unique pair.
+        # Delete-rejoin-delete within retention: replace the unique pair. A
+        # standing ban on the old row carries over, else the loop launders it.
+        old = (
+            await session.execute(
+                select(AccountTombstone).where(
+                    AccountTombstone.provider == row.provider,
+                    AccountTombstone.provider_user_hash == digest,
+                )
+            )
+        ).scalar_one_or_none()
+        carries_ban = mod_banned or (
+            old is not None and old.mod_banned and _is_live(old)
+        )
         await session.execute(
             delete(AccountTombstone).where(
                 AccountTombstone.provider == row.provider,
@@ -229,6 +249,7 @@ async def _replace_oauth_identity_with_a_tombstone(
                 account_id=account.id,
                 provider=row.provider,
                 provider_user_hash=digest,
+                mod_banned=carries_ban,
             )
         )
     await session.flush()
