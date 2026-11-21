@@ -255,7 +255,7 @@ export default function DefaultTaskDetail({
           >
             <Link
               to={`/praxis/${inProgressPraxisId}/edit`}
-              style={{ ...primaryButton, flex: 1, width: "auto", minWidth: 0 }}
+              style={{ ...primaryButton, flex: "1 1 8rem", width: "auto", minWidth: 0, padding: "var(--space-md) var(--space-xs)", overflowWrap: "anywhere" }}
             >
               {t("detail.inProgress.continue")}
             </Link>
