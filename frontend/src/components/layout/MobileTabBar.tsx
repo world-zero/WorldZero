@@ -11,7 +11,6 @@ import './tabBar.css'
 
 const YouSheet = lazy(() => import('./YouSheet'))
 const ModTotal = lazy(() => import('../admin/ModTotal'))
-const SignInSheet = lazy(() => import('../SignInOptions').then((m) => ({ default: m.SignInSheet })))
 
 type TabKey = 'nav.home' | 'nav.tasks' | 'nav.praxis' | 'nav.community'
 const TABS: { glyph: GlyphName; key: TabKey; to: () => string; on: (path: string) => boolean }[] = [
@@ -38,7 +37,6 @@ export default function MobileTabBar() {
   const { user } = useAuth()
   const { pending_requests_count: pending } = useSidebarPanels()
   const [youOpen, setYouOpen] = useState(false)
-  const [signIn, setSignIn] = useState(false)
   const [mod, setMod] = useState(0)
   const active = activeTab(pathname, youOpen)
   const character = user?.character ?? null
@@ -98,9 +96,10 @@ export default function MobileTabBar() {
           </Link>
         ))}
         {!user ? (
-          <button type="button" className={youClass} onClick={() => setSignIn(true)} aria-haspopup="dialog">
+          // The onboarding's sign-in view, the one sign-in screen (#1773).
+          <Link to="/?login" className={youClass}>
             {youInner}
-          </button>
+          </Link>
         ) : !character ? (
           <Link to="/characters/create" className={youClass}>
             {youInner}
@@ -127,11 +126,6 @@ export default function MobileTabBar() {
       {isAdmin && character && (
         <Suspense fallback={null}>
           <ModTotal onTotal={setMod} />
-        </Suspense>
-      )}
-      {signIn && (
-        <Suspense fallback={null}>
-          <SignInSheet open onClose={() => setSignIn(false)} />
         </Suspense>
       )}
     </>
