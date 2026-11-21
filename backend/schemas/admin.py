@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import ConfigDict, Field
 from schemas.base import WireModel
 
+from models.roles import Permission
 from schemas.comment import CommentOut
 from schemas.praxis import PraxisOut
 
@@ -233,10 +234,14 @@ class AdminRow(WireModel):
     username: str
     display_name: str
     is_owner: bool
+    #: Kept on the roster so the owner can revoke a suspended holder (#4025).
+    suspended: bool
+    #: The ticked boxes; empty for the owner, who holds all nine implicitly.
+    permissions: list[Permission]
 
 
-class AdminGrantIn(WireModel):
-    username: str
+class AdminPermissionIn(WireModel):
+    on: bool
 
 
 class RingRecipient(WireModel):

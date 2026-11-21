@@ -491,29 +491,49 @@ async def assign_or_revoke_role(
     )
 
 
-async def _admin_row(account_id: int, session: AsyncSession) -> Optional[AdminRow]:
-    """The account's lowest-id character as an :class:`AdminRow`, or None."""
-    character = (
-        await session.execute(
-            select(Character)
-            .where(Character.account_id == account_id)
-            .order_by(Character.id.asc())
-            .limit(1)
-        )
-    ).scalar_one_or_none()
-    if character is None:
-        return None
-    return AdminRow(
-        username=character.username,
-        display_name=character.display_name,
-        is_owner=await dependencies.account_is_owner(account_id, session),
-    )
-
-
 async def list_admins(session: AsyncSession) -> list[AdminRow]:
-    """One row per admin account (accounts with no character are skipped)."""
-    rows = [await _admin_row(a.id, session) for a in await find_admin_accounts(session)]
-    return [r for r in rows if r is not None]
+    """One row per holder, any status, as its lowest-id character.
+
+    Unlike :func:`find_admin_accounts` this keeps suspended holders, so the owner
+    can revoke them before an unsuspend hands their powers back (#4025).
+    """
+    owners = set(
+        await session.scalars(
+            select(AccountRole.account_id)
+            .join(Role, Role.id == AccountRole.role_id)
+            .where(Role.name == OWNER_ROLE_NAME)
+        )
+    )
+    held: dict[int, list[Permission]] = {}
+    for account_id, permission in await session.execute(
+        select(AccountPermission.account_id, AccountPermission.permission)
+    ):
+        held.setdefault(account_id, []).append(permission)
+    first_character = (
+        select(Character.account_id, func.min(Character.id).label("id"))
+        .where(Character.account_id.in_(owners | held.keys()))
+        .group_by(Character.account_id)
+        .subquery()
+    )
+    rows = await session.execute(
+        select(Character, Account.status)
+        .join(first_character, first_character.c.id == Character.id)
+        .join(Account, Account.id == Character.account_id)
+        .order_by(Character.account_id)
+    )
+    order = list(Permission)
+    return [
+        AdminRow(
+            username=character.username,
+            display_name=character.display_name,
+            is_owner=character.account_id in owners,
+            suspended=status == AccountStatus.suspended,
+            permissions=[]
+            if character.account_id in owners
+            else sorted(held.get(character.account_id, []), key=order.index),
+        )
+        for character, status in rows
+    ]
 
 
 async def _account_id_for_username(username: str, session: AsyncSession) -> int:
@@ -562,21 +582,22 @@ async def set_permission(
     )
 
 
-async def grant_admin(username: str, owner_id: int, session: AsyncSession) -> AdminRow:
-    """Owner makes a character's account an admin. Refuses an existing admin.
-
-    ponytail: starts it on ``handle_reports`` until the checkbox roster lands
-    (an admin needs at least one box); that slice replaces this.
-    """
+async def set_admin_permission(
+    username: str,
+    permission: Permission,
+    on: bool,
+    owner_id: int,
+    session: AsyncSession,
+) -> None:
+    """Owner ticks one box; ticking the first one is how an account becomes admin."""
     account_id = await _account_id_for_username(username, session)
-    if await dependencies.account_has_admin_role(account_id, session):
+    if await dependencies.account_is_owner(account_id, session):
         raise_coded(
-            409, ErrorCode.admin_already_admin, "That account is already an admin."
+            409,
+            ErrorCode.admin_cannot_revoke_owner,
+            "The owner holds every permission.",
         )
-    await set_permission(account_id, Permission.handle_reports, True, owner_id, session)
-    row = await _admin_row(account_id, session)
-    assert row is not None  # the username resolved through a character
-    return row
+    await set_permission(account_id, permission, on, owner_id, session)
 
 
 async def revoke_admin(username: str, owner_id: int, session: AsyncSession) -> None:

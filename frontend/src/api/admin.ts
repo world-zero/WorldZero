@@ -270,9 +270,18 @@ export async function getAdmins(): Promise<AdminRow[]> {
   return data
 }
 
-export async function grantAdmin(username: string): Promise<AdminRow> {
-  const { data } = await apiPost('/admin/admins', { body: { username } })
-  return data
+export type Permission = components['schemas']['Permission']
+
+/** Tick or untick one box; the first tick is what makes an account an admin. */
+export async function setAdminPermission(
+  username: string,
+  permission: Permission,
+  on: boolean,
+): Promise<void> {
+  await apiPut('/admin/admins/{username}/permissions/{permission}', {
+    params: { path: { username, permission } },
+    body: { on },
+  })
 }
 
 export async function revokeAdmin(username: string): Promise<void> {

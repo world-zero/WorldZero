@@ -1,8 +1,10 @@
 """The owner-only admin roster (#3258)."""
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 
-from models.account import Account
+from models.account import Account, AccountStatus
+from models.mod_action import ModAction
 from tests.integration.factories import make_admin, make_owner
 
 
@@ -39,12 +41,17 @@ async def test_is_owner_only_for_the_account_holding_the_owner_role(
     assert plain.json()["is_owner"] is False
 
 
+PUT_URL = "/admin/admins/{}/permissions/{}"
+ON = {"on": True}
+OFF = {"on": False}
+
+
 async def test_non_owner_admin_gets_403_on_all_three_routes(
     client: AsyncClient, db_session, account2, other, hdr2, owner_is_account,
 ):
     await make_admin(db_session, account2)
     assert (await client.get("/admin/admins", headers=hdr2)).status_code == 403
-    r = await client.post("/admin/admins", json={"username": "x"}, headers=hdr2)
+    r = await client.put(PUT_URL.format("x", "edit_copy"), json=ON, headers=hdr2)
     assert r.status_code == 403
     assert (await client.delete("/admin/admins/x", headers=hdr2)).status_code == 403
 
@@ -60,19 +67,56 @@ async def test_owner_lists_grants_and_revokes(
             "username": character.username,
             "display_name": character.display_name,
             "is_owner": True,
+            "suspended": False,
+            "permissions": [],
         }
     ]
 
-    body = {"username": other.username}
-    r = await client.post("/admin/admins", json=body, headers=hdr)
-    assert r.status_code == 201
-    assert r.json()["username"] == other.username and r.json()["is_owner"] is False
-    assert {"account_id", "email"}.isdisjoint(r.json())
-    assert len((await client.get("/admin/admins", headers=hdr)).json()) == 2
+    url = PUT_URL.format(other.username, "edit_copy")
+    assert (await client.put(url, json=ON, headers=hdr)).status_code == 204
+    rows = (await client.get("/admin/admins", headers=hdr)).json()
+    assert [r["permissions"] for r in rows] == [[], ["edit_copy"]]
+    assert {"account_id", "email"}.isdisjoint(rows[1])
 
-    r = await client.delete(f"/admin/admins/{other.username}", headers=hdr)
-    assert r.status_code == 204
+    assert (await client.put(url, json=OFF, headers=hdr)).status_code == 204
     assert len((await client.get("/admin/admins", headers=hdr)).json()) == 1
+
+
+async def test_grant_and_revoke_write_mod_log_lines(
+    client, db_session, account, other, hdr, owner_is_account
+):
+    await make_owner(db_session, account)
+    url = PUT_URL.format(other.username, "roll_era")
+    await client.put(url, json=ON, headers=hdr)
+    await client.put(url, json=ON, headers=hdr)  # idempotent: no second line
+    await client.put(url, json=OFF, headers=hdr)
+
+    lines = (
+        await db_session.execute(select(ModAction).order_by(ModAction.id))
+    ).scalars().all()
+    assert [
+        (m.actor_account_id, m.action, m.target_id, m.detail) for m in lines
+    ] == [
+        (account.id, "permission_grant", other.account_id, "roll_era"),
+        (account.id, "permission_revoke", other.account_id, "roll_era"),
+    ]
+
+
+async def test_suspended_holder_stays_on_the_roster_marked(
+    client, db_session, account, character, account2, other, hdr, owner_is_account
+):
+    await make_owner(db_session, account)
+    account2.status = AccountStatus.suspended
+    await db_session.commit()
+    url = PUT_URL.format(other.username, "ban_suspend")
+    r = await client.put(url, json=ON, headers=hdr)
+    assert r.status_code == 204, r.text
+
+    rows = (await client.get("/admin/admins", headers=hdr)).json()
+    assert [(r["username"], r["suspended"]) for r in rows] == [
+        (character.username, False),
+        (other.username, True),
+    ]
 
 
 def code(response) -> str:
@@ -86,15 +130,17 @@ async def test_refusals_carry_their_codes(
 
     r = await client.delete(f"/admin/admins/{character.username}", headers=hdr)
     assert (r.status_code, code(r)) == (409, "ADMIN_CANNOT_REVOKE_OWNER")
+    url = PUT_URL.format(character.username, "edit_copy")
+    r = await client.put(url, json=OFF, headers=hdr)
+    assert (r.status_code, code(r)) == (409, "ADMIN_CANNOT_REVOKE_OWNER")
 
-    post = client.post
-    r = await post("/admin/admins", json={"username": "nobody-here"}, headers=hdr)
+    url = PUT_URL.format("nobody-here", "edit_copy")
+    r = await client.put(url, json=ON, headers=hdr)
     assert (r.status_code, code(r)) == (404, "ADMIN_UNKNOWN_USERNAME")
     r = await client.delete("/admin/admins/nobody-here", headers=hdr)
     assert (r.status_code, code(r)) == (404, "ADMIN_UNKNOWN_USERNAME")
-
-    r = await post("/admin/admins", json={"username": character.username}, headers=hdr)
-    assert (r.status_code, code(r)) == (409, "ADMIN_ALREADY_ADMIN")
+    r = await client.put(PUT_URL.format(other.username, "nope"), json=ON, headers=hdr)
+    assert r.status_code == 422
 
     r = await client.delete(f"/admin/admins/{other.username}", headers=hdr)
     assert (r.status_code, code(r)) == (404, "ADMIN_NOT_AN_ADMIN")

@@ -168,11 +168,7 @@ export interface paths {
          */
         get: operations["admin_list_admins_admin_admins_get"];
         put?: never;
-        /**
-         * Admin Grant Admin
-         * @description Owner-only: grant admin to the account behind a character username.
-         */
-        post: operations["admin_grant_admin_admin_admins_post"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -194,6 +190,26 @@ export interface paths {
          * @description Owner-only: revoke admin. The owner's own role is refused.
          */
         delete: operations["admin_revoke_admin_admin_admins__username__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/admins/{username}/permissions/{permission}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Admin Set Permission
+         * @description Owner-only: tick or untick one box; the first tick makes an admin.
+         */
+        put: operations["admin_set_permission_admin_admins__username__permissions__permission__put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2188,10 +2204,10 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
-        /** AdminGrantIn */
-        AdminGrantIn: {
-            /** Username */
-            username: string;
+        /** AdminPermissionIn */
+        AdminPermissionIn: {
+            /** On */
+            on: boolean;
         };
         /**
          * AdminRow
@@ -2204,6 +2220,10 @@ export interface components {
             display_name: string;
             /** Is Owner */
             is_owner: boolean;
+            /** Permissions */
+            permissions: components["schemas"]["Permission"][];
+            /** Suspended */
+            suspended: boolean;
             /** Username */
             username: string;
         };
@@ -4459,6 +4479,12 @@ export interface components {
              */
             viewer_faction_multiplier: number;
         };
+        /**
+         * Permission
+         * @description The nine admin checkboxes (ADR-0101); a tenth widens the CHECK.
+         * @enum {string}
+         */
+        Permission: "handle_reports" | "ban_suspend" | "review_proposals" | "manage_tasks" | "delete_import_tasks" | "read_messages" | "edit_copy" | "small_world" | "roll_era";
         /** PickerPollOut */
         PickerPollOut: {
             state: components["schemas"]["PickerPollState"];
@@ -5844,41 +5870,6 @@ export interface operations {
             };
         };
     };
-    admin_grant_admin_admin_admins_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: {
-                access_token?: string | null;
-            };
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminGrantIn"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdminRow"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     admin_revoke_admin_admin_admins__username__delete: {
         parameters: {
             query?: never;
@@ -5891,6 +5882,42 @@ export interface operations {
             };
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_set_permission_admin_admins__username__permissions__permission__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+                permission: components["schemas"]["Permission"];
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminPermissionIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             204: {

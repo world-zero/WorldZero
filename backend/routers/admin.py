@@ -36,7 +36,7 @@ from models.roles import Permission
 from models.praxis import ModerationStatus, Praxis, PraxisStatus, PraxisType
 from models.task import TaskStatus
 from schemas.admin import (
-    AdminGrantIn,
+    AdminPermissionIn,
     PopulationDialOut,
     AdminRow,
     AdminTaskPatch,
@@ -80,9 +80,9 @@ from services.admin_service import (
     task_ids_with_history,
     remove_flagged_praxes_by_author,
     find_admin_accounts,
-    grant_admin,
     list_admins,
     revoke_admin,
+    set_admin_permission,
     flags_for_comments,
     flags_for_praxes,
     game_overview,
@@ -209,14 +209,16 @@ async def admin_list_admins(
     return await list_admins(session)
 
 
-@router.post("/admins", response_model=AdminRow, status_code=201)
-async def admin_grant_admin(
-    data: AdminGrantIn,
+@router.put("/admins/{username}/permissions/{permission}", status_code=204)
+async def admin_set_permission(
+    username: str,
+    permission: Permission,
+    data: AdminPermissionIn,
     owner: Account = Depends(require_owner),
     session: AsyncSession = Depends(get_db, scope="function"),
-) -> AdminRow:
-    """Owner-only: grant admin to the account behind a character username."""
-    return await grant_admin(data.username, owner.id, session)
+) -> None:
+    """Owner-only: tick or untick one box; the first tick makes an admin."""
+    await set_admin_permission(username, permission, data.on, owner.id, session)
 
 
 @router.delete("/admins/{username}", status_code=204)
