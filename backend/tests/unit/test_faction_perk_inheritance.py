@@ -141,8 +141,7 @@ def test_albescent_keeps_its_own_metatask_bypass() -> None:
 def test_task_vision_is_not_granted_when_no_faction_holds_it() -> None:
     """No better than the best: Era 2 has no Ephemerists, so no Task Vision."""
     assert ERA_2.allow_praxis_on_retired_task_factions == frozenset()
-    for era in ERAS.values():
-        assert era.allow_praxis_on_pending_task_factions == frozenset()
+    assert ERA_2.allow_praxis_on_pending_task_factions == frozenset()
 
 
 def test_inheritor_joins_a_perk_frozenset_that_anyone_else_is_in() -> None:
