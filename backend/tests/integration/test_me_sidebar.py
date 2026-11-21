@@ -87,6 +87,10 @@ async def test_sidebar_returns_all_three_panels(
     data = response.json()
 
     assert data["pending_requests_count"] == 1
+    counts = await activity_feed_service.pending_requests_counts(
+        [character.id], db_session
+    )
+    assert counts[character.id] == data["pending_requests_count"]
     # Membership, not equality: the panel also carries the era announcement.
     assert "global_task" in [item["type"] for item in data["global_activity"]]
     assert [praxis["id"] for praxis in data["active_praxes"]] == [mine.id]
@@ -97,7 +101,8 @@ async def test_sidebar_returns_all_three_panels(
 #: +3 (#3456): collab, duel and letter now also fetch their answered rows.
 #: +1 (#3766): duel_forfeited.
 #: +1 (#3875): the lapsed-duel sweep.
-SIDEBAR_SELECT_BUDGET = 27
+#: +1 (#3776): the sibling-lives list; counts only run when a sibling exists.
+SIDEBAR_SELECT_BUDGET = 28
 
 
 @pytest.mark.asyncio
@@ -137,6 +142,7 @@ async def test_sidebar_without_a_character_is_empty(
     assert response.status_code == 200
     assert response.json() == {
         "pending_requests_count": 0,
+        "other_lives_pending": [],
         "global_activity": [],
         "global_activity_count": 0,
         "active_praxes": [],

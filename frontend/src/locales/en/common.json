@@ -131,6 +131,8 @@
         "title": "Your characters",
         "close": "Close",
         "tapToUse": "Tap to use",
+        "waiting_one": "{{count}} request waiting",
+        "waiting_other": "{{count}} requests waiting",
         "meta": "{{faction}} · Level {{level}} · {{points}} pts",
         "createNew": "Create new character"
       },

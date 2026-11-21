@@ -5172,6 +5172,29 @@
         "title": "NudgeResultOut",
         "type": "object"
       },
+      "OtherLifePending": {
+        "properties": {
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "pending_requests_count": {
+            "title": "Pending Requests Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "character_id",
+          "display_name",
+          "pending_requests_count"
+        ],
+        "title": "OtherLifePending",
+        "type": "object"
+      },
       "OverviewStats": {
         "properties": {
           "accounts": {
@@ -6709,6 +6732,103 @@
         "title": "RingRecipient",
         "type": "object"
       },
+      "RosterCharacterOut": {
+        "description": "``/me/characters`` only: the owner's view adds the life's waiting requests.",
+        "properties": {
+          "all_time_score": {
+            "title": "All Time Score",
+            "type": "integer"
+          },
+          "avatar_url": {
+            "title": "Avatar Url",
+            "type": "string"
+          },
+          "badges": {
+            "items": {
+              "$ref": "#/components/schemas/BadgeOut"
+            },
+            "title": "Badges",
+            "type": "array"
+          },
+          "bio": {
+            "title": "Bio",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "faction_slug": {
+            "title": "Faction Slug",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "invitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Invitations",
+            "type": "array"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "pending_requests_count": {
+            "default": 0,
+            "title": "Pending Requests Count",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tagline": {
+            "title": "Tagline",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "display_name",
+          "bio",
+          "tagline",
+          "avatar_url",
+          "location",
+          "level",
+          "score",
+          "all_time_score",
+          "faction_slug",
+          "status",
+          "created_at",
+          "badges",
+          "invitations",
+          "pending_requests_count"
+        ],
+        "title": "RosterCharacterOut",
+        "type": "object"
+      },
       "RulesChangeEntry": {
         "additionalProperties": false,
         "properties": {
@@ -6932,6 +7052,14 @@
             "title": "Global Activity Count",
             "type": "integer"
           },
+          "other_lives_pending": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OtherLifePending"
+            },
+            "title": "Other Lives Pending",
+            "type": "array"
+          },
           "pending_requests_count": {
             "title": "Pending Requests Count",
             "type": "integer"
@@ -6939,6 +7067,7 @@
         },
         "required": [
           "pending_requests_count",
+          "other_lives_pending",
           "global_activity",
           "global_activity_count",
           "active_praxes"
@@ -12712,7 +12841,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/CharacterOut"
+                    "$ref": "#/components/schemas/RosterCharacterOut"
                   },
                   "title": "Response My Characters Me Characters Get",
                   "type": "array"

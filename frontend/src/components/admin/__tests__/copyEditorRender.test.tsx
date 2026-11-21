@@ -172,11 +172,18 @@ describe('CopyEditor, edit box over the spot (#3453)', () => {
     expect((await open(false, new DOMRect(30, -100, 200, 24))).style.position).not.toBe('fixed')
   })
 
-  it('follows the spot on scroll', async () => {
+  it('follows the spot on scroll (window or ancestor) and resize', async () => {
     const box = await open(false)
-    screen.getByText('Overridden Zero', { selector: 'p' }).getBoundingClientRect = () => new DOMRect(30, 80, 200, 24)
-    fireEvent.scroll(window)
-    await waitFor(() => expect(box.style.top).toBe('80px'))
+    const spot = screen.getByText('Overridden Zero', { selector: 'p' })
+    for (const [top, fire] of [
+      [80, () => fireEvent.scroll(window)],
+      [90, () => fireEvent.scroll(spot.parentElement!)],
+      [100, () => fireEvent(window, new Event('resize'))],
+    ] as const) {
+      spot.getBoundingClientRect = () => new DOMRect(30, top, 200, 24)
+      fire()
+      await waitFor(() => expect(box.style.top).toBe(`${top}px`))
+    }
   })
 
   it('without field-sizing it gets a row per line', async () => {

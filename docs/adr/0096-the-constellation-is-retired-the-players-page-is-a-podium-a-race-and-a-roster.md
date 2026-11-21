@@ -20,3 +20,7 @@ ADR-0074's two rules go with the canvas: "the Constellation is the one visualisa
 
 - No component in `frontend/src` names a Constellation or reads `--sky-*`; a new rank visualisation needs its own record.
 - ADR-0074's reasoning about AA on a painted dark stage no longer applies to any surface.
+
+## Amendment (#3800)
+
+`DesktopPlayers.tsx` and `MobilePlayers.tsx` are gone. The page is one `PlayersDirectory.tsx`, and the phone trees are picked inside it by `useFormFactor()`. "There is no sky" and the rest of the decision stand.

@@ -12,21 +12,22 @@ from models.praxis import PraxisStatus
 from schemas.activity_feed import ACTIVITY_FEED_ITEM_ADAPTER
 from schemas.airports import NearbyAirportsOut
 from schemas.auth import CurrentUser
-from schemas.character import ActiveCharacterIn, CharacterOut
+from schemas.character import ActiveCharacterIn, RosterCharacterOut
 from schemas.notification_prefs import (
     NotificationPrefOut,
     NotificationPrefsIn,
     NotificationPrefsOut,
 )
-from schemas.sidebar import SidebarOut
+from schemas.sidebar import OtherLifePending, SidebarOut
 from services.account_deletion import delete_account
-from services.activity_feed import get_sidebar_feed
+from services.activity_feed import get_sidebar_feed, pending_requests_counts
 from services.airports import nearby_airport_codes
 from services.auth import get_current_account
 from services.character import (
     build_character_out,
     get_account_invited_faction_slugs,
     list_account_roster,
+    list_sibling_lives,
     resolve_active_character,
     set_active_character,
 )
@@ -41,14 +42,21 @@ from services.push import push_available
 router = APIRouter()
 
 
-@router.get("/characters", response_model=list[CharacterOut])
+@router.get("/characters", response_model=list[RosterCharacterOut])
 async def my_characters(
     account: Account = Depends(get_current_account),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """The account's own roster — every non-banned life, carried life first."""
     rows = await list_account_roster(account, session)
-    return [build_character_out(character, stats) for character, stats in rows]
+    counts = await pending_requests_counts([c.id for c, _ in rows], session)
+    return [
+        RosterCharacterOut(
+            **build_character_out(character, stats).model_dump(),
+            pending_requests_count=counts[character.id],
+        )
+        for character, stats in rows
+    ]
 
 
 @router.get("/nearby-airports", response_model=NearbyAirportsOut)
@@ -212,6 +220,8 @@ async def my_sidebar(
         # Same switches as the feed (#1047); the request count ignores them.
         muted=muted_feed_types(account.notification_prefs),
     )
+    siblings = await list_sibling_lives(account, character.id, session)
+    sibling_counts = await pending_requests_counts([i for i, _ in siblings], session)
     # Membership, not authorship: slot counts count memberships.
     active_praxes = await list_praxes(
         session=session,
@@ -222,6 +232,15 @@ async def my_sidebar(
     )
     return SidebarOut(
         pending_requests_count=pending_requests_count,
+        other_lives_pending=[
+            OtherLifePending(
+                character_id=sibling_id,
+                display_name=name,
+                pending_requests_count=sibling_counts[sibling_id],
+            )
+            for sibling_id, name in siblings
+            if sibling_counts[sibling_id] > 0
+        ],
         global_activity=[
             ACTIVITY_FEED_ITEM_ADAPTER.validate_python(asdict(item))
             for item in global_activity

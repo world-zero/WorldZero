@@ -12,6 +12,7 @@ from typing import Any, Callable, Optional, Sequence
 from pydantic import ValidationError
 from sqlalchemy import (
     Select,
+    Integer,
     String,
     and_,
     case,
@@ -1793,16 +1794,58 @@ async def get_sidebar_feed(
     recent_activity = await _fetch_sources(
         sources_for(FILTER_ALL), fetch_ctx, archive_view, session, stream=True
     )
-    request_counts = await _count_sources(
-        sources_for(FILTER_REQUESTS), fetch_ctx, archive_view, session
-    )
+    pending = await _count_requests([(character_id, fetch_ctx, archive_view)], session)
 
     recent_activity.sort(key=lambda item: item.timestamp, reverse=True)
     return (
-        sum(request_counts.values()),
+        pending[character_id],
         recent_activity[:SIDEBAR_ACTIVITY_LIMIT],
         len(recent_activity),
     )
+
+
+def _request_sources() -> list[FeedSource]:
+    visible = _visible_types(FILTER_REQUESTS, archived=False)
+    return [source for source in FEED_SOURCES if source.item_type in visible]
+
+
+async def _count_requests(
+    scopes: Sequence[tuple[int, FeedContext, FeedArchiveView]],
+    session: AsyncSession,
+) -> dict[int, int]:
+    """The one pending-request counter: all characters share ONE union round trip."""
+    counts = {character_id: 0 for character_id, _, _ in scopes}
+    branches = []
+    for character_id, ctx, archive_view in scopes:
+        for source in _request_sources():
+            query = _scoped_query(source, ctx, archive_view)
+            if query is not None:
+                branches.append(
+                    select(
+                        literal(character_id, Integer).label("character_id"),
+                        func.count().label("count"),
+                    ).select_from(query.subquery())
+                )
+    if branches:
+        for character_id, count in (await session.execute(union_all(*branches))).all():
+            counts[character_id] += int(count)
+    return counts
+
+
+async def pending_requests_counts(
+    character_ids: Sequence[int], session: AsyncSession
+) -> dict[int, int]:
+    """Each character's pending-request count: the sidebar badge's number.
+
+    Request types only and never muted (#1047), so it equals ``counts.requests``.
+    """
+    scopes = []
+    for character_id in character_ids:
+        ctx, archive_view = await _build_fetch_context(
+            character_id, session, before_cursor=None, archived=False
+        )
+        scopes.append((character_id, ctx, archive_view))
+    return await _count_requests(scopes, session)
 
 
 async def get_activity_feed(

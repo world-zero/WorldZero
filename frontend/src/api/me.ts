@@ -1,8 +1,11 @@
 import { apiDelete, apiGet, apiPost } from './client'
-import type { CharacterOut, CurrentUser } from './auth'
+import type { components } from './generated/schema'
+import type { CurrentUser } from './auth'
+
+export type RosterCharacter = components['schemas']['RosterCharacterOut']
 
 /** Every life but banned ones, carried life first (#270). */
-export async function getMyCharacters(): Promise<CharacterOut[]> {
+export async function getMyCharacters(): Promise<RosterCharacter[]> {
   const { data } = await apiGet('/me/characters')
   return data
 }

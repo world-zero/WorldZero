@@ -270,13 +270,15 @@ async def recalculate_character_stats(
     score_delta = total_score - stats.score
     previous_score = stats.score
     previous_level = stats.level
+    previous_era_peak = stats.era_peak_level
     stats.score = total_score
     stats.level = compute_level(total_score, era)
     record_level_reached(author, stats.level)
+    stats.era_peak_level = max(previous_era_peak, stats.level)
     if score_delta:
         author.all_time_score += score_delta
 
-    if emit_taunts and stats.level > previous_level:
+    if emit_taunts and stats.level > previous_era_peak:
         await notify_level_up(session, author)
 
     if emit_taunts and score_delta:

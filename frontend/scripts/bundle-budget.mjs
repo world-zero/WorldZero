@@ -286,7 +286,7 @@ const BUDGETS = {
  * THE SILENCE IS NOT RIGHT. An unremarked number cannot be reviewed, and it
  * cannot be over-spent, because nothing says what "over" would be. This line
  * says it: Albescent may declare up to ALBESCENT_ALLOWANCE top-level class
- * selectors in the sheet, and the next lane that wants a fifty-first raises the
+ * selectors in the sheet, and the next lane that wants one more raises the
  * number in a diff a human reads, with a ledger line saying what it bought.
  *
  * WHY A SELECTOR COUNT AND NOT GZIPPED BYTES. Bytes are already guarded, above,
