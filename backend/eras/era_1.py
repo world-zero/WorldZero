@@ -217,6 +217,8 @@ ERA_1_LEVEL_PROFILES = (
 # ERA DEFINITION
 # =============================================================================
 
+_LEVEL_THRESHOLDS = (0, 10, 70, 170, 330, 610, 1090, 1840, 3040)
+
 ERA_1 = EraConfig(
     name="Renaissance",
     # Matched against Era.config_key in the DB: rename the era, never the key.
@@ -224,7 +226,8 @@ ERA_1 = EraConfig(
     max_task_signups=20,
     vote_budget_base=100,
     vote_budget_multiplier=2.0,
-    level_thresholds=(0, 10, 70, 170, 330, 610, 1090, 1840, 3040),
+    level_thresholds=_LEVEL_THRESHOLDS,
+    proposed_task_points_max=_LEVEL_THRESHOLDS[-1],
     # See SPEC-game-rules.md "Level privileges"
     level_to_propose_task=3,
     level_to_propose_metatask=5,

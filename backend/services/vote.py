@@ -207,6 +207,16 @@ async def account_has_received_vote(account_id: int, session: AsyncSession) -> b
     )
 
 
+async def refund_vote_budget(vote: Vote, session: AsyncSession) -> None:
+    """Give back one spent vote, to the era it was CAST in, never today's (#1345).
+
+    Keeps ``recompute_votes_spent_this_era``'s identity; call before deleting a vote.
+    """
+    stats = await get_or_create_stats(session, vote.voter_character_id, vote.era_id)
+    if stats.votes_spent_this_era > 0:
+        stats.votes_spent_this_era -= 1
+
+
 async def void_account_vote_on_join(
     praxis: Praxis,
     joiner: Character,
@@ -230,11 +240,7 @@ async def void_account_vote_on_join(
     if vote is None:
         return False
 
-    # Refund the budget (keeps ``recompute_votes_spent_this_era``'s identity) to
-    # the era the vote was CAST in, never today's (#1345).
-    stats = await get_or_create_stats(session, vote.voter_character_id, vote.era_id)
-    if stats.votes_spent_this_era > 0:
-        stats.votes_spent_this_era -= 1
+    await refund_vote_budget(vote, session)
 
     # Not via ``praxis.votes``: it is ``lazy="raise"``.
     await session.delete(vote)

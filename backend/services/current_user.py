@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dependencies import account_grants
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account, OAuthProvider
+from models.roles import Permission
 from models.terms_acceptance import CURRENT_TERMS_VERSION, TermsAcceptance
 from schemas.auth import CurrentUser
 from services.albescent_reveal import is_albescent_glimpsed, is_albescent_revealed
@@ -97,6 +98,7 @@ async def build_current_user(
         character=char_out,
         is_admin=is_admin,
         is_owner=is_owner,
+        permissions=[p for p in Permission if p in permissions],
         has_accepted_terms=has_accepted_terms,
         can_create_additional_character=eligibility.can_create_additional_character,
         can_start_as_albescent=eligibility.can_start_as_albescent,

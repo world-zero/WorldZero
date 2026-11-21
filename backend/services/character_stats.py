@@ -408,8 +408,8 @@ async def recompute_votes_spent_this_era(
     """Rebuild every ``votes_spent_this_era`` in ``era_row`` from the vote table (#1531).
 
     Rests on: counter == votes cast in the era window (cast increments, the
-    join-void decrements, #2216). Raises 409 for an era that carries spend
-    forward. Hazard: an admin budget grant (``set_character_stats``) is
+    join-void and praxis delete decrement, #2216/#3933). Raises 409 for an era that
+    carries spend forward. Hazard: an admin budget grant (``set_character_stats``) is
     indistinguishable from drift and gets reverted, so use ``dry_run`` first.
     Returns changed rows only. Run BEFORE a score backfill, never in one pass.
     """

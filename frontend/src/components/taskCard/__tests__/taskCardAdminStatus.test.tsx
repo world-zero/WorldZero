@@ -11,7 +11,7 @@ import type { TaskOut } from '../../../api/tasks'
 const mocks = vi.hoisted(() => ({ isAdmin: true, adminMode: true }))
 
 vi.mock('../../../auth/AuthContext', () => ({
-  useAuth: () => ({ user: { is_admin: mocks.isAdmin } }),
+  useAuth: () => ({ user: { is_admin: mocks.isAdmin, permissions: ALL_PERMISSIONS } }),
 }))
 vi.mock('../../../auth/AdminModeContext', () => ({
   useAdminMode: () => ({ adminMode: mocks.adminMode }),
@@ -19,7 +19,7 @@ vi.mock('../../../auth/AdminModeContext', () => ({
 
 // Imported after the mocks are registered.
 import TaskCard, { displayedTask } from '../TaskCard'
-import { aTask } from '../../../test/fixtures'
+import { ALL_PERMISSIONS, aTask } from '../../../test/fixtures'
 
 const TASK = aTask({
   description: 'Leave something small and honest where a stranger will find it.',

@@ -103,6 +103,17 @@ async def _validate_proposal(
                 {"level": era.level_to_propose_task},
             )
 
+    if (
+        era.proposed_task_points_max is not None
+        and data.point_value > era.proposed_task_points_max
+    ):
+        raise_coded(
+            422,
+            ErrorCode.task_points_too_high,
+            f"A task may be worth at most {era.proposed_task_points_max} points.",
+            {"max": era.proposed_task_points_max},
+        )
+
     await refuse_hidden_faction(
         session, data.primary_faction_slug, data.metatask_faction_slug
     )

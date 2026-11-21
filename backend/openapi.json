@@ -1827,6 +1827,14 @@
             "title": "Level Jump Reach",
             "type": "integer"
           },
+          "permissions": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
           "provider": {
             "default": "",
             "title": "Provider",
@@ -1875,6 +1883,7 @@
           "character",
           "is_admin",
           "is_owner",
+          "permissions",
           "has_accepted_terms",
           "can_create_additional_character",
           "can_start_as_albescent",
@@ -14478,7 +14487,7 @@
     },
     "/praxes/{praxis_id}/media/batch": {
       "post": {
-        "description": "Upload N media files in one request (#1298).\n\nOne entry per file, in request order: a ``MediaItemOut`` or that file's error.\n201 means processed, not all succeeded. 404/403 are batch-wide.\n``display_order`` follows request position, after existing media.\n\nLimits: 100 MB per file (``MEDIA_MAX_BYTES``, per-file 413); 1000 files per\nrequest (Starlette ``max_files``, whole-request 400); no app-level total cap\n(parts spool to temp files); edge proxy limit unknown, so clients chunk.",
+        "description": "Upload N media files in one request (#1298).\n\nOne entry per file, in request order: a ``MediaItemOut`` or that file's error.\n201 means processed, not all succeeded. 404/403 are batch-wide.\n``display_order`` follows request position, after existing media.\n\nLimits: 100 MB per file (``MEDIA_MAX_BYTES``, per-file 413); 1000 files per\nrequest (Starlette ``max_files``, whole-request 400); no app-level total cap\n(parts spool to temp files); Caddy 413s a body over 120 MB, so clients chunk.",
         "operationId": "upload_media_batch_route_praxes__praxis_id__media_batch_post",
         "parameters": [
           {

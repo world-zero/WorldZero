@@ -61,6 +61,11 @@ def test_spent_at_a_lower_level_is_available_again() -> None:
     assert is_level_jump_available(4, 3) is True
 
 
+def test_a_level_dip_below_the_stamp_does_not_refill_it() -> None:
+    assert is_level_jump_available(0, 1) is False
+    assert available_level_reach("wow", 0, 1, ERA_1) == 0
+
+
 def test_level_zero_is_a_real_level_that_can_be_spent_at() -> None:
     # NULL vs 0 is deliberate.
     assert is_level_jump_available(0, None) is True

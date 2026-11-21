@@ -106,6 +106,7 @@ ERA_2 = EraConfig(
     vote_budget_base=100,
     vote_budget_multiplier=2.0,
     level_thresholds=(0, 10, 70, 170, 330, 610, 1090, 1840, 3040),
+    proposed_task_points_max=3040,
     level_to_propose_task=3,
     level_to_propose_metatask=5,
     level_to_see_metatasks=5,
