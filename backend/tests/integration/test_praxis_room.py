@@ -9,7 +9,7 @@ import base64
 import io
 import linecache
 from contextlib import asynccontextmanager, suppress
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, AsyncIterator, Callable
 
 import pytest
@@ -64,7 +64,7 @@ from services.praxis_room import (
     acquire_single_instance_lock,
     room_name_for,
 )
-from tests.integration.factories import cast_vote, make_solo_praxis
+from tests.integration.factories import attach_proof, cast_vote, make_solo_praxis
 
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
@@ -1651,3 +1651,28 @@ async def test_a_lapsed_collab_with_an_over_cap_draft_stays_unsealed(
         await collab_consensus.seal_to_live(collab, db_session, CURRENT_ERA)
         assert collab.status == PraxisStatus.pending
         assert collab.submitted_at is None
+
+
+async def test_era_close_leaves_a_lapsed_over_cap_collab_unsealed(
+    db_session, active_task, character, era, monkeypatch
+) -> None:
+    collab = await _over_cap_solo(db_session, active_task, character)
+    collab.type = PraxisType.collab
+    collab.status = PraxisStatus.pending
+    collab.submit_proposed_at = datetime.now(timezone.utc) - timedelta(
+        days=CURRENT_ERA.collab_auto_submit_days + 1
+    )
+    db_session.add(
+        PraxisRoomUpdate(praxis_id=collab.id, update=_over_cap_doc().get_update())
+    )
+    await attach_proof(db_session, collab)
+    await db_session.commit()
+
+    async with running_rooms(db_session, monkeypatch):
+        sealed = await collab_consensus.seal_lapsed_at_era_close(
+            db_session, era, CURRENT_ERA
+        )
+
+    assert sealed == set()
+    assert collab.status == PraxisStatus.pending
+    assert collab.submitted_at is None

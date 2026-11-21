@@ -21,6 +21,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task
+from services.nudge import NUDGE_COOLDOWN
 
 
 async def _set_cast(
@@ -503,6 +504,11 @@ async def test_duel_side_carries_nudged_at(
     body = detail.json()
     assert body["opponent"]["nudged_at"] is not None
     assert body["challenger"]["nudged_at"] is None
+    nudged_at = datetime.fromisoformat(body["opponent"]["nudged_at"])
+    assert datetime.fromisoformat(body["opponent"]["nudge_again_at"]) == (
+        nudged_at + NUDGE_COOLDOWN
+    )
+    assert body["challenger"]["nudge_again_at"] is None
 
 
 @pytest.mark.asyncio
