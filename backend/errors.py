@@ -160,6 +160,7 @@ class ErrorCode(str, enum.Enum):
     # -- Activity feed ------------------------------------------------------
     feed_item_key_unknown = "FEED_ITEM_KEY_UNKNOWN"
     feed_item_key_malformed = "FEED_ITEM_KEY_MALFORMED"
+    feed_cursor_malformed = "FEED_CURSOR_MALFORMED"
     feed_item_not_archivable = "FEED_ITEM_NOT_ARCHIVABLE"
 
     # -- Google Photos as a proof source (#559) -------------------------------

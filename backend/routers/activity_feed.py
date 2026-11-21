@@ -2,10 +2,11 @@
 from dataclasses import asdict
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
+from errors import ErrorCode, raise_coded
 from dependencies import get_current_character
 from models.account import Account
 from models.character import Character
@@ -65,7 +66,7 @@ async def activity_feed(
     try:
         cursor = FeedCursor.decode(before) if before is not None else None
     except ValueError:
-        raise HTTPException(status_code=422, detail="Malformed cursor")
+        raise_coded(422, ErrorCode.feed_cursor_malformed, "Malformed feed cursor")
     dc_response = await get_activity_feed(
         character_id=character.id,
         session=session,
