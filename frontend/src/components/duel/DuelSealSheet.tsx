@@ -59,7 +59,7 @@ export default function DuelSealSheet({
           phoneClassName ?? ''
         }`}
         // After the spread: a skin's `position: relative` (UA, Ephemerists) would sink the sheet below the page.
-        style={{ background: 'var(--color-bg-page)', ...ground, position: 'fixed' }}
+        style={{ background: 'var(--color-bg-page)', ...ground, position: 'fixed', paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {children}
       </div>,

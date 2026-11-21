@@ -78,7 +78,7 @@ export default function NavBar() {
       }}
     >
       {/* `min-h-14`: wraps at 600-767px (#3182). Shares `ShellContent`'s width cap (#1562). */}
-      <div className="max-w-[var(--shell-max-width)] mx-auto px-4 sm:px-6 min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 lg:gap-x-6">
+      <div className="max-w-[var(--shell-max-width)] mx-auto pl-[max(var(--space-lg),env(safe-area-inset-left))] pr-[max(var(--space-lg),env(safe-area-inset-right))] sm:pl-[max(var(--space-xl),env(safe-area-inset-left))] sm:pr-[max(var(--space-xl),env(safe-area-inset-right))] min-h-14 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 lg:gap-x-6">
         <NavLink to="/" className="shrink-0 leading-none" style={{ textDecoration: 'none' }}>
           <span
             className="font-display italic"

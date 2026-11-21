@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 const FOCUSABLE =
-  'a[href],[tabindex]:not([tabindex="-1"]),:is(button,input,select,textarea):not(:disabled)'
+  'a[href],[tabindex]:not([tabindex="-1"]),:is(button,input,select,textarea):not(:disabled):not([tabindex="-1"])'
 
 // Open modals, topmost last: only the top one answers Escape and Tab.
 const open: HTMLElement[] = []
