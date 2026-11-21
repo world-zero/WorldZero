@@ -97,7 +97,6 @@ src/components/layout/MobileTabBar.tsx
 src/components/layout/Sidebar.tsx
 src/components/layout/WatercolorBackground.tsx
 src/components/metataskSeal/MetataskPicker.tsx
-src/components/metataskSeal/MetataskRemoveConfirm.tsx
 src/components/metataskSeal/MetataskSeal.tsx
 src/components/metataskSeal/sealBands.tsx
 src/components/metataskSeal/skins/AlbescentSeal.tsx
@@ -197,7 +196,6 @@ src/pages/characterPaths/archetypes/UaEditCharacter.tsx
 src/pages/characterPaths/archetypes/WowCreateCharacter.tsx
 src/pages/characterPaths/archetypes/WowEditCharacter.tsx
 src/pages/characterPaths/editCharacterSlots.tsx
-src/pages/characterProfile/RelationshipBlockControl.tsx
 src/pages/characterProfile/archetypes/CovenProfileBody.tsx
 src/pages/characterProfile/archetypes/DefaultProfileBody.tsx
 src/pages/characterProfile/archetypes/EphemeristsProfileBody.tsx

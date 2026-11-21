@@ -121,7 +121,7 @@ export default function MobilePlayers({
               <button
                 type="button"
                 onClick={() => navigate(sideHref('factions'), { replace: true })}
-                className="font-body text-left"
+                className="font-body text-left hit-box"
                 style={{
                   marginTop: 'var(--space-sm)',
                   padding: 0,
@@ -203,7 +203,7 @@ export default function MobilePlayers({
                   <button
                     type="button"
                     onClick={() => setVisible(visible + ROSTER_PAGE_STEP)}
-                    className="font-body w-full text-left"
+                    className="font-body w-full text-left hit-box"
                     style={{
                       marginTop: 'var(--space-md)',
                       padding: 'var(--space-md) 0',
