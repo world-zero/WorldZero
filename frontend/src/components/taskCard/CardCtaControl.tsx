@@ -65,6 +65,13 @@ export function CardCtaControl({
       </div>
     );
   }
+  if (cta.pending) {
+    return (
+      <span className={className} data-testid={testId} style={{ ...style, cursor: "default", ...(size === "detail" ? CTA_DETAIL_SIZE : null) }}>
+        {children}
+      </span>
+    );
+  }
   const cursor = { cursor: cta.denied ? "not-allowed" : "pointer" } as const;
   const sized = size === "detail" ? CTA_DETAIL_SIZE : null;
   if (cta.href) {

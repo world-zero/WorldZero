@@ -7,6 +7,7 @@ import type { TaskOut } from '../../../api/tasks'
 import { FACTION_MANIFESTS, surfaceMap } from '../../../factions'
 import { resolveVariant } from '../../../utils/factionDispatch'
 import { ProposalActionsContext } from '../proposalActions'
+import { taskCardSignupCta } from '../signupAffordance'
 
 vi.mock('../../../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
 
@@ -64,9 +65,16 @@ describe('own pending proposal card (#3771)', () => {
     for (const label of [PENDING, EDIT, WITHDRAW]) expect(html).toContain(label)
   })
 
-  it.each(SLUGS)("%s skin keeps today's CTA for anyone else", (slug) => {
+  it.each(SLUGS)('%s skin shows a plain Pending review label to anyone else (#4160)', (slug) => {
     const html = render(slug, false)
-    expect(html).toContain(i18n.t('tasks:detail.signup.denied.taskStatusClosed'))
-    for (const label of [PENDING, EDIT, WITHDRAW]) expect(html).not.toContain(label)
+    expect(html).toContain(PENDING)
+    expect(html).not.toContain(i18n.t('tasks:detail.signup.denied.taskStatusClosed'))
+    for (const label of [EDIT, WITHDRAW]) expect(html).not.toContain(label)
+  })
+
+  it('a retired task keeps No longer open', () => {
+    const cta = taskCardSignupCta({ ...pendingTask('default'), status: 'retired' }, () => {})
+    expect(cta?.label).toBe(i18n.t('tasks:detail.signup.denied.taskStatusClosed'))
+    expect(cta?.pending).toBeUndefined()
   })
 })
