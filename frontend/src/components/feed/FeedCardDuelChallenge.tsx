@@ -1,3 +1,4 @@
+import { PlayerLink } from '../PlayerName'
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trans } from "react-i18next";
@@ -123,7 +124,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           the band must never navigate. */}
       <div style={{ padding: "var(--space-md) var(--space-lg)", position: "relative" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--space-md)" }}>
-          <Link to={`/characters/${challenger_character_id}`} style={FEED_BODY_LIFTED}>
+          <PlayerLink state={item.actor_name_state ?? 'ok'} to={`/characters/${challenger_character_id}`} style={FEED_BODY_LIFTED}>
             <div
               style={{
                 width: 28,
@@ -134,7 +135,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 marginTop: "var(--space-xs)",
               }}
             />
-          </Link>
+          </PlayerLink>
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
@@ -156,7 +157,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                   values={{ name: item.actor_display_name }}
                   components={{
                     1: (
-                      <Link
+                      <PlayerLink state={item.actor_name_state ?? 'ok'}
                         to={`/characters/${challenger_character_id}`}
                         className="font-body"
                         style={{

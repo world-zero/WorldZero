@@ -1,3 +1,5 @@
+import { playerLabel } from '../../../utils/playerLabel'
+import { PlayerLink } from '../../../components/PlayerName'
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
@@ -104,7 +106,7 @@ export default function DefaultTaskDetail({
   const isMetatask = task.task_type === "metatask";
   // Null on a generic metatask; the issuer line is then the faction statement (#2282).
   const eyebrowFaction = headerFactionName(task);
-  const authorName = task.created_by_display_name ?? "";
+  const authorName = playerLabel(task.created_by_display_name ?? "", task.created_by_name_state);
   // The cards' resolver (#2554); also the action slot's existence test.
   const cta = detailSignupCta(state);
   const hasAction =
@@ -434,7 +436,7 @@ export default function DefaultTaskDetail({
             flexWrap: "wrap",
           }}
         >
-          <Link
+          <PlayerLink state={task.created_by_name_state}
             to={`/characters/${task.created_by}`}
             style={{
               display: "flex",
@@ -493,7 +495,7 @@ export default function DefaultTaskDetail({
             >
               {authorName}
             </span>
-          </Link>
+          </PlayerLink>
           <span className="label-caption">
             {t("detail.author", { level: task.created_by_level ?? 0 })}
           </span>

@@ -131,6 +131,12 @@ export function normalizeFeedItem(
   item: ActivityFeedItem,
   commentGate: number | null = null,
 ): FeedRow | null {
+  const row = rowFor(item, commentGate)
+  // An absent or suspended actor has no profile to open (#4238).
+  return row && (item.actor_name_state ?? 'ok') !== 'ok' ? { ...row, actorHref: null } : row
+}
+
+function rowFor(item: ActivityFeedItem, commentGate: number | null): FeedRow | null {
   if (!FACTION_ROW_TYPES.has(item.type)) return null
   const p = item.payload ?? {}
   const actor = item.actor_display_name

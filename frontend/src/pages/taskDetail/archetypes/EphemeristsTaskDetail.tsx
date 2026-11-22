@@ -1,3 +1,5 @@
+import { playerLabel } from '../../../utils/playerLabel'
+import { PlayerLink } from '../../../components/PlayerName'
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -138,7 +140,7 @@ export default function EphemeristsTaskDetail({
   const isMetatask = task.task_type === "metatask";
   const eyebrowFaction = headerFactionName(task);
   const cta = detailSignupCta(state);
-  const authorName = task.created_by_display_name ?? "";
+  const authorName = playerLabel(task.created_by_display_name ?? "", task.created_by_name_state);
   const hasAction =
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
@@ -330,7 +332,7 @@ export default function EphemeristsTaskDetail({
             flexWrap: "wrap",
           }}
         >
-          <Link
+          <PlayerLink state={task.created_by_name_state}
             to={`/characters/${task.created_by}`}
             style={{
               display: "flex",
@@ -385,7 +387,7 @@ export default function EphemeristsTaskDetail({
             >
               {authorName}
             </span>
-          </Link>
+          </PlayerLink>
           <span style={eyebrow}>
             {t("detail.author", { level: task.created_by_level ?? 0 })}
           </span>
