@@ -9,6 +9,7 @@ from typing import Annotated, Literal, Optional, Union
 
 from pydantic import ConfigDict, Field, TypeAdapter, computed_field
 from schemas.base import WireModel
+from services.duel_state import DuelState
 
 
 class FeedPayloadBase(WireModel):
@@ -106,6 +107,7 @@ class DuelChallengePayload(FeedPayloadBase):
     task_point_value: int
     task_faction_slug: str
     duel_status: str
+    duel_state: DuelState
 
 
 class DuelForfeitedPayload(FeedPayloadBase):

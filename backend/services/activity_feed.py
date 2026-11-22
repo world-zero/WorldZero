@@ -6,7 +6,7 @@ ADR-0036: each type is one ``FeedSource`` in ``FEED_SOURCES``. Badge counts are
 """
 import logging
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
 from pydantic import ValidationError
@@ -33,7 +33,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute, aliased
 
 from errors import ErrorCode, raise_coded
-from game_config import era_config_for_key
+from game_config import CURRENT_ERA, EraConfig, era_config_for_key
 from models.character import Character
 from models.comment import Comment, CommentMention
 from models.era import Era
@@ -47,6 +47,7 @@ from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
 from schemas.params import INT64_MAX
 from services.block_service import blocked_counterpart_ids, has_blocked
+from services.duel_state import duel_state
 from services.era_gates import meets_vote_level
 from services.meta_task import character_sees_metatasks
 from services.vote_tally import counted_votes
@@ -758,6 +759,8 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
             Duel.id,
             Duel.created_at,
             Duel.status,
+            Duel.forfeited_by_character_id,
+            Duel.live_at,
             Duel.challenger_praxis_id,
             Duel.task_id,
             Task.title.label("task_title"),
@@ -786,7 +789,12 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
     return query.order_by(Duel.created_at.desc(), Duel.id.desc()).limit(SUB_QUERY_LIMIT)
 
 
-def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
+def _duel_challenge_item(
+    row: Any, era: EraConfig = CURRENT_ERA
+) -> ActivityFeedItemDC:
+    # ponytail: no praxis rows here, so a live duel may read drafting rather than
+    # one_cast; the card only cares challenged vs dissolved vs the rest.
+    state = duel_state(row, None, None, datetime.now(timezone.utc), era)
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
         item_key=build_item_key(FEED_ITEM_TYPE_DUEL_CHALLENGE, row.id),
@@ -803,6 +811,7 @@ def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
             duel_status=row.status.value,
+            duel_state=state,
         ),
     )
 

@@ -173,16 +173,16 @@ describe('the two bespoke bodies that were ruled in', () => {
     expect(html.split(LIFT).length - 1).toBeGreaterThanOrEqual(2)
   })
 
-  it.each(['pending', 'accepted', 'declined', 'dissolved'])(
+  it.each(['challenged', 'live', 'dissolved'])(
     'points the duel challenge at the task when %s',
-    (duel_status) => {
+    (duel_state) => {
       const html = renderCompanion(
         <FeedCardDuelChallenge
           item={item('duel_challenge', {
             duel_id: 2,
             challenger_praxis_id: 30,
             task_id: 7,
-            duel_status,
+            duel_state,
             task_title: 'Run a mile',
             task_point_value: 4,
             challenger_character_id: 4,
