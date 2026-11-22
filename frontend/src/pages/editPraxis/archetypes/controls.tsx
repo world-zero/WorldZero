@@ -426,7 +426,7 @@ export function InviteSearch({
           }}
           onBlur={() => setTimeout(() => setInviteOpen(false), 200)}
         />
-        {inviteOpen && inviteResults.length > 0 && (
+        {inviteOpen && inviteQuery.length >= 2 && (
           <div
             role="listbox"
             style={{
@@ -442,11 +442,31 @@ export function InviteSearch({
               overflowY: "auto",
             }}
           >
+            {inviteResults.length === 0 && (
+              <div
+                data-testid="composer-invite-empty"
+                style={{
+                  padding: "var(--space-sm) var(--space-md)",
+                  fontFamily: skin.fontFamily,
+                  fontSize: "var(--text-lg)",
+                  color: skin.inputColor ?? "inherit",
+                  opacity: 0.7,
+                }}
+              >
+                {t("editPraxis.invite.noMatch")}
+              </div>
+            )}
             {inviteResults.map((character) => (
               <button
                 key={character.id}
                 type="button"
-                disabled={inviting}
+                disabled={inviting || character.unavailable_reason != null}
+                title={
+                  character.unavailable_reason != null
+                    ? t("editPraxis.invite.hasActivePraxis")
+                    : undefined
+                }
+                data-unavailable={character.unavailable_reason ?? undefined}
                 onMouseDown={() => {
                   // Back to the chip; the roster grows their row.
                   setPickerOpen(false);
@@ -460,7 +480,12 @@ export function InviteSearch({
                   padding: "var(--space-sm) var(--space-md)",
                   background: "transparent",
                   border: "none",
-                  cursor: inviting ? "wait" : "pointer",
+                  cursor: character.unavailable_reason
+                    ? "not-allowed"
+                    : inviting
+                      ? "wait"
+                      : "pointer",
+                  opacity: character.unavailable_reason ? 0.5 : undefined,
                   textAlign: "left",
                   fontFamily: skin.fontFamily,
                   fontSize: "var(--text-lg)",
@@ -494,7 +519,9 @@ export function InviteSearch({
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {factionName(character.faction_slug)}
+                  {character.unavailable_reason
+                    ? t("editPraxis.invite.hasActivePraxis")
+                    : factionName(character.faction_slug)}
                 </span>
               </button>
             ))}

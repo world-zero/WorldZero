@@ -74,7 +74,7 @@
   "services/admin_service.py::E501": 5,
   "services/admin_service.py::I001": 1,
   "services/auth.py::E501": 5,
-  "services/character.py::E501": 5,
+  "services/character.py::E501": 4,
   "services/character.py::I001": 1,
   "services/character_stats.py::E501": 3,
   "services/character_stats.py::I001": 1,

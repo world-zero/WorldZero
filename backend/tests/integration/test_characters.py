@@ -374,28 +374,98 @@ async def test_list_characters_faction_no_match(client: AsyncClient, character: 
 
 
 @pytest.mark.asyncio
-async def test_list_characters_excludes_players_active_on_task(
+async def test_search_flags_players_active_on_task_and_server_still_refuses(
     client: AsyncClient,
     character: Character,
     character2: Character,
     active_task: Task,
     auth_headers2: dict,
+    db_session: AsyncSession,
 ):
-    """#320."""
-    create = await client.post(
+    """#4192: listed with a reason, not dropped; invite and challenge still 409."""
+    from sqlalchemy import select as sa_select
+
+    from errors import ErrorCode
+    from models.character_stats import CharacterStats
+    from models.era import Era
+    from services.auth import create_jwt
+
+    era_row = (await db_session.execute(sa_select(Era))).scalar_one()
+    owners = []
+    for index in range(2):
+        owner_account = Account(email=f"flag-owner{index}@example.com")
+        db_session.add(owner_account)
+        await db_session.flush()
+        owner = Character(
+            account_id=owner_account.id,
+            username=f"flag_owner{index}",
+            display_name=f"Flag Owner {index}",
+            faction_slug=character.faction_slug,
+        )
+        db_session.add(owner)
+        await db_session.flush()
+        db_session.add(
+            CharacterStats(
+                character_id=owner.id,
+                era_id=era_row.id,
+                score=500,
+                level=5,
+                votes_spent_this_era=0,
+            )
+        )
+        token = create_jwt(owner_account.id)
+        owners.append((owner, {"Authorization": f"Bearer {token}"}))
+    await db_session.commit()
+    (collab_owner, collab_headers), (duel_owner, duel_headers) = owners
+    assert (
+        await client.post(
+            "/praxes",
+            json={"task_id": active_task.id, "type": "solo"},
+            headers=auth_headers2,
+        )
+    ).status_code == 201
+    mine = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Mine"},
+        headers=collab_headers,
+    )
+    assert mine.status_code == 201
+    solo = await client.post(
         "/praxes",
         json={"task_id": active_task.id, "type": "solo"},
-        headers=auth_headers2,
+        headers=duel_headers,
     )
-    assert create.status_code == 201
+    assert solo.status_code == 201
 
     resp = await client.get(
         "/characters", params={"exclude_active_task_id": active_task.id}
     )
     assert resp.status_code == 200
-    ids = [c["id"] for c in resp.json()]
-    assert character2.id not in ids
-    assert character.id in ids
+    reasons = {c["id"]: c["unavailable_reason"] for c in resp.json()}
+    assert reasons[character2.id] == "has_active_praxis"
+    assert reasons[collab_owner.id] == "has_active_praxis"
+    plain = await client.get("/characters")
+    assert all(c["unavailable_reason"] is None for c in plain.json())
+
+    invite = await client.post(
+        f"/praxes/{mine.json()['id']}/invite",
+        json={"invitee_id": character2.id},
+        headers=collab_headers,
+    )
+    assert invite.status_code == 409
+    invite_code = invite.json()["detail"]["code"]
+    assert invite_code == ErrorCode.invite_target_has_active_praxis.value
+    challenge = await client.post(
+        "/duels/challenge",
+        json={
+            "challenger_praxis_id": solo.json()["id"],
+            "opponent_character_id": character2.id,
+        },
+        headers=duel_headers,
+    )
+    assert challenge.status_code == 409, challenge.text
+    challenge_code = challenge.json()["detail"]["code"]
+    assert challenge_code == ErrorCode.duel_opponent_has_active_praxis.value
 
 
 @pytest.mark.asyncio
