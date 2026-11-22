@@ -37,6 +37,10 @@ const EXEMPT: Record<string, string> = {
   "feed:factionHero|albescent.eyebrow":
     "Albescent's hero is a wrapper over DefaultFactionHero, which reads the SHARED " +
     "factions:detail.eyebrow rather than a per-faction one.",
+  "feed:invitationLetter|na":
+    "Unaffiliated sends no invitation; the card falls back to the shared wording (#4133).",
+  "feed:invitationLetter|albescent":
+    "Albescent is not joined by invitation letter (ADR-0082).",
 };
 
 const CATALOGS: readonly [string, Record<string, unknown>][] = [

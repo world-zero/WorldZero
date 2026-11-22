@@ -41,6 +41,12 @@ export function acceptMode(
   return "confirm-first";
 }
 
+/** The faction's own wording if the catalog has it, else the shared key (ADR-0038). */
+function letterKey(slug: string, part: "sentence" | "body") {
+  const own = `feed:invitationLetter.${slug}.${part}`;
+  return (i18n.exists(own) ? own : `feed:invitationLetter.${part}`) as "feed:invitationLetter.body";
+}
+
 /** The control BOX; its face is `.feed-action`, which every user also carries (#1783). */
 const CONTROL: CSSProperties = {
   padding: "var(--space-xs) var(--space-lg)",
@@ -166,8 +172,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
       >
         {/* One <Trans> so the faction name stays in the unit; name is tag <1>. */}
         <Trans
-          ns="feed"
-          i18nKey="invitationLetter.sentence"
+          i18nKey={letterKey(faction_slug, "sentence") as never}
           values={{ faction: letterName }}
           components={{ 1: <span style={{ color: ink, fontWeight: 700 }} /> }}
         />
@@ -181,7 +186,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
           marginBottom: "var(--space-md)",
         }}
       >
-        {i18n.t("feed:invitationLetter.body")}
+        {i18n.t(letterKey(faction_slug, "body"))}
       </p>
 
       {confirming ? (
