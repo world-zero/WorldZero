@@ -635,28 +635,15 @@ export function ProfileSkin({
                           {t('sidebar.characterCard.topLevel')}
                         </span>
                       ) : (
-                        <>
-                          <span
-                            style={{
-                              fontFamily: kit.bodyFont ?? kit.eyebrowFont,
-                              fontSize: 'var(--text-content)',
-                              color: headerMuted,
-                            }}
-                          >
-                            {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: kit.eyebrowFont,
-                              fontSize: 'var(--text-md)',
-                              letterSpacing: '0.1em',
-                              textTransform: 'uppercase',
-                              color: headerMuted,
-                            }}
-                          >
-                            {t('profile.nextLevel', { level: progression.nextLevel })}
-                          </span>
-                        </>
+                        <span
+                          style={{
+                            fontFamily: kit.bodyFont ?? kit.eyebrowFont,
+                            fontSize: 'var(--text-content)',
+                            color: headerMuted,
+                          }}
+                        >
+                          {t('profile.ptsThisLevel', { current: pointsIntoLevel, span: levelSpan })}
+                        </span>
                       )}
                     </div>
                     <div

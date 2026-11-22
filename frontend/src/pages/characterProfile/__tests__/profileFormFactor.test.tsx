@@ -171,7 +171,7 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
     )
     const text = html.replace(/<[^>]*>/g, '')
     expect(text, 'name (credential)').toContain('Reza')
-    expect(text, 'progression next-level label').toContain('next · lvl 8')
+    expect(text, 'no next-level label').not.toContain('next · lvl')
     expect(text, 'progression points-into-level').toContain('380 / 500 pts this level')
     expect(text, 'badge').toContain('Sock Puppet')
     expect(text, 'friend/foe control').toContain('Friend')
