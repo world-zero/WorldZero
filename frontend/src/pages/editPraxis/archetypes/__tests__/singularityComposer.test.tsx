@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
-import i18n from "../../../../i18n";
+import "../../../../i18n";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { anEditPraxisState } from "../../../../test/fixtures";
 import type { PraxisOut } from "../../../../api/praxis";
