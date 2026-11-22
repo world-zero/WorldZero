@@ -34,6 +34,7 @@ from services.era import get_current_era_row, get_current_era_row_safe, get_or_c
 from services.era_gates import meets_albescent_level
 from services.media import delete_stored_avatar
 from services.praxis_room import close_character_sockets
+from services import standing
 
 # A life a moderator banned, as opposed to one its player left (``departed_at``).
 MOD_BANNED = and_(
@@ -292,10 +293,14 @@ async def has_mod_banned_life(account_id: int, session: AsyncSession) -> bool:
 
 async def is_playable(character: Character, session: AsyncSession) -> bool:
     """The life and its account are both active."""
-    if character.status != CharacterStatus.active:
-        return False
     account = await session.get(Account, character.account_id)
-    return account is not None and account.status == AccountStatus.active
+    if account is None:
+        return False
+    # Terms and sibling lives are out of this check: behaviour is unchanged (#4236).
+    life = standing.life_standing(character)
+    return standing.is_playable(
+        standing.account_standing(account.status, True, [life]), life
+    )
 
 
 async def can_create_additional_character(
