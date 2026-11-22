@@ -6,6 +6,16 @@
     "nowUnlocked": "Now Unlocked",
     "continue": "Continue"
   },
+  "rankLead": {
+    "trailhead": "You are now a",
+    "ranger": "You are now a",
+    "surveyor": "You are now a",
+    "warden": "You are now a",
+    "voyager": "You are now a",
+    "chronicler": "You are now a",
+    "luminary": "You are now a",
+    "paragon": "You are now"
+  },
   "ranks": {
     "trailhead": "Trailhead",
     "ranger": "Ranger",

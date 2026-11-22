@@ -214,10 +214,18 @@ function MobileConfetti() {
   )
 }
 
+/** Per-rank lead; a rank without its own falls back to the shared one. */
+function useLead(rankKey: string): string {
+  const { t, i18n } = useTranslation('progression')
+  const own = `rankLead.${rankKey}`
+  return tKey(t, i18n.exists(`progression:${own}`) ? own : 'popup.levelReached')
+}
+
 /** Mobile skin of the Field Stamp popup (#519). See docs/design/mobile. */
 function MobileLevelUpCard({
   level,
   rank,
+  rankKey,
   abilities,
   continueText,
   onContinue,
@@ -226,6 +234,7 @@ function MobileLevelUpCard({
 }: {
   level: number
   rank: string
+  rankKey: string
   abilities: LevelUnlock[]
   continueText: string
   onContinue: () => void
@@ -233,6 +242,7 @@ function MobileLevelUpCard({
   preview?: boolean
 }) {
   const { t } = useTranslation('progression')
+  const lead = useLead(rankKey)
   const ref = useModal(onContinue, !preview)
   return (
     <div
@@ -259,7 +269,7 @@ function MobileLevelUpCard({
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-label={`${t('popup.levelReached')} ${rank}`}
+        aria-label={`${lead} ${rank}`}
         data-form-factor="mobile"
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -282,7 +292,7 @@ function MobileLevelUpCard({
         <SealStamp level={level} sealRing={sealRing} />
 
         <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-md)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
-          {t('popup.levelReached')}
+          {lead}
         </p>
         <RainbowText text={rank} fontSize={28} />
 
@@ -349,6 +359,7 @@ export default function LevelUpPopup({
   const formFactor = useFormFactor()
   const continueText = continueLabel ?? t('popup.continue')
   const rank = tKey(t, `ranks.${rankKey}`)
+  const lead = useLead(rankKey)
   // The mobile card mounts its own; this one only guards the desktop card.
   const ref = useModal(onContinue, formFactor !== 'mobile' && !preview)
   if (formFactor === 'mobile') {
@@ -357,6 +368,7 @@ export default function LevelUpPopup({
         preview={preview}
         level={level}
         rank={rank}
+        rankKey={rankKey}
         abilities={abilities}
         continueText={continueText}
         onContinue={onContinue}
@@ -370,7 +382,7 @@ export default function LevelUpPopup({
       ref={ref}
       role="dialog"
       aria-modal="true"
-      aria-label={`${t('popup.levelReached')} ${rank}`}
+      aria-label={`${lead} ${rank}`}
       style={{
         width: 372,
         maxWidth: '100%',
@@ -388,7 +400,7 @@ export default function LevelUpPopup({
       <SealStamp level={level} sealRing={sealRing} />
 
       <p style={{ fontFamily: FONT_BODY, fontSize: 'var(--text-md)', textTransform: 'uppercase', letterSpacing: '0.15em', color: FAINT, margin: '0 0 var(--space-xs)' }}>
-        {t('popup.levelReached')}
+        {lead}
       </p>
       <RainbowText text={rank} />
 
