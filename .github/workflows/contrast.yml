@@ -1,6 +1,7 @@
 # The rendered contrast sweep on every PR (#3498). Unlike e2e.yml, this one
 # blocks: it is a required check, so it must report on every PR and merge-queue
-# ref, hence no paths filter. Same pipeline as e2e.yml (run-e2e.sh), one spec only.
+# ref, hence no paths filter: a copy- or ci-only PR (scripts/ci_scope.sh) skips
+# the job instead, which still reports. Same pipeline as e2e.yml, one spec only.
 name: Contrast
 
 on:
@@ -14,7 +15,25 @@ permissions:
   contents: read
 
 jobs:
+  # Same gate as test.yml's scope job; a failure here runs the sweep.
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      scope: ${{ steps.s.outputs.scope }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 2
+      - id: s
+        run: |
+          s=full
+          [ "${{ github.event_name }}" = pull_request ] && s=$(bash scripts/ci_scope.sh)
+          echo "scope=$s" | tee -a "$GITHUB_OUTPUT"
+
   contrast:
+    needs: scope
+    if: ${{ !cancelled() && needs.scope.outputs.scope != 'ci' && needs.scope.outputs.scope != 'copy' }}
     runs-on: ubuntu-latest
 
     services:
