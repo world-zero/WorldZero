@@ -321,13 +321,14 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         display: "flex",
         gap: "var(--space-sm)",
         alignItems: "stretch",
+        flexWrap: "wrap",
         boxSizing: "border-box",
       }}
     >
       <div
         style={{
           ...innerBox,
-          flex: hasAction ? "0 0 auto" : "1 1 auto",
+          flex: hasAction ? "1 0 auto" : "1 1 auto",
           minWidth: COVEN_WORTH_MIN,
           display: "flex",
           alignItems: "center",
@@ -340,7 +341,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...innerBox,
-            flex: 1,
+            flex: "999 1 150px",
             minWidth: 0,
             display: "flex",
             flexDirection: "column",
