@@ -150,6 +150,8 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
         clearTermsAcceptance()
         // Layout gates on `has_accepted_terms`; hand off only once it can see the row.
         await refetch()
+        // handOff() already leaves for a player with a character; the contract pass must not leave a second time.
+        if (hasCharacter) passedContract.current = true
         handOff()
         setRecording(false)
       },

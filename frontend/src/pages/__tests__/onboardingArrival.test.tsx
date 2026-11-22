@@ -121,7 +121,7 @@ describe('resumed after sign-in with a held contract click', () => {
     function Host() {
       const [user, setUser] = useState<CurrentUser>({ ...USER, has_accepted_terms: true } as CurrentUser)
       return (
-        <AuthContext.Provider value={{ user, loading: false, refetch: async () => setUser((u) => ({ ...u, character: { id: 5 } }) as CurrentUser), applyUser: setUser, signOut: async () => {} }}>
+        <AuthContext.Provider value={{ user, loading: false, refetch: async () => { if (vi.mocked(createCharacter).mock.calls.length) setUser((u) => ({ ...u, character: { id: 5 } }) as CurrentUser) }, applyUser: setUser, signOut: async () => {} }}>
           <OnboardingFlow resumed onAccepted={onAccepted} />
         </AuthContext.Provider>
       )
@@ -134,6 +134,23 @@ describe('resumed after sign-in with a held contract click', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /back/i }))
     await waitFor(() => expect(onAccepted).toHaveBeenCalledTimes(1))
+  })
+
+  it('a returning player with a character is handed off exactly once', async () => {
+    vi.stubGlobal('sessionStorage', { getItem: (k: string) => (k === 'wz_terms_accepted' ? 'true' : null), setItem: () => {}, removeItem: () => {} })
+    const onAccepted = vi.fn()
+    function Host() {
+      const [user, setUser] = useState<CurrentUser>({ ...USER, character: { id: 5 }, has_accepted_terms: false } as CurrentUser)
+      return (
+        <AuthContext.Provider value={{ user, loading: false, refetch: async () => setUser((u) => ({ ...u, has_accepted_terms: true }) as CurrentUser), applyUser: setUser, signOut: async () => {} }}>
+          <OnboardingFlow resumed onAccepted={onAccepted} />
+        </AuthContext.Provider>
+      )
+    }
+    render(<MemoryRouter><Host /></MemoryRouter>)
+    await waitFor(() => expect(onAccepted).toHaveBeenCalled())
+    await new Promise((r) => setTimeout(r, 50))
+    expect(onAccepted).toHaveBeenCalledTimes(1)
   })
 
   it('Back from the character step shows the contract, not a loading line', async () => {
