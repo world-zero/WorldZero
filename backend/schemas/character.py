@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal, Optional
 
 from pydantic import (
     AfterValidator,
@@ -65,6 +65,12 @@ class CharacterOut(WireModel):
     badges: list[BadgeOut] = Field(default_factory=list)
     # Current-era invitation slugs (ADR-0022); set ONLY on the /auth/me path.
     invitations: list[str] = Field(default_factory=list)
+
+
+class CharacterSearchOut(CharacterOut):
+    """``GET /characters`` rows: a player the task's invite/challenge would refuse is listed, flagged."""
+
+    unavailable_reason: Optional[Literal["has_active_praxis"]] = None
 
 
 class RosterCharacterOut(CharacterOut):

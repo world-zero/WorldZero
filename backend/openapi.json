@@ -765,6 +765,110 @@
         "title": "CharacterOut",
         "type": "object"
       },
+      "CharacterSearchOut": {
+        "description": "``GET /characters`` rows: a player the task's invite/challenge would refuse is listed, flagged.",
+        "properties": {
+          "all_time_score": {
+            "title": "All Time Score",
+            "type": "integer"
+          },
+          "avatar_url": {
+            "title": "Avatar Url",
+            "type": "string"
+          },
+          "badges": {
+            "items": {
+              "$ref": "#/components/schemas/BadgeOut"
+            },
+            "title": "Badges",
+            "type": "array"
+          },
+          "bio": {
+            "title": "Bio",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "faction_slug": {
+            "title": "Faction Slug",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "invitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Invitations",
+            "type": "array"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "tagline": {
+            "title": "Tagline",
+            "type": "string"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "const": "has_active_praxis",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "display_name",
+          "bio",
+          "tagline",
+          "avatar_url",
+          "location",
+          "level",
+          "score",
+          "all_time_score",
+          "faction_slug",
+          "status",
+          "created_at",
+          "badges",
+          "invitations",
+          "unavailable_reason"
+        ],
+        "title": "CharacterSearchOut",
+        "type": "object"
+      },
       "CharacterStatus": {
         "description": "A life is either playable or banned.",
         "enum": [
@@ -11598,7 +11702,7 @@
     },
     "/characters": {
       "get": {
-        "description": "List active characters, optionally filtered by name or faction.\n\n``exclude_active_task_id`` hides players already on that task (#320).\n``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a\nno-op for anonymous callers. Convenience only: ``services.duel`` enforces it.",
+        "description": "List active characters, optionally filtered by name or faction.\n\n``exclude_active_task_id`` flags players already on that task with\n``unavailable_reason`` instead of dropping them (#4192).\n``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a\nno-op for anonymous callers. Convenience only: ``services.duel`` enforces it.",
         "operationId": "list_characters_characters_get",
         "parameters": [
           {
@@ -11708,7 +11812,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/CharacterOut"
+                    "$ref": "#/components/schemas/CharacterSearchOut"
                   },
                   "title": "Response List Characters Characters Get",
                   "type": "array"

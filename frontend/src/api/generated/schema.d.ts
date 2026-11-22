@@ -992,7 +992,8 @@ export interface paths {
          * List Characters
          * @description List active characters, optionally filtered by name or faction.
          *
-         *     ``exclude_active_task_id`` hides players already on that task (#320).
+         *     ``exclude_active_task_id`` flags players already on that task with
+         *     ``unavailable_reason`` instead of dropping them (#4192).
          *     ``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a
          *     no-op for anonymous callers. Convenience only: ``services.duel`` enforces it.
          */
@@ -2521,6 +2522,47 @@ export interface components {
             status: string;
             /** Tagline */
             tagline: string;
+            /** Username */
+            username: string;
+        };
+        /**
+         * CharacterSearchOut
+         * @description ``GET /characters`` rows: a player the task's invite/challenge would refuse is listed, flagged.
+         */
+        CharacterSearchOut: {
+            /** All Time Score */
+            all_time_score: number;
+            /** Avatar Url */
+            avatar_url: string;
+            /** Badges */
+            badges: components["schemas"]["BadgeOut"][];
+            /** Bio */
+            bio: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Faction Slug */
+            faction_slug: string;
+            /** Id */
+            id: number;
+            /** Invitations */
+            invitations: string[];
+            /** Level */
+            level: number;
+            /** Location */
+            location: string;
+            /** Score */
+            score: number;
+            /** Status */
+            status: string;
+            /** Tagline */
+            tagline: string;
+            /** Unavailable Reason */
+            unavailable_reason: "has_active_praxis" | null;
             /** Username */
             username: string;
         };
@@ -7302,7 +7344,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CharacterOut"][];
+                    "application/json": components["schemas"]["CharacterSearchOut"][];
                 };
             };
             /** @description Validation Error */
