@@ -4,6 +4,9 @@ import type { CharacterOut } from './auth'
 
 export type { CharacterOut }
 
+/** A search row; `unavailable_reason` is set when the task's invite/challenge would 409 (#4192). */
+export type CharacterSearchOut = components['schemas']['CharacterSearchOut']
+
 export interface CharacterCreate {
   /** Server derives a unique @handle from display_name when omitted (ADR-0019). */
   username?: string
@@ -25,7 +28,7 @@ export type CharacterUpdate = components['schemas']['CharacterUpdate']
 export async function listCharacters(params?: {
   search?: string
   faction?: string
-  /** Invite-search pre-filter (#320). */
+  /** Flags (does not drop) players already on that task (#4192). */
   exclude_active_task_id?: number
   /**
    * Hide the caller's own lives (ADR-0041), resolved server-side; no-op when
@@ -33,7 +36,7 @@ export async function listCharacters(params?: {
    */
   exclude_own_account?: boolean
   limit?: number
-}): Promise<CharacterOut[]> {
+}): Promise<CharacterSearchOut[]> {
   const { data } = await apiGet('/characters', { params: { query: params } })
   return data
 }

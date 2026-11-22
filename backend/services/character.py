@@ -683,7 +683,6 @@ async def list_characters_for_viewer(
     *,
     search: Optional[str] = None,
     faction_slug: Optional[str] = None,
-    exclude_active_task_id: Optional[int] = None,
     exclude_account_id: Optional[int] = None,
     viewer_account: Optional[Account] = None,
     # Resolved by the route; an admin is treated as revealed (#2400).
@@ -694,13 +693,10 @@ async def list_characters_for_viewer(
 ) -> list[tuple[Character, CharacterStats | None]]:
     """List active characters with current-era stats.
 
-    ``exclude_active_task_id`` drops players the invite would 409 on (#320),
-    except multi-membership factions. ``exclude_account_id`` is the ADR-0041
+    ``exclude_account_id`` is the ADR-0041
     same-account rule for the duel picker (#1385). ``viewer_account`` decides
     whether ``?faction=albescent`` is answered (#2422); None is anti-oracle.
     """
-    from services.signup_eligibility import multi_membership_faction_slugs
-
     era_row = await get_current_era_row_safe(session)
     era_id = era_row.id if era_row else None
 
@@ -746,23 +742,6 @@ async def list_characters_for_viewer(
         query = query.where(Character.faction_slug.in_(roster_faction_slugs))
     if exclude_account_id is not None:
         query = query.where(Character.account_id != exclude_account_id)
-    if exclude_active_task_id is not None:
-        active_member_ids = (
-            select(PraxisMember.character_id)
-            .join(Praxis, PraxisMember.praxis_id == Praxis.id)
-            .where(
-                Praxis.task_id == exclude_active_task_id,
-                Praxis.status.in_(
-                    [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
-                ),
-            )
-        )
-        query = query.where(
-            or_(
-                Character.faction_slug.in_(multi_membership_faction_slugs(era)),
-                Character.id.notin_(active_member_ids),
-            )
-        )
     # id tiebreak keeps equal-score order stable for paging (#655).
     order_columns = []
     if match_priority is not None:
@@ -774,6 +753,37 @@ async def list_characters_for_viewer(
 
     result = await session.execute(query)
     return list(result.all())
+
+
+async def task_blocked_character_ids(
+    session: AsyncSession,
+    task_id: int,
+    characters: list[Character],
+    era: EraConfig = CURRENT_ERA,
+) -> set[int]:
+    """Which of these players hold a claim-blocking praxis on the task (#320).
+
+    The invite and the duel challenge both 409 on them, except multi-membership
+    factions, who are never blocked.
+    """
+    from services.signup_eligibility import multi_membership_faction_slugs
+
+    multi = multi_membership_faction_slugs(era)
+    ids = [c.id for c in characters if c.faction_slug not in multi]
+    if not ids:
+        return set()
+    result = await session.execute(
+        select(PraxisMember.character_id)
+        .join(Praxis, PraxisMember.praxis_id == Praxis.id)
+        .where(
+            PraxisMember.character_id.in_(ids),
+            Praxis.task_id == task_id,
+            Praxis.status.in_(
+                [PraxisStatus.in_progress, PraxisStatus.pending, PraxisStatus.submitted]
+            ),
+        )
+    )
+    return set(result.scalars())
 
 
 async def build_character_outs(

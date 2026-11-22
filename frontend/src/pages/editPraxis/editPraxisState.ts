@@ -11,7 +11,7 @@ import type {
 import type { DuelDetailOut } from "../../api/duel";
 import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 import type { TaskOut } from "../../api/tasks";
-import type { CharacterOut } from "../../api/characters";
+import type { CharacterOut, CharacterSearchOut } from "../../api/characters";
 import type { EditPraxisPhase } from "./editPraxisPhase";
 import type { RoomEndReason } from "./roomSeal";
 import type { CrewNudgeResult } from "./useComposerRoster";
@@ -58,7 +58,7 @@ export interface EditPraxisState {
   // Invites (collab) / challenge (duel) — shared search box
   inviteQuery: string;
   setInviteQuery: (value: string) => void;
-  inviteResults: CharacterOut[];
+  inviteResults: CharacterSearchOut[];
   /** A profile's Challenge/Invite target, ready to send in one tap (#3772). */
   staged: CharacterOut | null;
   inviteOpen: boolean;
