@@ -164,12 +164,12 @@
   },
   "about": {
     "title": "About World Zero",
-    "intro1": "World Zero is a community game played in the real world. Players create characters — public personas separate from their login identity — and compete by completing real-world tasks, posting proof of their actions, and earning points through community votes.",
-    "intro2": "Every task has a level requirement. Every submission is rated by the community with a star vote. Points flow from votes; votes flow from participation. The leaderboard reflects not just effort, but community recognition.",
+    "intro1": "World Zero is a game you play in real life.",
+    "intro2": "You play by going and doing cool things, telling us about it, and getting voted on by the comminty",
     "howToPlayHeading": "How to Play",
-    "step1": "Sign in with Google and create a Character — your public game persona.",
-    "step2": "Browse open Tasks and sign up for ones that interest you.",
-    "step3": "Complete the task in the real world and post your proof (Praxis).",
+    "step1": "Choose a task",
+    "step2": "Actually do the task. Preferably in a really coll way",
+    "step3": "To show us you did the task, write about it! Take pictures!",
     "step4": "The community votes on submissions with a star rating.",
     "step5": "Earn points, level up, and unlock new tasks and privileges.",
     "inspiredHeading": "Inspired by SF0",
@@ -179,7 +179,7 @@
     "title": "Contact",
     "sentHeading": "Message sent!",
     "sentBody": "We'll get back to you when we can.",
-    "intro": "Have a question, bug report, or just want to say hi? Send us a message.",
+    "intro": "Questions? Complaints? Suggestions? Love Poetry?  Put them in the box and I'll see what I can do",
     "nameLabel": "Name",
     "emailLabel": "Email",
     "messageLabel": "Message",
@@ -204,7 +204,7 @@
   },
   "attributions": {
     "title": "Attributions",
-    "intro": "World Zero was built by many awesome people. I'm going to thank them now\n\nPixie - Fearless leader, Product/Builder, Game design. Also the person writing this copy :D \n\nTy Odin - Game design. \n\nIt took me 10 years, but I've brought your ideas to life. Thank you for the time and energy you gave both me, and this awesome creation you helped make. You were a fantastic inspiration to me both in the SF0 days and now. I'm looking forward to beating you at this version too.\n\nAndrew - Everymen and Design\n\nThank you for being my husband, supporting me logistically, emotionally and financially while I worked away at this. Thank you also for the Everymen, they are a rad faction and I can't wait to see what people do with them.\n\nEli - Database consulting, Nitpicking, most of the good copy on the site, Ephemerists.\n\nYou are my creative rival/muse. Your writing contributions are what has taken this site from slop to superb (though we still have more to do). If there is something clever someone sees on the site, it was probably you.  I'm looking forward to immediately be-foeing you so when I see a taunt from you, I get busy\n\nRobin - Unwavering Artists, Bugs\n\nWe walked 25 miles together for an SF0 task which took our friendship from classmates to people who still hang out 15 years later. I'm so excited to play this game with you. UA teaches us that imperfect art can still be good. Without your guidance, I would build this forever and never be able to set it free. \n\nZilena - SNIDE, Singularity\n\nYou are the coolest person I know, and this game is to help other people have the go get em attitude that you do. I appreciate your time and creative energy helping to make something to inspire others, including me, have motivation to do the things you would just do on a Tuseday night. \n\nJoe and Ana - Nit Picks\n\nThank you both for helping spare the world from my spelling and some of my more... eccentric design choices. Both of you were deeply helpful and I hope you both enjoy playing what you helped build. \n\nI also want to credit SSI (Sean, Sam and Ian), the creators of SF0, the direct inspiration for this game.\nThey made a game that changed my life. It taught me that yes, I can just go out and do things that I feel need to be done. \nAnd their game needed new life breathed in. I hope they play, and I hope they enjoy \n\nAside from these people, we also have to thank all of the AMAZING authors of open source tools which made this possible."
+    "intro": "World Zero was built by many awesome people. I'm going to thank them now\n\nPixie - Fearless leader, Product/Builder, Game design. Also the person writing this copy :D \n\nTy Odin - Game design. \n\nIt took me 10 years, but I've brought your ideas to life. Thank you for the time and energy you gave both me, and this awesome creation you helped make. You were a fantastic inspiration to me both in the SF0 days and now. I'm looking forward to beating you at this version too.\n\nAndrew - Everymen and Design\n\nThank you for being my husband, supporting me logistically, emotionally and financially while I worked away at this. Thank you also for the Everymen, they are a rad faction and I can't wait to see what people do with them.\n\nEli - Database consulting, Nitpicking, most of the good copy on the site, Ephemerists.\n\nYou are my creative rival/muse. Your writing contributions are what has taken this site from slop to superb (though we still have more to do). If there is something clever someone sees on the site, it was probably you.  I'm looking forward to immediately be-foeing you so when I see a taunt from you, I get busy\n\nRobin - Unwavering Artists, Bugs\n\nWe walked 25 miles together for an SF0 task which took our friendship from classmates to people who still hang out 15 years later. I'm so excited to play this game with you. UA teaches us that imperfect art can still be good. Without your guidance, I would build this forever and never be able to set it free. \n\nZylena - SNIDE, Singularity\n\nYou are the coolest person I know, and this game is to help other people have the go get em attitude that you do. I appreciate your time and creative energy helping to make something to inspire others, including me, have motivation to do the things you would just do on a Tuseday night. \n\nJoe and Ana - Nit Picks\n\nThank you both for helping spare the world from my spelling and some of my more... eccentric design choices. Both of you were deeply helpful and I hope you both enjoy playing what you helped build. \n\nI also want to credit SSI (Sean, Sam and Ian), the creators of SF0, the direct inspiration for this game.\nThey made a game that changed my life. It taught me that yes, I can just go out and do things that I feel need to be done. \nAnd their game needed new life breathed in. I hope they play, and I hope they enjoy \n\nAside from these people, we also have to thank all of the AMAZING authors of open source tools which made this possible."
   },
   "signIn": {
     "google": "Continue with Google",
