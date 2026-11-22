@@ -133,8 +133,6 @@
     "flag": {
       "flaggedTitle": "Flagged for admin review",
       "flaggedBody": "Thanks — an admin will take a look shortly.",
-      "flaggedOk": "OK",
-      "badge": "FLAG",
       "title": "Flag this praxis",
       "body": "If this content is inappropriate or violates the rules, flag it for admin review.",
       "flag": "Flag",
