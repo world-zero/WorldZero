@@ -500,7 +500,7 @@ async def assign_or_revoke_role(
 
 
 async def list_admins(session: AsyncSession) -> list[AdminRow]:
-    """One row per holder, any status, as its lowest-id character.
+    """One row per holder, any status but deleted, as its lowest-id character.
 
     Unlike :func:`find_admin_accounts` this keeps suspended holders, so the owner
     can revoke them before an unsuspend hands their powers back (#4025).
@@ -527,6 +527,7 @@ async def list_admins(session: AsyncSession) -> list[AdminRow]:
         select(Character, Account.status)
         .join(first_character, first_character.c.id == Character.id)
         .join(Account, Account.id == Character.account_id)
+        .where(Account.status != AccountStatus.deleted)
         .order_by(Character.account_id)
     )
     order = list(Permission)
@@ -605,6 +606,10 @@ async def set_admin_permission(
             ErrorCode.admin_cannot_revoke_owner,
             "The owner holds every permission.",
         )
+    if on and await session.scalar(
+        select(Account.status).where(Account.id == account_id)
+    ) == AccountStatus.deleted:
+        raise_coded(409, ErrorCode.account_deleted, "Account was deleted.")
     await set_permission(account_id, permission, on, owner_id, session)
 
 
