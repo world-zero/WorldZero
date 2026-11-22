@@ -278,8 +278,10 @@ export function InviteSearch({
   const { t } = useTranslation("forms");
   // The only roster mount inside a room, so the only one with presence dots (#1744).
   const room = usePraxisRoom();
-  // Invite search hides behind the `+ invite` chip (#1417).
-  const [pickerOpen, setPickerOpen] = useState(false);
+  // The chip (#1417) shows once anyone is on the roster; until then the search starts open, as in duel mode.
+  const [chipClicked, setChipClicked] = useState(false);
+  const rosterEmpty = praxis.invites.length === 0 && praxis.members.every((m) => m.character_id === currentCharacterId);
+  const pickerOpen = chipClicked || rosterEmpty;
   // Duel mode reuses the box as a one-opponent picker (#311); once attached
   // the pair replaces it.
   const challengeAttached = duelMode && praxis.duel_id != null;
@@ -372,7 +374,7 @@ export function InviteSearch({
         <button
           type="button"
           data-testid="composer-invite-open"
-          onClick={() => setPickerOpen(true)}
+          onClick={() => setChipClicked(true)}
           // title, not aria-label: the visible words stay the name for voice control.
           title={t("editPraxis.invite.addDescription")}
           className="label-caption"
@@ -398,7 +400,7 @@ export function InviteSearch({
           data-composer-field
           data-testid="composer-invite-search"
           // Opened by the chip, so it takes the caret.
-          autoFocus={pickerOpen}
+          autoFocus={chipClicked}
           value={inviteQuery}
           onChange={(event) => setInviteQuery(event.target.value)}
           placeholder={
@@ -469,7 +471,7 @@ export function InviteSearch({
                 data-unavailable={character.unavailable_reason ?? undefined}
                 onMouseDown={() => {
                   // Back to the chip; the roster grows their row.
-                  setPickerOpen(false);
+                  setChipClicked(false);
                   void onPick(character);
                 }}
                 style={{
