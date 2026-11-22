@@ -133,7 +133,7 @@ describe('the task panel without manage_tasks', () => {
     holding('review_proposals')
     const onChanged = panel('pending')
     const title = screen.getByLabelText('Title') as HTMLInputElement
-    expect(title.disabled).toBe(true)
+    expect(title.readOnly).toBe(true)
     fireEvent.change(title, { target: { value: 'Edited anyway' } })
     fireEvent.click(screen.getByRole('button', { name: 'activate' }))
     await waitFor(() => expect(onChanged).toHaveBeenCalled())
@@ -145,8 +145,10 @@ describe('the task panel without manage_tasks', () => {
   it('restores a deleted task with delete_import_tasks alone', async () => {
     holding('delete_import_tasks')
     const onChanged = panel('deleted')
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Edited anyway' } })
     fireEvent.click(screen.getByRole('button', { name: 'restore as pending' }))
     await waitFor(() => expect(onChanged).toHaveBeenCalled())
+    expect(api.updateTaskStatus).toHaveBeenCalledWith(5, 'pending', undefined)
     expect(api.adminPatchTask).not.toHaveBeenCalled()
   })
 })

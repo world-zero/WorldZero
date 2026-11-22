@@ -388,20 +388,21 @@ async def test_a_malformed_before_cursor_is_a_422_not_a_500(
 ):
     for bad in (
         "not-a-date",
-        "2999-01-01T00:00:00+00:00|global_task|99999999999",
-        f"2999-01-01T00:00:00+00:00|global_task|{2**31}",
+        f"2999-01-01T00:00:00+00:00|global_task|{2**63}",
+        "2999-01-01T00:00:00+00:00|global_task|-1",
     ):
         response = await client.get(
             "/activity-feed", params={"before": bad}, headers=auth_headers
         )
         assert response.status_code == 422, response.text
 
-    good = await client.get(
-        "/activity-feed",
-        params={"before": "2999-01-01T00:00:00+00:00|global_task|1"},
-        headers=auth_headers,
-    )
-    assert good.status_code == 200, good.text
+    for ok in (1, 2**31):
+        good = await client.get(
+            "/activity-feed",
+            params={"before": f"2999-01-01T00:00:00+00:00|global_task|{ok}"},
+            headers=auth_headers,
+        )
+        assert good.status_code == 200, good.text
 
 
 @pytest.mark.asyncio

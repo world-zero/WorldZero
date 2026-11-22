@@ -45,7 +45,7 @@ from models.nudge import Nudge
 from models.relationship import Relationship, RelationshipType
 from models.duel import Duel, DuelStatus
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisInviteStatus, PraxisMember, PraxisStatus, PraxisType
-from schemas.params import INT32_MAX
+from schemas.params import INT64_MAX
 from services.block_service import blocked_counterpart_ids, has_blocked
 from services.era_gates import meets_vote_level
 from services.meta_task import character_sees_metatasks
@@ -197,8 +197,8 @@ class FeedCursor(NamedTuple):
         """Raises ValueError on anything this module did not issue."""
         raw_timestamp, item_type, raw_id = raw.split(CURSOR_SEPARATOR)
         source_id = int(raw_id)
-        if not 0 <= source_id <= INT32_MAX:
-            raise ValueError("cursor id outside the Integer PK range")
+        if not 0 <= source_id <= INT64_MAX:
+            raise ValueError("cursor id outside the BigInteger PK range")
         return cls(datetime.fromisoformat(raw_timestamp), item_type, source_id)
 
 
