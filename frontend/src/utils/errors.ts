@@ -54,6 +54,7 @@ const GENERIC_SERVER_PROSE = 'Internal Server Error'
 
 /** Only the `backend/errors.py::ErrorCode` values the client branches on; strings are wire contract. */
 export const ErrorCode = {
+  copyOverrideChanged: 'COPY_OVERRIDE_CHANGED',
   taskBankFull: 'TASK_BANK_FULL',
   taskNotFound: 'TASK_NOT_FOUND',
   praxisNotFound: 'PRAXIS_NOT_FOUND',

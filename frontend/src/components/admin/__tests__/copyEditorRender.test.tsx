@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { deleteCopyOverride, putCopyOverride } from '../../../api/copy'
 import { ApiError } from '../../../api/apiError'
-import i18n from '../../../i18n'
+import i18n, { overriddenKeys } from '../../../i18n'
 import CopyEditor, { shippedValue } from '../CopyEditor'
 import { MARK } from '../copyProbe'
 
@@ -33,6 +33,7 @@ beforeEach(() => {
   }))
   vi.mocked(deleteCopyOverride).mockResolvedValue(undefined)
   i18n.addResource('en', NS, KEY, 'Overridden Zero')
+  overriddenKeys.add(`${NS}:${KEY}`)
 })
 afterEach(() => {
   vi.unstubAllGlobals()

@@ -24,3 +24,7 @@ ADR-0074's two rules go with the canvas: "the Constellation is the one visualisa
 ## Amendment (#3800)
 
 `DesktopPlayers.tsx` and `MobilePlayers.tsx` are gone. The page is one `PlayersDirectory.tsx`, and the phone trees are picked inside it by `useFormFactor()`. "There is no sky" and the rest of the decision stand.
+
+## Amendment (#3980)
+
+`PlayersDirectory.tsx` now picks its podium, race and roster by viewport width alone, through `usePhoneWidth()` (`(max-width: 767px)`, pointer ignored). Only its title stays on `useFormFactor()`, so it pairs with Community's heading. This supersedes the #3800 sentence that `useFormFactor()` picks the phone trees.

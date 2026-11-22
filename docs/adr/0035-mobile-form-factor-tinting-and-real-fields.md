@@ -1,6 +1,6 @@
 # ADR-0035: Mobile is a form-factor axis on the same surface seam, tinted by a theme×treatment cascade, showing only real domain fields
 
-**Status:** Amended by ADR-0053, ADR-0056, ADR-0058, ADR-0063, ADR-0065, ADR-0067, ADR-0069, ADR-0076, ADR-0078
+**Status:** Amended by ADR-0053, ADR-0056, ADR-0058, ADR-0063, ADR-0065, ADR-0067, ADR-0069, ADR-0076, ADR-0078, ADR-0096
 **Date:** 2026-07-14
 
 > **Superseded per surface, not in whole.** The mandatory `Default` (na) skin and
@@ -134,3 +134,7 @@ Rule 2, "`data-treatment = <faction slug>` overrides `--accent`, `--headline`, `
 ## Amendment (2026-11-19, #3426)
 
 Rule 4's "the praxis score shows `{base} + {votePoints}`" is replaced by ADR-0053 (`score` is one computed total) and ADR-0076 (a base-only score reads as a bare total). The rule's real point stands: no 1-5 average, no voter count.
+
+## Amendment (#3980)
+
+**Clause amended:** the touch gate on `mobile`. The Players directory alone picks its phone trees by width, via `usePhoneWidth()` in `hooks/useFormFactor.ts` (`(max-width: 767px)`, pointer ignored). Every other surface keeps `useFormFactor()` and the `(pointer: coarse)` term.

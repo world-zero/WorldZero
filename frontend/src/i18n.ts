@@ -114,6 +114,9 @@ i18n.use(initReactI18next).use(copyRegistry).init({
 // Suites read copy at collection time, before any route has loaded it. Constant-folded out of production builds.
 if (import.meta.env.MODE === 'test') await loadAppCopy()
 
+/** `ns:key` pairs the server holds a row for; a row can hold the shipped text. */
+export const overriddenKeys = new Set<string>()
+
 /**
  * Apply DB copy overrides over the shipped catalog. Non-blocking (called from
  * `main.tsx`) so first paint never waits; failures are silent since the shipped
@@ -124,6 +127,7 @@ export async function loadCopyOverrides(): Promise<void> {
     const overrides = await listCopyOverrides()
     for (const { ns, key, value } of overrides) {
       i18n.addResource('en', ns, key, value)
+      overriddenKeys.add(`${ns}:${key}`)
     }
     // Re-render every hook consumer so direct `i18n.t` callers below them update.
     if (overrides.length > 0) i18n.emit('languageChanged', i18n.language)

@@ -183,6 +183,31 @@ async def test_a_stale_base_is_refused_and_names_the_live_wording(
 
 
 @pytest.mark.asyncio
+async def test_a_base_that_is_not_the_live_wording_leaves_the_row_alone(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+):
+    """The row holds "Den"; an editor who last saw "Hearth" must not overwrite it."""
+    await make_admin(db_session, account)
+    line = {"ns": "common", "key": "nav.home"}
+    db_session.add(CopyOverride(**line, value="Den", updated_by_id=account.id))
+    await db_session.flush()
+
+    resp = await client.put(
+        "/copy-overrides",
+        json={**line, "value": "Nest", "base": "Hearth"},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["params"] == {"current": "Den"}
+    row = (await db_session.execute(select(CopyOverride))).scalar_one()
+    await db_session.refresh(row)
+    assert row.value == "Den"
+
+
+@pytest.mark.asyncio
 async def test_omitting_base_still_saves_unconditionally(
     client: AsyncClient,
     db_session: AsyncSession,

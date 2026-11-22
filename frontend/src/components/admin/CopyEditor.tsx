@@ -14,9 +14,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { useTranslation } from 'react-i18next'
 
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
-import { extractError, extractErrorCode, extractErrorParams } from '../../utils/errors'
+import { ErrorCode, extractError, extractErrorCode, extractErrorParams } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
-import i18n, { lazyShipped, resources } from '../../i18n'
+import i18n, { lazyShipped, overriddenKeys, resources } from '../../i18n'
 import { candidatesShownIn } from './copyProbe'
 import { isFactionScopedKey } from '../../utils/copyScope'
 import {
@@ -68,12 +68,11 @@ export function pluralForms(target: CopyTarget): CopyTarget[] {
 }
 
 /**
- * The override this browser holds for a string, or null when it shows the shipped
- * wording. Sent as `base`, so a save that started from stale text is refused.
+ * The override this browser holds for a string, or null when the server has no row
+ * for it. Sent as `base`, so a save that started from stale text is refused.
  */
 export function baseOf(target: CopyTarget): string | null {
-  const template = currentTemplate(target)
-  return template === null || template === shippedValue(target.ns, target.key) ? null : template
+  return overriddenKeys.has(`${target.ns}:${target.key}`) ? currentTemplate(target) : null
 }
 
 /** What Save does: store the override, then show it. Exported for the test. */
@@ -86,12 +85,14 @@ export async function saveCopy(target: CopyTarget, value: string, base?: string 
   })
   // The server trims; show what it stored, not the draft.
   i18n.addResource('en', target.ns, target.key, saved.value)
+  overriddenKeys.add(`${target.ns}:${target.key}`)
 }
 
 /** What Revert does: drop the override, then show the shipped wording again. */
 export async function revertCopy(target: CopyTarget): Promise<void> {
   await deleteCopyOverride(target.ns, target.key)
   i18n.addResource('en', target.ns, target.key, shippedValue(target.ns, target.key))
+  overriddenKeys.delete(`${target.ns}:${target.key}`)
 }
 
 /**
@@ -298,7 +299,7 @@ export default function CopyEditor() {
       setTarget(null)
       setNotice(null)
     } catch (err) {
-      if (extractErrorCode(err) === 'COPY_OVERRIDE_CHANGED') {
+      if (extractErrorCode(err) === ErrorCode.copyOverrideChanged) {
         // Show their wording on the page and keep this draft: Save again overwrites, Cancel keeps theirs.
         const live = extractErrorParams(err).current
         const current = typeof live === 'string' ? live : null
