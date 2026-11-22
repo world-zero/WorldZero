@@ -132,6 +132,14 @@ describe('factions directory', () => {
     expect(html).toContain('opacity:0.5')
   })
 
+  it('tells a defected faction in platform words, never the faction voice (#4245)', () => {
+    const { text } = dir(status([['everymen', 'defected']]))
+    expect(text).toContain(i18n.t('feed:factionSelect.burned.status'))
+    expect(text).toContain(i18n.t('feed:factionSelect.burned.cta'))
+    expect(text).not.toContain(statusLine('everymen', 'locked'))
+    expect(text).not.toContain(i18n.t('feed:factionSelect.everymen.cta'))
+  })
+
   it('shows loading and error states without cards', () => {
     expect(dir(null, { loading: true }).html).not.toContain('<button')
     const err = dir(STATUS, { error: new Error('Boom') })

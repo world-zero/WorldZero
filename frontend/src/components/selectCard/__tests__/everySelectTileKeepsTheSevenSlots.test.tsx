@@ -15,7 +15,7 @@ import {
   setAlbescentRevealed,
 } from "../../../utils/factions";
 
-const STATES: readonly SelectState[] = ["locked", "eligible", "member"];
+const STATES: readonly SelectState[] = ["locked", "eligible", "member", "burned"];
 
 /** The three zones and the seven slots, in the one order a tile may draw them. */
 const WITH_HEADCOUNT = [

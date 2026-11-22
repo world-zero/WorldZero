@@ -1,6 +1,7 @@
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 // Type-only: the dispatcher imports every tile, and every tile imports this.
 import type { SelectState } from "./FactionSelectCard";
+import i18n from "../../i18n";
 import { paragraphsOf } from "../../utils/paragraphs";
 
 /**
@@ -300,6 +301,11 @@ export function SelectCardStanding({
       )}
     </div>
   );
+}
+
+/** A burned tile (#4245) says it in platform wording, never the faction's voice. */
+export function selectLine(state: SelectState, key: "status" | "cta", own: (state: Exclude<SelectState, "burned">) => string): string {
+  return state === "burned" ? i18n.t(`feed:factionSelect.burned.${key}` as const) : own(state);
 }
 
 interface SelectCardCallProps {
