@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
-import { readFileSync } from 'node:fs'
 import { useRef } from 'react'
 import { useSharedSpectrum } from '../useSharedSpectrum'
 
@@ -11,7 +10,7 @@ function Sheet() {
   const band = useRef<HTMLSpanElement>(null)
   useSharedSpectrum(band)
   return (
-    <div className="spectrum-shared">
+    <div data-testid="sheet" className="spectrum-shared">
       <span ref={band} className="spectrum-rule" />
       <span data-testid="rule" className="spectrum-rule" />
     </div>
@@ -19,12 +18,13 @@ function Sheet() {
 }
 
 describe('useSharedSpectrum', () => {
-  it('sets the sheet width and each mark offset, and the CSS reads them', () => {
-    const { container, getByTestId } = render(<Sheet />)
-    const sheet = container.querySelector<HTMLElement>('.spectrum-shared')!
-    expect(sheet.style.getPropertyValue('--spec-w')).toBe('0px')
-    expect(getByTestId('rule').style.getPropertyValue('--spec-x')).toBe('0px')
-    const css = readFileSync('src/css/06-faction-chrome-2.css', 'utf8')
-    expect(css).toMatch(/\.spectrum-shared \.spectrum-rule \{[^}]*var\(--spec-w[^}]*var\(--spec-x/)
+  it('gives the sheet its width and each mark its offset from the sheet', () => {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return { left: this.dataset.testid === 'rule' ? 60 : 10 } as DOMRect
+    })
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(300)
+    const { getByTestId } = render(<Sheet />)
+    expect(getByTestId('sheet').style.getPropertyValue('--spec-w')).toBe('300px')
+    expect(getByTestId('rule').style.getPropertyValue('--spec-x')).toBe('50px')
   })
 })

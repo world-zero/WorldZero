@@ -457,9 +457,13 @@
   background-image: var(--faction-default-rainbow-conic);
 }
 /* #4113: marks on the praxis detail sheet share one gradient space (vars set by useSharedSpectrum). */
+.spectrum-shared {
+  --spec-w: 100%;
+}
 .spectrum-shared .spectrum-rule {
-  background-size: var(--spec-w, 100%) 100%;
-  background-position: calc(-1 * var(--spec-x, 0px)) 0;
+  --spec-x: 0px;
+  background-size: var(--spec-w) 100%;
+  background-position: calc(-1 * var(--spec-x)) 0;
   background-repeat: no-repeat;
 }
 
