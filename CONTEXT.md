@@ -257,7 +257,7 @@ soft-delete of its character. The forfeiter takes their **loss** modifier, the f
 and the duel stays `live`.
 _Avoid_: "withdraw" for this in user-facing copy — a duelist's control says **Forfeit** and states
 the consequence. Reserve **withdraw** for the reversible solo/collab unsubmit, **decline** for an
-opponent refusing a `pending` challenge, **cancel** for a challenger revoking their own, and
+opponent refusing a `pending` challenge, **call off** for either side ending a pending/active duel (see Call off), and
 **leave** for a collab member dropping out.
 
 **Call off** *(duel only)*:
