@@ -1,9 +1,5 @@
 {
   "alembic/env.py::I001": 1,
-  "alembic/versions/0002_squashed.py::I001": 1,
-  "alembic/versions/0003_character_tagline.py::E501": 1,
-  "alembic/versions/0004_onboarding_cross_faction.py::I001": 1,
-  "alembic/versions/0005_praxis_member_habit_bonus.py::E501": 1,
   "config.py::E501": 2,
   "db.py::I001": 1,
   "elevate_admin.py::E501": 7,

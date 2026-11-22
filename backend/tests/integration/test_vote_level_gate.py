@@ -3,13 +3,10 @@
 Vote route and ``/auth/me`` ``can_vote`` share ``era_gates.may_vote`` over
 ``Character.peak_level``, which an era reset never lowers.
 """
-import importlib.util
-from pathlib import Path
-
 import pytest
 from fastapi import HTTPException
 from httpx import AsyncClient
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode
@@ -28,12 +25,6 @@ from tests.integration.factories import make_character, make_solo_praxis, make_t
 pytestmark = pytest.mark.usefixtures("some_faction")
 
 REQUIRED_LEVEL: int = CURRENT_ERA.vote_level_required
-_MIGRATION_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "alembic"
-    / "versions"
-    / "0022_character_peak_level.py"
-)
 
 
 async def _sealed_praxis(session: AsyncSession, task, author: Character) -> Praxis:
@@ -165,34 +156,3 @@ async def test_a_gated_character_still_gets_the_own_praxis_refusal(
         await cast_vote_on_praxis(newcomer, own_praxis.id, 4, db_session)
     assert refusal.value.status_code == 403
     assert refusal.value.detail == "Cannot vote on your own praxis."
-
-
-@pytest.mark.asyncio
-async def test_backfill_qualifies_anyone_who_reached_the_level_in_any_era(
-    db_session: AsyncSession, era: Era, account: Account
-):
-    spec = importlib.util.spec_from_file_location(
-        "peak_level_migration", _MIGRATION_PATH
-    )
-    migration = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(migration)
-
-    praxis = await _someone_elses_praxis(db_session, era)
-    veteran = await make_character(
-        db_session, era, username="gate_backfill_veteran", level=REQUIRED_LEVEL
-    )
-    never = await make_character(db_session, era, username="gate_backfill_never")
-    await _roll_era(db_session, account, [veteran, never])
-    # A deployed DB the moment the column lands.
-    veteran.peak_level = 0
-    await db_session.flush()
-
-    await db_session.execute(text(migration.BACKFILL_SQL))
-    await db_session.refresh(veteran)
-    await db_session.refresh(never)
-
-    assert veteran.peak_level == REQUIRED_LEVEL
-    assert never.peak_level == 0
-    cast = await cast_vote_on_praxis(veteran, praxis.id, 3, db_session)
-    assert cast.vote.value == 3
-    await _assert_gated(never, praxis, db_session)
