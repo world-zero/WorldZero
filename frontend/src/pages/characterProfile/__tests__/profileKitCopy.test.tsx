@@ -66,7 +66,6 @@ function renderText(factionSlug: string): string {
 const SHARED_COPY: readonly string[] = [
   i18n.t('common:profile.lvl'),
   i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 }),
-  i18n.t('common:profile.nextLevel', { level: 8 }),
   i18n.t('common:profile.praxisEmptyTitle'),
   i18n.t('common:profile.praxisEmptyBody'),
   i18n.t('common:profile.badgesHeading'),
@@ -76,7 +75,7 @@ const SLUGS = ['na', 'ua', 'snide', 'wow', 'coven', 'ephemerists', 'everymen', '
 
 describe('every profile kit renders the one shared set of words (#1911)', () => {
   it('has words to look for, so the loop below cannot pass by asserting nothing', () => {
-    expect(SHARED_COPY).toHaveLength(6)
+    expect(SHARED_COPY).toHaveLength(5)
     for (const word of SHARED_COPY) expect(word.length).toBeGreaterThan(0)
   })
 

@@ -247,7 +247,6 @@ export default function CovenEditCharacter({ state }: { state: EditCharacterStat
           <h1
             style={{
               fontFamily: DISPLAY,
-              fontWeight: 600,
               fontSize: sizes.titleSize,
               lineHeight: 1.1,
               color: INK,

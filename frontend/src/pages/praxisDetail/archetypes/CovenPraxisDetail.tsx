@@ -30,7 +30,7 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 const CHROME = 'var(--font-faction-script)' /* Caveat */
 const READING = 'var(--font-faction-spectral)' /* Spectral */
 const HAND = 'var(--font-faction-script)' /* Caveat */
-const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
+const DISPLAY = 'var(--font-faction-witch)'
 
 const INK = 'var(--faction-coven-slip-ink)'
 const DEEP = 'var(--faction-coven-slip-deep)'
@@ -161,7 +161,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
       <span
         style={{
           fontFamily: DISPLAY,
-          fontWeight: 600,
           fontSize: size.headingSize,
           lineHeight: 1.06,
           letterSpacing: '0.02em',
@@ -241,7 +240,6 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
     <h1
       style={{
         fontFamily: DISPLAY,
-        fontWeight: 600,
         fontSize: size.titleSize,
         lineHeight: 1.04,
         margin: '0 0 var(--space-md)',

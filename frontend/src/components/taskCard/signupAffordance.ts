@@ -19,6 +19,8 @@ export interface TaskCardSignupCta {
   taskId: number;
   /** Server shut sign-up; the same slot says WHY instead. */
   denied: boolean;
+  /** A pending task: a plain label for every viewer, never a control. */
+  pending?: boolean;
   /**
    * Absent iff the slot does not sign up: `CardCtaControl` spreads it, so no
    * skin can attach a dead-ended control (cf. `PendingRowPill.tsx`).
@@ -65,6 +67,9 @@ export function taskCardSignupCta(
           href: `/praxis/${task.submitted_praxis_id}`,
         };
       }
+    }
+    if (task.status === "pending") {
+      return { label: i18n.t("tasks:proposalCard.pendingReview"), taskId: task.id, denied: true, pending: true };
     }
     // `level` is only read by `denied.belowLevel`; harmless elsewhere.
     const key = signupCtaKey(task.signup_reason);

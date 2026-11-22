@@ -14,7 +14,9 @@ import {
 } from "../../api/praxis";
 import { extractError } from "../../utils/errors";
 import { factionFill } from "../../utils/factions";
+import { notifyRequestsChanged } from "../../utils/requestsBus";
 import { isTaskBankFull } from "./bankFull";
+import { isInvitePraxisSubmitted } from "./inviteClosed";
 import FeedBadge from "./FeedBadge";
 import FeedBankFullModal from "./FeedBankFullModal";
 import { FEED_BODY_LIFTED, FeedBodyOverlay } from "./feedBodyTarget";
@@ -40,6 +42,7 @@ const TITLE_STYLE = {
 export default function FeedCardCollabInvite({ item }: Props) {
   const {
     praxis_id,
+    task_id,
     invite_id,
     task_title,
     task_point_value,
@@ -62,6 +65,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
   const [showDropModal, setShowDropModal] = useState(false);
   const [dropError, setDropError] = useState("");
   const [dropping, setDropping] = useState(false);
+  const [closed, setClosed] = useState(false);
 
   const handleAccept = async () => {
     const result = await accept();
@@ -82,6 +86,9 @@ export default function FeedCardCollabInvite({ item }: Props) {
         setDropError("");
         refetchActiveTasks();
         setShowDropModal(true);
+      } else if (isInvitePraxisSubmitted(err)) {
+        setClosed(true);
+        notifyRequestsChanged();
       }
     }
   };
@@ -111,7 +118,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
     }
   };
 
-  const isPending = status === "pending";
+  const isPending = status === "pending" && !closed;
 
   return (
     <>
@@ -191,11 +198,11 @@ export default function FeedCardCollabInvite({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          {/* The body's anchor (#1893): the praxis you're invited into. A named
-              link, so the added tab stop is readable. */}
-          {praxis_id != null ? (
+          {/* The body's anchor (#1893): the task; the praxis is members-only until
+              you accept (ADR-0024). A named link, so the added tab stop is readable. */}
+          {task_id != null ? (
             <Link
-              to={`/praxis/${praxis_id}`}
+              to={`/tasks/${task_id}`}
               className="font-body"
               style={{ ...TITLE_STYLE, textDecoration: "none" }}
             >
@@ -275,6 +282,17 @@ export default function FeedCardCollabInvite({ item }: Props) {
               style={{ color: "var(--badge-collab)", textDecoration: "none", ...FEED_BODY_LIFTED }}
             >
               {i18n.t("feed:collabInvite.accepted")}
+            </Link>
+          </div>
+        )}
+        {closed && (
+          <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
+            <Link
+              to={`/praxis/${praxis_id}`}
+              className="label-caption"
+              style={{ textDecoration: "none", ...FEED_BODY_LIFTED }}
+            >
+              {i18n.t("feed:collabInvite.closed")}
             </Link>
           </div>
         )}

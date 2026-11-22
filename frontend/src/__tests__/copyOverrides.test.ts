@@ -215,11 +215,19 @@ describe('saving an override', () => {
     expect(i18n.t('admin:console.people.suspendError')).toBe('no dice')
   })
 
-  it('refuses a replacement that drops a placeholder, and names it', () => {
-    const template = i18n.getResource('en', 'admin', 'copyEdit.missingPlaceholder') as string
-    expect(template).toContain('{{placeholders}}')
-    expect(missingPlaceholders(template, 'put it back')).toEqual(['{{placeholders}}'])
-    expect(missingPlaceholders(template, 'you dropped {{placeholders}}')).toEqual([])
+  it('lets a draft drop a placeholder but refuses one the template lacks, naming it', () => {
+    const template = 'Within the first {{hours}} hours'
+    expect(missingPlaceholders(template, 'Soon')).toEqual([])
+    expect(missingPlaceholders(template, 'In {{hours}} hours')).toEqual([])
+    expect(missingPlaceholders(template, 'In {{hour}} hours')).toEqual(['{{hour}}'])
+    expect(missingPlaceholders(template, 'In {{days}} days')).toEqual(['{{days}}'])
+  })
+
+  it('lets a draft restore a placeholder a saved override dropped (checked against shipped)', () => {
+    const shipped = 'Within the first {{hours}} hours'
+    expect(missingPlaceholders('Soon', 'In {{hours}} hours')).toEqual(['{{hours}}'])
+    expect(missingPlaceholders('Soon', 'In {{hours}} hours', shipped)).toEqual([])
+    expect(missingPlaceholders('Soon', 'In {{hour}} hours', shipped)).toEqual(['{{hour}}'])
   })
 
   it('refuses a replacement that drops or renames a Trans tag', () => {

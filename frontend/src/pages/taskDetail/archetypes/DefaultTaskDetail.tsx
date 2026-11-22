@@ -200,7 +200,7 @@ export default function DefaultTaskDetail({
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: "var(--color-success)" }}>

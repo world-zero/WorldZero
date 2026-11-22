@@ -253,7 +253,7 @@ export default function ImageEditModal({
           value={zoom}
           aria-label={t('imageEdit.zoomLabel')}
           onChange={(event) => setZoom(Number(event.target.value))}
-          style={{ flex: 1 }}
+          className="image-edit-zoom"
         />
       </label>
 

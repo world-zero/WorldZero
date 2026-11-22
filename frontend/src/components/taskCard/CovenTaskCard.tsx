@@ -14,7 +14,7 @@ import { useFormFactor } from "../../hooks/useFormFactor";
 import { factionBodyVars } from "../../utils/factionBodyFace"
 
 /**
- * Cozy Coven — the candlelit spell slip (#1023). Grenze Gotisch title, Spectral
+ * Cozy Coven — the candlelit spell slip (#1023). Berkshire Swash title, Spectral
  * reading copy, Caveat chrome.
  *
  * One responsive component (ADR-0056): `useFormFactor` picks the size set; no
@@ -25,7 +25,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace"
 
 const CHROME = "var(--font-faction-script)"; /* Caveat */
 const READING = "var(--font-faction-spectral)"; /* Spectral */
-const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
+const DISPLAY = "var(--font-faction-witch)";
 
 
 interface SizeSet {
@@ -171,7 +171,6 @@ export default function CovenTaskCard({
               className="card-title"
               style={{
                 fontFamily: DISPLAY,
-                fontWeight: 600,
                 fontSize: size.titleSize,
                 lineHeight: 1.06,
                 letterSpacing: "0.005em",

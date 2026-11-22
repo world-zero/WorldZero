@@ -59,13 +59,13 @@ describe('the taunt copy sheet', () => {
     await waitFor(() => expect(putCopyOverride).toHaveBeenCalledWith({ ns: 'taunts', key: KEY, value: '{{from_name}} out-leveled {{to_name}}.', base: null }))
   })
 
-  it('refuses a save that drops a name', async () => {
+  it('refuses a save that invents a name', async () => {
     await openTaunt()
     fireEvent.change(screen.getByLabelText('Replacement wording'), {
-      target: { value: '{{from_name}} out-leveled everyone.' },
+      target: { value: '{{from_name}} out-leveled {{rival}}.' },
     })
     fireEvent.click(screen.getByText('save'))
-    await screen.findByText(/Put .*to_name/)
+    await screen.findByText(/\{\{rival\}\} isn't filled in/)
     expect(putCopyOverride).not.toHaveBeenCalled()
   })
 

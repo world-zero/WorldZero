@@ -22,9 +22,10 @@ P, A, S, D, R = (
 )
 
 
-def _duel(status, created_at=FRESH, forfeit=None):
+def _duel(status, created_at=FRESH, forfeit=None, live_at=None):
     return SimpleNamespace(
-        status=status, created_at=created_at, forfeited_by_character_id=forfeit
+        status=status, created_at=created_at, forfeited_by_character_id=forfeit,
+        live_at=live_at,
     )
 
 
@@ -39,8 +40,6 @@ DUEL_CASES = [
     (A, FRESH, 7, CAST, DRAFT, DuelState.AWAITING_HONEST_SIDE),
     (S, FRESH, None, CAST, CAST, DuelState.LIVE),
     (S, FRESH, 7, CAST, CAST, DuelState.LIVE_FORFEITED),
-    (R, FRESH, None, CAST, CAST, DuelState.RESOLVED),
-    (R, FRESH, 7, DRAFT, CAST, DuelState.RESOLVED),
     (R, FRESH, None, DRAFT, DRAFT, DuelState.NO_CONTEST),
     (R, FRESH, None, CAST, DRAFT, DuelState.NO_CONTEST),
 ]
@@ -50,6 +49,22 @@ DUEL_CASES = [
 def test_duel_state(status, created, forfeit, mine, theirs, expected):
     duel = _duel(status, created, forfeit)
     assert duel_state(duel, mine, theirs, NOW, ERA_1) is expected
+
+
+@pytest.mark.parametrize("forfeit,mine,theirs", [
+    (None, CAST, CAST),  # went live, then a side reopened after the close
+    (None, DRAFT, CAST),
+    (7, DRAFT, CAST),  # normal forfeit: honest side cast, settled, then closed
+])
+def test_resolved_after_going_live_is_resolved(forfeit, mine, theirs):
+    duel = _duel(R, forfeit=forfeit, live_at=FRESH)
+    assert duel_state(duel, mine, theirs, NOW, ERA_1) is DuelState.RESOLVED
+
+
+def test_resolved_forfeit_frozen_before_going_live_is_no_contest():
+    # era close on AWAITING_HONEST_SIDE: winner None, never live
+    duel = _duel(R, forfeit=7)
+    assert duel_state(duel, DRAFT, DRAFT, NOW, ERA_1) is DuelState.NO_CONTEST
 
 
 def test_pending_never_lapses_without_a_window():

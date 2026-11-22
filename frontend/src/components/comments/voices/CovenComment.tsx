@@ -16,7 +16,7 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
 import { CAPTION_FONT } from '../../factionMarks/covenSlip'
 
 /**
- * Cozy Coven — the candlelit slip, as a comment (#1197). Grenze Gotisch byline,
+ * Cozy Coven — the candlelit slip, as a comment (#1197). Berkshire Swash byline,
  * Spectral body (user content takes the reading face, §4), Caveat only for the
  * "edited" marginalia. Behaviour is in the shared helpers; this owns chrome and ink.
  * One responsive component, no mobile twin (ADR-0063).
@@ -24,7 +24,7 @@ import { CAPTION_FONT } from '../../factionMarks/covenSlip'
 
 const READING = 'var(--font-faction-spectral)' /* Spectral */
 const HAND = 'var(--font-faction-script)' /* Caveat */
-const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
+const DISPLAY = 'var(--font-faction-witch)'
 
 const INK = 'var(--faction-coven-slip-ink)'
 const LABEL = 'var(--faction-coven-slip-label)'

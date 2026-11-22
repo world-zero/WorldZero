@@ -238,7 +238,7 @@
   --font-faction-serif: "Cormorant Garamond", Georgia, serif;
   /* Each must also be in the index.html font loader, or it silently renders as
      the fallback (#839, #1023). */
-  --font-faction-witch: "Grenze Gotisch", "Cormorant Garamond", Georgia, serif; /* Coven display */
+  --font-faction-witch: "Berkshire Swash", "Cormorant Garamond", Georgia, serif; /* Coven display */
   --font-faction-deco: "Poiret One", "Cinzel", serif; /* Ephemerists display */
   --font-faction-spectral: "Spectral", "EB Garamond", Georgia, serif; /* Ephemerists reading */
 

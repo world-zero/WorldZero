@@ -35,7 +35,7 @@ export function useModal<T extends HTMLElement = HTMLDivElement>(
     const items = () => [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)]
     if (!panel.contains(document.activeElement)) {
       panel.tabIndex = -1
-      ;(items()[0] ?? panel).focus()
+      ;(items()[0] ?? panel).focus({ preventScroll: true })
     }
     const onKeyDown = (e: KeyboardEvent) => {
       if (open[open.length - 1] !== panel) return
@@ -70,7 +70,7 @@ export function useModal<T extends HTMLElement = HTMLDivElement>(
       const under = open[open.length - 1]
       if (under) {
         under.tabIndex = -1
-        under.focus()
+        under.focus({ preventScroll: true })
       }
     }
   }, [active])

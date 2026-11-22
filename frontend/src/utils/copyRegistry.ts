@@ -117,11 +117,17 @@ export function copyMatchForElement(
 }
 
 /**
- * The one hard guard on a save: a dropped `{{…}}` renders a silent hole, and a
- * dropped `<Trans>` tag loses its component. Whole-token compare, so a renamed
- * placeholder or tag counts as dropped.
+ * The hard guard on a save. A dropped `{{…}}` is harmless (i18next just skips
+ * the value), but one the template lacks, such as a typo, renders a silent gap.
+ * A dropped or renamed `<Trans>` tag still loses its component. Tags are checked
+ * against `template` (in force); `{{…}}` against `known` (the shipped text, so a
+ * saved drop can be undone).
  */
-export function missingPlaceholders(template: string, next: string): string[] {
-  const tokens = template.match(/\{\{[^}]*\}\}|<\/?\w+\s*\/?>/g) ?? []
-  return [...new Set(tokens)].filter((token) => !next.includes(token))
+export function missingPlaceholders(template: string, next: string, known = template): string[] {
+  const tags = (s: string) => [...new Set(s.match(/<\/?\w+\s*\/?>/g) ?? [])]
+  const vars = (s: string) => [...new Set(s.match(/\{\{[^}]*\}\}/g) ?? [])]
+  return [
+    ...tags(template).filter((t) => !next.includes(t)),
+    ...vars(next).filter((v) => !known.includes(v)),
+  ]
 }

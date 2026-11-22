@@ -181,7 +181,7 @@ describe('DefaultEditCharacter — the na kit’s slots, identical at both width
     // Fields are named from inside (#2793); on an edit form that's the SR name.
     expect(html, 'story field').toContain('aria-label="Character bio"')
     expect(html, 'story value is the bio').toContain('>Doing very human things.</textarea>')
-    expect(html, 'tagline field').toContain('aria-label="Character Catchphrase"')
+    expect(html, 'tagline field').toContain('aria-label="Character catchphrase"')
     expect(html, 'tagline value is the tagline').toContain('>Slow spells, strong tea.</textarea>')
     // Handle and location: the fields the old phone column dropped (#2991).
     expect(html, 'the handle readout').toContain('value="@molly"')

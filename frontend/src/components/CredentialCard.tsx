@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import FactionSigil, { factionSigilRing } from './sigil/FactionSigil'
-import { factionName, isKnownFaction } from '../utils/factions'
+import { ALBESCENT_FACTION_SLUG, factionName, isKnownFaction } from '../utils/factions'
 import type { CharacterOut } from '../api/auth'
 import FactionAvatar from './avatar/FactionAvatar'
 
@@ -63,6 +63,18 @@ const NEUTRAL: Skin = {
   muted: 'var(--color-text-secondary)',
   font: 'var(--font-display)',
   border: '1px solid var(--color-border-strong)',
+}
+
+/** The hoop owns the spectrum (one rainbow per frame): Albescent's own avatar ring would spin inside it, so its face draws as na's disc. */
+const stillFace = (slug: string | null | undefined) => (slug === ALBESCENT_FACTION_SLUG ? '' : slug ?? '')
+
+/** FactionAvatar's monogram reads `username[0]`, so the card's own name stands in for it. */
+function monogramOf(name: string, factionSlug: string | null | undefined): CharacterOut {
+  return {
+    all_time_score: 0, avatar_url: '', badges: [], bio: '', created_at: '', display_name: name,
+    faction_slug: stillFace(factionSlug), id: 0, invitations: [], level: 0, location: '', score: 0,
+    status: 'active', tagline: '', username: name,
+  }
 }
 
 export default function CredentialCard({
@@ -157,14 +169,16 @@ export default function CredentialCard({
               }}
             >
               {character ? (
-                <FactionAvatar character={character} size={128} badge={false} />
+                <FactionAvatar character={{ ...character, faction_slug: stillRing ? stillFace(character.faction_slug) : character.faction_slug }} size={128} badge={false} />
               ) : avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-              ) : null}
+              ) : (
+                <FactionAvatar character={monogramOf(name, factionSlug)} size={128} badge={false} />
+              )}
             </div>
           )
           // One string for tooltip and accessible name; it only opens a file input — no drop (#1263).

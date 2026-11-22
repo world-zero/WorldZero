@@ -1461,6 +1461,8 @@ export interface PublishButtonSkin {
    * replaced in pull-back, collab and busy states; the mark persists.
    */
   trailingOrnament?: ReactNode;
+  /** `style` is `composerBandStyle`: negative margins that need a column of their own. */
+  band?: boolean;
 }
 
 export function PublishButton({
@@ -1635,63 +1637,90 @@ export function CollabSignals({
   // Only the publishing signal is title-gated (#2484).
   const needsTitle = publishNeedsTitle(title);
   const off = needsTitle || needsProof;
+  const showPrimary = !proposalLive || !gate.iCast;
+  const done = (
+    <button
+      type="button"
+      aria-pressed={iAmDone}
+      title={collabCopy(slug, "doneDescription")}
+      onClick={() => void markDone(!iAmDone)}
+      disabled={busy}
+      className="label-caption"
+      style={SECONDARY_SIGNAL_STYLE}
+    >
+      {collabCopy(slug, iAmDone ? "doneUndoAction" : "doneAction")}
+    </button>
+  );
+  const primary = showPrimary && (
+    <button
+      type="button"
+      // Slot id shared with PublishButton (#2453); the signal names the act.
+      data-testid="composer-primary"
+      data-collab-signal={proposalLive ? "approve" : "propose"}
+      title={
+        off
+          ? i18n.t(
+              needsTitle
+                ? "forms:editPraxis.composer.publishNeedsTitle"
+                : "forms:editPraxis.composer.publishNeedsProof",
+            )
+          : collabCopy(
+              slug,
+              proposalLive ? "approveDescription" : "proposeDescription",
+            )
+      }
+      aria-describedby={describedBy(needsTitle, needsProof)}
+      onClick={() => void (proposalLive ? publish() : propose())}
+      disabled={off || busy}
+      className={offClassName(skin.className, off)}
+      style={skin.style}
+    >
+      {skin.ornament}
+      {submitting ? skin.busyLabel : primaryLabel}
+      {skin.trailingOrnament}
+    </button>
+  );
+  const withdraw = proposalLive && (
+    <button
+      type="button"
+      title={collabCopy(slug, "withdrawDescription")}
+      onClick={() => void pullBack()}
+      disabled={busy}
+      className="label-caption"
+      style={SECONDARY_SIGNAL_STYLE}
+    >
+      {collabCopy(slug, "withdrawAction")}
+    </button>
+  );
+  const notices = (
+    <>
+      {needsTitle && showPrimary && <PublishNeedsTitleNotice />}
+      {needsProof && showPrimary && <PublishNeedsProofNotice />}
+    </>
+  );
+  // The band's negative margins slide it over row siblings, so it gets its own row.
+  if (skin.band) {
+    return (
+      <div className="flex flex-col items-stretch gap-2">
+        <div
+          data-testid="collab-secondaries"
+          className="flex flex-wrap items-center gap-2"
+        >
+          {done}
+          {withdraw}
+        </div>
+        {notices}
+        {primary}
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        aria-pressed={iAmDone}
-        title={collabCopy(slug, "doneDescription")}
-        onClick={() => void markDone(!iAmDone)}
-        disabled={busy}
-        className="label-caption"
-        style={SECONDARY_SIGNAL_STYLE}
-      >
-        {collabCopy(slug, iAmDone ? "doneUndoAction" : "doneAction")}
-      </button>
-      {(!proposalLive || !gate.iCast) && (
-        <button
-          type="button"
-          // Slot id shared with PublishButton (#2453); the signal names the act.
-          data-testid="composer-primary"
-          data-collab-signal={proposalLive ? "approve" : "propose"}
-          title={
-            off
-              ? i18n.t(
-                  needsTitle
-                    ? "forms:editPraxis.composer.publishNeedsTitle"
-                    : "forms:editPraxis.composer.publishNeedsProof",
-                )
-              : collabCopy(
-                  slug,
-                  proposalLive ? "approveDescription" : "proposeDescription",
-                )
-          }
-          aria-describedby={describedBy(needsTitle, needsProof)}
-          onClick={() => void (proposalLive ? publish() : propose())}
-          disabled={off || busy}
-          className={offClassName(skin.className, off)}
-          style={skin.style}
-        >
-          {skin.ornament}
-          {submitting ? skin.busyLabel : primaryLabel}
-          {skin.trailingOrnament}
-        </button>
-      )}
-      {proposalLive && (
-        <button
-          type="button"
-          title={collabCopy(slug, "withdrawDescription")}
-          onClick={() => void pullBack()}
-          disabled={busy}
-          className="label-caption"
-          style={SECONDARY_SIGNAL_STYLE}
-        >
-          {collabCopy(slug, "withdrawAction")}
-        </button>
-      )}
+      {done}
+      {primary}
+      {withdraw}
       {/* Below the row: it explains the one dead signal, not the group. */}
-      {needsTitle && (!proposalLive || !gate.iCast) && <PublishNeedsTitleNotice />}
-      {needsProof && (!proposalLive || !gate.iCast) && <PublishNeedsProofNotice />}
+      {notices}
     </div>
   );
 }

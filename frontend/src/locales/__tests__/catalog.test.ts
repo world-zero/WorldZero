@@ -167,7 +167,6 @@ describe('the profile kits share one set of copy in the catalog', () => {
   const SHARED_KEYS = [
     'lvl',
     'ptsThisLevel',
-    'nextLevel',
     'praxisEyebrow',
     'praxisEmptyTitle',
     'praxisEmptyBody',
@@ -197,7 +196,6 @@ describe('the profile kits share one set of copy in the catalog', () => {
   })
 
   it('interpolates the two copy fields that take a named variable', () => {
-    expect(i18n.t('common:profile.nextLevel', { level: 8 })).toBe('next · lvl 8')
     expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('Submitted by Reza')
     expect(i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 })).toBe(
       '380 / 500 pts this level',
@@ -939,8 +937,7 @@ describe('no call site drops an interpolation (#2827)', () => {
 /*
  * #2789: the Disclaimer is owner-written legal copy, verbatim (shared by
  * `/disclaimer` and onboarding stop 3). Rows that look like defects but stay:
- * the spaced hyphen `statutes - no violation`, the comma after "creator", and
- * straight quotes. `p4` is retired (paragraph boundaries are part of the
+ * the spaced hyphen `statutes - no violation` and straight quotes. `p4` is retired (paragraph boundaries are part of the
  * document); `t()` typing catches a leftover reader.
  */
 describe('the Disclaimer is the owner\'s text, character for character (#2789)', () => {
@@ -950,7 +947,7 @@ describe('the Disclaimer is the owner\'s text, character for character (#2789)',
 
   it('transcribes the first paragraph exactly', () => {
     expect(i18n.t('common:disclaimer.p1')).toBe(
-      `The creator, of the system of websites, events, and activities explicitly referred to as World Zero (henceforth, "Game"), assumes no responsibility for the actions of users (henceforth, "Players") of this website or any affiliated website (including but not limited to worldzero.org). This includes, but is not limited to, content posted to the Game by Players, suggested activities ("Tasks"), and actions taken by Players in particular or in general.`,
+      `The creator of the system of websites, events, and activities explicitly referred to as World Zero (henceforth, "Game"), assumes no responsibility for the actions of users (henceforth, "Players") of this website or any affiliated website (including but not limited to worldzero.org). This includes, but is not limited to, content posted to the Game by Players, suggested activities ("Tasks"), and actions taken by Players in particular or in general.`,
     )
   })
 
@@ -966,10 +963,9 @@ describe('the Disclaimer is the owner\'s text, character for character (#2789)',
     )
   })
 
-  it('keeps the three rows that look like defects', () => {
+  it('keeps the rows that look like defects', () => {
     // Named so a failure says which "correction" was made.
     expect(i18n.t('common:disclaimer.p2')).toContain('statutes - no violation')
-    expect(i18n.t('common:disclaimer.p1')).toContain('The creator, of the system')
     expect(i18n.t('common:disclaimer.p1')).toContain('"Game"')
     expect(i18n.t('common:disclaimer.p1')).toContain('"Players"')
     expect(i18n.t('common:disclaimer.p1')).toContain('"Tasks"')

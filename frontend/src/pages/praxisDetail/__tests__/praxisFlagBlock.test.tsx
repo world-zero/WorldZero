@@ -31,4 +31,11 @@ describe('PraxisFlagBlock', () => {
       expect(b).toMatch(/min-width:\s*44px/)
     }
   })
+
+  it('both discs hold an aria-hidden mark, not a word', () => {
+    for (const html of [render({}), render({ flagSubmitted: true })]) {
+      expect(html).toMatch(/<svg aria-hidden="true"/)
+      expect(html).not.toMatch(/>(FLAG|OK)</)
+    }
+  })
 })
