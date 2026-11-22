@@ -552,7 +552,8 @@ export function ProfileSkin({
               flexWrap: 'wrap',
             }}
           >
-            <div style={{ flexShrink: 0 }}>
+            {/* Phone: the card is narrower than the wrapped row, so centre it. */}
+            <div style={{ flexShrink: 0, marginInline: mobile ? 'auto' : undefined }}>
               {kit.credentialFrame ? kit.credentialFrame(credential) : credential}
             </div>
 
