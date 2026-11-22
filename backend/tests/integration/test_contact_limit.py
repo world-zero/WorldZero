@@ -40,3 +40,22 @@ async def test_contact_honeypot_stores_nothing(
     assert resp.status_code == 201
     assert {"id", "created_at"} <= resp.json().keys()
     assert await _rows(db_session) == []
+
+
+@pytest.mark.asyncio
+async def test_contact_limit_keys_ipv6_by_slash_64(client: AsyncClient):
+    contact_limit._hits.clear()
+    for i in range(5):
+        assert (await _post(client, f"2001:db8:1:2::{i + 1}")).status_code == 201
+    assert (await _post(client, "2001:db8:1:2:ffff::9")).status_code == 429
+    assert (await _post(client, "2001:db8:1:3::1")).status_code == 201
+
+
+def test_contact_limit_drops_expired_entries(monkeypatch):
+    contact_limit._hits.clear()
+    contact_limit._hits["1.1.1.1"].append(0.0)
+    monkeypatch.setattr(contact_limit.time, "monotonic", lambda: 10_000.0)
+    client = type("C", (), {"host": "2.2.2.2"})()
+    request = type("R", (), {"headers": {}, "client": client})()
+    contact_limit.hit_contact_limit(request)
+    assert "1.1.1.1" not in contact_limit._hits

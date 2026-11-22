@@ -1,3 +1,4 @@
+import ipaddress
 import time
 from collections import defaultdict, deque
 
@@ -22,10 +23,25 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def _bucket(ip: str) -> str:
+    # A v6 client owns a whole /64; per-address keys would let it rotate past the cap.
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if addr.version == 6:
+        return str(ipaddress.ip_network(f"{addr}/64", strict=False))
+    return ip
+
+
 def hit_contact_limit(request: Request) -> None:
     """Record one accepted message for this IP; 429 if it is past the hourly cap."""
-    ip = client_ip(request)
+    ip = _bucket(client_ip(request))
     now = time.monotonic()
+    # ponytail: O(keys) sweep per hit; fine at contact-form volume.
+    for key, stamps in list(_hits.items()):
+        if not stamps or now - stamps[-1] >= CONTACT_WINDOW_SECONDS:
+            del _hits[key]
     hits = _hits[ip]
     while hits and now - hits[0] >= CONTACT_WINDOW_SECONDS:
         hits.popleft()

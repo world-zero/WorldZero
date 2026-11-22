@@ -80,3 +80,7 @@ it to a different faction or none. It is not inherited
 #823), set by `apply_era_reset` beside `resolved_at`. "Which era resolved it" is no
 longer inferred from `resolved_at`, which lands after the new era's `started_at`
 and would name the wrong era. A duel still has no `era_id` for the era it began in.
+
+## Amendment (2026-11-22, #4041, #4060): lapse windows are per-era
+
+Lapse windows are `EraConfig` values (`duel_challenge_lapse_days`, `duel_cast_lapse_days`) and optional. With `None`, that clock never runs and the duel waits for the era close, as above. Era 1 sets both to 7 days: an unanswered challenge declines after 7 days, and the cast clock starts at the first cast, not at acceptance (#4005). The #3875 ruling that Era 1 waits for the era close was reversed by #4060. Read the era file for the live values.

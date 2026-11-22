@@ -287,8 +287,8 @@ A blocks B:
 - **B → A invites, duel challenges and nudges are swallowed.** B sees them sent
   and pending; A gets no feed item, request count or push. They are never
   declined, since a decline notice would announce the block. A swallowed
-  challenge lapses like any unanswered one (`duel_challenge_lapse_days`), which B
-  sees as an ordinary lapse. Requests already pending when A blocks become
+  challenge lapses like any unanswered one when the era sets a challenge window
+  (`duel_challenge_lapse_days`, ADR-0052), which B sees as an ordinary lapse. Requests already pending when A blocks become
   swallowed from then on.
 - **A swallowed request costs A nothing.** A pending invite counts as ownership
   for the self-vote rule (#2216) and a pending duel bars both sides; neither
