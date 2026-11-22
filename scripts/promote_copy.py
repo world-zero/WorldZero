@@ -89,7 +89,10 @@ def guard(overrides: list[dict], read_base, read_head) -> list[str]:
         if _is_marker(o["value"]):
             continue
         ns, key = o["ns"], o["key"]
-        base, head = (cache.setdefault((side, ns), read(ns)) for side, read in (("b", read_base), ("h", read_head)))
+        for side, read in (("b", read_base), ("h", read_head)):
+            if (side, ns) not in cache:
+                cache[side, ns] = read(ns)
+        base, head = cache["b", ns], cache["h", ns]
         b = _slot(base, key) if base is not None else None
         if b is None:
             continue
@@ -109,7 +112,8 @@ def _fetch(env: str) -> list[dict]:
                 return json.load(r)
         except OSError as e:
             err = e
-            time.sleep(10 * (attempt + 1))
+            if attempt < 2:
+                time.sleep(10 * (attempt + 1))
     sys.exit(f"Couldn't read {API[env]}/copy-overrides after 3 tries ({err}); rerun the job.")
 
 
@@ -226,7 +230,13 @@ if __name__ == "__main__":
         _check()
         sys.exit(print("ok"))
     if "--guard" in sys.argv:
-        ref = sys.argv[sys.argv.index("--guard") + 1]
+        args = sys.argv[sys.argv.index("--guard") + 1 :]
+        if not args:
+            sys.exit("usage: promote_copy.py --guard <base-ref>")
+        ref = args[0]
+        # An unresolved ref would read as "no key at base" and pass everything.
+        if subprocess.run(["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"], capture_output=True).returncode:
+            sys.exit(f"--guard: {ref!r} is not a commit here; fetch it (fetch-depth: 0) and rerun.")
         hits = guard(_fetch("dev"), _git_catalog(ref), _disk_catalog)
         for line in hits:
             print(f"::error::{line}")
