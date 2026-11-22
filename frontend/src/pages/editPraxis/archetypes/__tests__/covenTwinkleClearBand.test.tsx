@@ -1,6 +1,6 @@
 /**
  * The Coven masthead's twinkles stay out of the middle (#1983): a star beside
- * the "c" read as "tozy". The svg stretches (`preserveAspectRatio="none"`) while
+ * the "c" read as "tozy". Stars sit at a fixed fraction of the band while
  * the centred wordmark is fixed-size, so narrowing pushes central stars further
  * under it, and y doesn't map to "above the lettering". Horizontal exclusion is
  * the only rule that holds at every width.
@@ -70,38 +70,29 @@ const state = anEditPraxisState({
   duelChipVisible: true,
 });
 
-/** The twinkle band is the one svg on the page drawn in a 480×72 viewBox. */
-function twinklePaths(formFactor: "mobile" | "desktop"): string[] {
+/** Each star is its own svg, left = x/480 of the band, width = 2× its reach in viewBox units. */
+function twinkleSpans(formFactor: "mobile" | "desktop"): [number, number][] {
   mocks.formFactor = formFactor;
   const markup = renderToStaticMarkup(
     <MemoryRouter>
       <CovenEditPraxis state={state} />
     </MemoryRouter>,
   );
-  const band = markup.match(/<svg[^>]*viewBox="0 0 480 72"[^>]*>(.*?)<\/svg>/s);
-  expect(band, "the twinkle band is missing from the masthead").not.toBeNull();
-  return Array.from(band![1].matchAll(/\bd="([^"]+)"/g), (m) => m[1]);
-}
-
-/** x extent, walked from `M x y` + relative `l dx dy` pairs so shape changes count. */
-function xSpan(d: string): [number, number] {
-  const nums = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
-  let x = nums[0];
-  let min = x;
-  let max = x;
-  for (let i = 2; i + 1 < nums.length; i += 2) {
-    x += nums[i];
-    min = Math.min(min, x);
-    max = Math.max(max, x);
-  }
-  return [min, max];
+  return Array.from(
+    markup.matchAll(/<svg width="([\d.]+)" height="([\d.]+)" viewBox="-[^>]*left:([\d.]+)%/g),
+    (m) => {
+      expect(m[1], "a twinkle must be as tall as it is wide").toBe(m[2]);
+      const x = (Number(m[3]) / 100) * 480;
+      return [x - Number(m[1]) / 2, x + Number(m[1]) / 2];
+    },
+  );
 }
 
 describe("Coven masthead twinkles (#1983)", () => {
   it.each(["desktop", "mobile"] as const)(
     "keeps every star clear of the wordmark's centre on %s",
     (formFactor) => {
-      const spans = twinklePaths(formFactor).map(xSpan);
+      const spans = twinkleSpans(formFactor);
       expect(spans.length).toBeGreaterThan(0);
       for (const [min, max] of spans) {
         expect(
@@ -115,6 +106,6 @@ describe("Coven masthead twinkles (#1983)", () => {
 
   it("keeps the ornament at full strength — six twinkles, not fewer", () => {
     // Thinning the field would pass the clear-band check for the wrong reason.
-    expect(twinklePaths("desktop")).toHaveLength(6);
+    expect(twinkleSpans("desktop")).toHaveLength(6);
   });
 });

@@ -92,10 +92,10 @@ const FIELD_RADIUS = 10;
 const EDGE = `1.5px solid ${GOLD}`;
 const RULE = `1.5px solid ${BORDER}`;
 
-/** A four-point star, centred on (x, y) with arm length r. */
-function starPath(x: number, y: number, r: number): string {
+/** A four-point star about the origin, arm length r. */
+function starPath(r: number): string {
   const long = r * 2.6;
-  return `M${x} ${y - long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
+  return `M0 ${-long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
 }
 
 /** `.cvn-braid` owns the strands' pigments (index.css). */
@@ -110,7 +110,7 @@ function Braid({ style }: { style?: CSSProperties }) {
 
 /**
  * Stars only in the OUTER thirds: x < 105 or > 375 of 480 (#1983). x is a
- * fraction of the band (`preserveAspectRatio="none"`) while the wordmark is
+ * fraction of the band while the wordmark is
  * fixed-size, so a central star slides under the lettering on narrow viewports.
  * At 375px the row spans 145…335. If the wordmark grows, WIDEN the exclusion
  * (`covenTwinkleClearBand.test.tsx`).
@@ -125,28 +125,30 @@ function TwinkleField() {
     [462, 50, 1.7],
   ];
   return (
-    <svg
-      width="100%"
-      height="100%"
-      viewBox="0 0 480 72"
-      preserveAspectRatio="none"
+    <div
       aria-hidden="true"
-      style={{
-        position: "absolute",
-        inset: 0,
-        zIndex: 0,
-        pointerEvents: "none",
-      }}
+      style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}
     >
-      {stars.map(([x, y, r]) => (
-        <path
-          key={`${x}-${y}`}
-          d={starPath(x, y, r)}
-          fill={GOLD}
-          opacity={0.75}
-        />
-      ))}
-    </svg>
+      {stars.map(([x, y, r]) => {
+        const half = r * 3.6;
+        return (
+          <svg
+            key={`${x}-${y}`}
+            width={half * 2}
+            height={half * 2}
+            viewBox={`${-half} ${-half} ${half * 2} ${half * 2}`}
+            style={{
+              position: "absolute",
+              left: `${(x / 480) * 100}%`,
+              top: `${(y / 72) * 100}%`,
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <path d={starPath(r)} fill={GOLD} opacity={0.75} />
+          </svg>
+        );
+      })}
+    </div>
   );
 }
 
