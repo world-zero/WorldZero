@@ -316,3 +316,8 @@
   min-height: var(--touch-target);
   min-width: var(--touch-target);
 }
+
+.image-edit-zoom {
+  flex: 1;
+  accent-color: var(--color-text-primary);
+}
