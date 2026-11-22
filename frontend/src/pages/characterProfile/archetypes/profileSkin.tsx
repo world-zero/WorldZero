@@ -668,22 +668,6 @@ export function ProfileSkin({
                         />
                       )}
                     </div>
-                    {/* The whole climb on the era curve, caption tier (#2127).
-                        Ink set as `color`, not by repointing `--label-ink`: a kit
-                        whose quiet ink is the cascade would hand
-                        `--label-ink: inherit`, which lands on the tertiary.
-                        Hidden at the top of the curve (#2383). */}
-                    {progression.nextLevel !== null && (
-                      <div
-                        className="label-caption"
-                        style={{ marginTop: 'var(--space-xs)', color: headerMuted }}
-                      >
-                        {t('profile.ptsToNext', {
-                          score: character.score,
-                          threshold: progression.nextThreshold,
-                        })}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
