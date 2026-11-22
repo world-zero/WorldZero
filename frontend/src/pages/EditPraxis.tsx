@@ -91,6 +91,7 @@ export default function EditPraxis() {
       {state.collabSuccess && (
         <CollabSuccess
           members={state.praxis.members}
+          collabState={state.praxis.collab_state}
           currentCharacterId={state.currentCharacterId}
           factionSlug={state.praxis.task_faction_slug}
           taskPointValue={state.praxis.task_point_value}

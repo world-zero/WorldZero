@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 import type {
   PraxisInviteOut,
   PraxisMemberOut,
+  PraxisOut,
   PraxisType,
 } from '../../api/praxis'
 import { factionCssVar } from '../../utils/factions'
@@ -93,6 +94,7 @@ export function CollabRoster({
   factionSlug,
   taskPointValue,
   presentCharacterIds,
+  collabState,
   skin,
   onKick,
   onNudge,
@@ -122,6 +124,7 @@ export function CollabRoster({
    * (membership is checked server-side, #1740).
    */
   presentCharacterIds?: readonly number[]
+  collabState: PraxisOut["collab_state"]
   /** See {@link CollabSkin}. Only the composer passes one. */
   skin?: CollabSkin
   /**
@@ -153,7 +156,7 @@ export function CollabRoster({
   const { t } = useTranslation('forms')
   // Declared before the solo early-return so hook order never changes (#1082).
   const [pendingKick, setPendingKick] = useState<PraxisMemberOut | null>(null)
-  const gate = deriveCollabGate(members, currentCharacterId)
+  const gate = deriveCollabGate(members, currentCharacterId, collabState)
   if (praxisType !== 'collab') return null // solo/duel render nothing
 
   const accent = skin?.accent ?? factionCssVar(factionSlug, 'card-accent')

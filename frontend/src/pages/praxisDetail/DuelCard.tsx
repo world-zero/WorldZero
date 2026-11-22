@@ -15,6 +15,7 @@
  * PRAXIS, not the viewer. Archetypes dress it via `style`, `heading` and `ink`
  * (#1153).
  */
+import { duelOutcomeReadable } from '../../components/duel/duelState'
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -184,7 +185,7 @@ export function DuelCard({ state, style, heading, ink }: DuelCardProps) {
   if (!praxis || !duel) return null
 
   // Outcomes only (see the header).
-  if (duel.status !== 'settled' && duel.status !== 'resolved') return null
+  if (!duelOutcomeReadable(duel)) return null
 
   const { mine, rival } = sidesForPraxis(duel, praxis.id)
   const forfeitedBy = duel.forfeited_by_character_id

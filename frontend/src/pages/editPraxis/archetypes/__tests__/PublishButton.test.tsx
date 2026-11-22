@@ -4,6 +4,7 @@
  * Pull-back only survives on the MODERATED composer; an ordinary cast derives
  * the waiting stage instead (#1177, ADR-0059).
  */
+import { duelStateFor } from '../../../../test/fixtures'
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi } from "vitest";
@@ -149,7 +150,7 @@ function duelState(
     id: 7,
     task_id: 3,
     status: duelStatus,
-    state: "drafting",
+    state: duelStateFor(duelStatus),
     forfeited_by_character_id: null,
     cast_clock_started_at: null,
     challenger: duelSide(1, overrides.isPublished ?? true),

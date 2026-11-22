@@ -16,17 +16,17 @@ import type { PraxisOut } from "../../api/praxis";
 
 export type ProposalPraxis = Pick<
   PraxisOut,
-  "type" | "members" | "submit_proposed_at"
+  "type" | "members" | "submit_proposed_at" | "collab_state"
 >;
 
 /**
- * A publish window is open. Tests the timestamp, not `status === 'pending'`:
- * the latch needs the proposal's identity.
+ * A publish window is open, per the backend's `collab_state`. The timestamp
+ * stays only as the latch's identity (`editNeedsProposalConfirm`).
  */
 export function proposalIsLive(praxis: ProposalPraxis | null | undefined): boolean {
   if (!praxis) return false;
   if (praxis.type !== "collab" || praxis.members.length < 2) return false;
-  return praxis.submit_proposed_at != null;
+  return praxis.collab_state === "proposed";
 }
 
 /**

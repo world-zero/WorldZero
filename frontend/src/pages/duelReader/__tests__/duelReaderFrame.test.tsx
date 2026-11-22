@@ -3,6 +3,7 @@
  * claims only, no DOM. Archetypes are walked from `surfaceMap('duelReader')`,
  * never a hand-typed slug list.
  */
+import { duelStateFor } from '../../../test/fixtures'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -113,7 +114,7 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     task_id: 101,
     status: 'settled',
     forfeited_by_character_id: null,
-    state: "drafting",
+    state: duelStateFor(overrides.status ?? "settled", overrides.forfeited_by_character_id != null),
     cast_clock_started_at: null,
     winner_character_id: null,
     challenger_final_points: null,
@@ -312,6 +313,7 @@ describe('the standing reads out, and never as a verdict while voting is open', 
     const markup = render({
       duel: duel({
         status: 'resolved',
+        state: 'no_contest',
         winner_character_id: null,
         challenger_final_points: null,
         opponent_final_points: null,

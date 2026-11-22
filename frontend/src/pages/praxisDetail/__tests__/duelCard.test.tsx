@@ -115,6 +115,7 @@ describe('duel card — the three readings', () => {
       state({
         duel: duel({
           status: 'resolved',
+          state: 'no_contest',
           winner_character_id: null,
           challenger_final_points: null,
           opponent_final_points: null,

@@ -539,6 +539,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
       >
         <CollabRoster
           praxisType={praxis.type}
+          collabState={praxis.collab_state}
           invites={praxis.invites}
           members={praxis.members}
           currentCharacterId={state.user?.character?.id ?? null}

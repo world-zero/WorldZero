@@ -32,7 +32,7 @@ const member = (id: number, cast: boolean): PraxisMemberOut => ({
 
 const mount = () =>
   render(
-    <CollabRoster
+    <CollabRoster collabState={null}
       praxisType="collab"
       members={[member(1, true), member(2, false), member(3, false)]}
       currentCharacterId={1}

@@ -281,12 +281,26 @@ export const aDuelSide = (over: Partial<DuelSideOut> = {}): DuelSideOut => ({
  * A settled duel (unsubmitting forfeits, ADR-0011). Frozen-outcome fields stay
  * null: set only at era close (ADR-0052).
  */
-export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => ({
+export const duelStateFor = (
+  status: DuelDetailOut['status'],
+  forfeited = false,
+): DuelDetailOut['state'] =>
+  ({
+    pending: 'challenged',
+    declined: 'dissolved',
+    active: forfeited ? 'awaiting_honest_side' : 'drafting',
+    settled: forfeited ? 'live_forfeited' : 'live',
+    resolved: 'resolved',
+  })[status] as DuelDetailOut['state']
+
+export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => {
+  const status = over.status ?? 'settled'
+  return {
   id: 5,
   task_id: 7,
-  status: 'settled',
+  status,
   forfeited_by_character_id: null,
-  state: "drafting",
+  state: duelStateFor(status, (over.forfeited_by_character_id ?? null) != null),
   cast_clock_started_at: null,
   challenger: aDuelSide(),
   opponent: aDuelSide({ praxis_id: 2, character_id: 4, display_name: 'Rax' }),
@@ -294,7 +308,8 @@ export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => ({
   challenger_final_points: null,
   opponent_final_points: null,
   ...over,
-})
+  }
+}
 
 /** A faction's task, praxis and card for the per-faction suites. */
 export const forFaction = (slug: string) => ({

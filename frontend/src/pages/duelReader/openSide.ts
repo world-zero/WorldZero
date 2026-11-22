@@ -30,7 +30,7 @@ export function openSideFor(
 
   if (duel.forfeited_by_character_id !== null) return fallback
 
-  if (duel.status !== 'settled') return fallback
+  if (duel.state !== 'live') return fallback
 
   const challenger = duel.challenger.points_from_votes
   const opponent = duel.opponent.points_from_votes

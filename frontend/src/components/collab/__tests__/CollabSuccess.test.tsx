@@ -31,7 +31,7 @@ function shouldShowCollabSuccess(
   members: readonly PraxisMemberOut[],
   currentCharacterId: number | null,
 ): boolean {
-  const gate = deriveCollabGate(members, currentCharacterId)
+  const gate = deriveCollabGate(members, currentCharacterId, null)
   return gate.memberCount > 1 && gate.state === 'published'
 }
 
@@ -58,7 +58,7 @@ describe('CollabSuccess render', () => {
 
   it('credits every member with the full task value', () => {
     const html = renderToStaticMarkup(
-      <CollabSuccess
+      <CollabSuccess collabState={null}
         members={MEMBERS}
         currentCharacterId={1}
         factionSlug={null}
@@ -77,7 +77,7 @@ describe('CollabSuccess render', () => {
   // #1812: same shared wording as the roster.
   it('speaks the one shared voice on a faction task too', () => {
     const html = renderToStaticMarkup(
-      <CollabSuccess
+      <CollabSuccess collabState={null}
         members={MEMBERS}
         currentCharacterId={1}
         factionSlug="ua"
@@ -94,7 +94,7 @@ describe('CollabSuccess render', () => {
   it('offers a manual continue action, not an auto-redirect', () => {
     const onContinue = vi.fn()
     const html = renderToStaticMarkup(
-      <CollabSuccess
+      <CollabSuccess collabState={null}
         members={MEMBERS}
         currentCharacterId={1}
         factionSlug={null}
@@ -108,7 +108,7 @@ describe('CollabSuccess render', () => {
 
   it('is a labelled modal dialog', () => {
     const html = renderToStaticMarkup(
-      <CollabSuccess
+      <CollabSuccess collabState={null}
         members={MEMBERS}
         currentCharacterId={1}
         factionSlug={null}
@@ -121,7 +121,7 @@ describe('CollabSuccess render', () => {
 
   it('omits the points column when the task value is unknown', () => {
     const html = renderToStaticMarkup(
-      <CollabSuccess
+      <CollabSuccess collabState={null}
         members={MEMBERS}
         currentCharacterId={1}
         factionSlug={null}
@@ -135,7 +135,7 @@ describe('CollabSuccess render', () => {
 
 describe('a long crew on a short phone (#3993)', () => {
   const html = renderToStaticMarkup(
-    <CollabSuccess
+    <CollabSuccess collabState={null}
       members={Array.from({ length: 8 }, (_, i) => member(i + 1, `Crew ${i + 1}`, true))}
       currentCharacterId={1}
       factionSlug="ua"

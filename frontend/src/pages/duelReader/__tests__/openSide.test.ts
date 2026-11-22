@@ -1,5 +1,6 @@
 /** The phone reader's open-panel ruling (#1084): one case per row of the table
  *  in `openSide.ts`, since the tail is where nobody is behind. */
+import { duelStateFor } from '../../../test/fixtures'
 import { describe, it, expect } from 'vitest'
 import { openSideFor, type DuelSideKey } from '../openSide'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
@@ -29,7 +30,7 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     task_id: 101,
     status: 'settled',
     forfeited_by_character_id: null,
-    state: "drafting",
+    state: duelStateFor(overrides.status ?? "settled", overrides.forfeited_by_character_id != null),
     cast_clock_started_at: null,
     winner_character_id: null,
     challenger_final_points: null,

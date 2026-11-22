@@ -18,6 +18,7 @@ const render = () => {
   const duel = {
     id: 5,
     status: 'pending',
+    state: 'challenged',
     challenger: side(1, 'Ada'),
     opponent: side(2, 'Rax'),
   } as unknown as DuelDetailOut
