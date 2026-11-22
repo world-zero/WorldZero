@@ -308,7 +308,9 @@ async def has_current_terms(account_id: int, session: AsyncSession) -> bool:
 async def ensure_current_terms(account_id: int, session: AsyncSession) -> None:
     """Idempotent consent row for seeds and scripts that mint accounts."""
     if not await has_current_terms(account_id, session):
-        session.add(TermsAcceptance(account_id=account_id, version=CURRENT_TERMS_VERSION))
+        session.add(
+            TermsAcceptance(account_id=account_id, version=CURRENT_TERMS_VERSION)
+        )
         await session.flush()
 
 
