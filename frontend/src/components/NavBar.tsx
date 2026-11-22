@@ -128,28 +128,26 @@ export default function NavBar() {
           </Suspense>
         )}
 
-        {/* Desktop way in to Settings (#2154). Signed in only: it's a `ProtectedRoute`. */}
-        {user && (
-          <NavLink
-            to="/settings"
-            className="label-caption"
-            /* The e2e suite's proof of a session (#2761); guarded by
-               `e2eAnchors.test.ts` and `navSettingsSlot.test.tsx`. */
-            data-testid="nav-settings"
-            style={({ isActive }) => ({
-              textDecoration: 'none',
-              padding: 'var(--space-xs) var(--space-sm)',
-              color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
-              transition: 'color 150ms',
-            })}
-          >
-            {t('settings.open')}
-          </NavLink>
-        )}
-
-        <div className="flex items-center gap-3 shrink-0">
+        {/* `items-baseline`: Settings (caption tier, padded) and the name share a text line. */}
+        <div className="flex items-baseline gap-3 shrink-0">
           {user ? (
             <>
+              {/* Desktop way in to Settings (#2154). Signed in only: it's a `ProtectedRoute`. */}
+              <NavLink
+                to="/settings"
+                className="label-caption"
+                /* The e2e suite's proof of a session (#2761); guarded by
+                   `e2eAnchors.test.ts` and `navSettingsSlot.test.tsx`. */
+                data-testid="nav-settings"
+                style={({ isActive }) => ({
+                  textDecoration: 'none',
+                  padding: 'var(--space-xs) var(--space-sm)',
+                  color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                  transition: 'color 150ms',
+                })}
+              >
+                {t('settings.open')}
+              </NavLink>
               {user.character ? (
                 /* A name leads to the person (#2354). */
                 <NavLink
