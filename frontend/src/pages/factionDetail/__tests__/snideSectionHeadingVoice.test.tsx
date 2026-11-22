@@ -121,6 +121,15 @@ describe("every S.N.I.D.E. section heading is the censor bar (#2807)", () => {
     });
   }
 
+  it("About prose sits on the plain wall ramp, no halftone dots (#4174)", () => {
+    const m = snideMarkup();
+    const at = m.indexOf(i18n.t("factions:detail.aboutHeading"));
+    const panel = m.slice(m.lastIndexOf('<div style="', m.lastIndexOf("position:relative;overflow:hidden", at)), m.indexOf("<p", at));
+    expect(panel, "About panel lost the plain ramp").toContain("linear-gradient(180deg, var(--faction-snide-wall) 0%");
+    expect(panel, "About panel grew a textured ground").not.toContain("repeating-linear-gradient(115deg");
+    expect(panel, "halftone dots are back behind the About prose").not.toContain("radial-gradient");
+  });
+
   it("the marker scrawl has left this surface", () => {
     // The token itself stays: other files still spend it.
     expect(

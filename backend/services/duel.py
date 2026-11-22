@@ -35,6 +35,7 @@ from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at, nudge_again_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
+from services.duel_state import challenge_lapsed, duel_state
 from services.era_gates import may_create_duel
 from services.praxis import _lock_signups_for_character, get_praxis
 from services.praxis_duel import get_duel_for_praxis, maybe_settle_duel
@@ -222,10 +223,9 @@ async def settle_lapsed_duels(
 
     async def lapse(duel: Duel) -> Optional[tuple[str, Optional[int]]]:
         if duel.status == DuelStatus.pending:
-            days = era.duel_challenge_lapse_days
-            if (
-                days is not None and now >= duel.created_at + timedelta(days=days)
-            ) or await _challenge_unanswerable(duel, session, era):
+            if challenge_lapsed(duel, now, era) or await _challenge_unanswerable(
+                duel, session, era
+            ):
                 return "decline", None
         elif (
             duel.status == DuelStatus.active
@@ -400,6 +400,9 @@ async def get_duel_detail(
         id=duel.id,
         task_id=duel.task_id,
         status=duel.status,
+        state=duel_state(
+            duel, challenger_praxis, opponent_praxis, datetime.now(timezone.utc), era
+        ),
         cast_clock_started_at=(
             clock[1] if clock and duel.forfeited_by_character_id is None else None
         ),
@@ -540,10 +543,7 @@ async def respond_to_duel_challenge(
         )
 
     # No sweep here (signup lock came first, #3655): a lapsed one reads as resolved.
-    days = era.duel_challenge_lapse_days
-    lapsed = days is not None and (
-        datetime.now(timezone.utc) >= duel.created_at + timedelta(days=days)
-    )
+    lapsed = challenge_lapsed(duel, datetime.now(timezone.utc), era)
     if duel.status != DuelStatus.pending or lapsed:
         raise_coded(
             400,

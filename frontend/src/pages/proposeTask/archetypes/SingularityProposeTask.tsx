@@ -26,8 +26,6 @@ import SingularityLamps from '../../../components/factionMarks/SingularityLamps'
 import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
   factionName,
-  getAllFactions,
-  sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVar, factionRoleVars } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
@@ -46,7 +44,6 @@ import {
 } from '../../editPraxis/archetypes/shared'
 import { ErrorBanner } from '../../../components/ui/ErrorBanner'
 import {
-  UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
 
@@ -156,7 +153,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -181,14 +178,6 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
 
   // The #1695 review window from the era; undrawn while `/game-config` loads.
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
-
-  // Unaffiliated leads (ADR-0039), then rainbow order (#352).
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({ slug: f.slug })),
-    ).map((f) => f.slug),
-  ]
 
   /**
    * The readout's foot, inside the panel: the only place `-term-dim` may be

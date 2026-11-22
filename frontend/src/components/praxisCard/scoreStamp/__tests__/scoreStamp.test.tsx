@@ -763,6 +763,7 @@ describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => 
     rival_bonus_points: 0,
     is_top_for_task: false,
     duel_id: null,
+    collab_state: null,
     can_flag: true,
     applied_metatasks: [],
     viewer_can_vote: true,

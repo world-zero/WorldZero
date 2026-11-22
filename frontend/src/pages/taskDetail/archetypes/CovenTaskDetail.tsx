@@ -185,7 +185,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       <span
         style={{
           fontFamily: DISPLAY,
-          fontWeight: 600,
           fontSize: COVEN_HEADING,
           lineHeight: 1.06,
           letterSpacing: "0.02em",
@@ -230,7 +229,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 {/* On the ward PAGE ground, so INK (#1295). */}
@@ -322,13 +321,14 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         display: "flex",
         gap: "var(--space-sm)",
         alignItems: "stretch",
+        flexWrap: "wrap",
         boxSizing: "border-box",
       }}
     >
       <div
         style={{
           ...innerBox,
-          flex: hasAction ? "0 0 auto" : "1 1 auto",
+          flex: hasAction ? "1 0 auto" : "1 1 auto",
           minWidth: COVEN_WORTH_MIN,
           display: "flex",
           alignItems: "center",
@@ -341,7 +341,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...innerBox,
-            flex: 1,
+            flex: "999 1 150px",
             minWidth: 0,
             display: "flex",
             flexDirection: "column",
@@ -397,7 +397,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       <h1
         style={{
           fontFamily: DISPLAY,
-          fontWeight: 600,
           fontSize: COVEN_TITLE,
           lineHeight: 1.06,
           letterSpacing: "0.005em",
@@ -562,7 +561,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         <span
           style={{
             fontFamily: DISPLAY,
-            fontWeight: 600,
             fontSize: COVEN_HEADING,
             lineHeight: 1.06,
             letterSpacing: "0.02em",
@@ -642,7 +640,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 border: "none",
                 cursor: "pointer",
                 fontFamily: DISPLAY,
-                fontWeight: 600,
                 fontSize: "var(--text-content)",
                 // Unpanelled, on the ward PAGE: INK, not DEEP (#1295).
                 color: INK,

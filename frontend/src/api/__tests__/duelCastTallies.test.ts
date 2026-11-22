@@ -57,6 +57,7 @@ function detail(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     task_id: 2,
     status: 'settled',
     forfeited_by_character_id: null,
+    state: "drafting",
     cast_clock_started_at: null,
     challenger: side(MINE_PRAXIS, 3),
     opponent: side(RIVAL_PRAXIS, 4),

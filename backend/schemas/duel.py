@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 from schemas.base import WireModel
 from models.duel import DuelStatus
+from services.duel_state import DuelState
 
 
 class DuelChallengeIn(WireModel):
@@ -54,6 +55,7 @@ class DuelDetailOut(WireModel):
     id: int
     task_id: int
     status: DuelStatus
+    state: DuelState
     forfeited_by_character_id: Optional[int]
     # When the not-yet-cast side's ``duel_cast_lapse_days`` began; NULL = no clock.
     cast_clock_started_at: Optional[datetime] = None

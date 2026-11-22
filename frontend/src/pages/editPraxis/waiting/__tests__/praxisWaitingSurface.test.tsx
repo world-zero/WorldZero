@@ -94,6 +94,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
     task_id: 5,
     status,
     forfeited_by_character_id: null,
+    state: "drafting",
     cast_clock_started_at: null,
     challenger: {
       praxis_id: 1,
@@ -617,6 +618,7 @@ describe("duel — sealed, waiting on the rival", () => {
 
   it("exits neutrally — pull back, never forfeit", () => {
     expect(html).toContain(collabCopy(SLUG, "duelPullBackAction"));
+    expect(html).toContain("Pull back (free until they submit)");
     expect(html.toLowerCase()).not.toContain("forfeit");
   });
 

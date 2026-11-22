@@ -9,7 +9,7 @@ import { CAPTION_FONT } from '../factionMarks/covenSlip'
 /**
  * Cozy Coven — the candlelit slip as a feed card (#1197): a pink→lavender head
  * under a gold twinkle field, a braided seam, and the near-white slip carrying the
- * shared payload. Grenze Gotisch for the kind, Caveat for the chrome.
+ * shared payload. Berkshire Swash for the kind, Caveat for the chrome.
  *
  * Chassis only (#1194): `FeedItemSlot` owns the archive; `children` is the
  * faction-blind body and pads itself (hence no padding here). Slots are placed by
@@ -28,7 +28,7 @@ import { CAPTION_FONT } from '../factionMarks/covenSlip'
 const DEEP = 'var(--faction-coven-slip-deep)'
 const ROW_SKIN: FeedRowSkin = { ink: { actor: DEEP } }
 
-const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
+const DISPLAY = 'var(--font-faction-witch)'
 
 interface SizeSet {
   /** The head's faction mark, raw px (§4a). */

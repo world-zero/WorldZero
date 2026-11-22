@@ -21,7 +21,7 @@ function praxis(overrides: Partial<FlaggedPraxisOut> = {}): FlaggedPraxisOut {
   } as FlaggedPraxisOut;
 }
 
-function setup(row: FlaggedPraxisOut, confirming: "ban" | "suspend" | null = null) {
+function setup(row: FlaggedPraxisOut, confirming: "ban" | "suspend" | "removeAll" | null = null) {
   const props = {
     onAsk: vi.fn(),
     onCancel: vi.fn(),
@@ -60,5 +60,14 @@ describe("AuthorRow", () => {
     const props = setup(praxis());
     fireEvent.click(screen.getByRole("button", { name: "Open in People" }));
     expect(props.onViewAccount).toHaveBeenCalledWith("junk");
+  });
+
+  it.each([
+    [1, "Remove 1 flagged post by Junk Poster?", "confirm — remove 1 post"],
+    [2, "Remove 2 flagged posts by Junk Poster?", "confirm — remove 2 posts"],
+  ])("removeAll with %i flagged reads in the right number", (n, heading, submit) => {
+    setup(praxis({ author_flagged_count: n }), "removeAll");
+    expect(screen.getByText(heading)).toBeTruthy();
+    expect(screen.getByRole("button", { name: submit })).toBeTruthy();
   });
 });

@@ -14,7 +14,9 @@ import {
 } from "../../api/praxis";
 import { extractError } from "../../utils/errors";
 import { factionFill } from "../../utils/factions";
+import { notifyRequestsChanged } from "../../utils/requestsBus";
 import { isTaskBankFull } from "./bankFull";
+import { isInvitePraxisSubmitted } from "./inviteClosed";
 import FeedBadge from "./FeedBadge";
 import FeedBankFullModal from "./FeedBankFullModal";
 import { FEED_BODY_LIFTED, FeedBodyOverlay } from "./feedBodyTarget";
@@ -63,6 +65,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
   const [showDropModal, setShowDropModal] = useState(false);
   const [dropError, setDropError] = useState("");
   const [dropping, setDropping] = useState(false);
+  const [closed, setClosed] = useState(false);
 
   const handleAccept = async () => {
     const result = await accept();
@@ -83,6 +86,9 @@ export default function FeedCardCollabInvite({ item }: Props) {
         setDropError("");
         refetchActiveTasks();
         setShowDropModal(true);
+      } else if (isInvitePraxisSubmitted(err)) {
+        setClosed(true);
+        notifyRequestsChanged();
       }
     }
   };
@@ -112,7 +118,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
     }
   };
 
-  const isPending = status === "pending";
+  const isPending = status === "pending" && !closed;
 
   return (
     <>
@@ -276,6 +282,17 @@ export default function FeedCardCollabInvite({ item }: Props) {
               style={{ color: "var(--badge-collab)", textDecoration: "none", ...FEED_BODY_LIFTED }}
             >
               {i18n.t("feed:collabInvite.accepted")}
+            </Link>
+          </div>
+        )}
+        {closed && (
+          <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
+            <Link
+              to={`/praxis/${praxis_id}`}
+              className="label-caption"
+              style={{ textDecoration: "none", ...FEED_BODY_LIFTED }}
+            >
+              {i18n.t("feed:collabInvite.closed")}
             </Link>
           </div>
         )}

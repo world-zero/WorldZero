@@ -55,6 +55,10 @@ describe('duel challenge card', () => {
     expect(html).not.toContain('Withdraw')
     expect(html.match(/<button/g)).toHaveLength(2)
   })
+
+  it('links the task title to /tasks/<task_id>', () => {
+    expect(html).toContain('href="/tasks/1"')
+  })
 })
 
 describe("catalogs", () => {

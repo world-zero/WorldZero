@@ -13,7 +13,7 @@ import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/us
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
-import type { ProposeTaskState } from '../../frontend/src/pages/proposeTask/useProposeTask'
+import { proposeFactionOptions, type ProposeTaskState } from '../../frontend/src/pages/proposeTask/useProposeTask'
 import type { DuelReaderState } from '../../frontend/src/pages/duelReader/useDuelReader'
 import type { DuelDetailOut, DuelSideOut } from '../../frontend/src/api/duel'
 import type { PraxisOut } from '../../frontend/src/api/praxis'
@@ -404,6 +404,7 @@ export function proposeTaskState(slug: string): ProposeTaskState {
     currentLevel: 6,
     success: false,
     factions: factionOuts,
+    factionOptions: proposeFactionOptions(factionOuts),
     title: 'Walk a neighbour’s dog while they are in hospital',
     setTitle: noop,
     description:
@@ -466,6 +467,7 @@ function duelPraxis(taskSlug: string | null, overrides: Partial<PraxisOut> = {})
     created_by_id: 7,
     display_multiplier: 1,
     duel_id: 44,
+    collab_state: null,
     flagged_at: null,
     habit_bonus_points: 0,
     rival_bonus_points: 0,
@@ -508,6 +510,7 @@ export function duelReaderState(taskSlug: string | null, forfeit = false): DuelR
     task_id: 101,
     status: 'settled',
     forfeited_by_character_id: forfeit ? 7 : null,
+    state: "drafting",
     cast_clock_started_at: null,
     winner_character_id: null,
     challenger_final_points: null,

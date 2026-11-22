@@ -102,7 +102,6 @@ export default function CovenInvitationLetter({
         <h2
           style={{
             fontFamily: DISPLAY,
-            fontWeight: 600,
             fontSize: 'var(--text-title)',
             lineHeight: 1.06,
             letterSpacing: '0.005em',

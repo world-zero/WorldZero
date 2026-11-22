@@ -83,7 +83,7 @@ describe("Coven task detail — the dress", () => {
 
   it("speaks in the faction's four faces, all via tokens", () => {
     const { html } = render(<CovenTaskDetail state={baseState()} />);
-    expect(html, "Grenze Gotisch — display").toContain("--font-faction-witch");
+    expect(html, "Berkshire Swash — display").toContain("--font-faction-witch");
     expect(html, "Spectral — numerals + brief").toContain("--font-faction-spectral");
     expect(html, "Caveat — the hand").toContain("--font-faction-script");
     expect(html, "Caveat — chrome (the hand too)").toContain("--font-faction-script");

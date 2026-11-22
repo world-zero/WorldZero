@@ -347,3 +347,29 @@ describe("the crew's primary waits for a title (#2484)", () => {
     );
   });
 });
+
+describe("a band skin stacks the primary under the links (#4194)", () => {
+  const bandRow = (proposalLive: boolean, iApproved = false) => {
+    const markup = renderToStaticMarkup(
+      <CollabSignals
+        {...state({ proposalLive, iApproved })}
+        skin={{ ...SKIN, band: true }}
+      />,
+    );
+    const row = /<div data-testid="collab-secondaries"[^>]*>(.*?)<\/div>/.exec(markup)![1];
+    return { markup, row };
+  };
+
+  it.each([false, true])("keeps the band out of the links row (live: %s)", (live) => {
+    const { markup, row } = bandRow(live);
+    expect(row).not.toContain("composer-primary");
+    expect(markup).toContain("composer-primary");
+    expect(row.match(/<button/g)).toHaveLength(live ? 2 : 1);
+  });
+
+  it("still draws both links once I have approved and the primary is gone", () => {
+    const { markup, row } = bandRow(true, true);
+    expect(markup).not.toContain("composer-primary");
+    expect(row.match(/<button/g)).toHaveLength(2);
+  });
+});

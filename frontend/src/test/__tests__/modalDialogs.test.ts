@@ -2,34 +2,48 @@
  * Every `role="dialog"` takes its modal behaviour from `hooks/useModal` and carries
  * an accessible name (#3568). An eleventh hand-rolled dialog fails here.
  */
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from "vitest";
 
-import { readStripped, sourceFiles, toRelative } from '../sourceScan'
+import { readStripped, sourceFiles, toRelative } from "../sourceScan";
 
 const dialogFiles = () =>
   sourceFiles()
     .filter((path) => /role="dialog"/.test(readStripped(path)))
     .map((path) => ({ rel: toRelative(path), text: readStripped(path) }))
-    .sort((a, b) => a.rel.localeCompare(b.rel))
+    .sort((a, b) => a.rel.localeCompare(b.rel));
 
 describe('role="dialog" components share useModal (#3568)', () => {
-  it('still sees the known dialogs, so it cannot pass by matching nothing', () => {
-    expect(dialogFiles().length).toBeGreaterThanOrEqual(10)
-  })
+  it("still sees the known dialogs, so it cannot pass by matching nothing", () => {
+    expect(dialogFiles().length).toBeGreaterThanOrEqual(10);
+  });
 
   for (const { rel, text } of dialogFiles()) {
     it(`${rel} uses useModal`, () => {
-      expect(text).toMatch(/useModal(<[^>]*>)?\(/)
-      expect(text).toMatch(/ref=\{(ref|panelRef)\}/)
-    })
+      expect(text).toMatch(/useModal(<[^>]*>)?\(/);
+      expect(text).toMatch(/ref=\{(ref|panelRef)\}/);
+    });
 
     it(`${rel} names every dialog`, () => {
       for (const match of text.matchAll(/role="dialog"/g)) {
-        const near = text.slice(match.index, match.index + 400)
-        expect(near, 'role="dialog" needs aria-label or aria-labelledby').toMatch(
-          /aria-label(ledby)?=/,
-        )
+        const near = text.slice(match.index, match.index + 400);
+        expect(
+          near,
+          'role="dialog" needs aria-label or aria-labelledby',
+        ).toMatch(/aria-label(ledby)?=/);
       }
-    })
+    });
   }
-})
+});
+
+describe("useModal focus never scrolls the page", () => {
+  it("passes preventScroll on open and on the modal-underneath fallback", () => {
+    const hook = sourceFiles().find((p) =>
+      toRelative(p).endsWith("hooks/useModal.ts"),
+    )!;
+    const src = readStripped(hook);
+    expect(src).toContain(
+      "(items()[0] ?? panel).focus({ preventScroll: true })",
+    );
+    expect(src).toContain("under.focus({ preventScroll: true })");
+  });
+});

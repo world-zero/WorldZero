@@ -160,7 +160,7 @@ export function TaskWorthStamp({ state }: { state: TaskDetailState }) {
 /**
  * The sign-up slot's control, resolved by the cards' `taskCardSignupCta` so
  * the surfaces agree (#2554). Narrowed for the page:
- * - a `denied` refusal returns null (the page hides unusable controls, §1.4);
+ * - a `denied` refusal returns null, except a pending task's plain label (the page hides unusable controls, §1.4);
  * - a link to the viewer's praxis (#2359/#2643) stands down where the page's
  *   own in-progress/submitted block already draws one — it is the fallback;
  * - anonymous viewers get null from the server's `can_sign_up: false`, and
@@ -178,6 +178,7 @@ export function detailSignupCta(
   if (cta.href) {
     return state.mySubmission || state.isInProgress ? null : cta;
   }
+  if (cta.pending) return cta;
   return cta.denied || !state.canSignUp ? null : cta;
 }
 

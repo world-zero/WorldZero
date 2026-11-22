@@ -23,8 +23,10 @@ from models.praxis import (
     PraxisInvite,
     PraxisMember,
     PraxisStatus,
+    PraxisType,
 )
 from models.task import Task
+from services.collab_state import collab_state
 from services.media import media_item_out
 from schemas.praxis import (
     PraxisCardOut,
@@ -218,6 +220,12 @@ async def build_praxis_out(
         voter_count=tally.voter_count,
         is_top_for_task=praxis.id in crowned_ids,
         duel_id=duel_id,
+        # Orphans (0 members) stay readable until #4201 stops them existing.
+        collab_state=(
+            collab_state(praxis)
+            if praxis.type == PraxisType.collab and praxis.members
+            else None
+        ),
         can_flag=can_flag,
         applied_metatasks=applied_metatasks,
         viewer_can_vote=can_vote,
