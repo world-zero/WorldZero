@@ -1,7 +1,6 @@
 /**
  * #1423: the rail lists no pending requests (ADR-0070: answered only in the
- * `/updates` queue) but the handle still badges the count. A count silently
- * reading 0 looks like "nothing pending", hence pinned.
+ * `/updates` queue) and the fold handle badges nothing (#4131).
  */
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
@@ -16,12 +15,17 @@ vi.mock('../../../hooks/useSidebarPanels', () => ({
 }))
 
 vi.mock('../../../auth/AuthContext', () => ({
-  useAuth: () => ({ user: { character: null } as unknown as CurrentUser }),
+  useAuth: () => ({ user: { character: null } as unknown as CurrentUser, signOut: () => {} }),
 }))
+vi.mock('../../../hooks/useTheme', () => ({
+  useTheme: () => ({ theme: 'light', toggle: () => {} }),
+}))
+vi.mock('../../../api/auth', () => ({ loginWith: () => {} }))
 vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => null,
 }))
 
+import NavBar from '../../NavBar'
 import SidebarColumn from '../SidebarColumn'
 
 const PENDING_COUNT = 3
@@ -59,27 +63,17 @@ describe('the rail and its pending requests', () => {
     expect(html, 'decline').not.toContain(i18n.t('common:actions.decline'))
   })
 
-  it('still badges the count on the collapsed handle', () => {
-    const html = render(true)
-    expect(html).toContain('aria-label="Expand sidebar — 3 pending requests"')
-    expect(html).toContain('>3<')
-  })
-
-  // #1457: badged in both states.
-  it('badges the count on the expanded handle too, where the panel used to be', () => {
-    const html = render(false)
-    expect(html).toContain('aria-label="Collapse sidebar — 3 pending requests"')
-    expect(html).toContain('>3<')
-  })
-
-  it('badges nothing when the count is 0 — 0 is not a silent failure', () => {
-    panelsMock.mockReturnValue({
-      pending_requests_count: 0,
-      global_activity: [],
-      active_praxes: [],
-      refetch: vi.fn(),
-      loading: false,
-    })
-    expect(render(true)).toContain('aria-label="Expand sidebar"')
+  // #4131: one badge on screen at desktop width, on Updates, never on the handle.
+  it.each([true, false])('draws exactly one badge, on Updates (collapsed=%s)', (collapsed) => {
+    panelsMock.mockReturnValue({ ...panelsMock(), pending_requests_count: 1 })
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/']}>
+        <NavBar />
+        <SidebarColumn collapsed={collapsed} onToggle={() => {}} />
+      </MemoryRouter>,
+    )
+    expect(html.match(/min-width:15px/g)).toHaveLength(1)
+    expect(html).toContain('aria-label="Updates — 1 pending request"')
+    expect(html).not.toContain('sidebar — ')
   })
 })

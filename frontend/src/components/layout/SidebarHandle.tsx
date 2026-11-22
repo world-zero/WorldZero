@@ -1,11 +1,11 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { panelStyle } from './Sidebar'
-import PendingBadge from './PendingBadge'
 
 /**
  * The one control that folds the desktop rail away and back (#1191): same
- * handle in both states, styled from the rail's `panelStyle`.
+ * handle in both states, styled from the rail's `panelStyle`. It carries no
+ * pending badge (#4131): the NavBar's Updates link is where desktop shows it.
  */
 const handleStyle: CSSProperties = {
   ...panelStyle,
@@ -19,68 +19,43 @@ const handleStyle: CSSProperties = {
   cursor: 'pointer',
 }
 
-function HandleButton({
-  expanded,
-  label,
-  glyph,
+export default function SidebarHandle({
+  collapsed,
   onToggle,
-  children,
 }: {
-  readonly expanded: boolean
-  readonly label: string
-  readonly glyph: string
+  readonly collapsed: boolean
   readonly onToggle: () => void
-  readonly children?: ReactNode
 }) {
+  const { t } = useTranslation('common')
+  const label = collapsed ? t('sidebar.toggle.expand') : t('sidebar.toggle.collapse')
+
   return (
     <button
       type="button"
       onClick={onToggle}
-      aria-expanded={expanded}
+      aria-expanded={!collapsed}
       // The rail stays mounted (#1343), so this id always resolves.
       aria-controls="wz-sidebar"
       aria-label={label}
       title={label}
-      className="flex flex-col items-center gap-1 w-8 mb-4"
+      className="flex items-center justify-center w-8 mb-4"
       style={handleStyle}
     >
-      <span aria-hidden="true">{glyph}</span>
-      {children}
+      {/* An SVG, not a text glyph: a guillemet's ink sits low in its em box (#4117). */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 12 12"
+        width="1em"
+        height="1em"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{ display: 'block', transform: collapsed ? 'scaleX(-1)' : undefined }}
+      >
+        <path d="M8 2 4 6l4 4" />
+      </svg>
     </button>
-  )
-}
-
-export default function SidebarHandle({
-  collapsed,
-  onToggle,
-  pendingCount,
-}: {
-  readonly collapsed: boolean
-  readonly onToggle: () => void
-  /** Pending collab invites + duel challenges, badged in BOTH states (#1457):
-   *  the rail no longer lists requests (ADR-0070). The badge is aria-hidden, so
-   *  the count rides the button's name: hence four labels. */
-  readonly pendingCount: number
-}) {
-  const { t } = useTranslation('common')
-
-  // Literal keys, not a template (copy sweep / typed `t()`).
-  const label = collapsed
-    ? pendingCount > 0
-      ? t('sidebar.toggle.expandWithPending', { count: pendingCount })
-      : t('sidebar.toggle.expand')
-    : pendingCount > 0
-      ? t('sidebar.toggle.collapseWithPending', { count: pendingCount })
-      : t('sidebar.toggle.collapse')
-
-  return (
-    <HandleButton
-      expanded={!collapsed}
-      onToggle={onToggle}
-      glyph={collapsed ? '›' : '‹'}
-      label={label}
-    >
-      <PendingBadge count={pendingCount} />
-    </HandleButton>
   )
 }
