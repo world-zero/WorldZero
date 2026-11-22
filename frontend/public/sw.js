@@ -70,7 +70,16 @@ async function focusOrOpen(clients, url) {
   await clients.openWindow(url)
 }
 
-if (typeof module !== 'undefined') module.exports = { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen }
+// Mirrors REQUEST_ITEM_TYPES in src/api/activityFeed.ts (pinned by serviceWorkerRoute.test.ts).
+const REQUEST_KINDS = ['duel_challenge', 'collab_invite', 'invitation_letter', 'awaiting_submission']
+
+// A request push also tells every open page, so its rail refetches (ADR-0072 Class C).
+async function tellWindows(clients, p) {
+  if (!REQUEST_KINDS.includes(p.kind)) return
+  for (const c of await clients.matchAll({ type: 'window', includeUncontrolled: true })) c.postMessage({ type: 'wz-request-push' })
+}
+
+if (typeof module !== 'undefined') module.exports = { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen, tellWindows, REQUEST_KINDS }
 
 if (typeof self !== 'undefined' && self.addEventListener) {
   // Precache so a first visit works offline. No clients.claim: the next navigation is controlled by the
@@ -108,7 +117,7 @@ if (typeof self !== 'undefined' && self.addEventListener) {
       // A push must still show something: the default kind is the generic line.
     }
     const m = pushMessageSafe(p, { ...PUSH_STRINGS, origin: self.location.origin })
-    event.waitUntil(self.registration.showNotification(m.title, m.options))
+    event.waitUntil(Promise.all([self.registration.showNotification(m.title, m.options), tellWindows(self.clients, p)]))
   })
 
   self.addEventListener('notificationclick', (event) => {

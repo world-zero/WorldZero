@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import push from '../locales/en/push.json'
 // @ts-expect-error classic-script worker with no types; vite-node supplies the `module` its guard exports to.
-import { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen } from '../../public/sw.js'
+import { route, isShell, shellUrls, pushMessage, pushMessageSafe, safeUrl, focusOrOpen, tellWindows, REQUEST_KINDS } from '../../public/sw.js'
+import { REQUEST_ITEM_TYPES } from '../api/activityFeed'
 
 const O = 'https://worldzero.org'
 
@@ -114,5 +115,41 @@ describe('focusOrOpen', () => {
     const clients = { matchAll: async () => [c], openWindow: vi.fn() }
     await focusOrOpen(clients, '/c')
     expect(clients.openWindow).not.toHaveBeenCalled()
+  })
+})
+
+describe('tellWindows (#4193)', () => {
+  it('posts to every window for a request kind, not for another kind', async () => {
+    const a = { postMessage: vi.fn() }
+    const b = { postMessage: vi.fn() }
+    const clients = { matchAll: async () => [a, b] }
+    await tellWindows(clients, { kind: 'duel_challenge' })
+    expect(a.postMessage).toHaveBeenCalledWith({ type: 'wz-request-push' })
+    expect(b.postMessage).toHaveBeenCalledTimes(1)
+    await tellWindows(clients, { kind: 'vote_on_mine' })
+    expect(a.postMessage).toHaveBeenCalledTimes(1)
+  })
+  it('mirrors the frontend request set', () => {
+    expect(new Set(REQUEST_KINDS)).toEqual(new Set(REQUEST_ITEM_TYPES))
+  })
+  it('a request push shows the notification and tells windows', async () => {
+    const listeners: Record<string, (e: unknown) => void> = {}
+    const showNotification = vi.fn(async () => {})
+    const postMessage = vi.fn()
+    vi.stubGlobal('self', {
+      addEventListener: (t: string, f: (e: unknown) => void) => (listeners[t] = f),
+      location: { origin: O },
+      registration: { showNotification },
+      clients: { matchAll: async () => [{ postMessage }] },
+    })
+    vi.resetModules()
+    // @ts-expect-error classic-script worker with no types
+    await import('../../public/sw.js?push')
+    let work: Promise<unknown> = Promise.resolve()
+    listeners.push({ data: { json: () => ({ kind: 'collab_invite' }) }, waitUntil: (p: Promise<unknown>) => (work = p) })
+    await work
+    vi.unstubAllGlobals()
+    expect(showNotification).toHaveBeenCalled()
+    expect(postMessage).toHaveBeenCalledWith({ type: 'wz-request-push' })
   })
 })

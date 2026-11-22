@@ -47,8 +47,8 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   const [panels, setPanels] = useState<SidebarPanels>(EMPTY_PANELS)
   const [loading, setLoading] = useState(true)
 
-  const refetch = useCallback(() => {
-    setLoading(true)
+  const load = useCallback((quiet: boolean) => {
+    if (!quiet) setLoading(true)
     getSidebar()
       // ponytail: failure empties the panels (right for a post-sign-out 401), no
       // retry; upgrade: a query cache (react-query), as `utils/requestsBus` names.
@@ -56,6 +56,25 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
       .catch(() => setPanels(EMPTY_PANELS))
       .finally(() => setLoading(false))
   }, [])
+  const refetch = useCallback(() => load(false), [load])
+
+  // ADR-0072 Class C: an invite someone else sent is learned on regaining the tab. A focus +
+  // visibilitychange burst collapses to one quiet read (no skeleton flash).
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const wake = () => {
+      if (document.visibilityState !== 'visible') return
+      clearTimeout(timer)
+      timer = setTimeout(() => load(true), 100)
+    }
+    document.addEventListener('visibilitychange', wake)
+    window.addEventListener('focus', wake)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('visibilitychange', wake)
+      window.removeEventListener('focus', wake)
+    }
+  }, [load])
 
   // On mount, gated on nothing; plus request-change refreshes (#346).
   useEffect(() => {
