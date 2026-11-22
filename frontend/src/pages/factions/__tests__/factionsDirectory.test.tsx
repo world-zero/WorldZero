@@ -134,8 +134,8 @@ describe('factions directory', () => {
 
   it('tells a defected faction in platform words, never the faction voice (#4245)', () => {
     const { text } = dir(status([['everymen', 'defected']]))
-    expect(text).toContain(i18n.t('feed:factionSelect.burned.status'))
-    expect(text).toContain(i18n.t('feed:factionSelect.burned.cta'))
+    expect(text).toContain(i18n.t('feed:factionSelectBurned.status'))
+    expect(text).toContain(i18n.t('feed:factionSelectBurned.cta'))
     expect(text).not.toContain(statusLine('everymen', 'locked'))
     expect(text).not.toContain(i18n.t('feed:factionSelect.everymen.cta'))
   })

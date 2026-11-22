@@ -328,11 +328,11 @@
       }
     }
   },
+  "factionSelectBurned": {
+    "status": "Closed for this era",
+    "cta": "You can't rejoin this era"
+  },
   "factionSelect": {
-    "burned": {
-      "status": "Closed for this era",
-      "cta": "You can't rejoin this era"
-    },
     "ua": {
       "tagline": "Make it anyway",
       "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. We dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
