@@ -1,10 +1,12 @@
+// @vitest-environment jsdom
 /**
  * The composer's duel block and invite affordance. #1226: the viewer may hold
  * the `opponent` role, so the pair must resolve sides via `duelSides`; a
  * regression to `duel.opponent` swaps the order the assertions check.
  */
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, it, expect } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
 import type { PraxisInviteOut, PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from "../../../../api/duel";
@@ -231,18 +233,22 @@ describe("InviteSearch — a collab whose crew is still one (#1274)", () => {
   });
 });
 
-/** #1417: the `+ invite` chip. Static markup, so only the closed state. */
 describe("InviteSearch — a staged player from a profile (#3772)", () => {
+  const reza = { id: 7, display_name: "Reza", username: "reza", faction_slug: null } as never;
   it("draws a one-tap Invite row naming them", () => {
-    const state = collabState([]);
-    const html = chipHtml({
-      ...state,
-      staged: { id: 7, display_name: "Reza", username: "reza", faction_slug: null } as never,
-    });
-    expect(html).toContain("Invite Reza");
+    expect(chipHtml({ ...collabState([]), staged: reza })).toContain("Invite Reza");
+  });
+
+  it("sends that character when the row is tapped", () => {
+    const sendInvite = vi.fn();
+    const state = { ...collabState([]), staged: reza, sendInvite };
+    render(<InviteSearch {...state} praxis={state.praxis!} skin={SKIN} />);
+    fireEvent.click(screen.getByTestId("composer-invite-staged"));
+    expect(sendInvite).toHaveBeenCalledWith(reza);
   });
 });
 
+/** #1417: the `+ invite` chip. Static markup, so only the closed state. */
 describe("InviteSearch — the + invite chip (#1417)", () => {
   it("draws the chip instead of a permanently open search box", () => {
     const html = chipHtml(collabState([]));

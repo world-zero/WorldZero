@@ -100,7 +100,7 @@ export function useComposerRoster(options: {
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteResults, setInviteResults] = useState<CharacterOut[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [staged, setStaged] = useState<CharacterOut | null>(null);
+  const [stagedRaw, setStaged] = useState<CharacterOut | null>(null);
   const [inviting, setInviting] = useState(false);
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
   const [crewNudge, setCrewNudge] = useState<CrewNudgeResult | null>(null);
@@ -114,6 +114,19 @@ export function useComposerRoster(options: {
         /* foes-first ordering is a nicety */
       });
   }, [user?.character?.id]);
+
+  // One exclusion for search results and a staged profile player: a send the
+  // server would refuse (self, member, pending invitee, blocked) is never offered.
+  const selfId = user?.character?.id;
+  const offerable = useCallback(
+    (c: CharacterOut) =>
+      c.id !== selfId &&
+      !praxis?.members.some((m) => m.character_id === c.id) &&
+      !praxis?.invites.some((i) => i.status === "pending" && i.invitee_id === c.id) &&
+      !blockedIds.has(c.id),
+    [praxis, selfId, blockedIds],
+  );
+  const staged = stagedRaw && offerable(stagedRaw) ? stagedRaw : null;
 
   // Invite search; the fetch lives here so archetypes wire the input directly.
   useEffect(() => {
@@ -137,19 +150,7 @@ export function useComposerRoster(options: {
           limit: 8,
         });
         if (cancelled) return;
-        const memberIds = new Set(praxis.members.map((m) => m.character_id));
-        const pendingInviteIds = new Set(
-          praxis.invites
-            .filter((i) => i.status === "pending")
-            .map((i) => i.invitee_id),
-        );
-        const filtered = results.filter(
-          (c) =>
-            c.id !== user?.character?.id &&
-            !memberIds.has(c.id) &&
-            !pendingInviteIds.has(c.id) &&
-            !blockedIds.has(c.id),
-        );
+        const filtered = results.filter(offerable);
         // Duel mode: foes first (soft ordering).
         if (pickingOpponent && foeIds.size > 0) {
           filtered.sort(
@@ -174,7 +175,7 @@ export function useComposerRoster(options: {
     user?.character?.id,
     duelPaneOpen,
     foeIds,
-    blockedIds,
+    offerable,
   ]);
 
   const clearPicker = useCallback(() => {

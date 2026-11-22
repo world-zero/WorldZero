@@ -52,3 +52,33 @@ describe('useComposerRoster search', () => {
     expect(await search(true)).toEqual([10])
   })
 })
+
+describe('useComposerRoster staged player', () => {
+  const stagedFor = async (praxis: typeof PRAXIS, who: number) => {
+    h.listBlocks.mockResolvedValue([{ character_id: 9 }])
+    const { result } = renderHook(() => useComposerRoster({ praxis, duelPane: PANES.closed }))
+    await waitFor(() => expect(h.listBlocks).toHaveBeenCalled())
+    await act(async () => {
+      await Promise.resolve()
+    })
+    act(() => result.current.setStaged(aCharacter({ id: who })))
+    return result.current.staged
+  }
+  const withMember = aPraxis({
+    id: 4,
+    type: 'collab',
+    duel_id: null,
+    members: [{ character_id: 11 }] as never,
+  })
+
+  it('stages an eligible player', async () => {
+    expect((await stagedFor(PRAXIS, 10))?.id).toBe(10)
+  })
+  it.each([
+    ['a blocked', PRAXIS, 9],
+    ['the viewer', PRAXIS, 3],
+    ['an existing member', withMember, 11],
+  ])('never stages %s character', async (_n, praxis, who) => {
+    expect(await stagedFor(praxis, who)).toBeNull()
+  })
+})
