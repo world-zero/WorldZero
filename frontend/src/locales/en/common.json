@@ -197,11 +197,12 @@
     "p4": "If you delete your account, we keep a record for each service you signed in with: the name of the service plus a scrambled (salted hash) form of your ID there. It lets us recognise you if you come back, so we can show the 'You deleted your World Zero account' screen. The record is cleared when you come back and start again; until then we keep it. Your account and characters are blanked, not erased: your praxis posts show as [removed], your comments are hidden, and your votes still count. Text you wrote into other players' collaborative praxis posts stays.",
     "lastUpdated": "Last updated: November 2026"
   },
-  "donate": {
-    "title": "Support World Zero",
-    "intro": "World Zero is a community project built and maintained by volunteers. If you enjoy the game and want to help keep it running, consider supporting us on Patreon. Every contribution goes directly toward hosting, development, and keeping the game free for everyone.",
-    "patreon": "Support on Patreon",
-    "outro": "You can also support the project by playing, posting praxis, and spreading the word."
+  "ai": {
+    "title": "AI at World Zero",
+    "builtTitle": "How World Zero is built",
+    "built": "Most of World Zero's code and copy are written with AI tools (Claude). The owner reviews what ships.",
+    "praxisTitle": "No AI in a praxis",
+    "praxis": "Your write-up and your proof (photos, video) must be your own work. No AI-generated or AI-edited media, and no AI-written write-ups. Proof exists to show that a real person really did a real-world task."
   },
   "attributions": {
     "title": "Attributions",
@@ -249,7 +250,7 @@
     "contact": "Contact",
     "disclaimer": "Disclaimer",
     "attributions": "Attributions",
-    "donate": "Donate"
+    "ai": "AI"
   },
   "actions": {
     "accept": "Accept",
