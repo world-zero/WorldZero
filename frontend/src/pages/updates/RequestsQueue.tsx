@@ -15,6 +15,7 @@ import {
 import { useRequestsQueue } from './useRequestsQueue'
 import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import { useAuth } from '../../auth/AuthContext'
+import { factionName } from '../../utils/factions'
 import { setActiveCharacter } from '../../api/me'
 
 /** The sigil on a tray chip. Matches `factionFacet`'s chip-place size. */
@@ -149,7 +150,18 @@ export default function RequestsQueue() {
             <p className="font-body content-text requests-queue__error">{error}</p>
           ) : (
             // Never null past the empty-list early return.
-            current && <FeedCardRouter item={current} onArchiveChange={refresh} />
+            current && (
+              <FeedCardRouter
+                key={current.item_key}
+                item={current}
+                onArchiveChange={() => {
+                  // An unanswered item ignores the archive (ADR-0070) and stays
+                  // first, so advance like "Still waiting".
+                  setActiveKey(nextQueueKey(items, activeKey))
+                  refresh()
+                }}
+              />
+            )
           )}
         </div>
 
@@ -175,6 +187,9 @@ export default function RequestsQueue() {
                     />
                   </span>
                   {feedTypeLabel(chip.type)}
+                  {chip.type === 'invitation_letter' && chip.context_faction_slug
+                    ? `: ${factionName(chip.context_faction_slug)}`
+                    : ''}
                 </button>
               ))}
               {tray.expandable && (
