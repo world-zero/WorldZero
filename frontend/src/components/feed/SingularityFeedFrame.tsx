@@ -168,7 +168,7 @@ export default function SingularityFeedFrame({
           alignItems: 'center',
           gap: 'var(--space-sm)',
           flexWrap: 'wrap',
-          padding: 'var(--space-xs) var(--space-md)',
+          padding: 'var(--space-xs) var(--feed-archive-inset) var(--space-xs) var(--space-md)',
           borderBottom: `1px dashed ${HAIR}`,
           color: BRIGHT,
         }}

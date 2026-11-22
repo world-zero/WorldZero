@@ -67,6 +67,8 @@ export default function EverymenFeedFrame({
             // Two rules with the paper between; flips because it IS the paper.
             borderBottom: '3px double var(--everymen-paper)',
             padding: 'var(--feed-bar-pad)',
+            // The double frame sits 6px deeper than a 1px-border card; give it back.
+            paddingInlineEnd: 'calc(var(--feed-archive-inset) - 6px)',
           }}
         >
           {/* Left flank: the status tag as an overprinted currentColor chip.

@@ -44,7 +44,7 @@ export default function DefaultFeedFrame({ slug, kicker, time, tag, archive, chi
       </span>
       <div
         style={{
-          padding: 'var(--space-xs) var(--space-md) var(--space-xs) var(--space-lg)',
+          padding: 'var(--space-xs) var(--feed-archive-inset) var(--space-xs) var(--space-lg)',
           borderBottom: '1px solid var(--color-border)',
           color: 'var(--color-text-secondary)',
         }}
