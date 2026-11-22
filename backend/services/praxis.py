@@ -6,7 +6,7 @@ Handles all three praxis types: solo, collab, and duel.
 import os
 from datetime import datetime, timezone
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import func, or_, select, update
@@ -657,6 +657,16 @@ async def create_praxis(
 # ``on_member_edit``.
 
 
+def refuse_if_under_review(item: Any) -> None:
+    """Author writes that would change reviewed content stop here."""
+    if item.moderation_status != ModerationStatus.visible:
+        raise_coded(
+            409,
+            ErrorCode.under_review,
+            "This is under review and can't be changed right now.",
+        )
+
+
 async def unsubmit_praxis(
     praxis_id: int,
     character_id: int,
@@ -675,6 +685,8 @@ async def unsubmit_praxis(
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character_id, "reopen", session, era, lock=True
     )
+
+    refuse_if_under_review(praxis)
 
     # Withdraw is a group cancellation, same as a keystroke (ADR-0079).
     if praxis.status == PraxisStatus.pending:
@@ -871,6 +883,7 @@ async def delete_media_item(
     to the praxis. Paths go through ``resolve_stored_media_path`` (never a bare
     join); ``None`` means nothing on disk, and the row removal still succeeds.
     """
+    refuse_if_under_review(praxis)
     if praxis.status == PraxisStatus.submitted:
         remaining = await session.scalar(
             select(func.count())
