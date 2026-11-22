@@ -1142,6 +1142,17 @@ async def test_a_letter_for_the_faction_you_already_joined_is_not_a_request(
     assert queue["counts"]["requests"] == SEEDED_ITEM_COUNTS[REQUESTS_FILTER]
 
 
+@pytest.mark.asyncio
+async def test_an_invitation_letter_names_no_actor(
+    client: AsyncClient, full_feed: dict, auth_headers: dict
+):
+    feed = await _feed(client, auth_headers, REQUESTS_FILTER)
+    letters = [i for i in feed["items"] if i["type"] == FEED_ITEM_TYPE_INVITATION_LETTER]
+    assert letters
+    assert all(i["actor_display_name"] is None for i in letters)
+    assert all(i["actor_faction_slug"] == i["payload"]["faction_slug"] for i in letters)
+
+
 # --- 8. Per-type facet counts (#1420) ---
 
 @pytest.mark.asyncio

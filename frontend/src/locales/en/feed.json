@@ -200,6 +200,7 @@
     "seeNewTasks": "See New Tasks",
     "eraArchive": "Era Archive"
   },
+  "invitationLetterRail": "You're invited to join {{faction}}",
   "invitationLetter": {
     "kicker": "Faction Invitation",
     "sentence": "You've received an invitation to join <1>{{faction}}</1>.",

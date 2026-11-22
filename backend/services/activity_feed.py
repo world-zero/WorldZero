@@ -1029,13 +1029,13 @@ def _invitation_letters_query(ctx: FeedContext) -> Select:
 
 
 def _invitation_letter_item(row: Any) -> ActivityFeedItemDC:
-    # ADR-0038: slug only; the frontend resolves the name.
+    # ADR-0038: slug only; the frontend resolves the name. No actor sent a letter.
     letter: InvitationLetter = row[0]
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_INVITATION_LETTER,
         item_key=build_item_key(FEED_ITEM_TYPE_INVITATION_LETTER, letter.id),
         timestamp=letter.delivered_at,
-        actor_display_name=letter.faction_slug,
+        actor_display_name=None,
         actor_faction_slug=letter.faction_slug,
         actor_avatar_url=None,
         payload=InvitationLetterPayload(
