@@ -193,7 +193,7 @@ async def test_era_reset_freezes_no_winner_when_both_sides_failed(
 
 
 @pytest.mark.asyncio
-async def test_era_reset_leaves_pending_and_declined_duels_untouched(
+async def test_era_reset_dissolves_pending_and_leaves_declined_untouched(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction
 ):
     pending_duel, _, _ = await make_duel(
@@ -209,7 +209,9 @@ async def test_era_reset_leaves_pending_and_declined_duels_untouched(
 
     await db_session.refresh(pending_duel)
     await db_session.refresh(declined_duel)
-    assert pending_duel.status == DuelStatus.pending
+    # Q8
+    assert pending_duel.status == DuelStatus.declined
+    assert pending_duel.declined_at is not None
     assert pending_duel.resolved_at is None
     assert declined_duel.status == DuelStatus.declined
     assert declined_duel.resolved_at is None

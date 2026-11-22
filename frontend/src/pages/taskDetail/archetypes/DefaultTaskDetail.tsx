@@ -96,6 +96,7 @@ export default function DefaultTaskDetail({
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   if (!task) return null;
@@ -259,6 +260,7 @@ export default function DefaultTaskDetail({
             >
               {t("detail.inProgress.continue")}
             </Link>
+            {canDrop && (
             <button
               onClick={handleDrop}
               className="font-body"
@@ -277,6 +279,7 @@ export default function DefaultTaskDetail({
             >
               {t("detail.inProgress.drop")}
             </button>
+            )}
           </div>
           <ErrorBanner message={signupError} />
         </div>

@@ -396,3 +396,15 @@ describe("PublishButton — the primary is dead until the praxis has a title (#2
     ).not.toContain("disabled");
   });
 });
+
+describe("PublishButton while the challenge is unanswered (Q1)", () => {
+  it("shows the waiting line instead of Submit", () => {
+    const state = duelState("pending", { isPublished: false });
+    state.duel = { ...state.duel!, state: "challenged" };
+    const html = renderToStaticMarkup(
+      PublishButton({ ...state, skin: SKIN }) as ReactElement,
+    );
+    expect(html).toContain(i18n.t("forms:editPraxis.invite.duelWaitingForAccept"));
+    expect(html).not.toContain("SOLO_IDLE");
+  });
+});

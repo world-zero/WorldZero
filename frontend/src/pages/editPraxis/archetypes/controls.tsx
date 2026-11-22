@@ -2,6 +2,7 @@
  * Lightly skinned, accessible control primitives shared by all archetypes.
  * Archetypes own the outer containers; these are the inner essentials.
  */
+import { DUEL_STATES_THAT_BLOCK_DROP } from "../../../utils/duelDrop";
 import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, DragEvent, ReactNode } from "react";
@@ -142,6 +143,8 @@ function DuelPair({
   const accent = skin.collab?.accentInk ?? skin.collab?.accent ?? "currentColor";
   const quiet = skin.collab?.quiet ?? "currentColor";
   const accepted = duel?.status === "active";
+  // A forfeit can't be dissolved away (Q5).
+  const canDissolve = accepted && duel?.state !== "awaiting_honest_side";
   const canRescind = duel == null || duel.status === "pending";
   return (
     <div
@@ -183,7 +186,7 @@ function DuelPair({
           />
         </div>
       )}
-      {(canRescind || accepted) && (
+      {(canRescind || canDissolve) && (
         <div className="flex items-center gap-2">
           {canRescind && (
             <button
@@ -205,7 +208,7 @@ function DuelPair({
           )}
           {/* Accepted duels dissolve neutrally back to solo scoring (#956);
               heavier than ×, so labelled and confirmed. */}
-          {accepted && (
+          {canDissolve && (
             <button
               type="button"
               onClick={() => void dissolveDuel()}
@@ -707,10 +710,11 @@ interface DropButtonSkin {
 
 export function DropButton({
   praxis,
+  duel,
   currentCharacterId,
   cancel,
   skin,
-}: Pick<EditPraxisState, "praxis" | "currentCharacterId" | "cancel"> & {
+}: Pick<EditPraxisState, "praxis" | "duel" | "currentCharacterId" | "cancel"> & {
   skin?: DropButtonSkin;
 }) {
   const { t } = useTranslation("forms");
@@ -718,6 +722,7 @@ export function DropButton({
   // Delete is creator-only (backend `delete_praxis` enforces); others Leave (#1074).
   const isCreator = praxis?.created_by_id === currentCharacterId;
   if (isCollab && !isCreator) return null;
+  if (duel && DUEL_STATES_THAT_BLOCK_DROP.has(duel.state)) return null;
   // With others' parts inside, "drop task" undersells it; collabCopy warns.
   const crewAtStake = isCollab && praxis.members.length > 1;
   const label = crewAtStake
@@ -1501,6 +1506,15 @@ export function PublishButton({
   /** No media attached and not an admin (#3473). */
   needsProof?: boolean;
 }) {
+  // Q1: Submit waits for the accept; drafting and media stay open. `i18n.t`,
+  // not the hook: tests invoke this directly.
+  if (duelMode && duel?.state === "challenged") {
+    return (
+      <p className="label-caption" data-testid="composer-duel-waiting">
+        {i18n.t("forms:editPraxis.invite.duelWaitingForAccept")}
+      </p>
+    );
+  }
   // NOT unreachable (#1177): a moderator-FAILED duel side still `submitted`
   // renders the composer (phase is `composing`, waiting surface refuses), and
   // this is the author's only way back to fix the text. Ordinary casts go to

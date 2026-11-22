@@ -84,7 +84,8 @@ async def _authorize_duel(
     result = await session.execute(
         select(Duel).where(
             (Duel.challenger_praxis_id == praxis.id)
-            | (Duel.opponent_praxis_id == praxis.id)
+            | (Duel.opponent_praxis_id == praxis.id),
+            Duel.status != DuelStatus.declined,
         )
     )
     duel = result.scalar_one_or_none()

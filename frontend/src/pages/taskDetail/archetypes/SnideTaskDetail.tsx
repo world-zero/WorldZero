@@ -147,6 +147,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   // Guarded non-null by the dispatcher.
@@ -344,6 +345,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             <span style={plateLabel}>{t("detail.inProgress.continue")}</span>
             <XMark size={17} />
           </Link>
+          {canDrop && (
           <button
             onClick={handleDrop}
             style={{
@@ -367,6 +369,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.inProgress.drop")}
           </button>
+          )}
           <ErrorBanner message={signupError} />
         </div>
       )}

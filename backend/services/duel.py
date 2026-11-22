@@ -35,10 +35,15 @@ from services.character_stats import recalculate_character_stats
 from services.nudge import latest_nudge_at, nudge_again_at
 from services.vote_tally import get_tally, tally_votes
 from services.era import get_current_era_row, get_or_create_stats
-from services.duel_state import challenge_lapsed, duel_state
+from services.duel_state import ALLOWED_FROM, DuelState, challenge_lapsed, duel_state
 from services.era_gates import may_create_duel
 from services.praxis import _lock_signups_for_character, get_praxis
-from services.praxis_duel import get_duel_for_praxis, maybe_settle_duel
+from services.praxis_duel import (
+    duel_state_of,
+    forfeit_duel,
+    get_duel_for_praxis,
+    maybe_settle_duel,
+)
 from services.push import notify_duel_challenge
 from services.signup_eligibility import (
     count_in_progress_praxes,
@@ -141,8 +146,7 @@ async def _apply_forfeits(
     now = datetime.now(timezone.utc)
     rescore_ids: set[int] = set()
     for duel, forfeiter_id in forfeits:
-        duel.forfeited_by_character_id = forfeiter_id
-        duel.forfeited_at = now
+        forfeit_duel(duel, forfeiter_id, now)
         if duel.status == DuelStatus.pending:
             duel.status = DuelStatus.declined
             duel.declined_at = now
@@ -229,12 +233,13 @@ async def settle_lapsed_duels(
                 return "decline", None
         elif (
             duel.status == DuelStatus.active
-            and duel.forfeited_by_character_id is None
             and duel.accepted_at is not None
             and era.duel_cast_lapse_days is not None
         ):
             challenger = await session.get(Praxis, duel.challenger_praxis_id)
             opponent = await _opponent_praxis(duel, session)
+            if duel_state(duel, challenger, opponent, now, era) != DuelState.ONE_CAST:
+                return None
             clock = _cast_clock(duel, challenger, opponent)
             if clock and now >= clock[1] + timedelta(days=era.duel_cast_lapse_days):
                 late = (
@@ -357,6 +362,12 @@ async def get_duel_detail(
                 return slug
         return _faction_slug_of(character)
 
+    voted = any(
+        get_tally(tallies, pid).points_from_votes
+        for pid in (duel.challenger_praxis_id, duel.opponent_praxis_id)
+        if pid is not None
+    )
+
     def _side(
         character: Optional[Character],
         praxis: Optional[Praxis],
@@ -375,6 +386,7 @@ async def get_duel_detail(
                 is_winner,
                 is_tied,
                 era,
+                has_votes=voted,
             )
 
         return DuelSideOut(
@@ -463,7 +475,18 @@ async def issue_duel_challenge(
             ErrorCode.duel_requires_solo_praxis,
             "Only a solo praxis can issue a duel challenge.",
         )
-    if await get_duel_for_praxis(challenger_praxis_id, session) is not None:
+    # A side a finished duel left in progress (no-contest) stays out of duels.
+    if await get_duel_for_praxis(
+        challenger_praxis_id, session
+    ) is not None or await session.scalar(
+        select(Duel.id)
+        .where(
+            (Duel.challenger_praxis_id == challenger_praxis_id)
+            | (Duel.opponent_praxis_id == challenger_praxis_id),
+            Duel.status == DuelStatus.resolved,
+        )
+        .limit(1)
+    ):
         raise_coded(
             409, ErrorCode.duel_already_exists, "This praxis is already part of a duel."
         )
@@ -543,8 +566,8 @@ async def respond_to_duel_challenge(
         )
 
     # No sweep here (signup lock came first, #3655): a lapsed one reads as resolved.
-    lapsed = challenge_lapsed(duel, datetime.now(timezone.utc), era)
-    if duel.status != DuelStatus.pending or lapsed:
+    transition = "accept" if accept else "decline"
+    if await duel_state_of(duel, session, era) not in ALLOWED_FROM[transition]:
         raise_coded(
             400,
             ErrorCode.duel_challenge_already_resolved,
@@ -557,6 +580,7 @@ async def respond_to_duel_challenge(
         duel.status = DuelStatus.declined
         duel.declined_at = now
         await session.flush()
+        await _rescore_participants(duel, session, era)
         return None, duel
 
     opponent = await session.get(Character, character_id)
@@ -666,7 +690,8 @@ async def cancel_duel_challenge(
     """
     duel = await get_duel(duel_id, session, lock=True)
 
-    if duel.status not in (DuelStatus.pending, DuelStatus.active):
+    # Q5: a forfeit can't be dissolved away.
+    if await duel_state_of(duel, session, era) not in ALLOWED_FROM["dissolve"]:
         raise HTTPException(status_code=400, detail="Duel has already been resolved.")
 
     challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
@@ -679,14 +704,18 @@ async def cancel_duel_challenge(
     duel.status = DuelStatus.declined
     duel.declined_at = datetime.now(timezone.utc)
     await session.flush()
-
-    # A side may already be scored with the duel multiplier; revert both.
-    era_row = await get_current_era_row(session)
-    participant_ids = {challenger_character_id, duel.opponent_character_id} - {None}
-    for participant_id in sorted(participant_ids):
-        if participant_id is not None:
-            await recalculate_character_stats(
-                participant_id, session, era, era_row=era_row
-            )
-    await session.flush()
+    await _rescore_participants(duel, session, era)
     return duel
+
+
+async def _rescore_participants(
+    duel: Duel, session: AsyncSession, era: EraConfig
+) -> None:
+    """Decline and withdraw both end in DISSOLVED; a side may already be scored
+    with the duel multiplier, so revert both."""
+    challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)
+    participant_ids = {
+        challenger_praxis.created_by_id if challenger_praxis is not None else None,
+        duel.opponent_character_id,
+    } - {None}
+    await _rescore(participant_ids, session, era, emit_taunts=True)

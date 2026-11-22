@@ -21,6 +21,41 @@ class DuelState(enum.Enum):
     NO_CONTEST = "no_contest"
 
 
+# The states each transition may start from (#4191 tables, rulings Q1/Q4/Q5).
+# "cast" is a duel side's submit: refused while CHALLENGED (Q1). "reopen" is
+# its unsubmit: refused once forfeited, so a decided duel keeps both sides cast.
+ALLOWED_FROM: dict[str, frozenset[DuelState]] = {
+    "accept": frozenset({DuelState.CHALLENGED}),
+    "decline": frozenset({DuelState.CHALLENGED}),
+    "dissolve": frozenset(
+        {DuelState.CHALLENGED, DuelState.DRAFTING, DuelState.ONE_CAST}
+    ),
+    "cast": frozenset(
+        {
+            DuelState.DRAFTING,
+            DuelState.ONE_CAST,
+            DuelState.AWAITING_HONEST_SIDE,
+            DuelState.LIVE,
+            DuelState.LIVE_FORFEITED,
+        }
+    ),
+    "reopen": frozenset(
+        {
+            DuelState.CHALLENGED,
+            DuelState.DISSOLVED,
+            DuelState.ONE_CAST,
+            DuelState.AWAITING_HONEST_SIDE,
+            DuelState.LIVE,
+        }
+    ),
+}
+
+#: The states a winner may be named from (Q10); never a draft or a no-contest.
+CONTEST_STATES = frozenset(
+    {DuelState.LIVE, DuelState.LIVE_FORFEITED, DuelState.RESOLVED}
+)
+
+
 def challenge_lapsed(duel: Duel, now: datetime, era: EraConfig) -> bool:
     """Unanswered past ``duel_challenge_lapse_days``; ``None`` never lapses."""
     days = era.duel_challenge_lapse_days
@@ -56,6 +91,8 @@ def duel_state(
         if casts == 2:
             return DuelState.LIVE
         return DuelState.ONE_CAST if casts else DuelState.DRAFTING
-    # resolved: only maybe_settle_duel sets live_at (never cleared), so it marks a
-    # duel that went live; one frozen before that (era close, #4199) is no contest.
-    return DuelState.RESOLVED if duel.live_at is not None else DuelState.NO_CONTEST
+    # resolved: live_at (set once, never cleared) marks a duel that went live; a
+    # forfeit frozen from AWAITING_HONEST_SIDE has a winner too (Q4). Pending
+    # duels dissolve at close, so a forfeit here was never a declined one.
+    went_live = duel.live_at is not None or forfeited
+    return DuelState.RESOLVED if went_live else DuelState.NO_CONTEST

@@ -11,9 +11,47 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from game_config import CURRENT_ERA, EraConfig
 from models.duel import Duel, DuelStatus
 from models.praxis import Praxis, PraxisStatus
+from services.duel_state import DuelState, duel_state
 from services.push import notify_duel_live
+
+
+async def duel_state_of(
+    duel: Duel, session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> DuelState:
+    challenger = await session.get(Praxis, duel.challenger_praxis_id)
+    opponent = (
+        await session.get(Praxis, duel.opponent_praxis_id)
+        if duel.opponent_praxis_id is not None
+        else None
+    )
+    return duel_state(duel, challenger, opponent, datetime.now(timezone.utc), era)
+
+
+def forfeit_duel(duel: Duel, forfeiter_id: int, now: datetime) -> None:
+    """The one writer of a forfeit (Q11): both columns, so it reaches the feed.
+    Sticky: the first forfeit stands."""
+    if duel.forfeited_by_character_id is None:
+        duel.forfeited_by_character_id = forfeiter_id
+        duel.forfeited_at = now
+
+
+async def duel_blocks_delete(praxis_id: int, session: AsyncSession) -> bool:
+    """A side of any duel that left a row (not a dissolved one) can't be deleted:
+    the foreign keys refuse, so say so before they do."""
+    return (
+        await session.scalar(
+            select(Duel.id)
+            .where(
+                (Duel.challenger_praxis_id == praxis_id)
+                | (Duel.opponent_praxis_id == praxis_id),
+                Duel.status != DuelStatus.declined,
+            )
+            .limit(1)
+        )
+    ) is not None
 
 
 async def get_duel_for_praxis(praxis_id: int, session: AsyncSession) -> Optional[Duel]:

@@ -41,7 +41,7 @@ def duel_winner(
     1. Eligibility: one side ineligible → the other wins, even with a lower
        tally (intended). Both ineligible → ``None``; tiebreak doesn't apply.
     2. Strictly greater ``points_from_votes`` wins.
-    3. Equal points → ``tie_break_winner_id`` (e.g. Snide wins ties, #748,
+    3. Equal points, at least one vote → ``tie_break_winner_id`` (Era 1 Snide, #748,
        pre-resolved via :func:`services.scoring.sole_tie_taker_id`). ``None``
        is a real tie or a no-contest (callers pass equal points).
 
@@ -71,4 +71,6 @@ def duel_winner(
         return challenger_character_id
     if opponent_points > challenger_points:
         return opponent_character_id
-    return tie_break_winner_id
+    # Q10: a vote is worth at least 1 point, so 0 points means 0 votes: no winner,
+    # and the (per-era) tie perk has nothing to break.
+    return tie_break_winner_id if challenger_points else None

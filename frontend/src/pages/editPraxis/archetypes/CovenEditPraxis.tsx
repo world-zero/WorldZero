@@ -708,6 +708,7 @@ export default function CovenEditPraxis({ state }: Props) {
               />
               <DropButton
                 praxis={praxis}
+                duel={state.duel}
                 currentCharacterId={state.currentCharacterId}
                 cancel={state.cancel}
                 skin={{

@@ -117,6 +117,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   if (!task) return null;
@@ -279,6 +280,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           <Link to={`/praxis/${inProgressPraxisId}/edit`} style={goldButton}>
             {t("detail.inProgress.continue")}
           </Link>
+          {canDrop && (
           <button
             onClick={handleDrop}
             style={{
@@ -300,6 +302,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.inProgress.drop")}
           </button>
+          )}
           <ErrorBanner message={signupError} />
         </div>
       )}

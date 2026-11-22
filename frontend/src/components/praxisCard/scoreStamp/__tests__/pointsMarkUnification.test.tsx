@@ -123,6 +123,7 @@ function snideDetail(): string {
     signupError: null,
     handleSignup: async () => {},
     handleDrop: async () => {},
+    canDrop: true,
     dropConfirm: null,
   };
   return renderToStaticMarkup(

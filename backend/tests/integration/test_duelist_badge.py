@@ -207,7 +207,7 @@ async def test_resolved_duel_ignores_a_live_tally_that_disagrees(
 
 
 @pytest.mark.asyncio
-async def test_active_forfeited_duel_still_counts(
+async def test_awaiting_honest_side_earns_no_badge_yet(
     db_session: AsyncSession, era: Era, some_faction: Faction
 ):
     _, challenger, opponent = await make_duel(
@@ -216,7 +216,8 @@ async def test_active_forfeited_duel_still_counts(
         label="act",
         status=DuelStatus.active,
         forfeiter="opponent", commit=True)
-    assert await _badge_keys(db_session, challenger) == ["duelist"]
+    # Q10: only LIVE, LIVE_FORFEITED and RESOLVED count.
+    assert await _badge_keys(db_session, challenger) == []
     assert await _badge_keys(db_session, opponent) == []
 
 

@@ -24,6 +24,7 @@ from models.task import Task, TaskStatus
 # ``seed`` imports no service, so this costs no cycle; the seeder owns the key (#511).
 from seed import ONBOARDING_TASK_SEED_KEY
 from services.duel_outcome import duel_winner
+from services.duel_state import CONTEST_STATES, DuelState, duel_state
 from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
 
@@ -287,20 +288,27 @@ async def resolve_duels_at_era_close(
     closing_era_id: int | None = None,
     era: EraConfig = CURRENT_ERA,
 ) -> list[Duel]:
-    """Freeze every ``active``/``settled`` duel's outcome (ADR-0052).
+    """Dissolve ``pending`` duels (Q8); freeze ``active``/``settled`` ones (ADR-0052).
 
     Sets winner (``duel_winner``), both final-points snapshots, ``resolved_at``,
     status, and ``resolved_era_id`` (#823; a timestamp can't answer it since the
-    new Era row is inserted first). ``active`` duels are no-contests (null
-    winner, zero snapshots); ``pending``/``declined`` are untouched. No per-duel
+    new Era row is inserted first). A no-contest (nobody or one side cast) gets
+    null winner and null snapshots; a forfeit still has a winner (Q4). No per-duel
     feed events: the era announcement covers it.
     """
     resolved_at = resolved_at or datetime.now(timezone.utc)
 
     duel_result = await session.execute(
-        select(Duel).where(Duel.status.in_(DUELS_FROZEN_AT_ERA_CLOSE))
+        select(Duel).where(
+            Duel.status.in_((DuelStatus.pending, *DUELS_FROZEN_AT_ERA_CLOSE))
+        )
     )
     duels = list(duel_result.scalars().all())
+    # Q8: an unanswered challenge dissolves at close; nothing to freeze.
+    for duel in [d for d in duels if d.status == DuelStatus.pending]:
+        duel.status = DuelStatus.declined
+        duel.declined_at = resolved_at
+    duels = [d for d in duels if d.status != DuelStatus.declined]
     if not duels:
         return []
 
@@ -349,7 +357,15 @@ async def resolve_duels_at_era_close(
         )
 
     for duel in duels:
-        is_contest = duel.status == DuelStatus.settled
+        # Q4: a forfeit has an honest-side winner; a draft or one cast is none.
+        state = duel_state(
+            duel,
+            praxes_by_id.get(duel.challenger_praxis_id),
+            praxes_by_id.get(duel.opponent_praxis_id),
+            resolved_at,
+            era,
+        )
+        is_contest = state in CONTEST_STATES | {DuelState.AWAITING_HONEST_SIDE}
         if is_contest:
             challenger_points = get_tally(
                 tallies, duel.challenger_praxis_id
@@ -360,8 +376,7 @@ async def resolve_duels_at_era_close(
                 else 0
             )
         else:
-            challenger_points = 0
-            opponent_points = 0
+            challenger_points = opponent_points = None
 
         challenger_praxis = praxes_by_id.get(duel.challenger_praxis_id)
         challenger_character_id = (
@@ -376,8 +391,8 @@ async def resolve_duels_at_era_close(
             duel_winner(
                 challenger_character_id=challenger_character_id,
                 opponent_character_id=duel.opponent_character_id,
-                challenger_points=challenger_points,
-                opponent_points=opponent_points,
+                challenger_points=challenger_points or 0,
+                opponent_points=opponent_points or 0,
                 challenger_moderation=(
                     challenger_praxis.moderation_status if challenger_praxis else None
                 ),
