@@ -121,7 +121,8 @@ async def test_two_member_collab_converts_to_solo_when_one_leaves(
 
 
 @pytest.mark.asyncio
-async def test_conversion_drops_pending_invites(
+@pytest.mark.parametrize("exit_by", ["leave", "kick"])
+async def test_exit_with_pending_invite_keeps_the_collab(
     client: AsyncClient,
     character: Character,
     character2: Character,
@@ -129,8 +130,9 @@ async def test_conversion_drops_pending_invites(
     active_task: Task,
     auth_headers: dict,
     auth_headers2: dict,
+    exit_by: str,
 ):
-    """Only pending invites drop; the accepted one is membership history."""
+    """Amended ADR-0060: a pending invite keeps an editable collab alive."""
     praxis_id = await _collab_with_members(
         client, active_task, auth_headers2, [(character.id, auth_headers)]
     )
@@ -141,13 +143,40 @@ async def test_conversion_drops_pending_invites(
     )
     assert invite_resp.status_code in (200, 201)
 
+    if exit_by == "leave":
+        resp = await client.post(f"/praxes/{praxis_id}/leave", headers=auth_headers)
+    else:
+        resp = await client.post(
+            f"/praxes/{praxis_id}/kick/{character.id}", headers=auth_headers2
+        )
+    assert resp.status_code == 200
+
+    view = await client.get(f"/praxes/{praxis_id}", headers=auth_headers2)
+    data = view.json()
+    assert data["type"] == "collab"
+    assert [m["character_id"] for m in data["members"]] == [character2.id]
+    pending = [i for i in data["invites"] if i["status"] == "pending"]
+    assert [i["invitee_id"] for i in pending] == [character3.id]
+
+
+@pytest.mark.asyncio
+async def test_leave_with_no_pending_invites_converts(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    praxis_id = await _collab_with_members(
+        client, active_task, auth_headers2, [(character.id, auth_headers)]
+    )
     await client.post(f"/praxes/{praxis_id}/leave", headers=auth_headers2)
 
     view = await client.get(f"/praxes/{praxis_id}", headers=auth_headers)
-    assert view.status_code == 200
-    invites = view.json()["invites"]
-    assert not [invite for invite in invites if invite["status"] == "pending"]
-    assert [invite["invitee_id"] for invite in invites] == [character.id]
+    data = view.json()
+    assert data["type"] == "solo"
+    assert [i for i in data["invites"] if i["status"] == "pending"] == []
 
 
 # submitted: conversion reprices
