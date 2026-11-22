@@ -27,6 +27,14 @@ class CopyOverrideIn(WireModel):
     ns: str = Field(..., min_length=1, max_length=MAX_NS_LENGTH, pattern=_NS_PATTERN)
     key: str = Field(..., min_length=1, max_length=MAX_KEY_LENGTH, pattern=_KEY_PATTERN)
     value: str = Field(..., min_length=1, max_length=MAX_VALUE_LENGTH)
+    #: The override the editor started from; null = it started from the shipped
+    #: wording. Sent → the save lands only if the row still matches (stale-save
+    #: guard for concurrent editors). Omitted → unconditional, as before.
+    base: str | None = Field(default=None, max_length=MAX_VALUE_LENGTH)
+
+    @property
+    def checks_base(self) -> bool:
+        return "base" in self.model_fields_set
 
 
 class CopyOverrideOut(WireModel):

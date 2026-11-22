@@ -155,3 +155,10 @@ export function extractErrorCode(err: unknown): string | null {
   if (!detail || typeof detail === 'string' || Array.isArray(detail)) return null
   return typeof detail.code === 'string' ? detail.code : null
 }
+
+/** The coded failure's `params`, e.g. a 409's live value. Empty when uncoded. */
+export function extractErrorParams(err: unknown): Record<string, unknown> {
+  const detail = failureOf(err).body?.detail
+  if (!detail || typeof detail === 'string' || Array.isArray(detail)) return {}
+  return detail.params ?? {}
+}

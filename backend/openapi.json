@@ -1681,6 +1681,18 @@
       "CopyOverrideIn": {
         "description": "One override, as an admin submits it.",
         "properties": {
+          "base": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base"
+          },
           "key": {
             "maxLength": 255,
             "minLength": 1,

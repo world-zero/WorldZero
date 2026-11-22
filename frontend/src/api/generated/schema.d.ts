@@ -2891,6 +2891,8 @@ export interface components {
          * @description One override, as an admin submits it.
          */
         CopyOverrideIn: {
+            /** Base */
+            base?: string | null;
             /** Key */
             key: string;
             /** Ns */

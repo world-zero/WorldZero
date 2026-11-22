@@ -56,7 +56,7 @@ describe('the taunt copy sheet', () => {
       target: { value: '{{from_name}} out-leveled {{to_name}}.' },
     })
     fireEvent.click(screen.getByText('save'))
-    await waitFor(() => expect(putCopyOverride).toHaveBeenCalledWith({ ns: 'taunts', key: KEY, value: '{{from_name}} out-leveled {{to_name}}.' }))
+    await waitFor(() => expect(putCopyOverride).toHaveBeenCalledWith({ ns: 'taunts', key: KEY, value: '{{from_name}} out-leveled {{to_name}}.', base: null }))
   })
 
   it('refuses a save that drops a name', async () => {

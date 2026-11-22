@@ -5,7 +5,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { useTranslation } from 'react-i18next'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { deleteCopyOverride } from '../../../api/copy'
+import { deleteCopyOverride, putCopyOverride } from '../../../api/copy'
+import { ApiError } from '../../../api/apiError'
 import i18n from '../../../i18n'
 import CopyEditor, { shippedValue } from '../CopyEditor'
 import { MARK } from '../copyProbe'
@@ -95,6 +96,36 @@ describe('CopyEditor, mounted', () => {
     expect(screen.getByRole('status').textContent).toMatch(/unsaved/)
     fireEvent.click(screen.getByText('cancel'))
     expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('a save that started from stale wording shows theirs and keeps the draft', async () => {
+    const conflict = new ApiError(new Response(null, { status: 409 }), {
+      detail: { code: 'COPY_OVERRIDE_CHANGED', message: 'changed', params: { current: 'Their Zero' } },
+    })
+    vi.mocked(putCopyOverride).mockRejectedValueOnce(conflict)
+    vi.mocked(putCopyOverride).mockResolvedValueOnce({ ns: NS, key: KEY, value: 'My Zero' })
+    render(
+      <>
+        <Page />
+        <CopyEditor />
+      </>,
+    )
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+    fireEvent.click(screen.getByText('Overridden Zero'))
+    fireEvent.change(await screen.findByLabelText('Replacement wording'), { target: { value: 'My Zero' } })
+
+    fireEvent.click(screen.getByText('save'))
+    expect(await screen.findByText(/Someone else changed this/)).toBeTruthy()
+    expect(screen.getByRole('status').textContent).toContain('Their Zero')
+    expect(vi.mocked(putCopyOverride).mock.calls[0][0]).toEqual({ ns: NS, key: KEY, value: 'My Zero', base: 'Overridden Zero' })
+    expect(i18n.getResource('en', NS, KEY)).toBe('Their Zero')
+    expect(screen.getByLabelText('Replacement wording')).toHaveProperty('value', 'My Zero')
+
+    // Saving again is a deliberate overwrite of the wording they now see.
+    fireEvent.click(screen.getByText('save'))
+    await waitFor(() => expect(i18n.getResource('en', NS, KEY)).toBe('My Zero'))
+    expect(vi.mocked(putCopyOverride).mock.calls[1][0]).toMatchObject({ base: 'Their Zero' })
   })
 })
 

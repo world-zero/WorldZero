@@ -9,7 +9,13 @@ from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.roles import Permission
 from schemas.copy import CopyOverrideIn, CopyOverrideOut
-from services.copy_override import delete_override, list_overrides, upsert_override
+from services.copy_override import (
+    current_value,
+    delete_override,
+    list_overrides,
+    replace_override_if_unchanged,
+    upsert_override,
+)
 
 router = APIRouter()
 
@@ -30,7 +36,19 @@ async def put_copy_override(
 
     Keys aren't checked (catalogs live in the bundle); an unknown key is inert.
     """
-    return await upsert_override(data.ns, data.key, data.value, admin.id, session)
+    if not data.checks_base:
+        return await upsert_override(data.ns, data.key, data.value, admin.id, session)
+    saved = await replace_override_if_unchanged(
+        data.ns, data.key, data.value, data.base, admin.id, session
+    )
+    if saved is None:
+        raise_coded(
+            409,
+            ErrorCode.copy_override_changed,
+            "Someone else changed this wording while you were editing.",
+            params={"current": await current_value(data.ns, data.key, session)},
+        )
+    return saved
 
 
 @router.delete("/copy-overrides", status_code=204)

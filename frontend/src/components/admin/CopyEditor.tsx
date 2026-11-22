@@ -14,7 +14,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { useTranslation } from 'react-i18next'
 
 import { deleteCopyOverride, putCopyOverride } from '../../api/copy'
-import { extractError } from '../../utils/errors'
+import { extractError, extractErrorCode, extractErrorParams } from '../../utils/errors'
 import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { lazyShipped, resources } from '../../i18n'
 import { candidatesShownIn } from './copyProbe'
@@ -67,9 +67,23 @@ export function pluralForms(target: CopyTarget): CopyTarget[] {
     .filter((form) => currentTemplate(form) !== null)
 }
 
+/**
+ * The override this browser holds for a string, or null when it shows the shipped
+ * wording. Sent as `base`, so a save that started from stale text is refused.
+ */
+export function baseOf(target: CopyTarget): string | null {
+  const template = currentTemplate(target)
+  return template === null || template === shippedValue(target.ns, target.key) ? null : template
+}
+
 /** What Save does: store the override, then show it. Exported for the test. */
-export async function saveCopy(target: CopyTarget, value: string): Promise<void> {
-  const saved = await putCopyOverride({ ns: target.ns, key: target.key, value })
+export async function saveCopy(target: CopyTarget, value: string, base?: string | null): Promise<void> {
+  const saved = await putCopyOverride({
+    ns: target.ns,
+    key: target.key,
+    value,
+    ...(base === undefined ? {} : { base }),
+  })
   // The server trims; show what it stored, not the draft.
   i18n.addResource('en', target.ns, target.key, saved.value)
 }
@@ -154,6 +168,8 @@ export default function CopyEditor() {
   const [target, setTarget] = useState<CopyTarget | null>(null)
   const [choices, setChoices] = useState<CopyTarget[]>([])
   const [draft, setDraft] = useState('')
+  /** What the server must still hold for Save to land; set on open and after a conflict. */
+  const [base, setBase] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   /** The clicked element, set only for a direct open: the choosers keep the panel textarea. */
   const [spot, setSpot] = useState<HTMLElement | null>(null)
@@ -209,6 +225,7 @@ export default function CopyEditor() {
     setChoices([])
     setTarget(found)
     setDraft(template)
+    setBase(baseOf(found))
   }
 
   useEffect(() => {
@@ -277,10 +294,20 @@ export default function CopyEditor() {
       return
     }
     try {
-      await saveCopy(target, draft)
+      await saveCopy(target, draft, base)
       setTarget(null)
       setNotice(null)
     } catch (err) {
+      if (extractErrorCode(err) === 'COPY_OVERRIDE_CHANGED') {
+        // Show their wording on the page and keep this draft: Save again overwrites, Cancel keeps theirs.
+        const live = extractErrorParams(err).current
+        const current = typeof live === 'string' ? live : null
+        const theirs = current ?? shippedValue(target.ns, target.key)
+        i18n.addResource('en', target.ns, target.key, theirs)
+        setBase(current)
+        setNotice(t('copyEdit.changedUnderYou', { theirs }))
+        return
+      }
       setNotice(extractError(err, t('copyEdit.saveError')))
     }
   }
