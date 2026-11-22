@@ -22,10 +22,10 @@ const HAND = "var(--font-faction-script)"; /* Caveat */
 /** The band the twinkle field is confined to, so no star lands in copy (§4a). */
 const COVEN_BAND_HEIGHT = 44;
 
-/** A four-point star, centred on (x, y) with arm length r. */
-function starPath(x: number, y: number, r: number): string {
+/** A four-point star about the origin, arm length r. */
+function starPath(r: number): string {
   const long = r * 2.6;
-  return `M${x} ${y - long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
+  return `M0 ${-long - r} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
 }
 
 /** The gold twinkle field, clipped to the masthead band. */
@@ -39,18 +39,30 @@ function TwinkleField() {
     [74, 29, 1.6],
   ];
   return (
-    <svg
-      width="100%"
-      height={COVEN_BAND_HEIGHT}
-      viewBox={`0 0 340 ${COVEN_BAND_HEIGHT}`}
-      preserveAspectRatio="none"
+    <div
       aria-hidden="true"
-      style={{ position: "absolute", left: 0, top: 0, right: 0, zIndex: 1, pointerEvents: "none" }}
+      style={{ position: "absolute", left: 0, top: 0, right: 0, height: COVEN_BAND_HEIGHT, zIndex: 1, pointerEvents: "none" }}
     >
-      {stars.map(([x, y, r]) => (
-        <path key={`${x}-${y}`} d={starPath(x, y, r)} fill="var(--faction-coven-slip-gold)" opacity={0.8} />
-      ))}
-    </svg>
+      {stars.map(([x, y, r]) => {
+        const half = r * 3.6;
+        return (
+          <svg
+            key={`${x}-${y}`}
+            width={half * 2}
+            height={half * 2}
+            viewBox={`${-half} ${-half} ${half * 2} ${half * 2}`}
+            style={{
+              position: "absolute",
+              left: `${(x / 340) * 100}%`,
+              top: y + r,
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <path d={starPath(r)} fill="var(--faction-coven-slip-gold)" opacity={0.8} />
+          </svg>
+        );
+      })}
+    </div>
   );
 }
 
