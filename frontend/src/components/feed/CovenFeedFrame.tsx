@@ -4,6 +4,7 @@ import { useFormFactor } from '../../hooks/useFormFactor'
 import type { FeedFrameProps } from './feedFrameProps'
 import { FeedRowSkinContext, type FeedRowSkin } from './feedRowSkin'
 import { factionBodyVars } from '../../utils/factionBodyFace'
+import { CAPTION_FONT } from '../factionMarks/covenSlip'
 
 /**
  * Cozy Coven — the candlelit slip as a feed card (#1197): a pink→lavender head
@@ -27,7 +28,6 @@ import { factionBodyVars } from '../../utils/factionBodyFace'
 const DEEP = 'var(--faction-coven-slip-deep)'
 const ROW_SKIN: FeedRowSkin = { ink: { actor: DEEP } }
 
-const CHROME = 'var(--font-faction-script)' /* Caveat */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 
 interface SizeSet {
@@ -46,7 +46,7 @@ const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
 
 /** Small-caps chrome voice — every small mark on the head speaks in it. */
 const CAPTION: CSSProperties = {
-  fontFamily: CHROME,
+  fontFamily: CAPTION_FONT,
   fontWeight: 700,
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',

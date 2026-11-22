@@ -59,8 +59,9 @@ export const SLIP_SHEET =
   "linear-gradient(158deg, var(--faction-coven-slip-from), var(--faction-coven-slip-mid) 36%, var(--faction-coven-slip-lav) 74%, var(--faction-coven-slip-vio))";
 
 /** Small-caps caption voice — every label on the slip speaks in it. */
+export const CAPTION_FONT = `"Caveat Figures", ${CHROME}`;
 export const CAPTION: CSSProperties = {
-  fontFamily: CHROME,
+  fontFamily: CAPTION_FONT,
   fontWeight: 700,
   fontSize: "var(--text-md)",
   letterSpacing: "0.16em",

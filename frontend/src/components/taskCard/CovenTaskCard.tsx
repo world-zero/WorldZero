@@ -6,7 +6,7 @@ import { CARD_CTA_ROW, COVEN_CARD_CTA } from "./cardCta";
 import { CardCtaControl } from "./CardCtaControl";
 import { taskCardSignupCta } from "./signupAffordance";
 import CovenCauldron from "../factionMarks/CovenCauldron";
-import { CovenCat, SLIP_SHEET, Thread } from "../factionMarks/covenSlip";
+import { CAPTION_FONT, CovenCat, SLIP_SHEET, Thread } from "../factionMarks/covenSlip";
 import { useGroundIsBusy } from "../backdrop/BackdropContext";
 import i18n from "../../i18n";
 import { isNeutralMultiplier } from "../../utils/points";
@@ -60,7 +60,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
 
 /** Small-caps caption voice — every label on the slip speaks in it. */
 const CAPTION: CSSProperties = {
-  fontFamily: CHROME,
+  fontFamily: CAPTION_FONT,
   fontWeight: 700,
   letterSpacing: "0.16em",
   textTransform: "uppercase",

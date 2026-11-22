@@ -15,7 +15,7 @@ import MediaGallery from '../../../components/MediaGallery'
 import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI from '../../../components/vote/VoteUI'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
-import { CovenCat, SLIP_SHEET } from '../../../components/factionMarks/covenSlip'
+import { CAPTION, CovenCat, SLIP_SHEET } from '../../../components/factionMarks/covenSlip'
 import { useFormFactor } from '../../../hooks/useFormFactor'
 import { formatTimestamp } from '../../../utils/dates'
 import { mediaUrl } from '../../../utils/media'
@@ -35,7 +35,6 @@ const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
 const INK = 'var(--faction-coven-slip-ink)'
 const DEEP = 'var(--faction-coven-slip-deep)'
 const SOFT = 'var(--faction-coven-slip-soft)'
-const LABEL = 'var(--faction-coven-slip-label)'
 const GOLD = 'var(--faction-coven-slip-gold)'
 const PINK = 'var(--faction-coven-slip-pk)'
 const BORDER = 'var(--faction-coven-slip-border)'
@@ -64,15 +63,6 @@ const SIZES: Record<'desktop' | 'mobile', SizeSet> = {
     titleSize: 'var(--text-heading)',
     headingSize: 'var(--text-title)',
   },
-}
-
-const CAPTION: CSSProperties = {
-  fontFamily: CHROME,
-  fontWeight: 700,
-  fontSize: 'var(--text-md)',
-  letterSpacing: '0.16em',
-  textTransform: 'uppercase',
-  color: LABEL,
 }
 
 /** `.cvn-braid` owns the strands' pigments (index.css). */

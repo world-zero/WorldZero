@@ -583,3 +583,14 @@
   src: url('./assets/fonts/noto-sans-cuneiform-400-subset.woff2') format('woff2');
   unicode-range: U+12000, U+1201d, U+1207e, U+120fb, U+121a5, U+121fd, U+12228, U+1222c, U+12295, U+122db, U+122eb, U+12326;
 }
+
+/* Caveat Figures 700 — digits at cap height (#4126) */
+@font-face {
+  font-family: 'Caveat Figures';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/caveat-400to700-latin.woff2') format('woff2');
+  unicode-range: U+0030-0039;
+  size-adjust: 130%;
+}
