@@ -655,6 +655,7 @@ export default function Sidebar() {
           {/* Signature hairline: with the avatar ring and level track, one
               mark at three scales (#1553). */}
           <span
+            className="rail-hairline"
             style={{
               position: 'absolute',
               top: 0,
