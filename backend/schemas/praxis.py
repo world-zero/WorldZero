@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from pydantic import Field
 from schemas.base import WireModel
+from services.collab_state import CollabState
 from schemas.task import TaskOut
 from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
 
@@ -126,6 +127,7 @@ class PraxisOut(WireModel):
     voter_count: int = 0        # populated by build_praxis_out via vote_tally
     is_top_for_task: bool = False  # Task Crown: top submitted praxis for its task (ADR-0028)
     duel_id: Optional[int] = None
+    collab_state: Optional[CollabState] = None  # collabs only
     applied_metatasks: List[TaskOut] = []
     can_flag: bool = False      # populated by build_praxis_out; viewer-relative
     # Viewer-relative (#998): False only for the permanent blocks, the viewer's

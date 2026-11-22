@@ -56,6 +56,7 @@ function duelState(
     task_id: 3,
     status: options.status ?? "active",
     forfeited_by_character_id: null,
+    state: "drafting",
     cast_clock_started_at: null,
     challenger: duelSide(1, "Challenger Name", options.challengerSubmitted),
     opponent: duelSide(2, "Opponent Name", options.opponentSubmitted),

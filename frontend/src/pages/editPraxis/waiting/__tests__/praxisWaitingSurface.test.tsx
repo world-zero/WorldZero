@@ -94,6 +94,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
     task_id: 5,
     status,
     forfeited_by_character_id: null,
+    state: "drafting",
     cast_clock_started_at: null,
     challenger: {
       praxis_id: 1,

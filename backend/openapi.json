@@ -1065,6 +1065,16 @@
         "title": "CollabInvitePayload",
         "type": "object"
       },
+      "CollabState": {
+        "enum": [
+          "alone",
+          "drafting",
+          "proposed",
+          "live"
+        ],
+        "title": "CollabState",
+        "type": "string"
+      },
       "CollaboratorSubmittedItem": {
         "properties": {
           "actor_avatar_url": {
@@ -2219,6 +2229,9 @@
             ],
             "title": "Opponent Final Points"
           },
+          "state": {
+            "$ref": "#/components/schemas/DuelState"
+          },
           "status": {
             "$ref": "#/components/schemas/DuelStatus"
           },
@@ -2242,6 +2255,7 @@
           "id",
           "task_id",
           "status",
+          "state",
           "forfeited_by_character_id",
           "cast_clock_started_at",
           "challenger",
@@ -2667,6 +2681,21 @@
         ],
         "title": "DuelSideOut",
         "type": "object"
+      },
+      "DuelState": {
+        "enum": [
+          "challenged",
+          "drafting",
+          "one_cast",
+          "awaiting_honest_side",
+          "live",
+          "live_forfeited",
+          "dissolved",
+          "resolved",
+          "no_contest"
+        ],
+        "title": "DuelState",
+        "type": "string"
       },
       "DuelStatus": {
         "enum": [
@@ -3425,6 +3454,16 @@
             "title": "Can Flag",
             "type": "boolean"
           },
+          "collab_state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CollabState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -3674,6 +3713,7 @@
           "voter_count",
           "is_top_for_task",
           "duel_id",
+          "collab_state",
           "applied_metatasks",
           "can_flag",
           "viewer_can_vote",
@@ -6358,6 +6398,16 @@
             "title": "Can Flag",
             "type": "boolean"
           },
+          "collab_state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CollabState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -6599,6 +6649,7 @@
           "voter_count",
           "is_top_for_task",
           "duel_id",
+          "collab_state",
           "applied_metatasks",
           "can_flag",
           "viewer_can_vote",

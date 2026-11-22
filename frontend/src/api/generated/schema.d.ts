@@ -2637,6 +2637,11 @@ export interface components {
             /** Task Title */
             task_title: string;
         };
+        /**
+         * CollabState
+         * @enum {string}
+         */
+        CollabState: "alone" | "drafting" | "proposed" | "live";
         /** CollaboratorSubmittedItem */
         CollaboratorSubmittedItem: {
             /** Actor Avatar Url */
@@ -3151,6 +3156,7 @@ export interface components {
             opponent: components["schemas"]["DuelSideOut"];
             /** Opponent Final Points */
             opponent_final_points: number | null;
+            state: components["schemas"]["DuelState"];
             status: components["schemas"]["DuelStatus"];
             /** Task Id */
             task_id: number;
@@ -3325,6 +3331,11 @@ export interface components {
              */
             win_multiplier: number;
         };
+        /**
+         * DuelState
+         * @enum {string}
+         */
+        DuelState: "challenged" | "drafting" | "one_cast" | "awaiting_honest_side" | "live" | "live_forfeited" | "dissolved" | "resolved" | "no_contest";
         /**
          * DuelStatus
          * @enum {string}
@@ -3681,6 +3692,7 @@ export interface components {
              * @default false
              */
             can_flag: boolean;
+            collab_state: components["schemas"]["CollabState"] | null;
             /**
              * Created At
              * Format: date-time
@@ -4867,6 +4879,7 @@ export interface components {
              * @default false
              */
             can_flag: boolean;
+            collab_state: components["schemas"]["CollabState"] | null;
             /**
              * Created At
              * Format: date-time

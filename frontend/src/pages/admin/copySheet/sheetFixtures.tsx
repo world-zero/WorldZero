@@ -275,6 +275,7 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     score: 42,
     is_top_for_task: true,
     duel_id: null,
+    collab_state: null,
     can_flag: true,
     applied_metatasks: [],
     voter_count: 3,
@@ -557,6 +558,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
     task_id: 101,
     status: 'active',
     forfeited_by_character_id: null,
+    state: "drafting",
     cast_clock_started_at: null,
     challenger: {
       praxis_id: 601,
