@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { sideHref } from '../communitySide'
-import { useFormFactor } from '../../hooks/useFormFactor'
+import { usePhoneWidth } from '../../hooks/useFormFactor'
 import { useTranslation } from 'react-i18next'
 import PageTitle from '../../components/ui/PageTitle'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
@@ -59,7 +59,7 @@ const ELLIPSIS_GLYPH = '⋮'
  * The Players page (#1855, one page since #3800): podium, faction race, roster.
  * Phone (below 768px) stacks the podium into rows, folds the race behind "N more
  * factions" and drops the roster's faction column; those trees are picked by
- * `useFormFactor()`, the rest is shared.
+ * `usePhoneWidth()`, the rest is shared.
  *
  * Deliberate deviations from the design, do not "restore":
  *   - the eyebrow reads the era config, not the literal "Era Three";
@@ -79,7 +79,8 @@ export default function PlayersDirectory({
 }: PlayersViewProps) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
-  const mobile = useFormFactor() === 'mobile'
+  // Width alone picks the tree, pointer ignored: #3980 owner ruling. Don't swap back to useFormFactor.
+  const mobile = usePhoneWidth()
   const [filters, setFilters] = useState<PlayersFilters>(PLAYERS_FILTERS_DEFAULT)
   const [visible, setVisible] = useState(ROSTER_PAGE_STEP)
   const [raceOpen, setRaceOpen] = useState(true)
