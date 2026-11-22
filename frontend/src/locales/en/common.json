@@ -588,5 +588,8 @@
     "allDone": "Done. We won't send you any notification email.",
     "invalid": "That link isn't valid, so nothing changed. You can change your emails in Settings.",
     "settings": "Change your notification settings"
-  }
+  },
+  "absentPlayer": "<A Nonexistent Player>",
+  "suspendedPlayer": "{{name}} (Suspended)",
+  "nowPlayingAs": "You're now playing as {{name}}."
 }

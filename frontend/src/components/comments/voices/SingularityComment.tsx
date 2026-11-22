@@ -1,5 +1,5 @@
+import { PlayerLink, usePlayerLabel } from '../../PlayerName'
 import type { CSSProperties, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
@@ -125,6 +125,7 @@ function Pane({
 
 export default function SingularityComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const label = usePlayerLabel()
   const { user } = useAuth()
   const reveal = useOwnerReveal()
 
@@ -189,7 +190,7 @@ export default function SingularityComment(props: CommentProps) {
         <span aria-hidden="true" style={{ color: BLUE }}>
           {'>'}
         </span>
-        <Link
+        <PlayerLink state={comment.author.name_state}
           to={`/characters/${comment.author.id}`}
           style={{
             fontFamily: MONO,
@@ -198,8 +199,8 @@ export default function SingularityComment(props: CommentProps) {
             textDecoration: 'none',
           }}
         >
-          {comment.author.username}
-        </Link>
+          {label(comment.author.username, comment.author.name_state)}
+        </PlayerLink>
         <span aria-hidden="true" style={{ ...LABEL, color: BLUE }}>
           {handleOf(comment.id)}
         </span>

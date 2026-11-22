@@ -26,6 +26,7 @@ function task(overrides: Partial<TaskOut> & { id: number }): TaskOut {
     in_progress_count: 0,
     created_by_display_name: "",
     created_by_avatar_url: "",
+    created_by_name_state: 'ok',
     created_by_faction_slug: null,
     created_by_level: 0,
     signup_reason: null,

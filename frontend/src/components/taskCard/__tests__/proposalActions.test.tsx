@@ -17,7 +17,7 @@ const EDIT = i18n.t('tasks:proposalCard.edit')
 const WITHDRAW = i18n.t('tasks:proposalCard.withdraw')
 
 function pendingTask(slug: string): TaskOut {
-  return {
+  return { created_by_name_state: 'ok',
     id: 9,
     title: 'Plant a tree',
     description: 'Dig.',

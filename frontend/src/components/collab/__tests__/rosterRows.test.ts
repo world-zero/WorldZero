@@ -4,7 +4,7 @@ import type { PraxisInviteOut, PraxisMemberOut } from '../../../api/praxis'
 import { buildRosterRows, isRowDone, rosterInitials } from '../rosterRows'
 
 function member(id: number, submitted: boolean): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -25,7 +25,7 @@ function invite(
   status: PraxisInviteOut['status'],
   createdAt = '2026-01-01T00:00:00Z',
 ): PraxisInviteOut {
-  return {
+  return { invitee_name_state: 'ok',
     id,
     praxis_id: 1,
     inviter_id: 1,

@@ -8528,10 +8528,6 @@
             "title": "Faction Slug",
             "type": "string"
           },
-          "name_state": {
-            "$ref": "#/components/schemas/NameState",
-            "default": "ok"
-          },
           "value": {
             "title": "Value",
             "type": "integer"
@@ -8541,7 +8537,6 @@
           "character_id",
           "display_name",
           "avatar_url",
-          "name_state",
           "faction_slug",
           "value"
         ],

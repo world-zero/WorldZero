@@ -1,6 +1,7 @@
+import { PlayerLink, usePlayerLabel } from '../PlayerName'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import type { CharacterOut } from '../../api/auth'
 import {
   type CommentOut,
@@ -121,6 +122,7 @@ function Sheet({
 export function DefaultComment(props: CommentProps & { edge?: React.ReactNode }) {
   const { edge } = props
   const { t } = useTranslation('praxis')
+  const label = usePlayerLabel()
   const { user } = useAuth()
   const reveal = useOwnerReveal()
   if (props.mode === 'composer') {
@@ -177,7 +179,7 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
           flexWrap: 'wrap',
         }}
       >
-        <Link
+        <PlayerLink state={comment.author.name_state}
           to={`/characters/${comment.author.id}`}
           style={{
             fontFamily: 'var(--font-display)',
@@ -187,8 +189,8 @@ export function DefaultComment(props: CommentProps & { edge?: React.ReactNode })
             textDecoration: 'none',
           }}
         >
-          {comment.author.display_name}
-        </Link>
+          {label(comment.author.display_name, comment.author.name_state)}
+        </PlayerLink>
         <span style={{ ...CAPTION, color: factionCssVar(slug, 'card-muted') }}>
           {formatCommentTime(comment.created_at)}
         </span>

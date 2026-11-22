@@ -63,7 +63,7 @@ export default function BlockedSection({ sectionId }: SettingsSectionProps) {
               className={`font-body flex items-center gap-[var(--space-md)] pt-[var(--space-lg)] ${i === blocks.length - 1 ? '' : 'pb-[var(--space-lg)] border-b border-[var(--color-border)]'}`}
             >
               <FactionAvatar
-                character={authorToCharacter({ id: b.character_id, username: b.display_name, display_name: b.display_name, avatar_url: b.avatar_url, faction_slug: b.faction_slug })}
+                character={authorToCharacter({ id: b.character_id, username: b.display_name, display_name: b.display_name, avatar_url: b.avatar_url, faction_slug: b.faction_slug, name_state: 'ok' })}
                 size={40}
               />
               <div className="min-w-0 flex-1 text-[length:var(--text-content)]">

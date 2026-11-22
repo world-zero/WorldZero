@@ -20,7 +20,7 @@ const COMMENT: CommentOut = {
   is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  author: {
+  author: { name_state: 'ok',
     id: 42,
     username: 'vex',
     display_name: 'Vexline',
@@ -99,7 +99,7 @@ describe('SnideComment — acid and pink are drawn things, not inks (#1224)', ()
     const html = row({
       ...COMMENT,
       body_text: 'ask @bo',
-      mentions: [{ character_id: 9, username: 'bo', display_name: 'Bo' }],
+      mentions: [{ name_state: 'ok', character_id: 9, username: 'bo', display_name: 'Bo' }],
     })
     expect(html).toContain('href="/characters/9"')
     expect(html).toContain('--faction-snide-slip-acid-ink')

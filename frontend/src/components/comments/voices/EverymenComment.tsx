@@ -5,8 +5,8 @@
  * because red mention ink is 4.49:1 on paper but AA on the panel (#1223).
  * Behaviour lives in the shared helpers; one component, no mobile twin (ADR-0063).
  */
+import { PlayerLink, usePlayerLabel } from '../../PlayerName'
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { useAuth } from '../../../auth/AuthContext'
@@ -135,6 +135,7 @@ function Slip({
 
 export default function EverymenComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const label = usePlayerLabel()
   const { user } = useAuth()
   const reveal = useOwnerReveal()
 
@@ -187,9 +188,9 @@ export default function EverymenComment(props: CommentProps) {
       avatar={<FactionAvatar character={authorToCharacter(comment.author)} size="sm" />}
       containerProps={reveal.containerProps}
       byline={
-        <Link to={`/characters/${comment.author.id}`} style={BYLINE}>
-          {comment.author.display_name}
-        </Link>
+        <PlayerLink state={comment.author.name_state} to={`/characters/${comment.author.id}`} style={BYLINE}>
+          {label(comment.author.display_name, comment.author.name_state)}
+        </PlayerLink>
       }
       dateline={
         <>

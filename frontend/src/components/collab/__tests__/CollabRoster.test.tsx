@@ -8,7 +8,7 @@ import { formatClockTime } from '../../../utils/dates'
 import { stripResourceHints } from '../../../test/ssrMarkup'
 
 function member(id: number, cast: boolean, avatar = ''): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -29,7 +29,7 @@ function invite(
   status: PraxisInviteOut['status'],
   avatar = '',
 ): PraxisInviteOut {
-  return {
+  return { invitee_name_state: 'ok',
     id,
     praxis_id: 1,
     inviter_id: 1,

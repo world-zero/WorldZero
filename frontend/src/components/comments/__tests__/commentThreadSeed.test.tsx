@@ -19,7 +19,7 @@ const COMMENT: CommentOut = {
   is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  author: {
+  author: { name_state: 'ok',
     id: 42,
     username: 'ada',
     display_name: 'Adabel',

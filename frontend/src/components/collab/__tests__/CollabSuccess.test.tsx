@@ -11,7 +11,7 @@ import { CollabSuccess } from '../CollabSuccess'
 import { deriveCollabGate } from '../CollabRoster'
 
 function member(id: number, name: string, cast: boolean): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id: id * 10,
     praxis_id: 1,
     character_id: id,

@@ -729,7 +729,7 @@ describe('the unaffiliated disc shrink-wraps when nothing follows it (#1894)', (
  */
 describe('PraxisOut satisfies the stamp contract without a cast (#1079)', () => {
   /** A complete detail payload — every field spelled out, nothing asserted. */
-  const detail: PraxisOut = {
+  const detail: PraxisOut = { created_by_name_state: 'ok',
     id: 7,
     task_id: 3,
     task_title: 'Walk the long way home',

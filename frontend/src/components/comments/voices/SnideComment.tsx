@@ -1,5 +1,5 @@
+import { PlayerLink, usePlayerLabel } from '../../PlayerName'
 import type { CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { useAuth } from '../../../auth/AuthContext'
@@ -62,6 +62,7 @@ const FIELD = {
 
 export default function SnideComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const label = usePlayerLabel()
   const { user } = useAuth()
   const reveal = useOwnerReveal()
 
@@ -108,9 +109,9 @@ export default function SnideComment(props: CommentProps) {
         <FactionAvatar character={authorToCharacter(comment.author)} size="sm" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)', flexWrap: 'wrap' }}>
-            <Link to={`/characters/${comment.author.id}`} style={{ textDecoration: 'none' }}>
-              <Ransom text={comment.author.display_name} size={16} />
-            </Link>
+            <PlayerLink state={comment.author.name_state} to={`/characters/${comment.author.id}`} style={{ textDecoration: 'none' }}>
+              <Ransom text={label(comment.author.display_name, comment.author.name_state)} size={16} />
+            </PlayerLink>
             <span style={{ ...TYPED, color: 'var(--faction-snide-composer-muted)', whiteSpace: 'nowrap' }}>
               {formatCommentTime(comment.created_at)}
               {comment.is_edited && (

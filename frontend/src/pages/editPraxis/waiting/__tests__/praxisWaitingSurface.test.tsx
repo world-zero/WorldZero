@@ -33,7 +33,7 @@ function member(
   hasSubmitted: boolean,
   nudgedAt: string | null = null,
 ): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -97,7 +97,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
     forfeited_by_character_id: null,
     state: duelStateFor(status),
     cast_clock_started_at: null,
-    challenger: {
+    challenger: { name_state: 'ok',
       praxis_id: 1,
       character_id: ME,
       display_name: "Wren",
@@ -112,7 +112,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
       tie_multiplier: 1,
       rival_bonus: 0,
     },
-    opponent: {
+    opponent: { name_state: 'ok',
       praxis_id: null,
       character_id: THEM,
       display_name: "Rax",

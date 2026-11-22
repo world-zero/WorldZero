@@ -25,7 +25,7 @@ const COMMENT: CommentOut = {
   is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  author: {
+  author: { name_state: 'ok',
     id: 42,
     username: 'ada',
     display_name: 'Adabel',
@@ -130,7 +130,7 @@ describe('SingularityComment — the states the sheet draws', () => {
     const html = row({
       ...COMMENT,
       body_text: 'ping @bex and @ghost',
-      mentions: [{ username: 'bex', display_name: 'Bex', character_id: 99 }],
+      mentions: [{ name_state: 'ok', username: 'bex', display_name: 'Bex', character_id: 99 }],
     })
     expect(html).toContain('/characters/99')
     expect(html).toContain('@ghost')

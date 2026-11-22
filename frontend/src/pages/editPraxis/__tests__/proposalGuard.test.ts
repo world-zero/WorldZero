@@ -14,7 +14,7 @@ import {
 const AT = '2026-08-17T10:00:00Z'
 const LATER = '2026-08-17T12:00:00Z'
 
-const member = (id: number): PraxisMemberOut => ({
+const member = (id: number): PraxisMemberOut => ({ character_name_state: 'ok',
   id,
   praxis_id: 1,
   character_id: id,

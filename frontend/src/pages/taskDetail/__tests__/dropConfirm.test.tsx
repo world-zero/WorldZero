@@ -20,7 +20,7 @@ const draft = (over: Parameters<typeof aPraxisCard>[0] = {}) =>
 const aMember = (
   characterId: number,
   name: string,
-): PraxisMemberOut => ({
+): PraxisMemberOut => ({ character_name_state: 'ok',
   id: characterId,
   praxis_id: 55,
   character_id: characterId,

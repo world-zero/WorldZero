@@ -5792,8 +5792,6 @@ export interface components {
             display_name: string;
             /** Faction Slug */
             faction_slug: string;
-            /** @default ok */
-            name_state: components["schemas"]["NameState"];
             /** Value */
             value: number;
         };
