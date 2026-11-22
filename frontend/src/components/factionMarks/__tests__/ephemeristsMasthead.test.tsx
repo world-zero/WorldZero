@@ -22,6 +22,10 @@ describe("EphemeristsMasthead — the two scales", () => {
     expect(render("card")).toContain('width="44" height="44"');
   });
 
+  it("ends the band at the content column's inset, so the rules meet the panel frame (#4152)", () => {
+    expect(render("page")).toContain("padding:var(--space-xl) var(--detail-pad, var(--space-2xl)) var(--space-lg)");
+  });
+
   it("carries the wordmark at a different rung on each scale", () => {
     expect(render("page")).toContain("font-size:var(--text-title)");
     expect(render("card")).toContain("font-size:var(--text-content)");
