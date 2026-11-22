@@ -73,7 +73,7 @@ export default function Attributions() {
   return (
     <div className="py-8 max-w-2xl">
       <PageTitle title={t('attributions.title')} />
-      <p className="font-body text-muted mb-6">
+      <p className="font-body text-muted mb-6 whitespace-pre-line">
         {t('attributions.intro')}
       </p>
 
