@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { sideHref } from '../communitySide'
-import { usePhoneWidth } from '../../hooks/useFormFactor'
+import { useFormFactor, usePhoneWidth } from '../../hooks/useFormFactor'
 import { useTranslation } from 'react-i18next'
 import PageTitle from '../../components/ui/PageTitle'
 import FactionAvatar from '../../components/avatar/FactionAvatar'
@@ -81,6 +81,8 @@ export default function PlayersDirectory({
   const navigate = useNavigate()
   // Width alone picks the tree, pointer ignored: #3980 owner ruling. Don't swap back to useFormFactor.
   const mobile = usePhoneWidth()
+  // The h1 is the touch phone's job (Community.tsx heading), so it stays on the pointer-gated hook.
+  const touchPhone = useFormFactor() === 'mobile'
   const [filters, setFilters] = useState<PlayersFilters>(PLAYERS_FILTERS_DEFAULT)
   const [visible, setVisible] = useState(ROSTER_PAGE_STEP)
   const [raceOpen, setRaceOpen] = useState(true)
@@ -109,7 +111,7 @@ export default function PlayersDirectory({
         className={mobile ? 'flex items-center justify-between' : 'flex items-end justify-between'}
         style={{ gap: rowGap }}
       >
-        {mobile ? (
+        {touchPhone ? (
           <p className="label-heading">{eyebrow}</p>
         ) : (
           <PageTitle title={t('leaderboard.title')} eyebrow={eyebrow} />
