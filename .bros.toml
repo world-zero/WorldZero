@@ -52,6 +52,11 @@ paths = ["scripts/onboarding_motion.py", "frontend/src/pages/onboarding/motion/*
 run = "python3 scripts/onboarding_motion.py --check"
 
 [[check]]
+name = "comment-paths"
+paths = ["backend/*", "frontend/src/*", "scripts/*", "docs/*"]
+run = "python3 scripts/check_comment_paths.py"
+
+[[check]]
 name = "comments"
 paths = ["backend/*", "frontend/*", "scripts/*"]
 run = "bros comments origin/main"
