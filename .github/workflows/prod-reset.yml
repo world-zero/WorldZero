@@ -31,9 +31,14 @@ jobs:
       - name: Refuse once v2.0.0 is tagged
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # `git/ref/` (singular) matches exactly. Only a clean 404 lets the run on.
         run: |
-          if gh api "repos/${{ github.repository }}/git/refs/tags/v2.0.0" >/dev/null 2>&1; then
+          if out=$(gh api "repos/${{ github.repository }}/git/ref/tags/v2.0.0" 2>&1); then
             echo "::error::v2.0.0 exists; prod has launched. This reset is retired."
+            exit 1
+          fi
+          if ! printf '%s' "$out" | grep -q 'HTTP 404'; then
+            echo "::error::Couldn't confirm v2.0.0 is absent: $out"
             exit 1
           fi
 
@@ -46,7 +51,8 @@ jobs:
     environment: prod-reset
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
-      LABEL: pre-v2.0.0
+      # Per run, so a second run can never overwrite the first backup.
+      LABEL: pre-v2.0.0-${{ github.run_id }}
     steps:
       - name: Load the deploy key and pinned host key
         env:
