@@ -103,9 +103,17 @@ describe("task-detail comments slot", () => {
       expect(text.toLowerCase()).toContain(THREAD_ANCHOR);
     });
 
-    it(`${slug} drops the comment thread once the task is not active`, () => {
+    it.each(["pending", "retired"] as const)(
+      `${slug} mounts the comment thread on a %s task`,
+      (status) => {
+        const { text } = render(<Archetype state={baseState({ task: { ...TASK, status } })} />);
+        expect(text.toLowerCase()).toContain(THREAD_ANCHOR);
+      },
+    );
+
+    it(`${slug} drops the comment thread on a deleted task`, () => {
       const { text } = render(
-        <Archetype state={baseState({ task: { ...TASK, status: "retired" } })} />,
+        <Archetype state={baseState({ task: { ...TASK, status: "deleted" } })} />,
       );
       expect(text.toLowerCase()).not.toContain(THREAD_ANCHOR);
     });

@@ -35,6 +35,7 @@ from services.praxis import (
     resolve_flags,
 )
 from services.push import notify_comment
+from services.task import get_task_for_viewer
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.
 MENTION_RE = re.compile(r"@([A-Za-z0-9_]+)")
@@ -159,7 +160,7 @@ async def _assert_commentable_target(
     session: AsyncSession,
     author: Optional[Character] = None,
 ) -> None:
-    """Exactly one target, open for comments: a visible praxis or active task."""
+    """Exactly one target, open for comments: a visible praxis or task."""
     if (praxis_id is None) == (task_id is None):
         raise_coded(
             422,
@@ -181,15 +182,18 @@ async def _assert_commentable_target(
                 "This praxis is not open for comments.",
             )
     else:
+        # Same visibility gate as GET /tasks/{id}; withheld answers 404 like absent.
         task = await session.get(Task, task_id)
         if task is None:
             raise_coded(404, ErrorCode.task_not_found, "Task not found.")
-        if task.status != TaskStatus.active:
+        if task.status in (TaskStatus.deleted, TaskStatus.backdoor):
             raise_coded(
                 403,
                 ErrorCode.task_not_open_for_comments,
                 "This task is not open for comments.",
             )
+        if await get_task_for_viewer(session, task_id, author) is None:
+            raise_coded(404, ErrorCode.task_not_found, "Task not found.")
 
 
 async def create_comment(
