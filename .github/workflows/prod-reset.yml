@@ -41,8 +41,9 @@ jobs:
     needs: check
     if: vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
-    # The same required reviewer as a prod deploy.
-    environment: production
+    # Its own environment: `production` admits only v* tags, and a dispatch runs
+    # on main. Same required reviewer (the owner), main only. Delete with this file.
+    environment: prod-reset
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       LABEL: pre-v2.0.0
