@@ -234,9 +234,9 @@
     "join": {
       "heading": "Your standing in UA",
       "memberTitle": "I dunno, you're here I guess?",
-      "memberStanding": "Standing · <1>practising</1> not sitting?",
+      "memberStanding": "Standing · <1>practicing</1> not sitting?",
       "eligibleTitle": "Make one true piece a day",
-      "eligibleBody": "We practise. Not for the badge — for the making itself. Begin whenever you are ready.",
+      "eligibleBody": "We practice. Not for the badge — for the making itself. Begin whenever you are ready.",
       "joinButton": "Begin the practice",
       "joining": "Beginning…",
       "gateTitle": "Aware of the Art Circle"
@@ -304,7 +304,7 @@
       "memberTitle": "Thou art sworn",
       "memberStanding": "Standing · <1>GLORIOUS</1>",
       "eligibleTitle": "Enlist in the Crusade",
-      "eligibleBody": "the armour is one-size, the oath is for life",
+      "eligibleBody": "the armor is one-size, the oath is for life",
       "joinButton": "TAKE THE OATH ⚔",
       "joining": "SWEARING…",
       "gateTitle": "Await thy summons"
