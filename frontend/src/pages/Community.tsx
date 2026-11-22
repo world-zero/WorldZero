@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import PageTitle from '../components/ui/PageTitle'
 import SegmentedRail from '../components/ui/FilterBar/SegmentedRail'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { rememberSide, sideHref, type CommunitySide } from './communitySide'
@@ -19,8 +20,8 @@ export default function Community({ side, children }: { side: CommunitySide; chi
 
   return (
     <>
-      <div className="community-head">
-        <h1 className="community-title">{t('nav.community')}</h1>
+      <div className="pt-8">
+        <PageTitle title={t('nav.community')} />
         <div className="community-switch">
           <SegmentedRail
             rail={{

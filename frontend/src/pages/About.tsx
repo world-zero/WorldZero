@@ -18,17 +18,6 @@ export default function About() {
         </p>
       </div>
 
-      <div className="card p-6 mb-6">
-        <h2 className="font-display text-2xl font-bold mb-3">{t('about.howToPlayHeading')}</h2>
-        <ol className="font-body text-base leading-relaxed space-y-2 list-decimal list-inside">
-          <li>{t('about.step1')}</li>
-          <li>{t('about.step2')}</li>
-          <li>{t('about.step3')}</li>
-          <li>{t('about.step4')}</li>
-          <li>{t('about.step5')}</li>
-        </ol>
-      </div>
-
       <div className="card p-6">
         <h2 className="font-display text-2xl font-bold mb-3">{t('about.inspiredHeading')}</h2>
         <p className="font-body text-base leading-relaxed">
