@@ -10,10 +10,23 @@ export function formFactorFor(matchesMobile: boolean): FormFactor {
   return matchesMobile ? 'mobile' : 'desktop'
 }
 
-function subscribe(onChange: () => void): () => void {
-  const mql = window.matchMedia(MOBILE_QUERY)
+export const PHONE_WIDTH_QUERY = '(max-width: 767px)'
+
+const subscribeTo = (query: string) => (onChange: () => void): (() => void) => {
+  const mql = window.matchMedia(query)
   mql.addEventListener('change', onChange)
   return () => mql.removeEventListener('change', onChange)
+}
+const subscribe = subscribeTo(MOBILE_QUERY)
+const subscribeWidth = subscribeTo(PHONE_WIDTH_QUERY)
+
+/** Width-only phone check, no pointer term. Players directory only (#3980); everything else uses useFormFactor. */
+export function usePhoneWidth(): boolean {
+  return useSyncExternalStore(
+    subscribeWidth,
+    () => window.matchMedia(PHONE_WIDTH_QUERY).matches,
+    () => false,
+  )
 }
 
 /** Reactive media-query form factor (no UA sniffing). */

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { formFactorFor, MOBILE_QUERY, useFormFactor } from '../useFormFactor'
+import { formFactorFor, MOBILE_QUERY, PHONE_WIDTH_QUERY, useFormFactor, usePhoneWidth } from '../useFormFactor'
 
 /** A matchMedia stub that evaluates MOBILE_QUERY for a given viewport + pointer. */
 function stubViewport(width: number, pointer: 'fine' | 'coarse') {
@@ -29,5 +29,25 @@ describe('useFormFactor', () => {
   it('a coarse-pointer viewport at 390px gets the phone shell', () => {
     stubViewport(390, 'coarse')
     expect(renderHook(() => useFormFactor()).result.current).toBe('mobile')
+  })
+})
+
+describe('usePhoneWidth', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  const stub = (width: number) =>
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query === PHONE_WIDTH_QUERY && width <= 767,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+
+  it('600px with a fine pointer is phone', () => {
+    stub(600)
+    expect(renderHook(() => usePhoneWidth()).result.current).toBe(true)
+  })
+
+  it('1024px with a coarse pointer is desktop', () => {
+    stub(1024)
+    expect(renderHook(() => usePhoneWidth()).result.current).toBe(false)
   })
 })

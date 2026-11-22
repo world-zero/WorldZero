@@ -9,7 +9,7 @@ import { describe, it, expect, vi } from 'vitest'
 import '../i18n'
 import type { CharacterOut } from '../api/auth'
 
-vi.mock('../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop' }))
+vi.mock('../hooks/useFormFactor', () => ({ useFormFactor: () => 'desktop', usePhoneWidth: () => false }))
 vi.mock('../hooks/useTheme', () => ({
   useTheme: () => ({ theme: 'dark', toggle: () => {} }),
 }))

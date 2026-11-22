@@ -29,7 +29,7 @@ vi.mock('../../../api/leaderboard', () => ({ getLeaderboard: async () => [] }))
 
 import Leaderboard from '../../Leaderboard'
 import { DesktopPlayers, MobilePlayers } from './playersAt'
-import { ff } from './formFactorMock'
+import { ff, finePointer } from './formFactorMock'
 import {
   NO_RELATIONSHIPS,
   rankPlayers,
@@ -204,6 +204,19 @@ describe('the two form factors', () => {
     // contains "Faction", so it can't be asserted absent there.
     expect(desktop.text, 'desktop names the faction column').toContain('Faction')
     expect(mobile.html).toContain('data-testid="mobile-players-directory"')
+  })
+
+  it('phone width with a mouse draws the phone tree and keeps the page h1', () => {
+    finePointer.current = true
+    try {
+      const { html, text } = render(<MobilePlayers {...props()} />)
+      expect(html).toContain('data-testid="mobile-players-directory"')
+      expect(text, 'phone race').toMatch(/\d+ more factions/)
+      expect(text, 'phone roster has no column header').not.toContain('Lvl')
+      expect(html, 'no touch phone, so the page owns its title').toContain('<h1')
+    } finally {
+      finePointer.current = false
+    }
   })
 
   it('mounts the shared FilterBar on both, untouched', () => {
