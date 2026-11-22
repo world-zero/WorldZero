@@ -645,6 +645,7 @@ export default function EverymenEditPraxis({ state }: Props) {
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
+                band: true,
                 style: {
                   ...composerBandStyle(sizes, {
                     fontFamily: BEBAS,
