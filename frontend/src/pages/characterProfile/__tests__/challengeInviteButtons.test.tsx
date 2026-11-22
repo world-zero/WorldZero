@@ -50,6 +50,7 @@ describe('visibility', () => {
   it('hides both on your own profile and on a blocked player', () => {
     mount({ targetCharacterId: 3 })
     expect(screen.queryByText('Challenge')).toBeNull()
+    expect(screen.queryByText('Invite')).toBeNull()
     cleanup()
     mount({ blocked: true })
     expect(screen.queryByText('Challenge')).toBeNull()
@@ -85,7 +86,7 @@ describe('the sheet', () => {
     expect(screen.queryByText('Dueling')).toBeNull()
     expect(screen.queryByText('Done')).toBeNull()
     fireEvent.click(screen.getByText('Solo one'))
-    expect(await screen.findByText('AT /praxis/1/edit?mode=duel&with=Reza')).toBeTruthy()
+    expect(await screen.findByText('AT /praxis/1/edit?mode=duel&with=7')).toBeTruthy()
   })
 
   it('Invite lands on the Collab tab', async () => {
@@ -95,7 +96,7 @@ describe('the sheet', () => {
     mount()
     fireEvent.click(screen.getByText('Invite'))
     fireEvent.click(await screen.findByText('Collab one'))
-    expect(await screen.findByText('AT /praxis/2/edit?mode=collab&with=Reza')).toBeTruthy()
+    expect(await screen.findByText('AT /praxis/2/edit?mode=collab&with=7')).toBeTruthy()
   })
 
   it('says so and links to Tasks when nothing is eligible', async () => {

@@ -479,6 +479,7 @@ export default function CovenEditPraxis({ state }: Props) {
               inviteQuery={state.inviteQuery}
               setInviteQuery={state.setInviteQuery}
               inviteResults={state.inviteResults}
+              staged={state.staged}
               inviteOpen={state.inviteOpen}
               setInviteOpen={state.setInviteOpen}
               inviting={state.inviting}

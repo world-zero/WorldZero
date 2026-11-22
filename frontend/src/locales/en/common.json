@@ -32,6 +32,7 @@
     "invite": "Invite",
     "pickChallenge": "Challenge {{name}} with which praxis?",
     "pickInvite": "Invite {{name}} to which praxis?",
+    "pickNoneChallenge": "You have no in-progress solo praxis to challenge with. Start one from a task first.",
     "pickNone": "You have no in-progress praxis to use. Start one from a task first.",
     "pickNoneLink": "Browse Tasks",
     "pickClose": "Close",

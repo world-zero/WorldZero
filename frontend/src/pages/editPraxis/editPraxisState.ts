@@ -59,6 +59,8 @@ export interface EditPraxisState {
   inviteQuery: string;
   setInviteQuery: (value: string) => void;
   inviteResults: CharacterOut[];
+  /** A profile's Challenge/Invite target, ready to send in one tap (#3772). */
+  staged: CharacterOut | null;
   inviteOpen: boolean;
   setInviteOpen: (value: boolean) => void;
   inviting: boolean;

@@ -74,6 +74,8 @@ interface ComposerRoster {
   inviteQuery: string;
   setInviteQuery: (value: string) => void;
   inviteResults: CharacterOut[];
+  staged: CharacterOut | null;
+  setStaged: (character: CharacterOut | null) => void;
   inviteOpen: boolean;
   setInviteOpen: (value: boolean) => void;
   inviting: boolean;
@@ -98,6 +100,7 @@ export function useComposerRoster(options: {
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteResults, setInviteResults] = useState<CharacterOut[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [staged, setStaged] = useState<CharacterOut | null>(null);
   const [inviting, setInviting] = useState(false);
   const [foeIds, setFoeIds] = useState<Set<number>>(new Set());
   const [crewNudge, setCrewNudge] = useState<CrewNudgeResult | null>(null);
@@ -176,6 +179,7 @@ export function useComposerRoster(options: {
 
   const clearPicker = useCallback(() => {
     setInviteQuery("");
+    setStaged(null);
     setInviteOpen(false);
     setInviteResults([]);
   }, []);
@@ -345,6 +349,8 @@ export function useComposerRoster(options: {
     inviteQuery,
     setInviteQuery,
     inviteResults,
+    staged,
+    setStaged,
     inviteOpen,
     setInviteOpen,
     inviting,

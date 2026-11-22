@@ -146,6 +146,8 @@
       "searchPlaceholderDuel": "search an opponent to challenge",
       "searchAria": "search players to invite",
       "searchAriaDuel": "search an opponent",
+      "stagedDuel": "Challenge {{name}}",
+      "stagedCollab": "Invite {{name}}",
       "addAction": "+ invite",
       "addDescription": "Ask somebody else onto this collab.",
       "duelVersus": "vs",

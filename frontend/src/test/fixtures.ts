@@ -351,6 +351,7 @@ export const anEditPraxisState = (
   inviteQuery: '',
   setInviteQuery: noop,
   inviteResults: [],
+  staged: null,
   inviteOpen: false,
   setInviteOpen: noop,
   inviting: false,

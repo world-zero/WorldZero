@@ -1,7 +1,7 @@
 /**
  * Challenge (duel) and Invite (collab) on a player's profile (#3772). Each opens
  * a sheet of the viewer's in-progress praxes; picking one lands in its composer
- * with the player typed into the roster search (`useEditPraxis` reads `?mode`/`?with`).
+ * with the player staged for a one-tap send (`useEditPraxis` reads `?mode`/`?with=<id>`).
  * The send, and its errors, stay the composer's.
  */
 import { useState } from "react";
@@ -100,7 +100,11 @@ export default function ChallengeInviteButtons({
           </p>
           {list?.length === 0 && (
             <p className="font-body">
-              {t("relationships.pickNone")}{" "}
+              {t(
+                mode === "duel"
+                  ? "relationships.pickNoneChallenge"
+                  : "relationships.pickNone",
+              )}{" "}
               <Link to="/tasks" className="underline">
                 {t("relationships.pickNoneLink")}
               </Link>
@@ -112,7 +116,7 @@ export default function ChallengeInviteButtons({
               className="font-body block w-full cursor-pointer border-0 border-b border-solid border-[var(--color-border)] bg-transparent py-2 text-left"
               onClick={() =>
                 navigate(
-                  `/praxis/${p.id}/edit?${new URLSearchParams({ mode, with: targetDisplayName })}`,
+                  `/praxis/${p.id}/edit?${new URLSearchParams({ mode, with: String(targetCharacterId) })}`,
                 )
               }
             >

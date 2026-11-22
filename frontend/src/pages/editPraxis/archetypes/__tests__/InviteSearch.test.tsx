@@ -232,6 +232,17 @@ describe("InviteSearch — a collab whose crew is still one (#1274)", () => {
 });
 
 /** #1417: the `+ invite` chip. Static markup, so only the closed state. */
+describe("InviteSearch — a staged player from a profile (#3772)", () => {
+  it("draws a one-tap Invite row naming them", () => {
+    const state = collabState([]);
+    const html = chipHtml({
+      ...state,
+      staged: { id: 7, display_name: "Reza", username: "reza", faction_slug: null } as never,
+    });
+    expect(html).toContain("Invite Reza");
+  });
+});
+
 describe("InviteSearch — the + invite chip (#1417)", () => {
   it("draws the chip instead of a permanently open search box", () => {
     const html = chipHtml(collabState([]));
