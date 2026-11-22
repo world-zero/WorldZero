@@ -1861,7 +1861,9 @@ async def test_a_closing_flush_never_waits_on_a_delete_under_the_open_lock(
         await real_evict(praxis_id)
 
     monkeypatch.setattr(praxis_service, "evict_room", evict_after_the_socket_closes)
-    async with running_rooms(db_session, monkeypatch, flush_debounce_seconds=30.0) as rooms:
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30.0
+    ) as rooms:
         socket = await rooms.open(collab.id, account.id)
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "the first client")

@@ -566,9 +566,8 @@ class PraxisRoomServer(WebsocketServer):
     async def release(self, connection: _RoomConnection) -> None:
         """Forget a socket, and drop its room once nobody is left in it.
 
-        Never waits on Postgres under ``_open_lock``: a transaction that wrote a
-        praxis row and then waits for the lock would close a cycle Postgres cannot
-        see. The closing flush runs after the lock is released.
+        No DB wait under ``_open_lock`` (a cycle Postgres cannot see): the
+        closing flush runs after it is released.
         """
         self._connections.discard(connection)
         # Shielded: runs in a ``finally`` a disconnect may have cancelled.
@@ -585,11 +584,8 @@ class PraxisRoomServer(WebsocketServer):
                 await flusher.close()
 
     async def _drop_if_idle(self, name: str) -> _RoomFlusher | None:
-        """Detach an empty room and return its flusher; caller holds ``_open_lock``
-        and must ``close()`` the flusher after releasing it (no DB wait under the
-        lock). A reopen in between loads from the store, and the late flush is
-        harmless after a delete (zero rows) or a discard (the flusher is abandoned).
-        """
+        """Detach an empty room; the caller closes the returned flusher after
+        releasing ``_open_lock``. Caller holds ``_open_lock``."""
         room = self.rooms.get(name)
         if room is None or room.clients:
             return None
