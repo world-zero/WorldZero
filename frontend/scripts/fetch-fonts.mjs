@@ -154,7 +154,7 @@ const FACES = [
   'EB+Garamond:ital,wght@0,400;0,600;1,400',
   'Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,500',
   'Quicksand:wght@400;700',
-  'Grenze+Gotisch:wght@400;600',
+  'Berkshire+Swash',
   'Poiret+One',
   'Spectral:ital,wght@0,400;1,400',
 ]

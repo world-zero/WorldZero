@@ -26,10 +26,8 @@ import {
   factionCssVar,
   factionFill,
   factionName,
-  getAllFactions,
-  sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
-import { UNAFFILIATED_FACTION_SLUG, type ProposeTaskState } from '../useProposeTask'
+import { type ProposeTaskState } from '../useProposeTask'
 import {
   ComposerFooter,
   ComposerGround,
@@ -143,7 +141,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -168,14 +166,6 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
 
   // The #1695 review window from the era; undrawn while `/game-config` loads.
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
-
-  // Unaffiliated leads (ADR-0039), then rainbow order (#352).
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({ slug: f.slug })),
-    ).map((f) => f.slug),
-  ]
 
   /** Cinzel small caps, the plate's label voice, over the layout's tracking. */
   const label = { fontFamily: CAPS, fontWeight: 500, letterSpacing: '0.24em' }

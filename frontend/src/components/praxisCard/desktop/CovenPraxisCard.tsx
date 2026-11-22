@@ -69,7 +69,6 @@ export function CovenPraxisCard({ praxis, adminProps, showCrown }: ArchetypeProp
           paper={CARD}
           titleStyle={{
             fontFamily: DISPLAY,
-            fontWeight: 600,
             letterSpacing: "0.005em",
             color: INK,
           }}

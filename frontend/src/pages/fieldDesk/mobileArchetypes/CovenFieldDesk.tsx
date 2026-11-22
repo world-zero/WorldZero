@@ -315,7 +315,6 @@ export default function CovenFieldDesk({ state }: { state: FieldDeskHomeState })
             <span
               style={{
                 fontFamily: DISPLAY,
-                fontWeight: 600,
                 fontSize: 'var(--text-title)',
                 lineHeight: 1.06,
                 letterSpacing: '0.02em',

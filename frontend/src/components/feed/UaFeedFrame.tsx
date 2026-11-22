@@ -65,6 +65,7 @@ export default function UaFeedFrame({
           borderBottom: '1px solid var(--faction-ua-hair)',
           paddingBottom: 'var(--space-xs)',
           marginBottom: 'var(--space-sm)',
+          marginInlineEnd: 'calc(var(--feed-archive-inset) - var(--feed-gutter))',
         }}
       >
         <span

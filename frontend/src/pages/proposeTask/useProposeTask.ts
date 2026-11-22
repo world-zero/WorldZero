@@ -13,7 +13,12 @@ import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
 // Re-exported for existing importers (#921).
-import { UNAFFILIATED_FACTION_SLUG } from "../../utils/factions";
+import {
+  UNAFFILIATED_FACTION_SLUG,
+  getAllFactions,
+  isFactionHiddenFromChoosers,
+  sortFactionsByRainbowOrder,
+} from "../../utils/factions";
 
 export { UNAFFILIATED_FACTION_SLUG };
 
@@ -68,6 +73,14 @@ export function planProposalSubmission(fields: ProposalFields): ProposalPlan {
   };
 }
 
+/** Unaffiliated first (ADR-0039), then rainbow order; an unrevealed Albescent is dropped, not masked (#1891). */
+export function proposeFactionOptions(factions: FactionOut[]): string[] {
+  const slugs = sortFactionsByRainbowOrder(
+    (factions.length > 0 ? factions : getAllFactions()).map((f) => ({ slug: f.slug })),
+  ).map((f) => f.slug);
+  return [UNAFFILIATED_FACTION_SLUG, ...slugs].filter((slug) => !isFactionHiddenFromChoosers(slug));
+}
+
 export interface ProposeTaskState {
   // Gating guards live in the dispatcher
   isLoggedIn: boolean;
@@ -77,6 +90,7 @@ export interface ProposeTaskState {
   success: boolean;
 
   factions: FactionOut[];
+  factionOptions: string[];
 
   title: string;
   setTitle: (value: string) => void;
@@ -207,6 +221,7 @@ export function useProposeTask(editId?: number): ProposeTaskState {
     success,
 
     factions,
+    factionOptions: proposeFactionOptions(factions),
 
     title,
     setTitle,

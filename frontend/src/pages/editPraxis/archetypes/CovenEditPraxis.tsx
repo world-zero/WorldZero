@@ -61,7 +61,7 @@ interface Props {
 }
 
 /* Surface faces, not Coven's `card-font` (WORLD_ZERO_STYLE §4). */
-const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch — title */
+const DISPLAY = "var(--font-faction-witch)";
 const CHROME = "var(--font-faction-script)"; /* Caveat — body + label */
 
 const SHEET = "var(--faction-coven-ward-card)";
@@ -287,7 +287,7 @@ export default function CovenEditPraxis({ state }: Props) {
                 <span
                   style={{
                     fontFamily: DISPLAY,
-                    // eslint-disable-next-line local/no-raw-style-values -- ornament: the coven's wordmark, lettered in Grenze Gotisch.
+                    // eslint-disable-next-line local/no-raw-style-values -- ornament: the coven's wordmark, lettered in Berkshire Swash.
                     fontSize: 22,
                     lineHeight: 1,
                     letterSpacing: "0.02em",
@@ -744,6 +744,7 @@ export default function CovenEditPraxis({ state }: Props) {
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 ornament: <Sparkle size={12} />,
+                band: true,
                 style: {
                   ...composerBandStyle(sizes, {
                     // Design band: 14 / 700 / 0.12em (14 = --text-xl).

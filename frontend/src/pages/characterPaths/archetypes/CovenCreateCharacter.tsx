@@ -236,7 +236,6 @@ export default function CovenCreateCharacter({ state }: { state: CreateCharacter
             <h1
               style={{
                 fontFamily: DISPLAY,
-                fontWeight: 600,
                 fontSize: sizes.titleSize,
                 lineHeight: 1.1,
                 color: INK,

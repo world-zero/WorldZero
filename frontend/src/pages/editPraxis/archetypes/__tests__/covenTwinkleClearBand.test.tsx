@@ -6,9 +6,9 @@
  * under it, and y doesn't map to "above the lettering". Horizontal exclusion is
  * the only rule that holds at every width.
  *
- * At 375px: band = 375 − 2×12 − 2×16 = 319px; wordmark = 30 + 8 + 3.832em×22
- * ("cozy coven", grenze-gotisch wght 400) + 10×0.02×22 = 126.7px → 39.7%
- * centred → 144.8…335.2 of 480. [105, 375] reaches the wordmark only at a 281px
+ * At 375px: band = 375 − 2×12 − 2×16 = 319px; wordmark = 30 + 8
+ * ("cozy coven", Berkshire Swash 400, 104.4px with its 10×0.02×22 tracking) = 142.4px → 44.6%
+ * centred → 133…347 of 480. [105, 375] reaches the wordmark only at a 309px
  * viewport. If the wordmark grows, widen the exclusion.
  */
 import { renderToStaticMarkup } from "react-dom/server";

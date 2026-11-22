@@ -104,6 +104,6 @@ describe('the sheet', () => {
     mount()
     fireEvent.click(screen.getByText('Challenge'))
     const link = await screen.findByText('Browse Tasks')
-    expect(link.getAttribute('href')).toBe('/tasks')
+    expect(link.getAttribute('href')).toBe('/tasks?can_sign_up=1')
   })
 })
