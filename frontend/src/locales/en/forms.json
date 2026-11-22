@@ -146,6 +146,8 @@
       "searchPlaceholderDuel": "search an opponent to challenge",
       "searchAria": "search players to invite",
       "searchAriaDuel": "search an opponent",
+      "noMatch": "no one matches",
+      "hasActivePraxis": "already has a praxis on this task",
       "stagedDuel": "Challenge {{name}}",
       "stagedCollab": "Invite {{name}}",
       "addAction": "+ invite",
