@@ -1,5 +1,5 @@
-backend/alembic/versions/0002_squashed.py:scripts/check_db_stamp.py
-backend/alembic/versions/0002_squashed.py:scripts/reset_db.sh
+backend/alembic/versions/0003_squashed.py:scripts/check_db_stamp.py
+backend/alembic/versions/0003_squashed.py:scripts/reset_db.sh
 backend/eras/_template.py:backend/tests/integration/eras/test_era_N_rules.py
 backend/eras/_template.py:scripts/era_reset.py
 backend/routers/admin.py:scripts/era_reset.py

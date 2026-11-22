@@ -76,7 +76,7 @@ errors that remain are real.
 ### If the dump predates the migration squash
 
 `start.sh` runs `scripts/check_db_stamp.py` before alembic. A dump whose
-`alembic_version` is older than the `0002_squashed` baseline fails that check
+`alembic_version` is older than the `0003_squashed` baseline fails that check
 and the backend crashloops.
 
 The fix is to

@@ -4,7 +4,7 @@
 #
 # This file is a SECOND SOURCE for tests/integration/test_migrations_match_models.py.
 # It is the only description of the schema in this repo that is not derived from
-# models/ at runtime: 0002_squashed builds its tables with
+# models/ at runtime: 0003_squashed builds its tables with
 # Base.metadata.create_all, so a freshly migrated database is the ORM's schema by
 # construction and `alembic check` ends up comparing the models to themselves
 # (#2448). A committed file cannot do that — it changes only when a human commits

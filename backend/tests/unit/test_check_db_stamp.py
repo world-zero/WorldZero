@@ -4,7 +4,7 @@
 """
 from scripts.check_db_stamp import stamp_is_known, unknown_stamp_message
 
-KNOWN = {"0002_squashed"}
+KNOWN = {"0003_squashed"}
 
 
 def test_fresh_db_proceeds():
@@ -12,7 +12,7 @@ def test_fresh_db_proceeds():
 
 
 def test_known_revision_proceeds():
-    assert stamp_is_known("0002_squashed", KNOWN)
+    assert stamp_is_known("0003_squashed", KNOWN)
 
 
 def test_squashed_away_revision_blocks():
