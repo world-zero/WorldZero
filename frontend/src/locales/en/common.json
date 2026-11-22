@@ -58,7 +58,6 @@
     "joined": "joined {{joined}}",
     "lvl": "Level",
     "ptsThisLevel": "{{current}} / {{span}} pts this level",
-    "nextLevel": "next · lvl {{level}}",
     "ptsToNext": "{{score}} / {{threshold}} pts",
     "aboutHeading": "About",
     "badgesHeading": "Badges",
