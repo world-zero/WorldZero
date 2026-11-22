@@ -389,7 +389,7 @@
     "appearance": {
       "eyebrow": "Appearance",
       "darkMode": "Dark mode",
-      "darkModeHelp": "Edgy mode is not yet implemented.",
+      "darkModeHelp": "Unfortunately, edgy brooding mode has not yet been implemented.",
       "animations": "Animations",
       "animationsHelp": "By default, the site dances to a song carried by the wind. Disable this setting, and command the dance to cease.",
       "animationsSystemNote": "Your device is set to reduce motion.",
@@ -397,7 +397,7 @@
     },
     "notifications": {
       "eyebrow": "Notifications",
-      "emailPending": "Email isn't switched on for this server yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
+      "emailPending": "Email delivery is not implemented yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
       "columnPage": "Updates",
       "columnEmail": "Email",
       "columnPush": "Push",
@@ -440,7 +440,7 @@
       },
       "push": {
         "title": "Push to this phone",
-                "failed": "Couldn’t turn on push for this phone. Give it a moment and try again.",
+        "failed": "Couldn’t turn on push for this phone. Give it a moment and try again.",
         "ios": {
           "when": "IPHONE, NOT ON THE HOME SCREEN",
           "note": "iPhones only deliver notifications to the home-screen app. Put World Zero there first, then open it from the icon.",
@@ -550,7 +550,7 @@
       "lead": "Download everything tied to your account: your characters, the praxis you posted, the votes you cast, your comments, and the files you uploaded.",
       "export": {
         "title": "Export my data",
-        "note": "If your uploads are too large for one download, the zip lists a web address for each of them instead.",
+        "note": "If your uploads are too large for one download, you'll see a link to the data instead.",
         "button": "Download my data",
         "working": "Preparing…",
         "failed": "That download did not finish. Try it again."

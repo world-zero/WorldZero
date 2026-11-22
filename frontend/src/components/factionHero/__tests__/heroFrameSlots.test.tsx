@@ -76,10 +76,10 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
       /<h1[^>]*overflow-wrap:\s*normal/,
     );
 
-    // Escaped as the markup escapes apostrophes.
+    // Escaped as the markup escapes it.
     const tagline = i18n
       .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
-      .replace(/'/g, "&#x27;");
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
     expect(tagline, `${slug} has a tagline to draw`).not.toBe("");
     expect(html, `${slug} draws its tagline`).toContain(tagline);
 
@@ -96,7 +96,7 @@ describe("every faction hero mounts the frame's five slots (#2997)", () => {
     const html = render(slug, Hero);
     const tagline = i18n
       .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
-      .replace(/'/g, "&#x27;");
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 
     const kicker = html.indexOf('data-hero-slot="kicker"');
     const wordmark = html.indexOf("<h1");

@@ -5,6 +5,11 @@ files, one folder per language. You can edit copy without touching any code:
 change a value in `en/<namespace>.json`, save, done. **Edit values, never
 keys** — keys are the code's handle on the copy.
 
+**Copy the owner edited live on dev is hers.** A PR that rewrites or removes one of
+those keys fails the "Owner copy guard" check, which names the key and her wording.
+Keep her value (or keep the key); she releases a key by Reverting its row on the
+copy-edit page. Details: `scripts/promote_copy.py`.
+
 ```
 locales/
   en/            ← English (the source language)
