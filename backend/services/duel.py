@@ -701,7 +701,9 @@ async def cancel_duel_challenge(
     return duel
 
 
-async def _rescore_participants(duel: Duel, session: AsyncSession, era: EraConfig) -> None:
+async def _rescore_participants(
+    duel: Duel, session: AsyncSession, era: EraConfig
+) -> None:
     """Decline and withdraw both end in DISSOLVED; a side may already be scored
     with the duel multiplier, so revert both."""
     challenger_praxis = await session.get(Praxis, duel.challenger_praxis_id)

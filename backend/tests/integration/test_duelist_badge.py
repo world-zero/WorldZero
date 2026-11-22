@@ -216,7 +216,7 @@ async def test_awaiting_honest_side_earns_no_badge_yet(
         label="act",
         status=DuelStatus.active,
         forfeiter="opponent", commit=True)
-    # Q10: only LIVE, LIVE_FORFEITED and RESOLVED count; this settles on the honest cast.
+    # Q10: only LIVE, LIVE_FORFEITED and RESOLVED count.
     assert await _badge_keys(db_session, challenger) == []
     assert await _badge_keys(db_session, opponent) == []
 

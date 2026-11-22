@@ -144,6 +144,10 @@ async def test_an_active_duel_closes_with_its_no_contest_score(
     duel, challenger, _ = await make_duel(
         db_session, era, label="d", status=DuelStatus.active, challenger_votes=5
     )
+    # Both cast would read LIVE; a no-contest has a side still writing.
+    (await db_session.get(Praxis, duel.opponent_praxis_id)).status = (
+        PraxisStatus.in_progress
+    )
     await recalculate_character_stats(challenger.id, db_session)
     provisional = (await _stats(db_session, challenger, era)).score
 

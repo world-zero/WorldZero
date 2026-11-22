@@ -53,6 +53,7 @@ from services.character_stats import (
     recalculate_members_stats,
 )
 from services.collab_consensus import _lock_praxis
+from services.duel_state import ALLOWED_FROM, DuelState
 from services.era import (
     get_current_era_row,
     get_current_era_row_safe,
@@ -70,7 +71,6 @@ from services.media import (
     withdraw_media_from_mount,
 )
 from services.mod_log import log_mod_action
-from services.duel_state import ALLOWED_FROM, DuelState
 from services.praxis_duel import (
     discard_dissolved_duels_for_praxis,
     duel_blocks_delete,
@@ -1463,7 +1463,9 @@ async def submit_praxis(
     # Praxis lock held, duel rows next: the #3655 order. A late cast stays a forfeit.
     await _settle_lapsed_duels(session, era)
     duel = await get_duel_for_praxis(praxis_id, session)
-    if duel is not None and await duel_state_of(duel, session, era) not in ALLOWED_FROM["cast"]:
+    if duel is not None and (
+        await duel_state_of(duel, session, era) not in ALLOWED_FROM["cast"]
+    ):
         raise_coded(
             409,
             ErrorCode.duel_awaiting_accept,

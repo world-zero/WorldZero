@@ -6,11 +6,10 @@ from datetime import datetime, timezone
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import delete, select
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, detail_code
-from game_config import CURRENT_ERA
 from models.account import Account
 from models.character import Character
 from models.duel import Duel, DuelStatus
@@ -19,7 +18,6 @@ from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from services.auth import create_jwt
 from services.duel_outcome import duel_winner
-from services.era import apply_era_reset
 from tests.integration.factories import make_duel, raise_to_duel_level
 from tests.integration.test_duel_era_resolution import (
     NOT_TIE_TAKER,
@@ -40,7 +38,10 @@ async def _duel(db_session, era, label, status, *, cast=(), forfeiter=None, **kw
         db_session, era, label=label, status=DuelStatus.active,
         forfeiter=forfeiter, **kwargs,
     )
-    sides = {"challenger": duel.challenger_praxis_id, "opponent": duel.opponent_praxis_id}
+    sides = {
+        "challenger": duel.challenger_praxis_id,
+        "opponent": duel.opponent_praxis_id,
+    }
     for side, praxis_id in sides.items():
         (await db_session.get(Praxis, praxis_id)).status = (
             PraxisStatus.submitted if side in cast else PraxisStatus.in_progress
@@ -142,7 +143,9 @@ async def test_no_contest_writes_null_finals(
     db_session: AsyncSession, era: Era, account: Account, some_faction: Faction,
     cast: tuple,
 ):
-    duel, _, _ = await _duel(db_session, era, f"nc{len(cast)}", DuelStatus.active, cast=cast)
+    duel, _, _ = await _duel(
+        db_session, era, f"nc{len(cast)}", DuelStatus.active, cast=cast
+    )
     await _close_the_era(db_session, account)
     await db_session.refresh(duel)
     assert duel.status == DuelStatus.resolved
@@ -297,7 +300,7 @@ async def test_nudge_lookup_ignores_a_declined_row(
 ):
     from services.nudge import _authorize_duel
 
-    duel, challenger, opponent = await _duel(db_session, era, "nudge", DuelStatus.active)
+    duel, _, opponent = await _duel(db_session, era, "nudge", DuelStatus.active)
     db_session.add(Duel(
         task_id=duel.task_id,
         challenger_praxis_id=duel.challenger_praxis_id,
@@ -329,7 +332,9 @@ async def test_decline_rescores_like_withdraw(
 ):
     import services.duel as duel_service
 
-    duel, challenger, opponent = await _duel(db_session, era, "decl", DuelStatus.pending)
+    duel, challenger, opponent = await _duel(
+        db_session, era, "decl", DuelStatus.pending
+    )
     rescored: list[int] = []
     real = duel_service.recalculate_character_stats
 

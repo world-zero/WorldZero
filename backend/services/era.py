@@ -288,7 +288,7 @@ async def resolve_duels_at_era_close(
     closing_era_id: int | None = None,
     era: EraConfig = CURRENT_ERA,
 ) -> list[Duel]:
-    """Dissolve ``pending`` duels (Q8); freeze every ``active``/``settled`` one (ADR-0052).
+    """Dissolve ``pending`` duels (Q8); freeze ``active``/``settled`` ones (ADR-0052).
 
     Sets winner (``duel_winner``), both final-points snapshots, ``resolved_at``,
     status, and ``resolved_era_id`` (#823; a timestamp can't answer it since the
@@ -357,7 +357,7 @@ async def resolve_duels_at_era_close(
         )
 
     for duel in duels:
-        # Q4: a forfeit settles for the honest side; a draft or one cast is a no-contest.
+        # Q4: a forfeit has an honest-side winner; a draft or one cast is none.
         state = duel_state(
             duel,
             praxes_by_id.get(duel.challenger_praxis_id),

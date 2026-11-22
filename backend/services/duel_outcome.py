@@ -41,7 +41,7 @@ def duel_winner(
     1. Eligibility: one side ineligible → the other wins, even with a lower
        tally (intended). Both ineligible → ``None``; tiebreak doesn't apply.
     2. Strictly greater ``points_from_votes`` wins.
-    3. Equal points, at least one vote → ``tie_break_winner_id`` (the Era 1 Snide perk, #748,
+    3. Equal points, at least one vote → ``tie_break_winner_id`` (Era 1 Snide, #748,
        pre-resolved via :func:`services.scoring.sole_tie_taker_id`). ``None``
        is a real tie or a no-contest (callers pass equal points).
 
