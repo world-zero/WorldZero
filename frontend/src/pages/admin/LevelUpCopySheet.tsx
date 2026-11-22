@@ -12,6 +12,7 @@ import { noop } from './copySheet/sheetFixtures'
 
 export default function LevelUpCopySheet() {
   const { t } = useTranslation('admin')
+  const { t: tp } = useTranslation('progression')
   const config = useGameConfig()
   useFocusWithoutScroll()
   return (
@@ -34,6 +35,10 @@ export default function LevelUpCopySheet() {
           </div>
         </section>
       ))}
+      <section className="flex flex-col gap-3 mb-10">
+        <h2 className="label-heading">{t('levelUpSheet.fallbackLead')}</h2>
+        <p className="card-description">{tp('popup.levelReached')}</p>
+      </section>
     </div>
   )
 }
