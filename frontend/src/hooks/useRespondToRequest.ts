@@ -3,6 +3,7 @@ import type { ActivityFeedItem } from '../api/activityFeed'
 import { respondToInvite } from '../api/praxis'
 import { respondToChallenge } from '../api/duel'
 import { extractError } from '../utils/errors'
+import { duelCan } from '../components/duel/duelState'
 
 /**
  * Accept/decline for collab invites and duel challenges (#346): different
@@ -22,11 +23,13 @@ export function normalizeRequestStatus(
 
 /** Untyped payload read optionally: malformed → 'pending', not a render throw. */
 export function requestStatusOf(item: ActivityFeedItem): RequestResponseStatus {
-  const raw =
-    item.type === 'duel_challenge'
-      ? item.payload?.duel_status
-      : item.payload?.invite_status
-  return normalizeRequestStatus(raw)
+  if (item.type === 'duel_challenge') {
+    const duel = { state: item.payload?.duel_state }
+    // A lapsed challenge is still `pending` in the row but dissolved in state.
+    if (duel.state === undefined || duelCan('accept', duel)) return 'pending'
+    return duel.state === 'dissolved' ? 'declined' : 'accepted'
+  }
+  return normalizeRequestStatus(item.payload?.invite_status)
 }
 
 /** Returns the praxis to land on (shared collab / new opponent praxis); null on duel decline. */

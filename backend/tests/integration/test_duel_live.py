@@ -24,6 +24,7 @@ from services.activity_feed import (
     FeedCursor,
     get_activity_feed,
 )
+from services.duel import get_duel_detail
 from services.praxis_duel import maybe_settle_duel
 from tests.integration.conftest import CURRENT_ERA_VOTE_LEVEL
 from tests.integration.factories import make_character, make_duel
@@ -264,3 +265,23 @@ async def test_rows_order_and_page_on_live_at(db_session: AsyncSession, era):
     assert [i.item_key for i in page.items if i.type == FEED_ITEM_TYPE_DUEL_LIVE] == [
         f"duel_live:{older.id}"
     ]
+
+
+@pytest.mark.asyncio
+async def test_feed_challenge_state_matches_duel_detail(db_session: AsyncSession, era):
+    duel, challenger, opponent = await _active_duel(db_session, era, "dl9")
+    for casts in ("one_cast", "live"):
+        if casts == "one_cast":
+            (await db_session.get(Praxis, duel.challenger_praxis_id)).status = (
+                PraxisStatus.submitted
+            )
+        else:
+            (await db_session.get(Praxis, duel.opponent_praxis_id)).status = (
+                PraxisStatus.submitted
+            )
+        await db_session.flush()
+        feed = await get_activity_feed(opponent.id, db_session)
+        (item,) = [i for i in feed.items if i.type == "duel_challenge"]
+        detail = await get_duel_detail(duel.id, opponent, db_session)
+        assert item.payload.duel_state == detail.state
+        assert detail.state.value == casts

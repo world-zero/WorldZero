@@ -2296,6 +2296,9 @@
             "title": "Duel Id",
             "type": "integer"
           },
+          "duel_state": {
+            "$ref": "#/components/schemas/DuelState"
+          },
           "duel_status": {
             "title": "Duel Status",
             "type": "string"
@@ -2325,7 +2328,8 @@
           "task_title",
           "task_point_value",
           "task_faction_slug",
-          "duel_status"
+          "duel_status",
+          "duel_state"
         ],
         "title": "DuelChallengePayload",
         "type": "object"
