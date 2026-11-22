@@ -1,4 +1,4 @@
-"""Guard for scripts/check_comment_paths.py (#4101): missing paths fail, allowlisted ones pass."""
+"""Guard for scripts/check_comment_paths.py (#4101)."""
 
 import subprocess
 import sys
@@ -29,5 +29,6 @@ def test_missing_path_fails_with_file_and_line(tmp_path, capsys):
 
 def test_allowlisted_entry_passes(tmp_path):
     root = _repo(tmp_path)
-    (root / "allow.txt").write_text("frontend/src/a.ts:frontend/src/does/not/exist.css\n")
+    entry = "frontend/src/a.ts:frontend/src/does/not/exist.css\n"
+    (root / "allow.txt").write_text(entry)
     assert ccp.main(root, root / "allow.txt") == 0
