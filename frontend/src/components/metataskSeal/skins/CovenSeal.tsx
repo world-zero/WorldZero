@@ -82,7 +82,6 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
           className="block"
           style={{
             fontFamily: DISPLAY,
-            fontWeight: 600,
             fontSize: 'var(--text-title)',
             lineHeight: 1.1,
             letterSpacing: '0.005em',

@@ -46,7 +46,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace"
  *
  * All pairings are pinned by the card's `factionContrast` rows; the hat adds
  * `-slip-deep` on `-slip-mid` at the 3:1 graphic floor. No cat (not one of
- * `CovenCat`'s placements) and no Grenze Gotisch (no task title).
+ * `CovenCat`'s placements) and no Berkshire Swash (no task title).
  *
  * Seven-slot blocks (#3142): row band, Caveat motto, braid ornament, member
  * seal in {@link CovenSelectSeal}. Fluid to 360x300 for mobile (#732).
