@@ -1,6 +1,7 @@
 """A proposer edits or withdraws their own pending proposal (#3771)."""
 import pytest
 import pytest_asyncio
+from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,10 +11,15 @@ from game_config import CURRENT_ERA
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.mod_action import ModAction
+from models.roles import Permission
 from models.task import Task, TaskStatus
+from schemas.task import TaskCreate
+from services.admin_service import update_task_status
+from services.task import edit_proposal, withdraw_proposal
 from tests.integration.factories import make_task
 
 BODY = {"title": "Better title", "point_value": 12, "level_required": 1}
+BODY_MODEL = TaskCreate(**BODY)
 
 
 @pytest_asyncio.fixture
@@ -138,3 +144,52 @@ async def test_proposer_reads_their_proposal_with_notes_and_nobody_else_does(
 
     assert mine.json()["notes"] == "for the mods"
     assert theirs.status_code == 403
+
+
+# A second session on the same connection has its own identity map, so a stale
+# cached copy shows up without needing real concurrent transactions.
+async def _stale_session(db_session: AsyncSession, task: Task):
+    other = AsyncSession(bind=db_session.bind, expire_on_commit=False)
+    other.info["loaded"] = await other.get(Task, task.id)  # the identity map is weak
+    return other
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("act", [edit_proposal, withdraw_proposal])
+async def test_proposer_sees_a_mods_approval_made_after_they_loaded_it(
+    db_session: AsyncSession, proposer, act
+):
+    task = await _pending(db_session, proposer)
+    stale = await _stale_session(db_session, task)
+    await update_task_status(
+        task.id, TaskStatus.active, db_session,
+        actor_id=proposer.account_id, held=frozenset({Permission.review_proposals}),
+    )
+    await db_session.commit()
+
+    args = (BODY_MODEL,) if act is edit_proposal else ()
+    with pytest.raises(HTTPException) as exc:
+        await act(task.id, proposer, *args, stale)
+
+    assert exc.value.status_code == 409
+    assert exc.value.detail["code"] == ErrorCode.task_not_pending.value
+
+
+@pytest.mark.asyncio
+async def test_mod_approval_sees_a_withdrawal_made_after_they_loaded_it(
+    db_session: AsyncSession, proposer
+):
+    task = await _pending(db_session, proposer)
+    stale = await _stale_session(db_session, task)
+    await withdraw_proposal(task.id, proposer, db_session)
+    await db_session.commit()
+
+    with pytest.raises(HTTPException) as exc:
+        await update_task_status(
+            task.id, TaskStatus.active, stale,
+            actor_id=proposer.account_id,
+            held=frozenset({Permission.review_proposals}),
+        )
+
+    # Seen as deleted, leaving it needs a different permission than pending does.
+    assert exc.value.status_code == 403

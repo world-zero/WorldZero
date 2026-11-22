@@ -168,9 +168,13 @@ async def propose_task(
 
 
 async def _own_pending_task(
-    task_id: int, character: Character, session: AsyncSession
+    task_id: int, character: Character, session: AsyncSession, lock: bool = False
 ) -> Task:
-    task = await session.get(Task, task_id)
+    """``lock``: a mod's concurrent status change waits, or we see its result."""
+    query = select(Task).where(Task.id == task_id)
+    if lock:
+        query = query.with_for_update().execution_options(populate_existing=True)
+    task = await session.scalar(query)
     if task is None:
         raise_coded(404, ErrorCode.task_not_found, "Task not found.")
     if task.created_by_id != character.id:
@@ -209,7 +213,7 @@ async def edit_proposal(
 ) -> Task:
     """Rewrite a pending proposal. ``created_at`` is untouched, so the review
     window doesn't restart."""
-    task = await _own_pending_task(task_id, character, session)
+    task = await _own_pending_task(task_id, character, session, lock=True)
     task_type = await _validate_proposal(
         character, data, session, skip_level_check, era
     )
@@ -232,7 +236,7 @@ async def withdraw_proposal(
     task_id: int, character: Character, session: AsyncSession
 ) -> None:
     """Soft-delete via the existing ``deleted`` status; a mod can restore it."""
-    task = await _own_pending_task(task_id, character, session)
+    task = await _own_pending_task(task_id, character, session, lock=True)
     task.status = TaskStatus.deleted
     await session.flush()
     await log_mod_action(
