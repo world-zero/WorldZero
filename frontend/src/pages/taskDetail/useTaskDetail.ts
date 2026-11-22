@@ -10,7 +10,9 @@ import {
   deletePraxis,
   type PraxisCardOut,
 } from "../../api/praxis";
-import { cancelChallenge } from "../../api/duel";
+import { cancelChallenge, getDuelDetail } from "../../api/duel";
+import type { DuelDetailOut } from "../../api/duel";
+import { duelCanDrop } from "../../components/duel/duelState";
 import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 import { dropConfirmFor } from "./dropConfirm";
 import { listRelationships } from "../../api/relationships";
@@ -83,6 +85,8 @@ export interface TaskDetailState {
   handleSignup: () => Promise<void>;
   /** ASK to drop this task: opens {@link dropConfirm}, does not delete (#2215). */
   handleDrop: () => void;
+  /** False once the backend would refuse the drop (a live, forfeited or resolved duel side). */
+  canDrop: boolean;
   /** The pending drop confirmation, rendered by the dispatcher; null when none. */
   dropConfirm: DropConfirmState | null;
 }
@@ -103,6 +107,15 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     useState<PraxisCardOut | null>(null);
   /** The draft a pending confirm is asking about; null when none is open. */
   const [dropTarget, setDropTarget] = useState<PraxisCardOut | null>(null);
+  const [draftDuel, setDraftDuel] = useState<DuelDetailOut | null>(null);
+  const draftDuelId = inProgressPraxis?.duel_id ?? null;
+  useEffect(() => {
+    setDraftDuel(null);
+    if (draftDuelId == null) return;
+    // A failed read leaves Drop showing; the backend still refuses it.
+    getDuelDetail(draftDuelId).then(setDraftDuel, () => {});
+  }, [draftDuelId]);
+  const canDrop = duelCanDrop(draftDuel);
   const [taskSlotCount, setTaskSlotCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -327,6 +340,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     signupError,
     handleSignup,
     handleDrop,
+    canDrop,
     dropConfirm,
   };
 }

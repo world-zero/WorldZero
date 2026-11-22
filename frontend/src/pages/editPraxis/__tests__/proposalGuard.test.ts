@@ -31,6 +31,7 @@ const praxis = (over: Partial<ProposalPraxis> = {}): ProposalPraxis => ({
   type: 'collab',
   members: [member(1), member(2)],
   submit_proposed_at: AT,
+  collab_state: 'proposed',
   ...over,
 })
 
@@ -40,7 +41,11 @@ describe('proposalIsLive', () => {
   })
 
   it('is not live while the crew is only drafting', () => {
-    expect(proposalIsLive(praxis({ submit_proposed_at: null }))).toBe(false)
+    expect(proposalIsLive(praxis({ submit_proposed_at: null, collab_state: 'drafting' }))).toBe(false)
+  })
+
+  it('stays live when the proposer left and nobody has approved (Q3)', () => {
+    expect(proposalIsLive(praxis({ members: [member(1), member(2)] }))).toBe(true)
   })
 
   it('is never live for solo or a duel side, which have one member', () => {
@@ -71,7 +76,7 @@ describe('editNeedsProposalConfirm', () => {
   })
 
   it('never arms while the crew is drafting, agreed or not', () => {
-    const drafting = praxis({ submit_proposed_at: null })
+    const drafting = praxis({ submit_proposed_at: null, collab_state: 'drafting' })
     expect(editNeedsProposalConfirm(drafting, null)).toBe(false)
     expect(editNeedsProposalConfirm(drafting, AT)).toBe(false)
   })

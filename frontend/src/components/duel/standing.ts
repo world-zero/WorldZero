@@ -28,7 +28,7 @@ export function hasForfeited(duel: DuelDetailOut, side: DuelSideOut): boolean {
  */
 export function duelScoreFor(duel: DuelDetailOut, side: DuelSideOut): string {
   if (hasForfeited(duel, side)) return NO_SCORE
-  if (duel.status === 'resolved') {
+  if (duel.state === 'resolved' || duel.state === 'no_contest') {
     const frozen = finalFor(duel, side)
     return frozen != null ? formatPoints(frozen) : NO_SCORE
   }
@@ -42,17 +42,22 @@ export function duelVerdict(
   b: DuelSideOut,
   t: TFunction<'praxis'>,
 ): string {
-  if (duel.forfeited_by_character_id != null) {
+  // Era close keeps a forfeit: RESOLVED with a forfeiter is still won by default.
+  if (
+    duel.state === 'live_forfeited' ||
+    duel.state === 'awaiting_honest_side' ||
+    (duel.state === 'resolved' && duel.forfeited_by_character_id != null)
+  ) {
     return t('duelCrossLink.wonByDefault')
   }
+  if (duel.state === 'no_contest') return t('duelCrossLink.finalNoContest')
 
-  if (duel.status === 'resolved') {
-    // Null on a no-contest (never became votable).
-    const pair = finalFor(duel, a) != null && finalFor(duel, b) != null
-    if (!pair) return t('duelCrossLink.finalNoContest')
+  if (duel.state === 'resolved') {
+    // Q10: no winner without votes, so 0-0 reads tied whatever the perk did.
+    const noVotes = a.points_from_votes === 0 && b.points_from_votes === 0
     return t('duelCrossLink.final', {
       standing:
-        duel.winner_character_id == null
+        duel.winner_character_id == null || noVotes
           ? t('duelCrossLink.finalStanding.tied')
           : t('duelCrossLink.finalStanding.won', {
               name:

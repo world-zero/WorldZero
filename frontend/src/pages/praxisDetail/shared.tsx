@@ -25,6 +25,7 @@ import { factionCssVar } from '../../utils/factions'
 import { stampRestatesTaskPoints } from '../../utils/praxis'
 import { formatPoints } from '../../utils/points'
 import type { TFunction } from 'i18next'
+import { duelPreLive } from '../../components/duel/duelState'
 
 /**
  * Whether this praxis's score was banked (#1444). `ScoreStamp` renders nothing
@@ -414,7 +415,7 @@ export function unsubmitCase(
   praxis: PraxisOut,
   duel: DuelDetailOut | null,
 ): UnsubmitCase {
-  if (duel && (duel.status === 'pending' || duel.status === 'active')) return 'duelLive'
+  if (duelPreLive(duel)) return 'duelLive'
   if (praxis.members.length <= 1) return 'solo'
   return praxis.status === 'pending' ? 'collabOwnPart' : 'collabGroup'
 }
@@ -460,7 +461,7 @@ export function PraxisSubmitControls({ state }: { state: PraxisDetailState }) {
 
   // A SETTLED duel side's unsubmit is a permanent forfeit (ADR-0011): escalate
   // to the dialog (#718). While `active` it is a free reopen; don't warn.
-  const forfeitsOnUnsubmit = duel?.status === 'settled' && duel.forfeited_by_character_id == null
+  const forfeitsOnUnsubmit = duel?.state === 'live'
 
   const viewerCharacterId = user?.character?.id
 

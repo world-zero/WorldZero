@@ -75,6 +75,14 @@ describe('deriveCollabGate — the consensus state machine (#591)', () => {
 })
 
 // #1274: consensus readings are degenerate at one member.
+describe('deriveCollabGate — an open proposal whose proposer left (Q3)', () => {
+  it('reads as holdout, not writing, so every surface agrees', () => {
+    const crew = [member(1, false), member(2, false)]
+    expect(deriveCollabGate(crew, 1, 'proposed').state).toBe('holdout')
+    expect(deriveCollabGate(crew, 1, 'drafting').state).toBe('writing')
+  })
+})
+
 describe('deriveCollabGate — one member is awaiting, never published (#1274)', () => {
   it('a lone member who has not submitted → awaiting', () => {
     expect(deriveCollabGate([member(1, false)], 1)).toMatchObject({

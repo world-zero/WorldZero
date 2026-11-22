@@ -21,6 +21,7 @@
  * Renders purely from props plus injectable `autoSubmitDays`/`now`, for the
  * effect-less harness.
  */
+import { duelPreLive } from '../../../components/duel/duelState'
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -532,7 +533,7 @@ export default function PraxisWaitingSurface({
             <p className="content-text" style={dress.bodyStyle}>
               {collabCopy(
                 slug,
-                duel?.status === "pending" ? "duelPendingLine" : "duelElapsedLine",
+                duel?.state === "challenged" ? "duelPendingLine" : "duelElapsedLine",
                 {
                   elapsed: stamped,
                   name: sides.foe.display_name,
@@ -579,7 +580,7 @@ export default function PraxisWaitingSurface({
                 dress={dress}
                 completed={completed}
                 onNudge={
-                  duel?.status === "active" &&
+                  duel?.state !== "challenged" && duelPreLive(duel) &&
                   !blockedIds.has(sides.foe.character_id)
                     ? () => nudge(sides.foe.character_id)
                     : undefined

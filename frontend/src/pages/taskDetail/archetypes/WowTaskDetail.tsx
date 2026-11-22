@@ -159,6 +159,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   // Guarded non-null by the dispatcher.
@@ -299,6 +300,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
             <Star size={13} color={GOLD} />
             {t("detail.inProgress.continue")}
           </Link>
+          {canDrop && (
           <button
             onClick={handleDrop}
             style={{
@@ -317,6 +319,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.inProgress.drop")}
           </button>
+          )}
           <ErrorBanner message={signupError} />
         </div>
       )}

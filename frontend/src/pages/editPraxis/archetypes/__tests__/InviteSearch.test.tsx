@@ -4,6 +4,7 @@
  * the `opponent` role, so the pair must resolve sides via `duelSides`; a
  * regression to `duel.opponent` swaps the order the assertions check.
  */
+import { duelStateFor } from '../../../../test/fixtures'
 import { renderToStaticMarkup } from "react-dom/server";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
@@ -56,7 +57,7 @@ function duelState(
     task_id: 3,
     status: options.status ?? "active",
     forfeited_by_character_id: null,
-    state: "drafting",
+    state: duelStateFor(options.status ?? "active"),
     cast_clock_started_at: null,
     challenger: duelSide(1, "Challenger Name", options.challengerSubmitted),
     opponent: duelSide(2, "Opponent Name", options.opponentSubmitted),

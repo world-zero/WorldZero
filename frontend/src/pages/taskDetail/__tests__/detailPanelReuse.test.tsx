@@ -55,6 +55,7 @@ function baseState(overrides: Partial<TaskDetailState> = {}): TaskDetailState {
     handleSignup: async () => {},
     handleDrop: async () => {},
     dropConfirm: null,
+    canDrop: true,
     ...overrides,
   };
 }

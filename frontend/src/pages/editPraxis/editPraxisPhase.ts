@@ -4,6 +4,7 @@
  * `useEditPraxis` would pull a 54 KB-gzip chunk. `useEditPraxis` re-exports it.
  */
 import { deriveCollabGate } from "../../components/collab/collabGate";
+import { duelPreLive } from "../../components/duel/duelState";
 import type { PraxisOut } from "../../api/praxis";
 import type { DuelDetailOut } from "../../api/duel";
 
@@ -52,14 +53,15 @@ export function deriveEditPraxisPhase(
   if (praxis.duel_id != null) {
     if (praxis.status !== "submitted") return "composing";
     if (duel == null) return "composing";
-    if (duel.forfeited_by_character_id != null) return "composing";
-    if (duel.status === "active" || duel.status === "pending") return "waiting";
-    if (duel.status === "declined") return "handoff";
+    if (duel.state === "live_forfeited" || duel.state === "awaiting_honest_side")
+      return "composing";
+    if (duel.state === "dissolved") return "handoff";
+    if (duelPreLive(duel)) return "waiting";
     return "completed";
   }
   if (praxis.type === "collab" && praxis.members.length > 1) {
     if (praxis.status === "submitted") return "completed";
-    return deriveCollabGate(praxis.members, currentCharacterId).state ===
+    return deriveCollabGate(praxis.members, currentCharacterId, praxis.collab_state).state ===
       "waiting"
       ? "waiting"
       : "composing";
