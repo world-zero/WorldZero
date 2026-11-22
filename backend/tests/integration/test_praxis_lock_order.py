@@ -4,10 +4,12 @@ Seam: the advisory locks the paths take, probed from a second connection with
 ``pg_try_advisory_xact_lock`` (the suite shares one transaction, so Postgres
 never blocks here; the key and the holding are what is asserted).
 """
+import io
 from datetime import datetime, timedelta, timezone
 
 import pytest
 from httpx import AsyncClient
+from PIL import Image
 from sqlalchemy import delete, event, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +18,7 @@ from models.character import Character
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisInvite, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
-from services import collab_consensus
+from services import collab_consensus, google_photos
 from services import praxis as praxis_service
 from services.character_stats import _STATS_LOCK_NAMESPACE
 from services.collab_consensus import _PRAXIS_LOCK_NAMESPACE
@@ -351,3 +353,83 @@ async def test_leave_locks_duel_opponents_in_the_same_ascending_pass(
 
     assert taken[:3] == ids
     assert sorted(set(taken), key=taken.index) == sorted(set(taken))
+
+
+def _jpeg() -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGB", (8, 8), (1, 2, 3)).save(buffer, format="JPEG")
+    return buffer.getvalue()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "path",
+    ["delete-media", "unsubmit", "cancel-invite", "done", "upload", "batch", "google"],
+)
+async def test_each_praxis_mutation_path_holds_the_praxis_lock(
+    path,
+    monkeypatch,
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    db_connection,
+    db_session: AsyncSession,
+    era,
+):
+    """#3994: each writer serialises with ``submit_praxis``; a refusal still locks."""
+    # No accept here: an accept's own lock would stay held in the shared transaction.
+    created = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "collab", "title": "Locks"},
+        headers=auth_headers2,
+    )
+    assert created.status_code == 201, created.text
+    praxis_id = created.json()["id"]
+    url = f"/praxes/{praxis_id}"
+    media = {"file": ("a.jpg", _jpeg(), "image/jpeg")}
+    if path == "cancel-invite":
+        stranger = await make_character(
+            db_session, era, username="locksbystander"
+        )
+        invite_id = await _invite(client, praxis_id, auth_headers2, stranger.id)
+    if path == "google":
+        async def _account(account_id, session):
+            return "sub"
+
+        async def _ingest(**kwargs):
+            return []
+
+        monkeypatch.setattr(google_photos, "require_google_account", _account)
+        monkeypatch.setattr(google_photos, "ingest_picked_media", _ingest)
+    request = {
+        "delete-media": lambda: client.delete(
+            f"{url}/media/1", headers=auth_headers2
+        ),
+        "unsubmit": lambda: client.post(f"{url}/unsubmit", headers=auth_headers2),
+        "cancel-invite": lambda: client.delete(
+            f"{url}/invite/{invite_id}", headers=auth_headers2
+        ),
+        "done": lambda: client.post(
+            f"{url}/done", json={"is_done": True}, headers=auth_headers2
+        ),
+        "upload": lambda: client.post(
+            f"{url}/media", files=media, headers=auth_headers2
+        ),
+        "batch": lambda: client.post(
+            f"{url}/media/batch",
+            files=[("files", media["file"])],
+            headers=auth_headers2,
+        ),
+        "google": lambda: client.post(
+            f"{url}/media/google-photos",
+            json={"session_id": "s"},
+            headers=auth_headers2,
+        ),
+    }[path]
+    await request()
+
+    assert await _is_held(db_connection, _PRAXIS_LOCK_NAMESPACE, praxis_id)
+    assert not await _is_held(db_connection, _PRAXIS_LOCK_NAMESPACE, praxis_id + 1000)
