@@ -66,3 +66,9 @@ describe('crop-shape picker — praxis media only (#1713)', () => {
     }
   })
 })
+
+describe('zoom slider paint (#4190)', () => {
+  it('carries the themed class, not the UA blue', () => {
+    expect(markup(undefined)).toMatch(/<input[^>]*type="range"[^>]*class="image-edit-zoom"/)
+  })
+})
