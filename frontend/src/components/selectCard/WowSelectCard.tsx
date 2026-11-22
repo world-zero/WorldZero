@@ -6,7 +6,7 @@ import type { FactionSelectCardProps } from "./FactionSelectCard";
 import { WowSigil } from "../sigil/WowSigil";
 import { WowBalloonSeal, WowBuntingOrnament } from "../factionMarks/WowSelectMarks";
 // One line on purpose: the register test's import scan reads single-line imports.
-import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding } from "./selectCardBlocks";
+import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding, selectLine } from "./selectCardBlocks";
 import { CTA_SELECT_SIZE, WOW_CARD_CTA } from "../taskCard/cardCta";
 
 /**
@@ -74,11 +74,11 @@ export default function WowSelectCard({ state = "locked", members, onVisit }: Om
           headcount={(count) => `${count} ${i18n.t("feed:factionHero.wow.stats.members", { count })}`}
           style={{ fontSize: "var(--text-content)", color: "var(--wow-select-card-quiet)", marginBottom: "var(--space-md)" }}
         >
-          {i18n.t(`feed:factionSelect.wow.status.${state}` as const)}
+          {selectLine(state, "status", (s) => i18n.t(`feed:factionSelect.wow.status.${s}` as const))}
         </SelectCardStanding>
         {/* #2818 */}
         <SelectCardCall onClick={onVisit} style={{ ...WOW_CARD_CTA, ...CTA_SELECT_SIZE }}>
-          {i18n.t("feed:factionSelect.wow.cta")}
+          {selectLine(state, "cta", () => i18n.t("feed:factionSelect.wow.cta"))}
         </SelectCardCall>
       </SelectCardFooter>
     </SelectCardFrame>

@@ -5,6 +5,7 @@ import {
   SelectCardBand,
   SelectCardBody,
   SelectCardCall,
+  selectLine,
   SelectCardFooter,
   SelectCardFrame,
   SelectCardMotto,
@@ -45,7 +46,7 @@ const BLUE = "var(--faction-singularity-term-blue)";
 const DOT = `color-mix(in srgb, ${BLUE} 50%, transparent)`;
 
 export default function SingularitySelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.singularity.status.${state}` as const);
+  const status = selectLine(state, "status", (s) => i18n.t(`feed:factionSelect.singularity.status.${s}` as const));
   // The raster is out of flow, so zones are positioned to paint over it.
   const above = { position: "relative" } as const;
   return (
@@ -102,7 +103,7 @@ export default function SingularitySelectCard({ state = "locked", members, onVis
           className="sg-select-call"
           style={{ ...SINGULARITY_CARD_CTA, ...CTA_SELECT_SIZE }}
         >
-          {i18n.t("feed:factionSelect.singularity.cta")}
+          {selectLine(state, "cta", () => i18n.t("feed:factionSelect.singularity.cta"))}
         </SelectCardCall>
       </SelectCardFooter>
     </SelectCardFrame>

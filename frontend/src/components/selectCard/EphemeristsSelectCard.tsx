@@ -7,7 +7,7 @@ import * as eph from "../factionMarks/ephemeristsPlate";
 import EphemeristsGloss from "../factionMarks/EphemeristsGloss";
 import { CTA_SELECT_SIZE, EPHEMERISTS_CARD_CTA } from "../taskCard/cardCta";
 import { factionBodyVars } from "../../utils/factionBodyFace";
-import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding } from "./selectCardBlocks";
+import { SelectCardBand, SelectCardBody, SelectCardCall, SelectCardFooter, SelectCardFrame, SelectCardMotto, SelectCardOrnament, SelectCardPitch, SelectCardStanding, selectLine } from "./selectCardBlocks";
 
 /**
  * The Ephemerists directory tile (#2323), in the task card's PLATE register,
@@ -49,7 +49,7 @@ const seal = (
 );
 
 export default function EphemeristsSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.ephemerists.status.${state}` as const);
+  const status = selectLine(state, "status", (s) => i18n.t(`feed:factionSelect.ephemerists.status.${s}` as const));
   return (
     <SelectCardFrame className="eph-turn-scope" style={{ ...factionBodyVars("ephemerists"),
       /* Isolate: the net's `z-index: -1` paints above the sheet's fill. */
@@ -106,7 +106,7 @@ export default function EphemeristsSelectCard({ state = "locked", members, onVis
         </SelectCardStanding>
         {/* `.eph-cta` owns ground, ink and enclosure (#2146/#2818). */}
         <SelectCardCall onClick={onVisit} className="eph-cta" style={{ ...EPHEMERISTS_CARD_CTA, ...CTA_SELECT_SIZE }}>
-          {i18n.t("feed:factionSelect.ephemerists.cta")}
+          {selectLine(state, "cta", () => i18n.t("feed:factionSelect.ephemerists.cta"))}
         </SelectCardCall>
       </SelectCardFooter>
     </SelectCardFrame>

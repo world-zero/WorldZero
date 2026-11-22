@@ -328,6 +328,10 @@
       }
     }
   },
+  "factionSelectBurned": {
+    "status": "Closed for this era",
+    "cta": "You can't rejoin this era"
+  },
   "factionSelect": {
     "ua": {
       "tagline": "Make it anyway",
