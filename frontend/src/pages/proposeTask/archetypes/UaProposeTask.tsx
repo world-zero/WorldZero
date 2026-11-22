@@ -24,9 +24,7 @@ import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
   factionCssVar,
   factionName,
-  getAllFactions,
   isKnownFaction,
-  sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
@@ -48,7 +46,6 @@ import { Lotus } from '../../../components/factionMarks'
 import { UaSigil } from '../../../components/sigil/UaSigil'
 import { LOTUS, UA_DISPLAY, UA_TEXT } from '../../../components/factionMarks/uaAtoms'
 import {
-  UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
 
@@ -94,7 +91,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -119,14 +116,6 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
 
   /* #1695 review window; `null` until `/game-config` lands, and then UNDRAWN. */
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
-
-  /* Same option list as the na kit: unaffiliated, then rainbow order (#352). */
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({ slug: f.slug })),
-    ).map((f) => f.slug),
-  ]
 
   /* Ornament geometry in raw px (WORLD_ZERO_STYLE §4a). */
   const groundGeometry = sizes.isMobile
