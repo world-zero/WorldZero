@@ -627,6 +627,7 @@ export default function WowEditPraxis({ state }: Props) {
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 trailingOrnament: <span aria-hidden>✦</span>,
+                band: true,
                 style: {
                   ...composerBandStyle(sizes, {
                     /* The one control in the display face, per design. */

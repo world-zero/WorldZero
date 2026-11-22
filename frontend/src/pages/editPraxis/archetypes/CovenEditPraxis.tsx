@@ -744,6 +744,7 @@ export default function CovenEditPraxis({ state }: Props) {
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
                 ornament: <Sparkle size={12} />,
+                band: true,
                 style: {
                   ...composerBandStyle(sizes, {
                     // Design band: 14 / 700 / 0.12em (14 = --text-xl).
