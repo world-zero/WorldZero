@@ -30,6 +30,7 @@ function mount(user: CurrentUser | null, resumed = false) {
 const skip = () => screen.queryByTestId('onboarding-skip')
 
 beforeEach(() => {
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }))
   window.scrollTo = vi.fn()
   localStorage.clear()
 })

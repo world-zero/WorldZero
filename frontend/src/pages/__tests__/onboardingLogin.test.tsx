@@ -25,6 +25,7 @@ const mount = (url: string, user: CurrentUser | null) =>
   )
 
 beforeEach(() => {
+  vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }))
   const store = new Map<string, string>()
   vi.stubGlobal('sessionStorage', {
     getItem: (k: string) => store.get(k) ?? null,
