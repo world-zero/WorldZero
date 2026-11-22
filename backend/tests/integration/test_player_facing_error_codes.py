@@ -301,7 +301,7 @@ async def test_commenting_on_a_deleted_task_is_coded(
     character2: Character,
     auth_headers2: dict,
 ):
-    """A deleted task carries no comment thread (#4151)."""
+    """A deleted task is withheld like a missing one (#4151)."""
     active_task.status = TaskStatus.deleted
     await db_session.commit()
 
@@ -310,9 +310,9 @@ async def test_commenting_on_a_deleted_task_is_coded(
         json={"body_text": "hello"},
         headers=auth_headers2,
     )
-    assert response.status_code == 403, response.text
+    assert response.status_code == 404, response.text
     assert (
-        response.json()["detail"]["code"] == ErrorCode.task_not_open_for_comments.value
+        response.json()["detail"]["code"] == ErrorCode.task_not_found.value
     )
 
 

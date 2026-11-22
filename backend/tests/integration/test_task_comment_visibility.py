@@ -109,8 +109,15 @@ async def test_any_viewer_of_a_retired_task_can_comment(
     assert (await _comment(client, task.id, auth_headers)).status_code == 201
 
 
+async def _assert_same_as_missing(client, task_id, auth_headers):
+    gone = await _comment(client, 999_999_999, auth_headers)
+    r = await _comment(client, task_id, auth_headers)
+    assert gone.status_code == 404
+    assert (r.status_code, r.json()) == (gone.status_code, gone.json())
+
+
 @pytest.mark.asyncio
-async def test_a_deleted_task_is_closed_to_comments(
+async def test_a_deleted_task_is_indistinguishable_from_missing(
     client: AsyncClient,
     character,
     era: Era,
@@ -120,6 +127,19 @@ async def test_a_deleted_task_is_closed_to_comments(
 ):
     await _commenter(db_session, character, era)
     task = await _gated_task(db_session, character, TaskStatus.deleted)
-    r = await _comment(client, task.id, auth_headers)
-    assert r.status_code == 403
-    assert r.json()["detail"]["code"] == ErrorCode.task_not_open_for_comments.value
+    await _assert_same_as_missing(client, task.id, auth_headers)
+
+
+@pytest.mark.asyncio
+async def test_a_backdoor_the_viewer_cannot_see_is_indistinguishable_from_missing(
+    client: AsyncClient,
+    character,
+    character2,
+    era: Era,
+    some_faction: Faction,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await _commenter(db_session, character, era)
+    task = await _gated_task(db_session, character2, TaskStatus.backdoor)
+    await _assert_same_as_missing(client, task.id, auth_headers)

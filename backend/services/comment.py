@@ -159,6 +159,7 @@ async def _assert_commentable_target(
     task_id: Optional[int],
     session: AsyncSession,
     author: Optional[Character] = None,
+    era: EraConfig = CURRENT_ERA,
 ) -> None:
     """Exactly one target, open for comments: a visible praxis or task."""
     if (praxis_id is None) == (task_id is None):
@@ -183,17 +184,15 @@ async def _assert_commentable_target(
             )
     else:
         # Same visibility gate as GET /tasks/{id}; withheld answers 404 like absent.
-        task = await session.get(Task, task_id)
+        task = await get_task_for_viewer(session, task_id, author, era=era)
         if task is None:
             raise_coded(404, ErrorCode.task_not_found, "Task not found.")
-        if task.status in (TaskStatus.deleted, TaskStatus.backdoor):
+        if task.status is TaskStatus.backdoor:
             raise_coded(
                 403,
                 ErrorCode.task_not_open_for_comments,
                 "This task is not open for comments.",
             )
-        if await get_task_for_viewer(session, task_id, author) is None:
-            raise_coded(404, ErrorCode.task_not_found, "Task not found.")
 
 
 async def create_comment(
@@ -213,7 +212,9 @@ async def create_comment(
             {"level": era.comment_level_required},
         )
     body_text = _clean_body(body_text)
-    await _assert_commentable_target(praxis_id, task_id, session, author=author)
+    await _assert_commentable_target(
+        praxis_id, task_id, session, author=author, era=era
+    )
 
     comment = Comment(
         praxis_id=praxis_id,
