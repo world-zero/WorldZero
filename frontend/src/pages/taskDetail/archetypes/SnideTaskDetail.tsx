@@ -287,7 +287,7 @@ export default function SnideTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: PLATE_ACCENT }}>

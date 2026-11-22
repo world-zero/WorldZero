@@ -9,6 +9,7 @@ import { sortFactionsByRainbowOrder } from '../utils/factions'
 import { useAuth } from '../auth/AuthContext'
 import { useFormFactor } from '../hooks/useFormFactor'
 import { useFactionsDirectory, type FactionsDirectoryState } from './factions/useFactionsDirectory'
+import FactionSigil from '../components/sigil/FactionSigil'
 import { ErrorBanner } from "../components/ui/ErrorBanner";
 
 const NA_SLUG = 'na'
@@ -73,7 +74,9 @@ export function FactionsDirectory({ state }: { state: FactionsDirectoryState }) 
         <section
           className="sidebar-card unaffiliated-banner mb-4"
         >
-          <span aria-hidden="true" className="unaffiliated-banner-disc" />
+          <span aria-hidden="true" className="flex-none">
+            <FactionSigil slug={NA_SLUG} size={34} />
+          </span>
           <div>
             <div
               className="font-display italic unaffiliated-banner-title"

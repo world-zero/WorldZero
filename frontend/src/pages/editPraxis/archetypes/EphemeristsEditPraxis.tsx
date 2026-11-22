@@ -694,6 +694,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
                       weight={1.4}
                     />
                   ),
+                  band: true,
                   style: {
                     ...composerBandStyle(sizes, {
                       /* Design band: 12 / 500 / 0.24em (12 = --text-lg). */

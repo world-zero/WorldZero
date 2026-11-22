@@ -199,7 +199,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           </CardCtaControl>
           <div style={{ ...aside, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: "var(--leaf-task-detail-accent)" }}>

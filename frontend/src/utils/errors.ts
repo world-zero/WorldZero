@@ -56,6 +56,7 @@ const GENERIC_SERVER_PROSE = 'Internal Server Error'
 export const ErrorCode = {
   copyOverrideChanged: 'COPY_OVERRIDE_CHANGED',
   taskBankFull: 'TASK_BANK_FULL',
+  invitePraxisSubmitted: 'INVITE_PRAXIS_SUBMITTED',
   taskNotFound: 'TASK_NOT_FOUND',
   praxisNotFound: 'PRAXIS_NOT_FOUND',
   characterNotFound: 'CHARACTER_NOT_FOUND',

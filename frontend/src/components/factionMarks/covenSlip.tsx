@@ -25,7 +25,7 @@ import { mediaUrl } from "../../utils/media";
 export const CHROME = "var(--font-faction-script)"; /* Caveat */
 export const READING = "var(--font-faction-spectral)"; /* Spectral */
 export const HAND = "var(--font-faction-script)"; /* Caveat */
-export const DISPLAY = "var(--font-faction-witch)"; /* Grenze Gotisch */
+export const DISPLAY = "var(--font-faction-witch)";
 
 /* Ink. See the note above before painting a string in DEEP or PINK. */
 export const INK = "var(--faction-coven-slip-ink)";

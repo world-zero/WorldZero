@@ -585,6 +585,7 @@ export default function UaEditPraxis({ state }: Props) {
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
+                band: true,
                 style: {
                   ...composerBandStyle(sizes, {
                     fontFamily: UA_TEXT,

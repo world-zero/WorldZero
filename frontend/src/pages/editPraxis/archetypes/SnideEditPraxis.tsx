@@ -662,6 +662,7 @@ export default function SnideEditPraxis({ state }: Props) {
               skin={{
                 idleLabel: t("editPraxis.composer.submit"),
                 busyLabel: t("editPraxis.composer.submitBusy"),
+                band: true,
                 style: {
                   ...composerBandStyle(sizes, {
                     fontFamily: TITLE_FACE,

@@ -32,9 +32,7 @@ import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
   factionCssVar,
   factionName,
-  getAllFactions,
   isKnownFaction,
-  sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import {
   ComposerFooter,
@@ -69,7 +67,6 @@ import {
   Spark,
 } from '../../../components/factionMarks/covenSlip'
 import {
-  UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
@@ -124,7 +121,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -246,7 +243,6 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
           <h1
             style={{
               fontFamily: DISPLAY,
-              fontWeight: 600,
               fontSize: sizes.titleSize,
               lineHeight: 1.1,
               color: INK,
@@ -273,17 +269,6 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
     )
   }
 
-  /* Unaffiliated leads (ADR-0039), then rainbow order (#352). The order is
-     the page's, not the dress's. */
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({
-        slug: f.slug,
-      })),
-    ).map((f) => f.slug),
-  ]
-
   return (
     <ComposerPage
       sizes={sizes}
@@ -304,7 +289,6 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
             <h1
               style={{
                 fontFamily: DISPLAY,
-                fontWeight: 600,
                 fontSize: sizes.titleSize,
                 lineHeight: 1.1,
                 color: INK,

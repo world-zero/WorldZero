@@ -74,8 +74,9 @@ const dress: ProfileDress = {
   displayFont: BEBAS,
   eyebrowFont: MONO,
   bodyFont: MONO,
+  headerMuted: CREAM,
   headerStyle: {
-    background: `linear-gradient(150deg, ${RED}, var(--everymen-red-deep))`,
+    background: `linear-gradient(150deg, var(--everymen-band-top), var(--everymen-band-bottom))`,
     border: `3px solid ${INK}`,
     // ornament (#1609): a printed register mark, not elevation; 40% is the
     // shared register strength (#2302).

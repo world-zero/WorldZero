@@ -13,7 +13,7 @@ import type { PraxisDetailState } from '../../frontend/src/pages/praxisDetail/us
 import type { EditPraxisState } from '../../frontend/src/pages/editPraxis/useEditPraxis'
 import type { CreateCharacterState } from '../../frontend/src/pages/characterPaths/useCreateCharacter'
 import type { EditCharacterState } from '../../frontend/src/pages/characterPaths/useEditCharacter'
-import type { ProposeTaskState } from '../../frontend/src/pages/proposeTask/useProposeTask'
+import { proposeFactionOptions, type ProposeTaskState } from '../../frontend/src/pages/proposeTask/useProposeTask'
 import type { DuelReaderState } from '../../frontend/src/pages/duelReader/useDuelReader'
 import type { DuelDetailOut, DuelSideOut } from '../../frontend/src/api/duel'
 import type { PraxisOut } from '../../frontend/src/api/praxis'
@@ -404,6 +404,7 @@ export function proposeTaskState(slug: string): ProposeTaskState {
     currentLevel: 6,
     success: false,
     factions: factionOuts,
+    factionOptions: proposeFactionOptions(factionOuts),
     title: 'Walk a neighbour’s dog while they are in hospital',
     setTitle: noop,
     description:

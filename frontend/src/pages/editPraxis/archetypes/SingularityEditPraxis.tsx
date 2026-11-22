@@ -697,6 +697,7 @@ export default function SingularityEditPraxis({ state }: Props) {
                     }}
                   />
                 ),
+                band: true,
                 style: {
                   ...composerBandStyle(sizes, {
                     fontFamily: FACE,
