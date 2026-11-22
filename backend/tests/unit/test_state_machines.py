@@ -61,10 +61,10 @@ def test_resolved_after_going_live_is_resolved(forfeit, mine, theirs):
     assert duel_state(duel, mine, theirs, NOW, ERA_1) is DuelState.RESOLVED
 
 
-def test_resolved_forfeit_frozen_before_going_live_is_no_contest():
-    # era close on AWAITING_HONEST_SIDE: winner None, never live
+def test_resolved_forfeit_frozen_before_going_live_is_resolved():
+    # Q4: era close on AWAITING_HONEST_SIDE gives the honest side the win
     duel = _duel(R, forfeit=7)
-    assert duel_state(duel, DRAFT, DRAFT, NOW, ERA_1) is DuelState.NO_CONTEST
+    assert duel_state(duel, DRAFT, DRAFT, NOW, ERA_1) is DuelState.RESOLVED
 
 
 def test_pending_never_lapses_without_a_window():

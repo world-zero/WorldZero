@@ -18,6 +18,8 @@ from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from services.auth import create_jwt
 from services.duel_outcome import duel_winner
+from services.duel_state import DuelState
+from services.praxis_duel import duel_state_of
 from tests.integration.factories import make_duel, raise_to_duel_level
 from tests.integration.test_duel_era_resolution import (
     NOT_TIE_TAKER,
@@ -135,6 +137,7 @@ async def test_era_close_gives_awaiting_honest_side_the_win(
     await db_session.refresh(duel)
     assert duel.status == DuelStatus.resolved
     assert duel.winner_character_id == challenger.id
+    assert (await duel_state_of(duel, db_session)) is DuelState.RESOLVED
 
 
 @pytest.mark.asyncio

@@ -2,6 +2,7 @@
  * Lightly skinned, accessible control primitives shared by all archetypes.
  * Archetypes own the outer containers; these are the inner essentials.
  */
+import { DUEL_STATES_THAT_BLOCK_DROP } from "../../../utils/duelDrop";
 import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, DragEvent, ReactNode } from "react";
@@ -677,15 +678,6 @@ interface DropButtonSkin {
   label?: string;
   className?: string;
 }
-
-/** States a duel can't be dissolved from (Q5), so its side can't be dropped. */
-const DUEL_STATES_THAT_BLOCK_DROP = new Set<string>([
-  "awaiting_honest_side",
-  "live",
-  "live_forfeited",
-  "resolved",
-  "no_contest",
-]);
 
 export function DropButton({
   praxis,
