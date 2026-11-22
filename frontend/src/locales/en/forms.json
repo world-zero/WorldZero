@@ -114,15 +114,15 @@
       "dropDuelSideTitle": "Drop this task and end the duel?",
       "dropDuelSide": "The duel ends for both of you, and your draft goes with it — neither can be undone.",
       "dropDuelSideNote": "Your opponent keeps their praxis as an ordinary solo — no forfeit penalty.",
-      "leaveDuelTitle": "Cancel your challenge?",
-      "leaveDuel": "Switching mode cancels the duel challenge attached to this praxis.",
+      "leaveDuelTitle": "Call off your challenge?",
+      "leaveDuel": "Switching mode calls off the duel challenge attached to this praxis.",
       "dropCoauthorsTitle": "Drop your co-authors?",
       "soloDropsCoauthors": "Switching to solo removes your co-authors from this praxis — your draft stays.",
       "duelDropsCoauthors": "Switching to a duel removes your co-authors from this praxis — your draft stays.",
       "modeSwitchAction": "Switch mode",
-      "dissolveDuelTitle": "Dissolve this duel?",
+      "dissolveDuelTitle": "Call off this duel?",
       "dissolveDuel": "It ends for both of you, and each side scores as an ordinary praxis — no forfeit penalty.",
-      "dissolveDuelAction": "Dissolve it"
+      "dissolveDuelAction": "Call it off"
     },
     "attach": {
       "pickerTitle": "Attach a metatask to this praxis",
@@ -155,9 +155,9 @@
       "statusChallenged": "Challenge sent",
       "statusPending": "pending",
       "statusSubmitted": "submitted",
-      "cancelChallengeAria": "cancel challenge",
-      "dissolveDuelLabel": "Dissolve duel",
-      "dissolveDuelAria": "dissolve the duel",
+      "cancelChallengeAria": "call off challenge",
+      "dissolveDuelLabel": "Call off duel",
+      "dissolveDuelAria": "call off the duel",
       "rescindInviteAria": "rescind invite to {{name}}",
       "kickMemberAria": "kick {{name}} from the collab"
     },
