@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 /** Seam: the console as `/auth/me` describes the caller — rail, landing, MOD count and in-page controls follow `permissions` (#3847). */
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ALL_PERMISSIONS, aTask } from '../../../test/fixtures'
@@ -15,6 +15,8 @@ const api = vi.hoisted(() => ({
   getOverview: vi.fn(async () => ({ praxis: 38, active_tasks: 10, accounts: 21, characters: 27 })),
   getAllTasks: vi.fn(async () => [aTask({ id: 1, title: 'Walk Barefoot', status: 'active' })]),
   getTaskIdsWithHistory: vi.fn(async () => []),
+  adminPatchTask: vi.fn(async () => ({})),
+  updateTaskStatus: vi.fn(async () => ({})),
 }))
 vi.mock('../../../api/admin', () => api)
 vi.mock('../../../auth/AuthContext', () => ({ useAuth: () => ({ user: auth.user, loading: false }), hadSessionLastVisit: () => true }))
@@ -32,6 +34,7 @@ import App from '../../../App'
 import ModControl from '../../../components/admin/ModControl'
 import AuthorRow from '../AuthorRow'
 import TasksTab from '../TasksTab'
+import TaskPanel from '../TaskPanel'
 
 const holding = (...permissions: Permission[]) => {
   auth.user = { is_admin: true, is_owner: false, permissions }
@@ -116,5 +119,34 @@ describe('the owner', () => {
     cleanup()
     at('/', <ModControl />)
     expect(await screen.findByRole('button', { name: 'Mod, 12 waiting' })).toBeTruthy()
+  })
+})
+
+describe('the task panel without manage_tasks', () => {
+  const panel = (status: 'pending' | 'deleted') => {
+    const onChanged = vi.fn()
+    at('/', <TaskPanel task={aTask({ id: 5, title: 'Walk', status })} factions={[]} proposal={null} onChanged={onChanged} onDeleted={vi.fn()} onClose={vi.fn()} />)
+    return onChanged
+  }
+
+  it('approves an edited proposal with review_proposals alone: no PATCH, no error', async () => {
+    holding('review_proposals')
+    const onChanged = panel('pending')
+    const title = screen.getByLabelText('Title') as HTMLInputElement
+    expect(title.disabled).toBe(true)
+    fireEvent.change(title, { target: { value: 'Edited anyway' } })
+    fireEvent.click(screen.getByRole('button', { name: 'activate' }))
+    await waitFor(() => expect(onChanged).toHaveBeenCalled())
+    expect(api.updateTaskStatus).toHaveBeenCalledWith(5, 'active', undefined)
+    expect(api.adminPatchTask).not.toHaveBeenCalled()
+    expect(screen.queryByText(/error/i)).toBeNull()
+  })
+
+  it('restores a deleted task with delete_import_tasks alone', async () => {
+    holding('delete_import_tasks')
+    const onChanged = panel('deleted')
+    fireEvent.click(screen.getByRole('button', { name: 'restore as pending' }))
+    await waitFor(() => expect(onChanged).toHaveBeenCalled())
+    expect(api.adminPatchTask).not.toHaveBeenCalled()
   })
 })
