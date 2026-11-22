@@ -35,6 +35,7 @@ from services.praxis import (
     resolve_flags,
 )
 from services.push import notify_comment
+from services.standing import public_identity
 from services.task import get_task_for_viewer
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.
@@ -140,6 +141,18 @@ async def _reconcile_mentions(
                 comment_id=comment.id, mentioned_character_id=character.id
             )
         )
+
+
+def _author_out(character: Character) -> CommentAuthor:
+    identity = public_identity(character)
+    return CommentAuthor(
+        id=character.id,
+        username=identity.username,
+        display_name=identity.display_name,
+        avatar_url=identity.avatar_url,
+        faction_slug=character.faction_slug,
+        name_state=identity.name_state,
+    )
 
 
 def _clean_body(body_text: str) -> str:
@@ -443,13 +456,14 @@ def build_comment_out(
         is_edited=comment.is_edited,
         created_at=comment.created_at,
         updated_at=comment.updated_at,
-        author=CommentAuthor.model_validate(comment.created_by),
+        author=_author_out(comment.created_by),
         admin_note=comment.admin_note if viewer_id == comment.created_by_id else None,
         mentions=[
             CommentMentionOut(
                 character_id=mention.mentioned_character.id,
-                username=mention.mentioned_character.username,
-                display_name=mention.mentioned_character.display_name,
+                username=public_identity(mention.mentioned_character).username,
+                display_name=public_identity(mention.mentioned_character).display_name,
+                name_state=public_identity(mention.mentioned_character).name_state,
             )
             for mention in comment.mentions
             if not censored

@@ -24,8 +24,9 @@ import { SETTINGS_SECTIONS } from '../../Settings'
 import BlockedSection from '../sections/BlockedSection'
 import common from '../../../locales/en/common.json'
 
-const ROW = (id: number, name: string) => ({
+const ROW = (id: number, name: string, name_state = 'ok') => ({
   character_id: id,
+  name_state,
   display_name: name,
   avatar_url: '',
   faction_slug: 'ua',
@@ -63,6 +64,13 @@ describe('BlockedSection', () => {
     await waitFor(() => expect(screen.queryByText('Reza')).toBeNull())
     expect(h.unblockCharacter).toHaveBeenCalledWith(7)
     expect(screen.getByText('Ana')).toBeTruthy()
+  })
+
+  it('reads an absent block as the placeholder, unlinked, with no initial', async () => {
+    h.listBlocks.mockResolvedValue([ROW(9, '', 'absent')])
+    mount()
+    expect(await screen.findByText(common.absentPlayer)).toBeTruthy()
+    expect(screen.queryByRole('link')).toBeNull()
   })
 
   it('shows the empty state for an empty list', async () => {

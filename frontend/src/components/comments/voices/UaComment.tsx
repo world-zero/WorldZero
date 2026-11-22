@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { PlayerLink, usePlayerLabel } from '../../PlayerName'
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
@@ -48,6 +48,7 @@ function meta(extra?: CSSProperties): CSSProperties {
 
 export default function UaComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const label = usePlayerLabel()
   const { user } = useAuth()
   const reveal = useOwnerReveal()
   if (props.mode === 'composer') {
@@ -92,7 +93,7 @@ export default function UaComment(props: CommentProps) {
             gap: 'var(--space-md)',
           }}
         >
-          <Link
+          <PlayerLink state={comment.author.name_state}
             to={`/characters/${comment.author.id}`}
             style={{
               fontFamily: UA_DISPLAY,
@@ -102,8 +103,8 @@ export default function UaComment(props: CommentProps) {
               textDecoration: 'none',
             }}
           >
-            {comment.author.display_name}
-          </Link>
+            {label(comment.author.display_name, comment.author.name_state)}
+          </PlayerLink>
           <span style={meta({ whiteSpace: 'nowrap' })}>
             {formatCommentTime(comment.created_at)}
             {comment.is_edited ? ` · ${t('comments.edited')}` : ''}

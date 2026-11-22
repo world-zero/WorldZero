@@ -2,9 +2,9 @@
  * Shared comment-archetype contract + slot primitives (ADR-0006 / ADR-0018). Each
  * voice in voices/ switches on `props.mode` and owns only its chrome.
  */
+import { PlayerLink } from '../PlayerName'
 import type { ComponentType, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import type { CharacterOut } from '../../api/auth'
 import type { CommentMention, CommentOut } from '../../api/comments'
 import { MentionDropdown, useMentionAutocomplete } from './useMentionAutocomplete'
@@ -34,7 +34,8 @@ export function authorToCharacter(
 ): CharacterOut {
   return {
     id: author.id,
-    username: author.username,
+    // Absent: no initial to draw, the avatar stays a face-less disc.
+    username: author.name_state === 'absent' ? '' : author.username,
     display_name: author.display_name,
     avatar_url: author.avatar_url,
     faction_slug: author.faction_slug,
@@ -79,8 +80,9 @@ export function MentionText({
           const mention = byHandle.get(part.slice(1).toLowerCase())
           if (mention) {
             return (
-              <Link
+              <PlayerLink
                 key={index}
+                state={mention.name_state}
                 to={`/characters/${mention.character_id}`}
                 className={rainbow ? 'rainbow-ink' : undefined}
                 // rainbow: no inline `color`, or it would beat the gradient clip.
@@ -91,7 +93,7 @@ export function MentionText({
                 }}
               >
                 {part}
-              </Link>
+              </PlayerLink>
             )
           }
         }

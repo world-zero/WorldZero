@@ -5,7 +5,7 @@
  * No drop cap: slicing the body's first character broke a leading `@mention`; the
  * ochre margin rule marks the note instead. `-brass` is a rule colour, never an ink.
  */
-import { Link } from 'react-router-dom'
+import { PlayerLink, usePlayerLabel } from '../../PlayerName'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { formatCommentTime } from '../../../utils/commentTime'
@@ -111,6 +111,7 @@ function Marginalia({ children }: { children: React.ReactNode }) {
 
 export default function EphemeristsComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const label = usePlayerLabel()
   const { user } = useAuth()
   const reveal = useOwnerReveal()
 
@@ -157,7 +158,7 @@ export default function EphemeristsComment(props: CommentProps) {
           flexWrap: 'wrap',
         }}
       >
-        <Link
+        <PlayerLink state={comment.author.name_state}
           to={`/characters/${comment.author.id}`}
           style={{
             fontFamily: CAPS,
@@ -168,8 +169,8 @@ export default function EphemeristsComment(props: CommentProps) {
             textDecoration: 'none',
           }}
         >
-          {comment.author.display_name}
-        </Link>
+          {label(comment.author.display_name, comment.author.name_state)}
+        </PlayerLink>
         <span style={{ ...LABEL, color: QUIET }}>
           {formatCommentTime(comment.created_at)}
         </span>

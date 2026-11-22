@@ -3,6 +3,7 @@
  * claims only, no DOM. Archetypes are walked from `surfaceMap('duelReader')`,
  * never a hand-typed slug list.
  */
+import { duelStateFor } from '../../../test/fixtures'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -26,7 +27,7 @@ vi.mock('../../../hooks/useFormFactor', async (importOriginal) => ({
 }))
 
 function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
-  return {
+  return { name_state: 'ok',
     avatar_url: '',
     character_id: 7,
     display_name: 'Wren Ashgrove',
@@ -52,6 +53,7 @@ function praxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     can_flag: false,
     created_at: '2026-08-14T09:00:00Z',
     created_by_avatar_url: '',
+    created_by_name_state: 'ok',
     created_by_display_name: 'Wren Ashgrove',
     created_by_faction_slug: 'coven',
     created_by_id: 7,
@@ -113,7 +115,7 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     task_id: 101,
     status: 'settled',
     forfeited_by_character_id: null,
-    state: "drafting",
+    state: duelStateFor(overrides.status ?? "settled", overrides.forfeited_by_character_id != null),
     cast_clock_started_at: null,
     winner_character_id: null,
     challenger_final_points: null,
@@ -312,6 +314,7 @@ describe('the standing reads out, and never as a verdict while voting is open', 
     const markup = render({
       duel: duel({
         status: 'resolved',
+        state: 'no_contest',
         winner_character_id: null,
         challenger_final_points: null,
         opponent_final_points: null,

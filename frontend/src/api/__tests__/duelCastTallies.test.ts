@@ -34,7 +34,7 @@ const RIVAL_PRAXIS = 8
 const UNRELATED_PRAXIS = 99
 
 function side(praxisId: number | null, characterId: number): DuelSideOut {
-  return {
+  return { name_state: 'ok',
     praxis_id: praxisId,
     character_id: characterId,
     display_name: 'Someone',

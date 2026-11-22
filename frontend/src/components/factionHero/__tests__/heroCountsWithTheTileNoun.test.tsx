@@ -39,7 +39,7 @@ describe("a faction's header and its tile count members in one noun (#3178)", ()
         defaultValue: "",
       });
       // Whole words ("Player" ⊂ "Players"); hero order of count/label varies.
-      expect(hero, `${slug} header`).toMatch(new RegExp(`(^| )${noun}( |$)`));
+      expect(hero, `${slug} header`).toMatch(new RegExp(`(^| )${noun.replace(/[$]/g, "\\$&")}( |$)`));
       expect(tile, `${slug} tile`).toContain(`${count} ${noun}`);
     }
   });

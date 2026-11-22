@@ -5,7 +5,7 @@
  * holdout and a proposal is live (ADR-0079). The duration comes from
  * `EraConfig` via `/game-config`; unknown means undrawn. Math: `waitingClock.ts`.
  */
-import type { PraxisMemberOut } from "../../../api/praxis";
+import type { PraxisMemberOut, PraxisOut } from "../../../api/praxis";
 import { deriveCollabGate } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
 import { factionCssVar } from "../../../utils/factions";
@@ -13,6 +13,7 @@ import { collabPublishWindow } from "../waiting/waitingClock";
 
 interface HoldoutPublishNoticeProps {
   members: readonly PraxisMemberOut[];
+  collabState: PraxisOut["collab_state"];
   currentCharacterId: number | null | undefined;
   factionSlug: string | null | undefined;
   /** `PraxisOut.submit_proposed_at` — null until somebody submits. */
@@ -27,11 +28,12 @@ export default function HoldoutPublishNotice({
   members,
   currentCharacterId,
   factionSlug,
+  collabState,
   submitProposedAt,
   autoSubmitDays,
   now,
 }: HoldoutPublishNoticeProps) {
-  if (deriveCollabGate(members, currentCharacterId).state !== "holdout") {
+  if (deriveCollabGate(members, currentCharacterId, collabState).state !== "holdout") {
     return null;
   }
   const publishWindow = collabPublishWindow(submitProposedAt, autoSubmitDays, now);

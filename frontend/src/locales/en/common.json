@@ -49,15 +49,15 @@
     "loadError": "Couldn't load this character.",
     "praxisHeading": "Praxis",
     "praxisEyebrow": "Submitted by {{name}}",
-    "praxisEmptyTitle": "No praxis submitted yet.",
-    "praxisEmptyBody": "Every path is still open — the first finding is the hardest.",
+    "praxisEmptyTitle": "No Praxis submitted yet.",
+    "praxisEmptyBody": "Every path is still open - the first step is the hardest.",
     "topPraxis": "Top praxis",
-    "proposedTasksHeading": "Proposed tasks",
+    "proposedTasksHeading": "Proposed Tasks",
     "proposedTasksTotal": "{{count}} total",
-    "proposedTasksEmpty": "No proposed tasks yet.",
-    "joined": "joined {{joined}}",
+    "proposedTasksEmpty": "No Proposed Tasks yet.",
+    "joined": "Joined {{joined}}",
     "lvl": "Level",
-    "ptsThisLevel": "{{current}} / {{span}} pts this level",
+    "ptsThisLevel": "{{current}} / {{span}} points this level",
     "aboutHeading": "About",
     "badgesHeading": "Badges",
     "badgesEarned": "{{count}} earned",
@@ -127,11 +127,11 @@
   "fieldDesk": {
     "livesInPlay_one": "{{count}} life in play",
     "livesInPlay_other": "{{count}} lives in play",
-    "heading": "Whose shoes today?",
+    "heading": "Who are you today?",
     "headingFirstLife": "Nothing in the drawer yet.",
     "loading": "Pulling your lives from the drawer…",
     "stepInto": "Step into {{name}}",
-    "footer": "Lace up an old one, or cut a new pair from whole cloth.",
+    "footer": "Develop an existing character, or expand your cast.",
     "footerFirstLife": "Cut your first pair from whole cloth.",
     "footerNoNewSelf": "Lace up whichever pair the day calls for.",
     "beginNewSelfTitle": "Begin a new self",
@@ -192,14 +192,14 @@
     "p1": "The creator of the system of websites, events, and activities explicitly referred to as World Zero (henceforth, \"Game\"), assumes no responsibility for the actions of users (henceforth, \"Players\") of this website or any affiliated website (including but not limited to worldzero.org). This includes, but is not limited to, content posted to the Game by Players, suggested activities (\"Tasks\"), and actions taken by Players in particular or in general.",
     "p2": "As a Player, you agree to assume complete responsibility for any and all actions you or your character undertakes relating to you or your character's participation in the Game. You agree to submit no material to the Game that you have not created, or do not have permission to display publicly or reproduce in accordance with any applicable copyright. You agree that any action taken as part of your participation in the Game is in accordance with applicable laws and statutes - no violation of such is sanctioned by the Game. Any suggestion of any such violation that appears as part of the Game is due solely to the fictional nature of a game, and is not intended to condone or indemnify any violation of any local, state, or federal laws, nor any intrusion upon or violation of the rights of any Player, person, or persons.",
     "p3": "Due to the malleability of digital media, any appearance of such a violation by any Player may not be considered evidence, precedent, or approval of such a violation. Any material displayed as part of the Game should be considered fictive until and unless proven otherwise.",
-    "p4": "If you delete your account, we keep a record for each service you signed in with: the name of the service plus a scrambled (salted hash) form of your ID there. It lets us recognize you if you come back, so we can show the 'You deleted your World Zero account' screen. The record is cleared when you come back and start again; until then we keep it. Your account and characters are blanked, not erased: your praxis posts show as [removed], your comments are hidden, and your votes still count. Text you wrote into other players' collaborative praxis posts stays.",
+    "p4": "If you delete your account, we keep a record for each service you signed in with: the name of the service plus a scrambled (salted hash) form of your ID there. It lets us recognize you if you come back, so we can show the \"You deleted your World Zero account\" screen. The record is cleared when you come back and start again; until then we keep it. Your account and characters are blanked, not erased: your praxis posts show as [removed], your comments are hidden, and your votes still count. Text you wrote into other players' collaborative praxis posts stays.",
     "lastUpdated": "Last updated: November 2026"
   },
   "ai": {
     "title": "AI at World Zero",
     "builtTitle": "How World Zero is built",
     "built": "Most of World Zero's code and copy are written with AI tools (Claude). The owner reviews what ships.",
-    "praxisTitle": "No AI in a praxis",
+    "praxisTitle": "No AI in a Praxis",
     "praxis": "Your write-up and your proof (photos, video) must be your own work. No AI-generated or AI-edited media, and no AI-written write-ups. Proof exists to show that a real person really did a real-world task."
   },
   "attributions": {
@@ -323,15 +323,15 @@
       "noCharacter": "No character yet"
     },
     "activeTasks": {
-      "heading": "In progress tasks",
-      "empty": "No tasks in progress",
+      "heading": "In-progress tasks",
+      "empty": "No Tasks in progress",
       "slots_one": "{{count}} / {{max}} slots",
       "slots_other": "{{count}} / {{max}} slots"
     },
     "recentActivity": {
-      "heading": "Recent activity",
+      "heading": "Recent Activity",
       "empty": "No activity yet",
-      "seeMore": "See more"
+      "seeMore": "Reveal More"
     },
     "panel": {
       "collapse": "Collapse {{panel}}",
@@ -588,5 +588,9 @@
     "allDone": "Done. We won't send you any notification email.",
     "invalid": "That link isn't valid, so nothing changed. You can change your emails in Settings.",
     "settings": "Change your notification settings"
-  }
+  },
+  "absentPlayer": "<A Nonexistent Player>",
+  "suspendedPlayer": "{{name}} (Suspended)",
+  "nowPlayingAs": "You're now playing as {{name}}.",
+  "nowPlayingAsDismiss": "Got it"
 }

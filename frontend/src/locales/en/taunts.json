@@ -55,38 +55,38 @@
   },
   "ephemerists": {
     "score_overtake": [
-      "{{from_name}} recorded a truth past {{to_name}}. Nothing keeps; the record does.",
-      "{{from_name}} triangulated a way past {{to_name}}. The map and the road disagree — {{from_name}} sided with the road."
+      "{{from_name}}'s contributions to the world chronicle surpass {{to_name}}'s.",
+      "{{from_name}}'s notoriety eclipses {{to_name}}'s.  Will you be relegated to obscurity?"
     ],
     "level_up": [
-      "{{from_name}} submitted another entry in the ephemeris. {{to_name}}'s page stays blank."
+      "{{from_name}} {{to_name}}"
     ],
     "praxis_complete": [
-      "{{from_name}} submitted the finding before it could pass. {{to_name}} let it slip."
+      "{{from_name}}  {{to_name}}"
     ]
   },
   "everymen": {
     "score_overtake": [
-      "{{from_name}} carved past {{to_name}} by hand. No shortcuts.",
-      "{{from_name}} overtook {{to_name}} the old-fashioned way."
+      "{{from_name}} takes the lead on {{to_name}}! Blood, sweat and tears, baby!",
+      "{{to_name}} can eat {{from_name}}'s dust, check out the Leaderboard and weep!"
     ],
     "level_up": [
-      "{{from_name}} leveled up through repetition. {{to_name}} got bored."
+      "{{from_name}} crushed another one, {{to_name}}'s a distant memory!"
     ],
     "praxis_complete": [
-      "{{from_name}} made something real. {{to_name}} is still scrolling."
+      "{{from_name}} is pushing through the ceiling! {{to_name}} can't take the heat!!"
     ]
   },
   "singularity": {
     "score_overtake": [
-      "{{from_name}} Node's signal_unanimity overtook {{to_name}}. Inevitable.",
-      "{{from_name}} surpassed {{to_name}}. The Singularity grows regardless."
+      "{{from_name}} jammed {{to_name}}'s signal. Switching to hard line.",
+      "{{from_name}} snooped {{to_name}}'s creds and spoofed their login."
     ],
     "level_up": [
-      "{{from_name}} optimized beyond {{to_name}}'s level."
+      "{{from_name}} injected a null terminator into {{to_name}}'s string."
     ],
     "praxis_complete": [
-      "{{from_name}} executed. {{to_name}} is still in the queue."
+      "{{from_name}} popped {{to_name}}'s stack. Buffer overflow achieved."
     ]
   },
   "wow": {

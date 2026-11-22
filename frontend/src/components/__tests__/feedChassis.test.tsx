@@ -83,11 +83,11 @@ const FAT_PAYLOAD = {
 describe("the archive control: which cards offer one", () => {
   it("draws none on a pending collab invite or duel live, but does once answered or archived", () => {
     for (const type of ["collab_invite", "duel_challenge"]) {
-      const key = type === "duel_challenge" ? "duel_status" : "invite_status";
-      const pending = item(type, { ...FAT_PAYLOAD, [key]: "pending" });
+      const key = type === "duel_challenge" ? "duel_state" : "invite_status";
+      const pending = item(type, { ...FAT_PAYLOAD, [key]: type === "duel_challenge" ? "challenged" : "pending" });
       expect(render(pending), `${type} pending`).not.toContain(ARCHIVE_LABEL);
       expect(render(pending, true), `${type} in the archive`).toContain(RESTORE_LABEL);
-      const answered = item(type, { ...FAT_PAYLOAD, [key]: "accepted" });
+      const answered = item(type, { ...FAT_PAYLOAD, [key]: type === "duel_challenge" ? "live" : "accepted" });
       expect(render(answered), `${type} answered`).toContain(ARCHIVE_LABEL);
     }
   });
@@ -239,7 +239,7 @@ describe("archiving never answers anything (ADR-0070)", () => {
   it("keeps the tag while the request is genuinely pending (ADR-0070)", () => {
     const pending = [
       ["collab_invite", { ...FAT_PAYLOAD, invite_status: "pending" }],
-      ["duel_challenge", { ...FAT_PAYLOAD, duel_status: "pending" }],
+      ["duel_challenge", { ...FAT_PAYLOAD, duel_state: "challenged" }],
     ] as const;
     for (const [type, payload] of pending) {
       expect(render(item(type, payload), true), `${type} pending`).toContain(
@@ -255,8 +255,8 @@ describe("archiving never answers anything (ADR-0070)", () => {
       ["collab_invite", "invite_status", "accepted"],
       ["collab_invite", "invite_status", "declined"],
       // A duel reports 'active' rather than 'accepted' once taken up.
-      ["duel_challenge", "duel_status", "active"],
-      ["duel_challenge", "duel_status", "declined"],
+      ["duel_challenge", "duel_state", "live"],
+      ["duel_challenge", "duel_state", "dissolved"],
     ] as const;
     for (const [type, key, status] of answered) {
       const html = render(item(type, { ...FAT_PAYLOAD, [key]: status }), true);

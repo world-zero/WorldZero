@@ -10,6 +10,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.character import Character
+from services.standing import public_identity
 from models.relationship import Relationship, RelationshipType
 from schemas.relationship import RelationshipListItem
 
@@ -77,14 +78,16 @@ def _to_list_item(
 ) -> RelationshipListItem:
     """One display-ready edge, described from the edge's side, not the viewer's."""
     outgoing_type = relationship.type.value
+    identity = public_identity(target_character)
     return RelationshipListItem(
         id=relationship.id,
         from_character_id=relationship.from_character_id,
         to_character_id=relationship.to_character_id,
         type=outgoing_type,
         created_at=relationship.created_at,
-        to_display_name=target_character.display_name,
-        to_avatar_url=target_character.avatar_url,
+        to_display_name=identity.display_name,
+        to_name_state=identity.name_state,
+        to_avatar_url=identity.avatar_url,
         to_faction_slug=target_character.faction_slug,
         display_status=compute_display_status(outgoing_type, incoming_type),
     )

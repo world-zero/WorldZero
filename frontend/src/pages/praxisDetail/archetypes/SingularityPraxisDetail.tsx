@@ -1,3 +1,4 @@
+import { PlayerLink } from '../../../components/PlayerName'
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -240,13 +241,13 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       {/* `bylineFaces` credits the creator even with no member rows. */}
       <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
         {bylineFaces(praxis).map((author) => (
-          <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
+          <PlayerLink state={author.state} key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
             <MemberCell
               name={author.name}
               avatarUrl={author.avatarUrl}
               size={desktop ? 40 : 34}
             />
-          </Link>
+          </PlayerLink>
         ))}
       </span>
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -350,7 +351,9 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             key={voter.character_id}
             style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}
           >
-            <Link
+            <PlayerLink
+              state={voter.name_state}
+              name={voter.display_name}
               to={`/characters/${voter.character_id}`}
               style={{
                 flex: "1 1 auto",
@@ -363,9 +366,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 color: BRIGHT,
                 textDecoration: "none",
               }}
-            >
-              {voter.display_name}
-            </Link>
+            />
             <span
               aria-hidden
               style={{
@@ -439,6 +440,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       <div style={{ ...CREW_INK, color: INK }}>
         <CollabRoster
           praxisType={praxis.type}
+          collabState={praxis.collab_state}
           invites={praxis.invites}
           members={praxis.members}
           currentCharacterId={state.user?.character?.id ?? null}

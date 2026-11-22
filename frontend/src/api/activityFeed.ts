@@ -1,4 +1,21 @@
 import { apiGet, apiPost } from './client'
+import { playerLabel } from '../utils/playerLabel'
+
+type NameState = components['schemas']['NameState']
+
+/** One label for a suspended or absent actor, so every row reads it the same way (#4238). */
+function withPlayerLabel<T extends { actor_display_name: string | null; actor_name_state?: NameState }>(
+  item: T,
+): T {
+  const state = item.actor_name_state ?? 'ok'
+  if (state === 'ok' || item.actor_display_name === null) return item
+  const absent = state === 'absent'
+  return {
+    ...item,
+    actor_display_name: playerLabel(item.actor_display_name, state),
+    ...(absent ? { actor_avatar_url: null } : {}),
+  }
+}
 import type { components } from './generated/schema'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 
@@ -18,6 +35,8 @@ export interface ActivityFeedItem {
   actor_display_name: string | null
   actor_faction_slug: string | null
   actor_avatar_url: string | null
+  /** Absent on a payload cached before #4238; read as `ok`. */
+  actor_name_state?: NameState
   payload: Record<string, any>
   /** Frame theme: actor's faction, else task's, else null. Server-derived. */
   context_faction_slug: string | null
@@ -93,7 +112,11 @@ export async function getActivityFeed(params?: {
 }): Promise<ActivityFeedResponse> {
   const { data } = await apiGet('/activity-feed', { params: { query: params } })
   // The one place `FeedCounts` enters the app.
-  return { ...data, counts: normalizeFeedCounts(data?.counts) }
+  return {
+    ...data,
+    counts: normalizeFeedCounts(data?.counts),
+    items: (data?.items ?? []).map(withPlayerLabel),
+  }
 }
 
 /** 400 for unknown/malformed keys and `awaiting_submission` rows — don't offer the control there. */

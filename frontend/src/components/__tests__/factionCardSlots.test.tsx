@@ -110,7 +110,7 @@ const IMAGE_MEDIA: MediaItemOut = {
 };
 
 function member(id: number, name: string): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -257,7 +257,7 @@ const COMMENT: CommentOut = {
   is_edited: false,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
-  author: {
+  author: { name_state: 'ok',
     id: 3,
     username: "ada",
     display_name: "Adabel",

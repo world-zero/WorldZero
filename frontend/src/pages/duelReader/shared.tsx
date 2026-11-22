@@ -291,7 +291,7 @@ function Column({
   const mine = praxis != null && praxis.created_by_id === state.user?.character?.id
   // Artboard 2e: the winner's column takes one spectrum rule.
   const won =
-    duel.status === 'resolved' &&
+    duel.state === 'resolved' &&
     duel.winner_character_id != null &&
     duel.winner_character_id === entry.side.character_id
 

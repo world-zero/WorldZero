@@ -4,6 +4,7 @@ from typing import Literal, Optional
 from pydantic import ConfigDict, Field, model_validator
 from schemas.base import WireModel
 
+from models.character import NameState
 from models.comment import MAX_COMMENT_BODY
 from models.flag import MAX_FLAG_REASON_DETAIL, FlagReason
 
@@ -18,6 +19,7 @@ class CommentAuthor(WireModel):
     display_name: str
     avatar_url: str
     faction_slug: str
+    name_state: NameState = NameState.ok
 
 
 class CommentMentionOut(WireModel):
@@ -26,6 +28,7 @@ class CommentMentionOut(WireModel):
     character_id: int
     username: str
     display_name: str
+    name_state: NameState = NameState.ok
 
 
 class CommentIn(WireModel):

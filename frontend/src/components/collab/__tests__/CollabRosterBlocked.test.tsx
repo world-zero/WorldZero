@@ -16,7 +16,7 @@ import type { PraxisMemberOut } from '../../../api/praxis'
 import { CollabRoster } from '../CollabRoster'
 import { collabCopy } from '../collabCopy'
 
-const member = (id: number, cast: boolean): PraxisMemberOut => ({
+const member = (id: number, cast: boolean): PraxisMemberOut => ({ character_name_state: 'ok',
   id,
   praxis_id: 1,
   character_id: id,
@@ -32,7 +32,7 @@ const member = (id: number, cast: boolean): PraxisMemberOut => ({
 
 const mount = () =>
   render(
-    <CollabRoster
+    <CollabRoster collabState={null}
       praxisType="collab"
       members={[member(1, true), member(2, false), member(3, false)]}
       currentCharacterId={1}

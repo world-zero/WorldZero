@@ -31,7 +31,7 @@ export const CHARACTER_REDIRECT_EXEMPT_PATHS: ReadonlySet<string> = new Set([
   '/start/again',
 ])
 
-const CONTRACT_EXEMPT_PATHS: ReadonlySet<string> = new Set(['/start', '/start/again', '/settings'])
+const CONTRACT_EXEMPT_PATHS: ReadonlySet<string> = new Set(['/start', '/start/again', '/settings', '/contact'])
 
 /** Where `Layout` sends this render (#3468): no acceptance → the contract, even from creation. */
 export function characterRedirectTarget(
@@ -43,7 +43,9 @@ export function characterRedirectTarget(
   handoffPending = false,
   creationBanned = false,
 ): '/start' | '/characters/create' | null {
-  if (loading || !hasUser || hasCharacter) return null
+  if (loading || !hasUser) return null
+  // Every write 403s TERMS_REQUIRED without a current acceptance, character or not; the flow's contract step takes it.
+  if (hasCharacter) return hasAcceptedTerms || CONTRACT_EXEMPT_PATHS.has(pathname) ? null : '/start'
   // Nothing to create into, so the flow is a dead end (#4239): its two doors land on the create page's notice.
   if (creationBanned) return pathname === '/' || pathname === '/start' ? '/characters/create' : null
   // `/` renders the welcome flow for a character-less account, which owns contract and creation.

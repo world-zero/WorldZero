@@ -5,7 +5,8 @@
  * centred panel (#494); continue is manual, never a timer. Chrome mirrors
  * LevelUpPopup: dim overlay, role="dialog", autofocused primary, `useModal` trap.
  */
-import type { PraxisMemberOut } from '../../api/praxis'
+import { playerLabel } from '../../utils/playerLabel'
+import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import { useModal } from '../../hooks/useModal'
 import { factionCssVar } from '../../utils/factions'
@@ -15,18 +16,20 @@ import { deriveCollabGate } from './CollabRoster'
 export function CollabSuccess({
   members,
   currentCharacterId,
+  collabState,
   factionSlug,
   taskPointValue,
   onContinue,
 }: {
   members: readonly PraxisMemberOut[]
+  collabState: PraxisOut['collab_state']
   currentCharacterId: number | null | undefined
   factionSlug: string | null | undefined
   taskPointValue?: number | null
   /** Manual continue → the praxis detail page. Never fired on a timer. */
   onContinue: () => void
 }) {
-  const gate = deriveCollabGate(members, currentCharacterId)
+  const gate = deriveCollabGate(members, currentCharacterId, collabState)
   const accent = factionCssVar(factionSlug, 'card-accent')
   // No onClose: continue is manual only, never an Escape.
   const ref = useModal()
@@ -100,7 +103,7 @@ export function CollabSuccess({
                   fontWeight: member.character_id === currentCharacterId ? 700 : 400,
                 }}
               >
-                {member.character_display_name}
+                {playerLabel(member.character_display_name, member.character_name_state)}
               </span>
               {taskPointValue != null && (
                 <span

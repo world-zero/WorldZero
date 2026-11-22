@@ -51,6 +51,7 @@ export const aTask = (over: Partial<TaskOut> = {}): TaskOut => ({
   in_progress_count: 0,
   created_by_display_name: PROPOSER.name,
   created_by_avatar_url: '',
+  created_by_name_state: 'ok',
   created_by_faction_slug: null,
   created_by_level: 0,
   signup_reason: null,
@@ -89,6 +90,7 @@ export const aMember = (over: Partial<PraxisMemberOut> = {}): PraxisMemberOut =>
   character_id: AUTHOR.id,
   character_display_name: AUTHOR.name,
   character_avatar_url: '',
+  character_name_state: 'ok',
   has_approved: true,
   // Done is orthogonal to approval (ADR-0079).
   is_done: false,
@@ -123,6 +125,7 @@ export const aPraxis = (over: Partial<PraxisOut> = {}): PraxisOut => ({
   created_by_id: AUTHOR.id,
   created_by_display_name: AUTHOR.name,
   created_by_avatar_url: '',
+  created_by_name_state: 'ok',
   created_by_faction_slug: null,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-03T00:00:00Z',
@@ -172,6 +175,7 @@ export const aPraxisCard = (over: Partial<PraxisCardOut> = {}): PraxisCardOut =>
   created_by_id: AUTHOR.id,
   created_by_display_name: AUTHOR.name,
   created_by_avatar_url: '',
+  created_by_name_state: 'ok',
   created_by_faction_slug: null,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
@@ -195,6 +199,7 @@ export const aPraxisCard = (over: Partial<PraxisCardOut> = {}): PraxisCardOut =>
   opponent_display_name: null,
   opponent_faction_slug: null,
   opponent_avatar_url: '',
+  opponent_name_state: 'ok',
   viewer_can_vote: true,
   viewer_vote: null,
   voted_by_name: null,
@@ -263,6 +268,7 @@ export const aCurrentUser = (over: Partial<CurrentUser> = {}): CurrentUser => ({
 export const aDuelSide = (over: Partial<DuelSideOut> = {}): DuelSideOut => ({
   praxis_id: 1,
   character_id: AUTHOR.id,
+  name_state: 'ok',
   display_name: AUTHOR.name,
   faction_slug: 'na',
   avatar_url: '',
@@ -281,12 +287,26 @@ export const aDuelSide = (over: Partial<DuelSideOut> = {}): DuelSideOut => ({
  * A settled duel (unsubmitting forfeits, ADR-0011). Frozen-outcome fields stay
  * null: set only at era close (ADR-0052).
  */
-export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => ({
+export const duelStateFor = (
+  status: DuelDetailOut['status'],
+  forfeited = false,
+): DuelDetailOut['state'] =>
+  ({
+    pending: 'challenged',
+    declined: 'dissolved',
+    active: forfeited ? 'awaiting_honest_side' : 'drafting',
+    settled: forfeited ? 'live_forfeited' : 'live',
+    resolved: 'resolved',
+  })[status] as DuelDetailOut['state']
+
+export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => {
+  const status = over.status ?? 'settled'
+  return {
   id: 5,
   task_id: 7,
-  status: 'settled',
+  status,
   forfeited_by_character_id: null,
-  state: "drafting",
+  state: duelStateFor(status, (over.forfeited_by_character_id ?? null) != null),
   cast_clock_started_at: null,
   challenger: aDuelSide(),
   opponent: aDuelSide({ praxis_id: 2, character_id: 4, display_name: 'Rax' }),
@@ -294,7 +314,8 @@ export const aDuel = (over: Partial<DuelDetailOut> = {}): DuelDetailOut => ({
   challenger_final_points: null,
   opponent_final_points: null,
   ...over,
-})
+  }
+}
 
 /** A faction's task, praxis and card for the per-faction suites. */
 export const forFaction = (slug: string) => ({

@@ -38,7 +38,7 @@ function member(
   id: number,
   over: Partial<PraxisMemberOut> = {},
 ): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -100,6 +100,7 @@ function state(scenario: Scenario = {}): EditPraxisState {
     // `pending` = a proposal is live (ADR-0079); the timestamp identifies it.
     status: proposalLive ? "pending" : "in_progress",
     submit_proposed_at: proposalLive ? PROPOSED_AT : null,
+    collab_state: proposalLive ? "proposed" : "drafting",
     moderation_status: "visible",
     duel_id: null,
     created_by_id: ME,

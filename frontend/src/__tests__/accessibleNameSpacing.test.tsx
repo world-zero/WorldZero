@@ -23,7 +23,7 @@ function text(element: React.ReactElement): string {
 const CONDITION = 'do it underwater. no cuts.'
 
 function metatask(): TaskOut {
-  return {
+  return { created_by_name_state: 'ok',
     id: 42,
     title: CONDITION,
     description: '',
@@ -63,7 +63,7 @@ const COMMENT: CommentOut = {
   is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  author: {
+  author: { name_state: 'ok',
     id: 42,
     username: 'vex',
     display_name: 'Vex Line Crane',

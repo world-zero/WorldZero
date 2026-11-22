@@ -68,14 +68,14 @@ const COMMENT: CommentOut = {
   is_edited: true,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-02T00:00:00Z',
-  author: {
+  author: { name_state: 'ok',
     id: 42,
     username: 'ada',
     display_name: 'Adabel',
     avatar_url: '',
     faction_slug: 'albescent',
   },
-  mentions: [{ character_id: 9, username: 'bo', display_name: 'Bo' }],
+  mentions: [{ name_state: 'ok', character_id: 9, username: 'bo', display_name: 'Bo' }],
 }
 
 const CHARACTER: CharacterOut = {

@@ -1,5 +1,5 @@
+import { PlayerLink, usePlayerLabel } from '../../PlayerName'
 import type { CSSProperties, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import FactionAvatar from '../../avatar/FactionAvatar'
 import { useAuth } from '../../../auth/AuthContext'
@@ -108,6 +108,7 @@ function RibbonRule({ style }: { style?: CSSProperties }) {
 
 export default function WowComment(props: CommentProps) {
   const { t } = useTranslation('praxis')
+  const label = usePlayerLabel()
   const { user } = useAuth()
   const reveal = useOwnerReveal()
 
@@ -154,7 +155,7 @@ export default function WowComment(props: CommentProps) {
           gap: 'var(--space-sm)',
         }}
       >
-        <Link
+        <PlayerLink state={comment.author.name_state}
           to={`/characters/${comment.author.id}`}
           style={{
             fontFamily: MED,
@@ -163,8 +164,8 @@ export default function WowComment(props: CommentProps) {
             textDecoration: 'none',
           }}
         >
-          {comment.author.display_name}
-        </Link>
+          {label(comment.author.display_name, comment.author.name_state)}
+        </PlayerLink>
         <span style={QUIET}>{formatCommentTime(comment.created_at)}</span>
         {comment.is_edited && (
           <span style={QUIET}>

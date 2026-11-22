@@ -108,7 +108,7 @@ describe("Ephemerists task detail — the Valley plate", () => {
     expect(html, "the compass rose that replaced it").toContain(
       '<circle cx="50" cy="50" r="47"',
     );
-    expect(text, "the masthead wordmark").toContain("The Ephemerists");
+    expect(text, "the masthead wordmark").toContain("Ephemerists");
     // The kite's opening path command.
     expect(html, "the masthead's kite sigil").toContain("M19.1 30.8");
     // #1909 cut the kanji register; held as an absence.

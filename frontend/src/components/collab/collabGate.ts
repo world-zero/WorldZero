@@ -12,7 +12,7 @@
  * Since ADR-0079 `has_approved` approves the live proposal, so `writing` is
  * the ordinary drafting state.
  */
-import type { PraxisMemberOut } from '../../api/praxis'
+import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 
 export type CollabState =
   | 'awaiting'
@@ -31,6 +31,7 @@ export interface CollabGate {
 export function deriveCollabGate(
   members: readonly PraxisMemberOut[],
   currentCharacterId: number | null | undefined,
+  collabState: PraxisOut['collab_state'],
 ): CollabGate {
   const memberCount = members.length
   const castCount = members.filter((m) => m.has_approved).length
@@ -40,7 +41,8 @@ export function deriveCollabGate(
   let state: CollabState
   // First, because every test below it lies at one member (#1274).
   if (memberCount < 2) state = 'awaiting'
-  else if (castCount === 0) state = 'writing'
+  // The proposer left: no approvals survive, but the window is still open (Q3).
+  else if (castCount === 0) state = collabState === 'proposed' ? 'holdout' : 'writing'
   else if (castCount >= memberCount) state = 'published'
   else state = iCast ? 'waiting' : 'holdout'
   return { memberCount, castCount, iCast, state }

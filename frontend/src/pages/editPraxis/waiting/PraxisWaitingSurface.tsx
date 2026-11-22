@@ -21,6 +21,8 @@
  * Renders purely from props plus injectable `autoSubmitDays`/`now`, for the
  * effect-less harness.
  */
+import { playerLabel } from '../../../utils/playerLabel'
+import { duelPreLive } from '../../../components/duel/duelState'
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -450,7 +452,7 @@ export default function PraxisWaitingSurface({
   /** Names who still owes an approval (#1952, `waitingOnHeading`); fallback unreachable. */
   const outstanding = praxis.members
     .filter((member) => !member.has_approved)
-    .map((member) => member.character_display_name);
+    .map((member) => playerLabel(member.character_display_name, member.character_name_state));
   const crewHeading = waitingOnHeading(slug, outstanding);
   const heading = completed
     ? collabCopy(slug, isDuel ? "duelCompletedHeading" : "completedHeading")
@@ -532,7 +534,7 @@ export default function PraxisWaitingSurface({
             <p className="content-text" style={dress.bodyStyle}>
               {collabCopy(
                 slug,
-                duel?.status === "pending" ? "duelPendingLine" : "duelElapsedLine",
+                duel?.state === "challenged" ? "duelPendingLine" : "duelElapsedLine",
                 {
                   elapsed: stamped,
                   name: sides.foe.display_name,
@@ -579,7 +581,7 @@ export default function PraxisWaitingSurface({
                 dress={dress}
                 completed={completed}
                 onNudge={
-                  duel?.status === "active" &&
+                  duel?.state !== "challenged" && duelPreLive(duel) &&
                   !blockedIds.has(sides.foe.character_id)
                     ? () => nudge(sides.foe.character_id)
                     : undefined
@@ -590,6 +592,7 @@ export default function PraxisWaitingSurface({
             /* Completed: no kick/nudge (the backend would refuse). */
             <CollabRoster
               praxisType={praxis.type}
+              collabState={praxis.collab_state}
               members={praxis.members}
               invites={praxis.invites}
               currentCharacterId={currentCharacterId}

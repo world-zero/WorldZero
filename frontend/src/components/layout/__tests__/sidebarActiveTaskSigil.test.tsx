@@ -28,7 +28,7 @@ vi.mock('../../../hooks/useGameConfig', () => ({
 import Sidebar from '../Sidebar'
 
 function activeTask(taskFactionSlug: string): PraxisCardOut {
-  return {
+  return { created_by_name_state: 'ok', opponent_name_state: 'ok',
     id: 55,
     task_id: 7,
     task_title: 'Sunday Soup',

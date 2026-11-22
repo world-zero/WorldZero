@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from errors import DETAIL_CONTEXT_PARAM, ErrorCode, raise_coded
 from faction_slugs import UNAFFILIATED_FACTION_SLUG
 from game_config import CURRENT_ERA, EraConfig
-from models.character import Character
+from models.character import Character, NameState
 from models.duel import Duel, DuelStatus
 from models.praxis import (
     ModerationStatus,
@@ -25,6 +25,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.task import Task, TaskStatus
+from services.standing import public_identity
 from schemas.duel import DuelDetailOut, DuelSideOut
 from services.block_service import refuse_if_blocked
 from services.backdoor import settle_closed_backdoors
@@ -378,6 +379,7 @@ async def get_duel_detail(
         foe_praxis_id: Optional[int] = None,
     ) -> DuelSideOut:
         own_slug = _faction_slug_of(character)
+        identity = public_identity(character) if character is not None else None
 
         def _multiplier(is_winner: bool, is_tied: bool) -> float:
             return compute_duel_multiplier(
@@ -392,9 +394,10 @@ async def get_duel_detail(
         return DuelSideOut(
             praxis_id=praxis_id,
             character_id=character.id if character is not None else 0,
-            display_name=character.display_name if character is not None else "",
+            display_name=identity.display_name if identity else "",
+            name_state=identity.name_state if identity else NameState.ok,
             faction_slug=own_slug,
-            avatar_url=character.avatar_url if character is not None else "",
+            avatar_url=identity.avatar_url if identity else "",
             points_from_votes=(
                 get_tally(tallies, praxis_id).points_from_votes if praxis_id is not None else 0
             ),

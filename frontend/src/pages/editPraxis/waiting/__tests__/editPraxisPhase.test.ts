@@ -1,4 +1,5 @@
 /** When the composer holds on the waiting surface (#1080, ADR-0059). */
+import { duelStateFor } from '../../../../test/fixtures';
 import { describe, it, expect } from "vitest";
 import type { DuelDetailOut, DuelStatus } from "../../../../api/duel";
 import type { PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
@@ -8,7 +9,7 @@ const ME = 1;
 const THEM = 2;
 
 function member(id: number, hasSubmitted: boolean): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -39,6 +40,7 @@ function duel(status: DuelStatus, forfeitedBy: number | null = null): DuelDetail
   return {
     id: 7,
     status,
+    state: duelStateFor(status, forfeitedBy != null),
     forfeited_by_character_id: forfeitedBy,
   } as unknown as DuelDetailOut;
 }

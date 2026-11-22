@@ -322,7 +322,7 @@ export function useDuelSealCopy(
   return {
     heading: t('duelSeal.heading'),
     body:
-      duel.status === 'pending'
+      duel.state === 'challenged'
         ? lapseDays == null
           ? t('duelSeal.bodyPendingNoDays', { name: foe.display_name })
           : t('duelSeal.bodyPending', { name: foe.display_name, days: lapseDays })
@@ -334,7 +334,7 @@ export function useDuelSealCopy(
             .join(' '),
     // Until the foe casts nothing is stuck; only once live.
     note:
-      duel.status === 'active' && !foe.is_submitted
+      (duel.state === 'drafting' || duel.state === 'one_cast') && !foe.is_submitted
         ? t('duelSeal.reopenNote', { name: foe.display_name })
         : null,
     confirmLabel: t('duelSeal.confirm'),

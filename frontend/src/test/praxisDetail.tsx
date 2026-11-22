@@ -40,8 +40,8 @@ export const CO_MEMBER = aMember({
 
 /** Two voters at different values: the panel lists each, never averages. */
 export const VOTERS: VoterDetail[] = [
-  { character_id: 11, display_name: 'Cy', avatar_url: '', faction_slug: '', value: 5 },
-  { character_id: 12, display_name: 'Dov', avatar_url: '', faction_slug: '', value: 3 },
+  { character_id: 11, display_name: 'Cy', avatar_url: '', name_state: 'ok', faction_slug: '', value: 5 },
+  { character_id: 12, display_name: 'Dov', avatar_url: '', name_state: 'ok', faction_slug: '', value: 3 },
 ]
 
 /**

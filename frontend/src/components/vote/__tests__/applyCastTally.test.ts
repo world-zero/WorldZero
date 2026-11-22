@@ -42,7 +42,7 @@ const CARD = aPraxisCard({
 
 const RIVAL_PRAXIS_ID = 8
 
-const MINE_SIDE: DuelSideOut = {
+const MINE_SIDE: DuelSideOut = { name_state: 'ok',
   praxis_id: PRAXIS_ID,
   character_id: 3,
   display_name: 'Ada',
@@ -58,7 +58,7 @@ const MINE_SIDE: DuelSideOut = {
   rival_bonus: 0,
 }
 
-const RIVAL_SIDE: DuelSideOut = {
+const RIVAL_SIDE: DuelSideOut = { name_state: 'ok',
   praxis_id: RIVAL_PRAXIS_ID,
   character_id: 4,
   display_name: 'Rax',

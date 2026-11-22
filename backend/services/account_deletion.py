@@ -30,6 +30,7 @@ from models.push_subscription import PushSubscription
 from services.character import has_mod_banned_life, soft_delete_character
 from services.media import delete_stored_media
 from services.mod_log import log_mod_action
+from services.praxis import cancel_pending_invites_for
 
 # Retention is enforced purge-on-access in :func:`resolve_account_tombstone`.
 # ponytail: an unvisited tombstone outlives 90 days; add a periodic DELETE with
@@ -238,6 +239,7 @@ async def delete_account(
         character.tagline = ""
         character.location = ""
 
+    await cancel_pending_invites_for(character_ids, session, era)
     if character_ids:
         await _blank_authored_content(character_ids, session)
 

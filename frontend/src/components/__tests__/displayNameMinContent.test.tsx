@@ -32,7 +32,7 @@ function expectBreakable(style: string) {
 }
 
 function member(id: number, displayName: string): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -67,7 +67,7 @@ function praxis(): PraxisCardOut {
 describe('a long display name cannot inflate its container (#2129, #2132)', () => {
   it('the collab roster row lets the name break (#2129)', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, LONG_NAME), member(2, 'Pixie')]}
         invites={[]}

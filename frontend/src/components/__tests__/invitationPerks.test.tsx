@@ -179,18 +179,18 @@ describe("Albescent's letter takes the same four cuts on its own key names (#229
 describe('the eight real perks ship the corrected copy (#2298 §3)', () => {
   const MECHANICS: ReadonlyArray<readonly [string, string, string]> = [
     ['ua', 'Bonus points for persistence',
-      'Practice doing art daily, the inertia will drive you to continued more practice and be rewarded'],
+      'Practice doing art daily. Through inertia, be driven to continue. Be rewarded for your dedication.'],
     ['snide', 'Going Hard',
       'Duels you win bring glory. Duels you lose bring despair'],
     ['wow', 'Foolhardy Courage',
       'Levels and common sense do not stop you from biting off more than you can chew'],
     ['coven', 'The Power of Friendship',
-      'Witches who task together will always find a little extra magic ✦'],
+      'Witches who task together create more than the sum of their parts ✦'],
     ['ephemerists', 'Time Travel',
       'Enjoy access to tasks of the past, present, and future'],
     ['everymen', 'Tireless Determination',
-      'The only person you need to beat is yourself. Only you can do the task again, but better this time'],
-    ['singularity', 'Hack the System',
+      '"Fail Again, Fail Better". Embrace picking yourself up, and going again.'],
+    ['singularity', 'Hack World Zero',
       'This is read-only. See what no one else sees'],
   ]
 

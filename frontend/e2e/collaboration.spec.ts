@@ -87,8 +87,8 @@ test.describe('collaboration lifecycle', () => {
       await page.goto('/')
       // Scoped to the panel (#1676): the task also appears under "Recent
       // activity", legitimately; `.first()` would stop asserting WHICH section.
-      // `exact` excludes the "Collapse In progress tasks" control.
-      const inProgress = page.getByLabel('In progress tasks', { exact: true })
+      // `exact` excludes the "Collapse In-progress tasks" control.
+      const inProgress = page.getByLabel('In-progress tasks', { exact: true })
       await expect(inProgress.locator(`a[href="/praxis/${draft.praxisId}/edit"]`)).toBeVisible()
       await expect(inProgress.getByText(draft.task.title)).toBeVisible()
     } finally {
@@ -159,8 +159,8 @@ test.describe('collaboration UI (clicked buttons)', () => {
       // 2. Flip solo → collab through the ModePicker.
       await aPage.getByRole('button', { name: COLLAB_MODE, exact: true }).click()
 
-      // 3. Invite Bob. The search box sits behind the `+ invite` chip (#1417).
-      await aPage.getByTestId('composer-invite-open').click()
+      // 3. Invite Bob. Search starts open until the first invite (#4247); the
+      // `+ invite` chip only shows after one.
       await aPage.getByTestId('composer-invite-search').fill(bob.name)
       await aPage.getByRole('listbox').getByRole('button', { name: bob.name }).click()
       await expect(aPage.getByText(bob.name)).toBeVisible()

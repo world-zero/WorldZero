@@ -1250,6 +1250,14 @@ async def respond_to_invite(
         if invite.invitee_id != character_id:
             raise HTTPException(status_code=403, detail="This invite is not for you.")
 
+        inviter = await session.get(Character, invite.inviter_id)
+        if inviter is None or not await is_playable(inviter, session):
+            raise_coded(
+                409,
+                ErrorCode.invite_inviter_gone,
+                "The player who invited you is no longer here.",
+            )
+
         if invite.status != PraxisInviteStatus.pending:
             raise HTTPException(
                 status_code=400, detail="Invite has already been resolved."
@@ -1330,6 +1338,32 @@ async def respond_to_invite(
         await collab_consensus.on_member_edit(praxis, session, era)
     await session.refresh(invite)
     return invite
+
+
+async def cancel_pending_invites_for(
+    character_ids: list[int], session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> None:
+    """Delete every pending invite to or from these characters (S3, #4204), then
+    let a collab left with no one to wait for convert to solo."""
+    invites = (
+        await session.scalars(
+            select(PraxisInvite).where(
+                PraxisInvite.status == PraxisInviteStatus.pending,
+                or_(
+                    PraxisInvite.invitee_id.in_(character_ids),
+                    PraxisInvite.inviter_id.in_(character_ids),
+                ),
+            )
+        )
+    ).all()
+    praxis_ids = {invite.praxis_id for invite in invites}
+    for invite in invites:
+        await session.delete(invite)
+    await session.flush()
+    for praxis_id in praxis_ids:
+        praxis = await get_praxis(praxis_id, session, lock=True, refresh=True)
+        if praxis.status != PraxisStatus.submitted:
+            await collab_consensus.convert_if_sole_member(praxis, session, era)
 
 
 async def cancel_invite(

@@ -22,7 +22,7 @@ function sgComment(over: Partial<CommentOut>): CommentOut {
     is_edited: false,
     created_at: '2026-06-28T09:12:00Z',
     updated_at: '2026-06-28T09:12:00Z',
-    author: {
+    author: { name_state: 'ok',
       id: 44,
       username: 'node_44',
       display_name: 'node_44',
@@ -60,7 +60,7 @@ export function StackedReadouts() {
       'attach the raw csv and i will run the autocorrelation, @ada_reed. day-two spike reads like a sensor artifact, not signal.',
     created_at: '2026-07-01T15:04:00Z',
     updated_at: '2026-07-01T15:04:00Z',
-    mentions: [{ character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
+    mentions: [{ name_state: 'ok', character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
   })
   return (
     <div style={wrap}>

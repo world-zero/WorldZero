@@ -41,7 +41,7 @@ describe('respondToRequest dispatch', () => {
     const item = feedItem('duel_challenge', {
       duel_id: 5,
       challenger_praxis_id: 11,
-      duel_status: 'pending',
+      duel_state: 'challenged',
     })
     const praxisId = await respondToRequest(item, true)
     expect(respondToChallenge).toHaveBeenCalledWith(5, { accept: true })
@@ -51,7 +51,7 @@ describe('respondToRequest dispatch', () => {
 
   it('declines a duel via the same endpoint with accept: false', async () => {
     vi.mocked(respondToChallenge).mockResolvedValue({ opponent_praxis_id: null } as never)
-    const item = feedItem('duel_challenge', { duel_id: 5, duel_status: 'pending' })
+    const item = feedItem('duel_challenge', { duel_id: 5, duel_state: 'challenged' })
     const praxisId = await respondToRequest(item, false)
     expect(respondToChallenge).toHaveBeenCalledWith(5, { accept: false })
     expect(praxisId).toBeNull()
@@ -66,8 +66,15 @@ describe('respondToRequest dispatch', () => {
 describe('status normalization', () => {
   it('reads invite_status for collabs and duel_status for duels', () => {
     expect(requestStatusOf(feedItem('collab_invite', { invite_status: 'pending' }))).toBe('pending')
-    expect(requestStatusOf(feedItem('duel_challenge', { duel_status: 'pending' }))).toBe('pending')
-    expect(requestStatusOf(feedItem('duel_challenge', { duel_status: 'declined' }))).toBe('declined')
+    expect(requestStatusOf(feedItem('duel_challenge', { duel_state: 'challenged' }))).toBe('pending')
+    expect(requestStatusOf(feedItem('duel_challenge', { duel_state: 'dissolved' }))).toBe('declined')
+    expect(requestStatusOf(feedItem('duel_challenge', { duel_state: 'live' }))).toBe('accepted')
+  })
+
+  it('a lapsed challenge (pending row, dissolved state) offers no Accept', () => {
+    expect(
+      requestStatusOf(feedItem('duel_challenge', { duel_status: 'pending', duel_state: 'dissolved' })),
+    ).not.toBe('pending')
   })
 
   it('maps duel active/settled to accepted', () => {

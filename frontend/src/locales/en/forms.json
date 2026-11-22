@@ -23,7 +23,7 @@
     "submitBusy": "Stepping out…",
     "startsAt": "starts at Lvl 0 · 0 pts",
     "previewFallbackName": "Wanderer",
-    "help": "Upload a photo — it becomes your avatar everywhere. Until you answer a calling you play as Unaffiliated, and every path is open to you."
+    "help": "Upload a photo — your character's form manifest. Until you answer a calling you play as Unaffiliated, and every path is open to you."
   },
   "editCharacter": {
     "errors": {
@@ -37,7 +37,7 @@
     "notOwner": "You can only edit your own character.",
     "heading": "Edit character",
     "intro": "Your character is yours before any faction is. Set your portrait, name and story — it follows you onto every task and praxis you submit.",
-    "avatarHint": "Square image, at least 240px. Your monogram “{{initial}}” shows until you add one — framed in the full spectrum, since every path is still open to you.",
+    "avatarHint": "Unlike Dorian Gray, you will age before your portrait does. With no portrait, you will show up as “{{initial}}”. You and this text will age at the same rate.",
     "displayNameCount": "{{count}}/50",
     "handleHint": "Auto-derived · permanent",
     "storyCount": "{{count}} / 500",
@@ -75,7 +75,7 @@
     "changeAction": "Change photo",
     "noneChosen": "No photo chosen yet",
     "chosen": "Chosen: {{name}}",
-    "keepingCurrent": "Keeping your current photo"
+    "keepingCurrent": "Unlike Dorian Gray, you will age faster than your portrait."
   },
   "editPraxis": {
     "loadingPageTitle": "Edit Praxis",
@@ -300,11 +300,11 @@
       "tabPreview": "Preview",
       "tabsAria": "Switch between write and preview",
       "bodyPlaceholder": "Write-up",
-    "bodyConnecting": "Opening the shared write-up…",
-    "bodyUnreachable": "The shared write-up would not open, so this editor cannot take text. Reload the page to try again.",
-    "bodyProposalLive": "A proposal is live. You can still write — the first edit cancels the publish window and clears every approval.",
+      "bodyConnecting": "Opening the shared write-up…",
+      "bodyUnreachable": "The shared write-up would not open, so this editor cannot take text. Reload the page to try again.",
+      "bodyProposalLive": "A proposal is live. You can still write — the first edit cancels the publish window and clears every approval.",
       "proofLabel": "Proof",
-      "proofButton": "Drop a photo of the work\nor browse files",
+      "proofButton": "Drop a photo \nor browse files\nof the work",
       "proofButtonMobile": "Take or choose a photo",
       "recapPoints": "{{points}} pts",
       "proofHelper": "Photos, clips or receipts — max 50 MB each.",
@@ -318,7 +318,7 @@
     "pageTitle": "Propose a Task",
     "successTask": {
       "heading": "Task proposed!",
-      "body": "An admin will review it soon. Only admins can see it for its first {{hours}} hours; other players see it after that."
+      "body": "An admin will review it soon, and weigh it against the weight of a feather. {{hours}}"
     },
     "successMeta": {
       "heading": "Metatask proposed!",

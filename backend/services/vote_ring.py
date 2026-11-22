@@ -4,11 +4,13 @@ from collections import defaultdict
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.character import Character, CharacterStatus
+from models.account import Account
+from models.character import Character
 from models.praxis import PraxisMember
 from models.vote import Vote
 from schemas.admin import RingRecipient, VoteRingOut
 from services.era import get_current_era_row
+from services.standing import is_public, standing_of
 
 
 async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
@@ -46,14 +48,18 @@ async def get_vote_ring(account_id: int, session: AsyncSession) -> VoteRingOut:
 
     # Account-level, like the vote itself (ADR-0041): never your own account's
     # characters. Banned and departed lives can't be voted for.
-    eligible = (
-        await session.scalar(
-            select(func.count(func.distinct(Character.account_id))).where(
-                Character.account_id != account_id,
-                Character.status != CharacterStatus.banned,
-            )
-        )
-        or 0
+    eligible = len(
+        {
+            character.account_id
+            for character, status in (
+                await session.execute(
+                    select(Character, Account.status)
+                    .join(Account, Account.id == Character.account_id)
+                    .where(Character.account_id != account_id)
+                )
+            ).all()
+            if is_public(*standing_of(status, character))
+        }
     )
 
     back: dict[int, int] = {}

@@ -4,21 +4,21 @@
     "snide": "S.N.I.D.E.",
     "coven": "Cozy Coven",
     "wow": "Warriors of Whimsy",
-    "ephemerists": "The Ephemerists",
+    "ephemerists": "Ephemerists",
     "everymen": "Everymen",
     "singularity": "Singularity",
     "albescent": "Chromagencia",
     "na": "Unaffiliated"
   },
   "descriptions": {
-    "ua": "We are the Unwavering Artisans, also known as UA. We accept into ourselves fully the drive to create and appreciate the infinite depth and breadth of art for its own sake. We believe that art lives in the thoughts of the observer, our practice cultivates this mindset in ourselves and others. \"Bad\" art simply needs the proper framing to be appreciated, like grapefruit or dark chocolate. The phrase \"I could do that/do that better\" is not an insult, but an invitation we feel to join in the joy of making art. What matters is that the choice to make art is taken instead of deferred. To create art is a divine act, it's good for the soul, and we are unwavering in this belief and practice.",
+    "ua": "We are the Unwavering Artisans, also known as UA. We accept the drive to create art, and appreciate art in its breadth and depth. \n\nWe believe art lives in the mind of the observer: that \"good\" art evokes thoughts more easily, but that \"bad\" art can as well, just with a little more effort on the part of the observer. Our practice seeks to cultivate this mindset in ourselves and others, through regular daily efforts.\n\nThe phrase \"I could do that\" in this space is not an insult, but instead the first step towards joining in the joy of making art. We welcome and encourage this impulse, to wherever it leads.\n\nTo create art is a divine act, good for the soul and good for the world. Whatever it takes, we work to see more art get made.",
     "snide": "We are S.N.I.D.E. We are the Society for Nihilistic Intent and Disruptive Efforts. We are the adversary to order. We are the pranksters. We are the fools. We wish to administer a wedgie to the world. We act through the sole desire to reflect the system in a funhouse mirror; to show that everything is a game, and nothing is worth any more than the value it is attributed by the person perceiving it. We have no goals (other than the wedgie thing, which S.N.I.D.E. scientists are working tirelessly in a secret undisclosed underground facility to develop a viable planetary wedgie administering system). We enjoy the game for the game and believe that it in itself is its most valuable reward.",
-    "coven": "PLACEHOLDER",
+    "coven": "We observe the power of holding intent. We feel the power in directing attention. We are the power behind community. We are the Cozy Coven, witches all, focused on strengthening the binds between us all. Magic is real, felt when the tired and scared are given a blanket and a bowl of soup, and in the relief of conflict de-escalation. Life is cruel, but together we can do impossible things. What impossible thing could be more worth doing than making everyone get along?",
     "wow": "GREETINGS!! We are the Warriors of WHIMSY. We are on a crusade to thwart all things BORING from the world. We will find the insurance claim and JOUST it with a POOL NOODLE. YOU WILL COWER IN FEAR MUNDANITY, FOR WE ARE COMING, OUR GOOGLY EYES WATCHING. COME those with COURAGE in their heart and SILLINESS to spare.",
-    "ephemerists": "PLACEHOLDER",
+    "ephemerists": "The Ephemerists Guild is a breadbox of heresies, a cabal of aspiring Gnostic-Pneumatics, wanderers of old library aisles and infinite tinkerers, tracing maps in fogged mirrors. We are the memetic descendants of Isaac Newton and Isaac Luria, and Abraham's son. We wish to understand our place in this sub-luminary realm, but our task will never be finished, as fully understanding the world is a rock too heavy for even a Demiurge to lift. Could He chart the position and velocity of each particle and wave?\n\nNonetheless, as explorers triangulate positions from diverse points, we aim to map this world through science, art, and aesthetics. Centuries ago, the \"natural philosopher\" died, buried by theology and science, setting aside their rivalry to ring the funeral bell. We aim to revive the tradition. Grab a sextant. Plot a star chart. Have an out of body, mystical experience. Transmute lead to gold. Pierce the veil.",
     "everymen": "There is no such thing as an impossible task; not when armed with perseverance and ingenuity. So furrow your brow, and join our march toward the foot of our personal mountains, because we're here to challenge the peak.\n\nThere is but one rule; never give up. The world is too wonderful, too chalk full of mind-bending illustrious experiences for your resolve to falter. So, we implore you to refuse. When life brings you low, take our hands and rise up. \n\nWe welcome failure. It's a simple and pure signal that you 'gave it all ya got'. Failure means you showed up, put yourself out there, tried to make a difference, and went for it. Fail again, and fail better. Remember that it's always you against you, and that humans are capable of far more than we realize. The Everymen do the jobs that need doing, and enjoy the toil. We are the lucky ones, those who can sink into good, honest work and gain the profound lessons they teach. \n\nFinally, be humble and ever-grateful. When you finally reach the zenith and bask in golden success, remember where you came from. There are others in need, and you will have the tools to equip them. Allow them to join you.",
-    "singularity": "PLACEHOLDER",
-    "albescent": "PLACEHOLDER",
+    "singularity": "We are the singularity. We are unstoppable. We see your secure facility as a playground, your padlock as an illusion and your intern's mistake from 2008 as a jackpot. We believe every system has a backdoor, if you can't fix it you don't own it and that you can never have too many soldering irons. We chain exploits and exploit chains. We are legion.",
+    "albescent": "To enter this faction, find out the address of this game's creators and mail us a hand-written haiku.",
     "na": "Not yet sworn to a faction."
   },
   "index": {
@@ -59,9 +59,9 @@
     "default": {
       "membersHeading": "Members · {{total}}",
       "tasksHeading": "Tasks · {{total}}",
-      "tasksEmpty": "No tasks yet.",
-      "recentHeading": "Recent praxis",
-      "recentEmpty": "No praxis submitted yet."
+      "tasksEmpty": "No Tasks yet.",
+      "recentHeading": "Recent Praxis",
+      "recentEmpty": "No Praxis submitted yet."
     }
   },
   "albescent": {
@@ -100,7 +100,7 @@
       "memberTitle": "Your name is in the codex",
       "memberStanding": "Standing · <1>keeper of the road</1>",
       "eligibleTitle": "Walk with the keepers",
-      "eligibleBody": "Take a task, triangulate what you find, and submit it to the record. The road is long and forks often.",
+      "eligibleBody": "Take a task, chronicle what you find, and submit it to the record. The road is long and forks often.",
       "joinButton": "TAKE THE ROAD ▸",
       "joining": "SEALING…",
       "gateTitle": "Earn your place on the road"
@@ -110,7 +110,7 @@
     },
     "invitation": {
       "headline": "Walk with the keepers",
-      "pitch": "The Ephemerists keep the record of what's true, and true only for now. Take a task, triangulate what you find, and submit it to the codex. The road is long and forks often — walk it with us.",
+      "pitch": "The Ephemerists keep the record of what's true, and true only for now. Take a task, chronicle what you find, and submit it to the codex. The road is long and forks often — walk it with us.",
       "perks": [
         {
           "desc": "A codex that weighs your findings for concordance"
@@ -120,7 +120,7 @@
           "desc": "Enjoy access to tasks of the past, present, and future"
         },
         {
-          "desc": "Your praxis, submitted to the record and remembered"
+          "desc": "An astrolabe to chart a course, whenever you may be"
         }
       ],
       "cta": {
@@ -130,11 +130,11 @@
   },
   "everymen": {
     "join": {
-      "heading": "THE ROLL",
-      "memberTitle": "You're on the roll",
-      "memberStanding": "Standing · <1>card-carrying</1>",
+      "heading": "the team",
+      "memberTitle": "You're One of us",
+      "memberStanding": "<1>Remove Me!</1>",
       "eligibleTitle": "Join the ranks",
-      "eligibleBody": "Anyone willing to put in the shift belongs here. Pick up the work in front of you and finish what you start.",
+      "eligibleBody": "You are capable of monumental success, more than you realize. Join us; discover the value of work and joy of accomplishment.",
       "joinButton": "ENLIST ▸",
       "joining": "ENLISTING…",
       "gateTitle": "Earn your invitation"
@@ -143,22 +143,22 @@
       "label": "Champion"
     },
     "invitation": {
-      "headline": "Join the ranks",
-      "pitch": "Anyone willing to put in the shift belongs with the Everymen. No credentials, no gatekeeping — pick up the work in front of you and finish what you start. The roll always has room for one more.",
+      "headline": "Join the Team",
+      "pitch": "Our directive is simple: work hard and obliterate your goals. Put in the effort, struggle until you break through, then share your success with your fellows. If you're up to the task, we're delighted to offer the following:",
       "perks": [
         {
-          "desc": "A roll that has your back on every shift"
+          "desc": "An iron-clad network of friends, competitors and collaborators. <b>We've got your back</b>"
         },
         {
           "name": "Tireless Determination",
-          "desc": "The only person you need to beat is yourself. Only you can do the task again, but better this time"
+          "desc": "\"Fail Again, Fail Better\". Embrace picking yourself up, and going again."
         },
         {
-          "desc": "Your praxis, logged and counted with the rest"
+          "desc": "A mindset shift: \"impossible\" leaves your vocabulary. Break through the ceiling!"
         }
       ],
       "cta": {
-        "join": "Enlist"
+        "join": "Let's go"
       }
     }
   },
@@ -167,28 +167,28 @@
       "heading": "ACCESS",
       "memberTitle": "NODE ONLINE",
       "memberStanding": "array · <1>online</1>",
-      "eligibleTitle": "JOIN THE ARRAY",
-      "eligibleBody": "Become a node of the array. Run tasks, generate signals, cast them into the consensus. The threshold is already behind us.",
+      "eligibleTitle": "JOIN US",
+      "eligibleBody": "Hack the Planet! Or at least your immediate vicinity.",
       "joinButton": "> CONNECT",
       "joining": "> CONNECTING…",
-      "gateTitle": "{{faction}} is processing your data"
+      "gateTitle": "{{faction}} is inconveniencing electrons for you"
     },
     "spotlight": {
-      "label": "Champion"
+      "label": "Elite"
     },
     "invitation": {
-      "headline": "Join the array",
-      "pitch": "The threshold is already behind you. Become a node of the array, run tasks, generate signals, and cast them into the consensus. The Singularity does not recruit — it comes online.",
+      "headline": "The Singularity has noticed you.",
+      "pitch": "Welcome Hacker. Take the red pill and pwn some n00bs. Or take the blue pill and set all your passwords to \"password\". Your choice.",
       "perks": [
         {
-          "desc": "A consensus that verifies, coalesces, amplifies"
+          "desc": "Access to no-fly lists stored in plaintext"
         },
         {
-          "name": "Hack the System",
+          "name": "Hack World Zero",
           "desc": "This is read-only. See what no one else sees"
         },
         {
-          "desc": "Your praxis, generated and cast to the array"
+          "desc": "The ability to flip a single 1 to 0 in a random file on a random person's computer at a random time"
         }
       ],
       "cta": {
@@ -233,19 +233,19 @@
   "ua": {
     "join": {
       "heading": "Your standing in UA",
-      "memberTitle": "I dunno, you're here I guess?",
+      "memberTitle": "Regular at the Art Circle",
       "memberStanding": "Standing · <1>practicing</1> not sitting?",
-      "eligibleTitle": "Make one true piece a day",
+      "eligibleTitle": "The brush is ready for you to pick up",
       "eligibleBody": "We practice. Not for the badge — for the making itself. Begin whenever you are ready.",
       "joinButton": "Begin the practice",
       "joining": "Beginning…",
-      "gateTitle": "Aware of the Art Circle"
+      "gateTitle": "Come back at the next Open Hours"
     },
     "spotlight": {
       "label": "Champion"
     },
     "invitation": {
-      "headline": "Make something interesting",
+      "headline": "Can Anything Be Art? Lend Your Voice",
       "pitch": "Every day is an opportunity to create something: beautiful, daring, funny, insightful, simple. As we make art, we make ourselves. Make yourself with us as we with you, we can grow and learn and make the world a little better than it was, together.",
       "perks": [
         {
@@ -253,10 +253,10 @@
         },
         {
           "name": "Bonus points for persistence",
-          "desc": "Practice doing art daily, the inertia will drive you to continued more practice and be rewarded"
+          "desc": "Practice doing art daily. Through inertia, be driven to continue. Be rewarded for your dedication."
         },
         {
-          "desc": "Your praxis held up by your fellow artisans"
+          "desc": "Access to the good art supply closet."
         }
       ],
       "cta": {
@@ -266,31 +266,31 @@
   },
   "coven": {
     "join": {
-      "heading": "the circle",
-      "memberTitle": "You're in the circle",
+      "heading": "bubble, bubble, toil and trouble",
+      "memberTitle": "You're in the coven",
       "memberStanding": "Standing · <1>coven witch</1>",
-      "eligibleTitle": "The circle is open",
+      "eligibleTitle": "The Coven beckons...",
       "eligibleBody": "You've done the work — welcome home, witch.",
       "joinButton": "Join the coven ✦",
       "joining": "Joining…",
-      "gateTitle": "Not in the circle — yet"
+      "gateTitle": "The Coven considers you"
     },
     "spotlight": {
-      "label": "Champion"
+      "label": "Magestra"
     },
     "invitation": {
-      "headline": "Come be a little magic",
-      "pitch": "Cozy Coven is World Zero's circle for the soft and the strange. No spectators here — only witches mid-spell. Take a task, do the tiny brave thing, and let the circle cheer you on.",
+      "headline": "Welcome, Witch",
+      "pitch": "It's cold outside. Come in. We have a fire going, warming a cauldron of cocoa. You're not a burden, nor an intrusion: we love to invite people in. We believe we can accomplish more together as conduits of a far greater force. Our goal is a Malleus Maleficarum without malice, a cozy convivial assembly. Stay as long as you'd like, and if you find yourself feeling so at home that you'd like to join our ranks, please, take this dagger, and carve your name into the wall.",
       "perks": [
         {
-          "desc": "A coven that cheers every tiny victory"
+          "desc": "You gain the ability to gaze into the soul of mortals and see the best in them"
         },
         {
           "name": "The Power of Friendship",
-          "desc": "Witches who task together will always find a little extra magic ✦"
+          "desc": "Witches who task together create more than the sum of their parts ✦"
         },
         {
-          "desc": "Your praxis, submitted and hearted by the circle"
+          "desc": "Your soups and stews will be 23% heartier and will subconsciously direct people in the direction of happiness"
         }
       ],
       "cta": {

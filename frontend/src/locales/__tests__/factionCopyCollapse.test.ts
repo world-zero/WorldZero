@@ -73,14 +73,14 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
   // {{faction}} not last: "S.N.I.D.E." would get a second full stop (#2368).
   { banned: `factions:{F}\\.join\\.gateBody`, shared: 'factions:mobile.gateHint', wording: 'Keep tasking for {{faction}} if you want to be invited.' },
   { banned: `factions:{F}\\.mobile\\.eyebrow`, shared: 'factions:detail.eyebrow', wording: 'Faction' },
-  { banned: `factions:{F}\\.praxis\\.empty`, shared: 'factions:detail.default.recentEmpty', wording: 'No praxis submitted yet.' },
-  { banned: `factions:{F}\\.praxis\\.heading`, shared: 'factions:detail.default.recentHeading', wording: 'Recent praxis' },
+  { banned: `factions:{F}\\.praxis\\.empty`, shared: 'factions:detail.default.recentEmpty', wording: 'No Praxis submitted yet.' },
+  { banned: `factions:{F}\\.praxis\\.heading`, shared: 'factions:detail.default.recentHeading', wording: 'Recent Praxis' },
   { banned: `factions:{F}\\.roster\\.empty`, shared: 'factions:detail.membersEmpty', wording: 'No members yet.' },
   { banned: `factions:{F}\\.roster\\.emptyWithSpotlight`, shared: 'factions:detail.membersEmptyWithSpotlight', wording: 'No other members yet.' },
   { banned: `factions:{F}\\.roster\\.heading`, shared: 'factions:detail.default.membersHeading', wording: 'Members · {{total}}' },
   { banned: `factions:{F}\\.roster\\.level`, shared: 'factions:detail.memberLevel', wording: 'Level {{level}}' },
   { banned: `factions:{F}\\.spotlight\\.stat`, shared: 'factions:detail.spotlightStat', wording: 'Level {{level}} · {{score}} points' },
-  { banned: `factions:{F}\\.tasks\\.empty`, shared: 'factions:detail.default.tasksEmpty', wording: 'No tasks yet.' },
+  { banned: `factions:{F}\\.tasks\\.empty`, shared: 'factions:detail.default.tasksEmpty', wording: 'No Tasks yet.' },
   { banned: `factions:{F}\\.tasks\\.heading`, shared: 'factions:detail.default.tasksHeading', wording: 'Tasks · {{total}}' },
 
   // feed.json
@@ -98,10 +98,10 @@ const FAMILIES: Array<{ banned: string; shared: string; wording: string }> = [
 
   // common.json: character-profile kits (#1858)
   { banned: `common:profile\\.{F}\\.badgeTitle`, shared: 'common:profile.badgesHeading', wording: 'Badges' },
-  { banned: `common:profile\\.{F}\\.levelUnit`, shared: 'common:profile.ptsThisLevel', wording: '{{current}} / {{span}} pts this level' },
-  { banned: `common:profile\\.{F}\\.praxisEmptyBody`, shared: 'common:profile.praxisEmptyBody', wording: 'Every path is still open — the first finding is the hardest.' },
+  { banned: `common:profile\\.{F}\\.levelUnit`, shared: 'common:profile.ptsThisLevel', wording: '{{current}} / {{span}} points this level' },
+  { banned: `common:profile\\.{F}\\.praxisEmptyBody`, shared: 'common:profile.praxisEmptyBody', wording: 'Every path is still open - the first step is the hardest.' },
   // Wording per #2046 ("submitted", not "sealed").
-  { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No praxis submitted yet.' },
+  { banned: `common:profile\\.{F}\\.praxisEmptyTitle`, shared: 'common:profile.praxisEmptyTitle', wording: 'No Praxis submitted yet.' },
   { banned: `common:profile\\.{F}\\.praxisEyebrow`, shared: 'common:profile.praxisEyebrow', wording: 'Submitted by {{name}}' },
   // "lvl" -> "Level" per #2598.
   { banned: `common:profile\\.{F}\\.ringLabel`, shared: 'common:profile.lvl', wording: 'Level' },

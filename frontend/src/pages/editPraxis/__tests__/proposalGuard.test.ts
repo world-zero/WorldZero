@@ -4,6 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import type { PraxisMemberOut } from '../../../api/praxis'
+import { deriveCollabGate } from '../../../components/collab/collabGate'
 import {
   editNeedsProposalConfirm,
   proposalIsLive,
@@ -13,7 +14,7 @@ import {
 const AT = '2026-08-17T10:00:00Z'
 const LATER = '2026-08-17T12:00:00Z'
 
-const member = (id: number): PraxisMemberOut => ({
+const member = (id: number): PraxisMemberOut => ({ character_name_state: 'ok',
   id,
   praxis_id: 1,
   character_id: id,
@@ -31,6 +32,7 @@ const praxis = (over: Partial<ProposalPraxis> = {}): ProposalPraxis => ({
   type: 'collab',
   members: [member(1), member(2)],
   submit_proposed_at: AT,
+  collab_state: 'proposed',
   ...over,
 })
 
@@ -40,7 +42,15 @@ describe('proposalIsLive', () => {
   })
 
   it('is not live while the crew is only drafting', () => {
-    expect(proposalIsLive(praxis({ submit_proposed_at: null }))).toBe(false)
+    expect(proposalIsLive(praxis({ submit_proposed_at: null, collab_state: 'drafting' }))).toBe(false)
+  })
+
+  it('stays live when the proposer left and nobody has approved (Q3)', () => {
+    // Leaving keeps status and submit_proposed_at; only kick/edit clear them.
+    const left = praxis({ submit_proposed_at: AT, members: [member(1), member(2)] })
+    expect(left.members.some((m) => m.has_approved)).toBe(false)
+    expect(proposalIsLive(left)).toBe(true)
+    expect(deriveCollabGate(left.members, 1, left.collab_state).state).toBe('holdout')
   })
 
   it('is never live for solo or a duel side, which have one member', () => {
@@ -71,7 +81,7 @@ describe('editNeedsProposalConfirm', () => {
   })
 
   it('never arms while the crew is drafting, agreed or not', () => {
-    const drafting = praxis({ submit_proposed_at: null })
+    const drafting = praxis({ submit_proposed_at: null, collab_state: 'drafting' })
     expect(editNeedsProposalConfirm(drafting, null)).toBe(false)
     expect(editNeedsProposalConfirm(drafting, AT)).toBe(false)
   })

@@ -22,13 +22,14 @@ function render(slug: string): string {
   )
 }
 
+const covenBody = i18n.t('feed:invitationLetter.coven.body')
 afterEach(() => {
-  i18n.addResource('en', 'feed', 'invitationLetter.coven.body', i18n.t('feed:invitationLetter.body'))
+  i18n.addResource('en', 'feed', 'invitationLetter.coven.body', covenBody)
 })
 
 describe('invitation card faction copy', () => {
   it('an override for coven changes only the coven card', () => {
-    const shared = i18n.t('feed:invitationLetter.body')
+    const shared = i18n.t('feed:invitationLetter.snide.body')
     i18n.addResource('en', 'feed', 'invitationLetter.coven.body', 'Come to the table.')
     expect(render('coven')).toContain('Come to the table.')
     expect(render('snide')).toContain(shared)

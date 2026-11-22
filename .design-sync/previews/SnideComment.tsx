@@ -22,7 +22,7 @@ function snideComment(over: Partial<CommentOut>): CommentOut {
     is_edited: false,
     created_at: '2026-06-28T09:12:00Z',
     updated_at: '2026-06-28T09:12:00Z',
-    author: {
+    author: { name_state: 'ok',
       id: 22,
       username: 'rax_vandal',
       display_name: 'Rax Vandal',
@@ -58,7 +58,7 @@ export function StackedDispatches() {
     body_text: 'they sent the sweepers at dawn and missed it, @ada_reed. rent is theft and the poem stays.',
     created_at: '2026-07-01T15:04:00Z',
     updated_at: '2026-07-01T15:04:00Z',
-    mentions: [{ character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
+    mentions: [{ name_state: 'ok', character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
   })
   return (
     <div style={wrap}>

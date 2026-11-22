@@ -5,6 +5,7 @@ from pydantic import AliasChoices, ConfigDict, Field
 from schemas.base import WireModel
 from schemas.params import INT32_MAX
 
+from models.character import NameState
 from models.praxis import PraxisType
 from models.task import TaskStatus, TaskType
 
@@ -47,6 +48,7 @@ class TaskOut(WireModel):
     in_progress_count: int = 0
     # Author byline, read-time joins via services.task.authors_for_tasks (#1029).
     created_by_display_name: str = ""
+    created_by_name_state: NameState = NameState.ok
     # Relative media path, "" = no portrait (monogram fallback).
     created_by_avatar_url: str = ""
     # The author's member faction, not the task's primary_faction_slug.
@@ -133,6 +135,7 @@ class TaskSignupOut(WireModel):
 
     character_id: int
     display_name: str
+    name_state: NameState = NameState.ok
     avatar_url: str
     faction_slug: str
     # Current-era level (ADR-0042); 0 when no stats row this era.

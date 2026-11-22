@@ -4,6 +4,7 @@
  * Pull-back only survives on the MODERATED composer; an ordinary cast derives
  * the waiting stage instead (#1177, ADR-0059).
  */
+import { duelStateFor } from '../../../../test/fixtures'
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect, vi } from "vitest";
@@ -21,7 +22,7 @@ import {
 } from "../controls";
 
 function member(id: number, cast: boolean): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -108,6 +109,7 @@ function duelSide(characterId: number, submitted: boolean) {
     display_name: `C${characterId}`,
     faction_slug: "na",
     avatar_url: "",
+    name_state: "ok" as const,
     points_from_votes: 0,
     is_submitted: submitted,
     nudged_at: null,
@@ -149,7 +151,7 @@ function duelState(
     id: 7,
     task_id: 3,
     status: duelStatus,
-    state: "drafting",
+    state: duelStateFor(duelStatus),
     forfeited_by_character_id: null,
     cast_clock_started_at: null,
     challenger: duelSide(1, overrides.isPublished ?? true),

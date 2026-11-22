@@ -38,7 +38,7 @@ const PRAXIS = aPraxis({
  * the only foreign hue is the rival's; no avatars, so `plate` draws.
  */
 function duelAgainst(hostSlug: string, rivalSlug: string): DuelDetailOut {
-  const side = (overrides: Partial<DuelSideOut>): DuelSideOut => ({
+  const side = (overrides: Partial<DuelSideOut>): DuelSideOut => ({ name_state: 'ok',
     praxis_id: 1,
     character_id: 3,
     display_name: 'Ada',

@@ -52,6 +52,7 @@ export function makeTask(overrides: Partial<TaskOut> = {}): TaskOut {
     in_progress_count: 0,
     created_by_display_name: '',
     created_by_avatar_url: '',
+    created_by_name_state: 'ok',
     created_by_faction_slug: null,
     created_by_level: 0,
     signup_reason: null,
@@ -175,7 +176,7 @@ export const mockUser: CurrentUser = {
 }
 
 const SAMPLE_MEMBERS: PraxisMemberOut[] = [
-  {
+  { character_name_state: 'ok',
     id: 1,
     praxis_id: 501,
     character_id: 7,
@@ -189,7 +190,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
     nudged_at: null,
     nudge_again_at: null,
   },
-  {
+  { character_name_state: 'ok',
     id: 2,
     praxis_id: 501,
     character_id: 12,
@@ -204,7 +205,7 @@ const SAMPLE_MEMBERS: PraxisMemberOut[] = [
   },
 ]
 
-const SAMPLE_INVITE: PraxisInviteOut = {
+const SAMPLE_INVITE: PraxisInviteOut = { invitee_name_state: 'ok',
   id: 1,
   praxis_id: 501,
   inviter_id: 7,
@@ -260,6 +261,7 @@ export function makePraxis(overrides: Partial<PraxisOut> = {}): PraxisOut {
     created_by_id: 7,
     created_by_display_name: 'Ada Reed',
     created_by_avatar_url: '',
+    created_by_name_state: 'ok',
     created_by_faction_slug: slug,
     created_at: EARLIER,
     updated_at: NOW,
@@ -297,7 +299,7 @@ export const mockComments: CommentOut[] = [
     is_edited: false,
     created_at: EARLIER,
     updated_at: EARLIER,
-    author: {
+    author: { name_state: 'ok',
       id: 12,
       username: 'sam_okafor',
       display_name: 'Sam Okafor',
@@ -316,14 +318,14 @@ export const mockComments: CommentOut[] = [
     is_edited: true,
     created_at: NOW,
     updated_at: NOW,
-    author: {
+    author: { name_state: 'ok',
       id: 19,
       username: 'pip_marigold',
       display_name: 'Pip Marigold',
       avatar_url: '',
       faction_slug: 'wow',
     },
-    mentions: [{ character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
+    mentions: [{ name_state: 'ok', character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
   },
 ]
 
@@ -355,6 +357,7 @@ export const mockCollaboration: PraxisCardOut = {
   task_faction_slug: 'everymen',
   body_text: "",
   created_by_avatar_url: '',
+  created_by_name_state: 'ok',
   created_by_faction_slug: 'everymen',
   submit_proposed_at: null,
   members: SAMPLE_MEMBERS,
@@ -368,6 +371,7 @@ export const mockCollaboration: PraxisCardOut = {
   opponent_display_name: null,
   opponent_faction_slug: null,
   opponent_avatar_url: '',
+  opponent_name_state: 'ok',
 }
 
 export const mockCredential: CredentialCardProps = {
@@ -498,6 +502,7 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     task_faction_slug: slug,
     body_text: PRAXIS_BODY_BY_SLUG[slug ?? 'ua'] ?? PRAXIS_BODY_BY_SLUG.ua,
     created_by_avatar_url: '',
+    created_by_name_state: 'ok',
     created_by_faction_slug: slug,
     submit_proposed_at: null,
     members: [],
@@ -511,6 +516,7 @@ export function makePraxisCard(overrides: Partial<PraxisCardOut> = {}): PraxisCa
     opponent_display_name: null,
     opponent_faction_slug: null,
     opponent_avatar_url: '',
+    opponent_name_state: 'ok',
     ...overrides,
   }
 }
@@ -560,7 +566,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
     forfeited_by_character_id: null,
     state: "drafting",
     cast_clock_started_at: null,
-    challenger: {
+    challenger: { name_state: 'ok',
       praxis_id: 601,
       character_id: 7,
       display_name: 'Ada Reed',
@@ -575,7 +581,7 @@ export function makeDuel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut 
       tie_multiplier: 1,
       rival_bonus: 0,
     },
-    opponent: {
+    opponent: { name_state: 'ok',
       praxis_id: null,
       character_id: 19,
       display_name: 'Pip Marigold',

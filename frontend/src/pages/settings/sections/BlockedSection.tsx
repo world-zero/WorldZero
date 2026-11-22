@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../../auth/AuthContext'
 import { listBlocks, unblockCharacter, type BlockListItem } from '../../../api/relationships'
 import { CARD_CTA } from '../../../components/ctaTapFloor'
 import FactionAvatar from '../../../components/avatar/FactionAvatar'
 import { authorToCharacter } from '../../../components/comments/shared'
+import { PlayerLink } from '../../../components/PlayerName'
+import { playerLabel } from '../../../utils/playerLabel'
 import { formatDate } from '../../../utils/dates'
 import type { SettingsSectionProps } from '../../Settings'
 import SettingsCard from '../SettingsCard'
@@ -63,16 +64,14 @@ export default function BlockedSection({ sectionId }: SettingsSectionProps) {
               className={`font-body flex items-center gap-[var(--space-md)] pt-[var(--space-lg)] ${i === blocks.length - 1 ? '' : 'pb-[var(--space-lg)] border-b border-[var(--color-border)]'}`}
             >
               <FactionAvatar
-                character={authorToCharacter({ id: b.character_id, username: b.display_name, display_name: b.display_name, avatar_url: b.avatar_url, faction_slug: b.faction_slug })}
+                character={authorToCharacter({ id: b.character_id, username: b.display_name, display_name: b.display_name, avatar_url: b.avatar_url, faction_slug: b.faction_slug, name_state: b.name_state })}
                 size={40}
               />
               <div className="min-w-0 flex-1 text-[length:var(--text-content)]">
-                <Link to={`/characters/${b.character_id}`} className="text-[var(--color-text-primary)] [overflow-wrap:anywhere]">
-                  {b.display_name}
-                </Link>
+                <PlayerLink state={b.name_state} name={b.display_name} to={`/characters/${b.character_id}`} className="text-[var(--color-text-primary)] [overflow-wrap:anywhere]" />
                 <div className="mt-[var(--space-xs)] text-[var(--color-text-tertiary)]">
                   {failedId === b.character_id ? (
-                    <span role="alert">{t('settings.blocked.unblockFailed', { name: b.display_name })}</span>
+                    <span role="alert">{t('settings.blocked.unblockFailed', { name: playerLabel(b.display_name, b.name_state) })}</span>
                   ) : (
                     t('settings.blocked.blockedOn', { date: formatDate(b.created_at) })
                   )}
