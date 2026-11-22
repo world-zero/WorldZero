@@ -287,10 +287,13 @@ on the title and the beats while signed out (phones; on desktop the top nav's Si
 now title, seven beats, contract, sign-in, creation, arrival, and a signed-in person who opens
 `/start` cold skips only the sign-in step; the OAuth resume lands past the title, beats and contract.
 
-**The flow stops applying once that character has completed the onboarding task** — the same
-predicate as the mark. One rule, two consumers, consistent by construction: the flow can
-never refuse to start someone whose task is simultaneously marked *start here*. Past that
-line a scan drops the player at `/`.
+**The flow never refuses anyone** (#4205 O5, owner ruling 2026-11-21). `/start` stays
+replayable for a player who finished the onboarding task; Skip goes to their desk. Only the
+bare `/` swaps the flow for the desk, once a character exists. Two more rulings (#4239): a
+failed sign-in returns to the sign-in card with the error and the held contract click; a
+creation-banned account never walks the flow (the layout gate sends `/` and `/start` to the
+notice); terms on file with no character skips the contract, with no second acceptance row.
+Arrival has no Back, nor does the creation form once a character exists.
 
 Three of the five bail points needed no decision, being already handled: no session (nothing
 to resume); an account with zero characters (`/` always shows the create-your-first-life

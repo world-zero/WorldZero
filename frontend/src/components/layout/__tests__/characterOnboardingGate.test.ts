@@ -26,9 +26,15 @@ describe('characterRedirectTarget with acceptance on file', () => {
     }
   })
 
-  it('does not send a creation-banned account to the create form', () => {
-    expect(characterRedirectTarget(false, true, false, true, '/tasks', false, true)).toBeNull()
-    expect(characterRedirectTarget(false, true, false, false, '/tasks', false, true)).toBe('/start')
+  it('lets a creation-banned account browse, and sends it to the notice instead of the flow, accepted or not (O3)', () => {
+    for (const accepted of [true, false]) {
+      expect(characterRedirectTarget(false, true, false, accepted, '/tasks', false, true)).toBeNull()
+      expect(characterRedirectTarget(false, true, false, accepted, '/characters/create', false, true)).toBeNull()
+      for (const pathname of ['/', '/start']) {
+        expect(characterRedirectTarget(false, true, false, accepted, pathname, false, true)).toBe('/characters/create')
+        expect(characterRedirectTarget(false, true, false, accepted, pathname, true, true)).toBe('/characters/create')
+      }
+    }
   })
 
   it('does not bounce a character-less account away from /start', () => {
