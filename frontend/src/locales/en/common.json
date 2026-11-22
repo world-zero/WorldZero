@@ -397,7 +397,7 @@
     },
     "notifications": {
       "eyebrow": "Notifications",
-      "emailPending": "Email delivery is not implemented yet. When it is, we'll pay attention to these settings. For now, they are merely decorative, like a nice vase.",
+      "emailPending": " ",
       "columnPage": "Updates",
       "columnEmail": "Email",
       "columnPush": "Push",
