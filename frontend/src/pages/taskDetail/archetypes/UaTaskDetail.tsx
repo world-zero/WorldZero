@@ -101,6 +101,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   // Guarded non-null by the dispatcher.
@@ -199,7 +200,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
           </CardCtaControl>
           <div style={{ ...aside, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: "var(--leaf-task-detail-accent)" }}>
@@ -262,6 +263,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             >
               {t("detail.inProgress.continue")}
             </Link>
+            {canDrop && (
             <button
               onClick={handleDrop}
               style={{
@@ -281,6 +283,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             >
               {t("detail.inProgress.drop")}
             </button>
+            )}
           </div>
           <ErrorBanner message={signupError} />
         </div>

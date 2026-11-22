@@ -95,11 +95,13 @@ def compute_duel_multiplier(
     is_winner: bool,
     is_tied: bool,
     era: EraConfig,
+    has_votes: bool = True,
 ) -> float:
     """Duel outcome multiplier for one participant.
 
     On a tie, the sole ``takes_duel_ties`` holder gets its win rate and the other
-    its loss rate; with zero or two holders both get 1.0 (#2664).
+    its loss rate; with zero or two holders both get 1.0 (#2664). A tie with no
+    votes at all pays 1.0 to both: the perk needs a vote to break (Q10).
     """
     if not is_tied:
         faction_config = era.factions.get(character_faction_slug)
@@ -110,7 +112,7 @@ def compute_duel_multiplier(
     tie_winner_slug = sole_tie_taker_slug(
         character_faction_slug, opponent_faction_slug, era
     )
-    if tie_winner_slug is None:
+    if tie_winner_slug is None or not has_votes:
         return 1.0
 
     faction_config = era.factions.get(character_faction_slug)

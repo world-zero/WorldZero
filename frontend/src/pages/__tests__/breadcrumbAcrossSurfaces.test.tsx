@@ -75,6 +75,7 @@ function taskState(): TaskDetailState {
     signupError: null,
     handleSignup: async () => {},
     handleDrop: async () => {},
+    canDrop: true,
     dropConfirm: null,
   };
 }

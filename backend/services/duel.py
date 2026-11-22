@@ -362,6 +362,12 @@ async def get_duel_detail(
                 return slug
         return _faction_slug_of(character)
 
+    voted = any(
+        get_tally(tallies, pid).points_from_votes
+        for pid in (duel.challenger_praxis_id, duel.opponent_praxis_id)
+        if pid is not None
+    )
+
     def _side(
         character: Optional[Character],
         praxis: Optional[Praxis],
@@ -380,6 +386,7 @@ async def get_duel_detail(
                 is_winner,
                 is_tied,
                 era,
+                has_votes=voted,
             )
 
         return DuelSideOut(

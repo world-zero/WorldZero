@@ -128,6 +128,7 @@ export default function EphemeristsTaskDetail({
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   // Guarded non-null by the dispatcher.
@@ -461,7 +462,7 @@ export default function EphemeristsTaskDetail({
           <EphemeristsNotationBand side="bottom" seed={`task:${task.id}`} />
           <div style={{ ...quietItalic, marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: BRASS_LIGHT }}>
@@ -496,6 +497,7 @@ export default function EphemeristsTaskDetail({
             <Link className="eph-cta" to={`/praxis/${inProgressPraxisId}/edit`} style={{ ...primaryButton, flex: "1 1 8rem", width: "auto", minWidth: 0, padding: "var(--space-md) var(--space-xs)", overflowWrap: "anywhere" }}>
               {t("detail.inProgress.continue")}
             </Link>
+            {canDrop && (
             <button
               onClick={handleDrop}
               style={{
@@ -510,6 +512,7 @@ export default function EphemeristsTaskDetail({
             >
               {t("detail.inProgress.drop")}
             </button>
+            )}
           </div>
           <ErrorBanner message={signupError} />
         </div>

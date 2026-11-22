@@ -11,6 +11,7 @@ from game_config import CURRENT_ERA, EraConfig
 from models.duel import DuelStatus
 from models.era import Era
 from models.faction import Faction
+from models.vote import Vote
 from services.duel import get_duel_detail
 from services.scoring import compute_duel_multiplier, compute_faction_multiplier
 from services.task import build_task_out_for_viewer
@@ -67,19 +68,29 @@ async def test_anonymous_viewer_gets_the_identity(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("voted", [False, True], ids=["no_votes", "voted"])
 @pytest.mark.parametrize(
     "mine_ties, theirs_ties, expected_tie",
     [(False, False, 1.0), (True, True, 1.0), (True, False, 2.0), (False, True, 0.25)],
 )
 async def test_duel_sides_carry_win_loss_and_the_resolved_tie(
     db_session: AsyncSession, era: Era, some_faction: Faction,
-    mine_ties: bool, theirs_ties: bool, expected_tie: float,
+    mine_ties: bool, theirs_ties: bool, expected_tie: float, voted: bool,
 ) -> None:
     skewed = _skewed_era(mine_takes_ties=mine_ties, theirs_takes_ties=theirs_ties)
     duel, _challenger, _opponent = await make_duel(
         db_session, era, label="rm", status=DuelStatus.active,
         challenger_faction=MINE, opponent_faction=THEIRS,
     )
+    if voted:
+        voter = await make_character(db_session, era, username="rmvoter")
+        db_session.add(Vote(
+            praxis_id=duel.challenger_praxis_id, voter_character_id=voter.id,
+            voter_account_id=voter.account_id, value=3,
+        ))
+        await db_session.flush()
+    # Q10: the tie perk needs a vote to break; a vote-less tie pays nobody.
+    expected_tie = expected_tie if voted else 1.0
 
     detail = await get_duel_detail(duel.id, None, db_session, skewed)
 
@@ -87,7 +98,7 @@ async def test_duel_sides_carry_win_loss_and_the_resolved_tie(
     assert (side.win_multiplier, side.loss_multiplier) == (2.0, 0.25)
     assert side.tie_multiplier == expected_tie
     assert side.tie_multiplier == compute_duel_multiplier(
-        MINE, THEIRS, False, True, skewed
+        MINE, THEIRS, False, True, skewed, has_votes=voted
     )
 
     other = detail.opponent
@@ -99,5 +110,5 @@ async def test_duel_sides_carry_win_loss_and_the_resolved_tie(
         THEIRS, MINE, False, False, skewed
     )
     assert other.tie_multiplier == compute_duel_multiplier(
-        THEIRS, MINE, False, True, skewed
+        THEIRS, MINE, False, True, skewed, has_votes=voted
     )

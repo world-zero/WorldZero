@@ -535,7 +535,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
     return (
       <div className="sidebar-card card-on-page flex items-center gap-3" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--color-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span className="label-caption" style={{ color: 'var(--color-success)' }}>{t('detail.flag.flaggedOk')}</span>
+          <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-success)' }}><path d="M3 8.5l3.5 3.5L13 4.5" /></svg>
         </div>
         <div className="flex-1">
           <p className="font-body" style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.flaggedTitle')}</p>
@@ -551,7 +551,7 @@ export function PraxisFlagBlock({ state }: { state: PraxisDetailState }) {
     <div className="sidebar-card card-on-page" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
       <div className="flex items-center gap-3">
         <div style={{ width: 32, height: 32, borderRadius: '50%', border: '1.5px solid var(--color-danger-edge)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span className="label-caption">{t('detail.flag.badge')}</span>
+          <svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-danger-edge)' }}><path d="M4 14V2" fill="none" /><path d="M4 2.5h8l-2 3 2 3H4z" /></svg>
         </div>
         <div className="flex-1">
           <p className="font-body" style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--color-text-secondary)' }}>{t('detail.flag.title')}</p>

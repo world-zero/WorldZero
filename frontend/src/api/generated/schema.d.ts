@@ -992,7 +992,8 @@ export interface paths {
          * List Characters
          * @description List active characters, optionally filtered by name or faction.
          *
-         *     ``exclude_active_task_id`` hides players already on that task (#320).
+         *     ``exclude_active_task_id`` flags players already on that task with
+         *     ``unavailable_reason`` instead of dropping them (#4192).
          *     ``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a
          *     no-op for anonymous callers. Convenience only: ``services.duel`` enforces it.
          */
@@ -2525,6 +2526,47 @@ export interface components {
             username: string;
         };
         /**
+         * CharacterSearchOut
+         * @description ``GET /characters`` row; flagged when the task's invite/challenge would 409.
+         */
+        CharacterSearchOut: {
+            /** All Time Score */
+            all_time_score: number;
+            /** Avatar Url */
+            avatar_url: string;
+            /** Badges */
+            badges: components["schemas"]["BadgeOut"][];
+            /** Bio */
+            bio: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Faction Slug */
+            faction_slug: string;
+            /** Id */
+            id: number;
+            /** Invitations */
+            invitations: string[];
+            /** Level */
+            level: number;
+            /** Location */
+            location: string;
+            /** Score */
+            score: number;
+            /** Status */
+            status: string;
+            /** Tagline */
+            tagline: string;
+            /** Unavailable Reason */
+            unavailable_reason: "has_active_praxis" | null;
+            /** Username */
+            username: string;
+        };
+        /**
          * CharacterStatus
          * @description A life is either playable or banned.
          * @enum {string}
@@ -2630,6 +2672,8 @@ export interface components {
             praxis_id: number;
             /** Task Faction Slug */
             task_faction_slug: string;
+            /** Task Id */
+            task_id: number;
             /** Task Level Required */
             task_level_required: number;
             /** Task Point Value */
@@ -3134,6 +3178,8 @@ export interface components {
             duel_status: string;
             /** Task Faction Slug */
             task_faction_slug: string;
+            /** Task Id */
+            task_id: number;
             /** Task Point Value */
             task_point_value: number;
             /** Task Title */
@@ -7302,7 +7348,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CharacterOut"][];
+                    "application/json": components["schemas"]["CharacterSearchOut"][];
                 };
             };
             /** @description Validation Error */

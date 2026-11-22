@@ -85,6 +85,7 @@ export default function EverymenTaskDetail({
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   // Guarded non-null by the dispatcher.
@@ -416,7 +417,7 @@ export default function EverymenTaskDetail({
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: OLIVE }}>
@@ -488,6 +489,7 @@ export default function EverymenTaskDetail({
           <Link to={`/praxis/${inProgressPraxisId}/edit`} style={primaryBar}>
             {t("detail.inProgress.continue")}
           </Link>
+          {canDrop && (
           <button
             onClick={handleDrop}
             style={{
@@ -510,6 +512,7 @@ export default function EverymenTaskDetail({
           >
             {t("detail.inProgress.drop")}
           </button>
+          )}
           <ErrorBanner
             message={signupError}
             style={{

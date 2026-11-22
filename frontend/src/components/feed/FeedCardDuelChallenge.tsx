@@ -8,10 +8,9 @@ import { useMyActiveTasks } from "../../hooks/useMyActiveTasks";
 import { useGameConfig } from "../../hooks/useGameConfig";
 import { useAuth } from "../../auth/AuthContext";
 import { deletePraxis, leavePraxis } from "../../api/praxis";
-import { cancelChallenge, respondToChallenge } from "../../api/duel";
+import { respondToChallenge } from "../../api/duel";
 import { factionFill } from "../../utils/factions";
 import { extractError } from "../../utils/errors";
-import FeedBadge from "./FeedBadge";
 import FeedBankFullModal from "./FeedBankFullModal";
 import { FEED_BODY_LIFTED, FeedBodyOverlay } from "./feedBodyTarget";
 
@@ -41,7 +40,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   // Duel payload fields, not collab's; the shared hook owns the endpoint (#346).
   const {
     duel_id,
-    challenger_praxis_id,
+    task_id,
     task_title,
     task_point_value,
     task_faction_slug,
@@ -63,16 +62,11 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   // failures need their own channel.
   const [dropError, setDropError] = useState("");
   const [busy, setBusy] = useState(false);
-  // Withdraw: either participant may call off a pending challenge (#956), via
-  // /duels/{id}/cancel.
-  const [withdrawn, setWithdrawn] = useState(false);
-  const [withdrawing, setWithdrawing] = useState(false);
-  const [withdrawError, setWithdrawError] = useState("");
 
   const landOnPraxis = (praxisId: number | null) => {
     // Accepting creates the opponent's praxis server-side; land on its editor.
     navigate(
-      praxisId ? `/praxis/${praxisId}/edit` : `/praxis/${challenger_praxis_id}`,
+      praxisId ? `/praxis/${praxisId}/edit` : `/tasks/${task_id}`,
     );
   };
 
@@ -91,22 +85,6 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   };
 
   const handleDecline = () => decline();
-
-  const handleWithdraw = async () => {
-    if (withdrawing) return;
-    setWithdrawing(true);
-    setWithdrawError("");
-    try {
-      await cancelChallenge(duel_id);
-      setWithdrawn(true);
-    } catch (err) {
-      setWithdrawError(
-        extractError(err, i18n.t("feed:duelChallenge.withdrawError")),
-      );
-    } finally {
-      setWithdrawing(false);
-    }
-  };
 
   // Drop a praxis to free a slot, then retry: authored solo → delete, joined
   // collab → leave. NEVER unsubmitPraxis — it doesn't free a slot.
@@ -193,7 +171,6 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                   }}
                 />
               </span>
-              <FeedBadge type="duel" label={i18n.t("feed:badge.duel")} />
             </div>
           </div>
         </div>
@@ -217,11 +194,11 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          {/* The body's anchor (#1893): the challenger's praxis. Its id is NULL
-              before that praxis exists, and then the body is plain. */}
-          {challenger_praxis_id != null ? (
+          {/* The body's anchor (#1893): the task. The challenger's praxis is
+              in-progress, members-only (ADR-0024), so the recipient can't open it. */}
+          {task_id != null ? (
             <Link
-              to={`/praxis/${challenger_praxis_id}`}
+              to={`/tasks/${task_id}`}
               className="font-body"
               style={{ ...TITLE_STYLE, textDecoration: "none" }}
             >
@@ -236,11 +213,23 @@ export default function FeedCardDuelChallenge({ item }: Props) {
           <span className="label-caption">
             {i18n.t("feed:duelChallenge.taskMeta", { points: task_point_value })}
           </span>
-          {/* eslint-disable-next-line local/no-raw-style-values -- ornament: crossed-swords dingbat used as an icon */}
-          <span style={{ fontSize: 12 }}>&#x2694;</span>
+          {/* Drawn, not U+2694: several faces lack the glyph and paint tofu. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            width="1em"
+            height="1em"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 4l10 10M20 4L10 14M3 17l4 4M21 17l-4 4M7 13l-4 4M17 13l4 4" />
+          </svg>
         </div>
 
-        {isPending && !withdrawn && (
+        {isPending && (
           <div
             style={{
               marginTop: "var(--space-md)",
@@ -256,7 +245,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             {/* Face is `.feed-action` (#1783); see FeedCardCollabInvite. */}
             <button
               onClick={handleAccept}
-              disabled={loading || busy || withdrawing}
+              disabled={loading || busy}
               className="feed-action"
               style={{
                 background: "var(--badge-duel)",
@@ -270,7 +259,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             </button>
             <button
               onClick={handleDecline}
-              disabled={loading || busy || withdrawing}
+              disabled={loading || busy}
               className="feed-action"
               style={{
                 background: "transparent",
@@ -282,21 +271,6 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             >
               {i18n.t("common:actions.decline")}
             </button>
-            {/* The opponent's mirror of the challenger's × (#956). */}
-            <button
-              onClick={handleWithdraw}
-              disabled={loading || busy || withdrawing}
-              className="feed-action"
-              style={{
-                background: "transparent",
-                color: "var(--color-text-tertiary)",
-                border: "1px solid var(--color-border)",
-                padding: "var(--space-xs) var(--space-lg)",
-                cursor: loading || busy || withdrawing ? "not-allowed" : "pointer",
-              }}
-            >
-              {i18n.t("feed:duelChallenge.withdraw")}
-            </button>
             {error && !showDropModal && (
               <span
                 className="label-caption"
@@ -305,29 +279,13 @@ export default function FeedCardDuelChallenge({ item }: Props) {
                 {error}
               </span>
             )}
-            {withdrawError && (
-              <span
-                className="label-caption"
-                style={{ color: "var(--color-danger)" }}
-              >
-                {withdrawError}
-              </span>
-            )}
-          </div>
-        )}
-
-        {withdrawn && (
-          <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
-            <span className="label-caption">
-              {i18n.t("feed:duelChallenge.withdrawn")}
-            </span>
           </div>
         )}
 
         {status === "accepted" && (
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <Link
-              to={`/praxis/${challenger_praxis_id}`}
+              to={`/tasks/${task_id}`}
               className="label-caption"
               style={{ color: "var(--badge-duel)", textDecoration: "none", ...FEED_BODY_LIFTED }}
             >

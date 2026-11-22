@@ -167,7 +167,6 @@ describe('the profile kits share one set of copy in the catalog', () => {
   const SHARED_KEYS = [
     'lvl',
     'ptsThisLevel',
-    'nextLevel',
     'praxisEyebrow',
     'praxisEmptyTitle',
     'praxisEmptyBody',
@@ -197,7 +196,6 @@ describe('the profile kits share one set of copy in the catalog', () => {
   })
 
   it('interpolates the two copy fields that take a named variable', () => {
-    expect(i18n.t('common:profile.nextLevel', { level: 8 })).toBe('next · lvl 8')
     expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('Submitted by Reza')
     expect(i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 })).toBe(
       '380 / 500 pts this level',

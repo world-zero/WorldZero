@@ -430,3 +430,44 @@ async def test_decline_on_submitted_collab_stays_collab(
         await client.post(f"/praxes/{praxis_id}/submit", headers=headers)
     await _decline(client, praxis_id, character3, auth_headers3, auth_headers2)
     assert await _type_of(client, praxis_id, auth_headers2) == "collab"
+
+
+async def _invite_id(client, praxis_id, invitee, headers):
+    view = await client.get(f"/praxes/{praxis_id}", headers=headers)
+    invites = view.json()["invites"]
+    return next(i["id"] for i in invites if i["invitee_id"] == invitee.id)
+
+
+@pytest.mark.asyncio
+async def test_decline_of_an_already_resolved_invite_is_refused(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    praxis_id = await _collab_with_members(client, active_task, auth_headers2, [])
+    await _invite(client, praxis_id, character, auth_headers2)
+    await _invite(client, praxis_id, character3, auth_headers2)
+    accepted = await _invite_id(client, praxis_id, character, auth_headers2)
+    cancelled = await _invite_id(client, praxis_id, character3, auth_headers2)
+    path = f"/praxes/{praxis_id}/invite"
+    ok = await client.post(
+        f"{path}/{accepted}/respond", json={"accept": True}, headers=auth_headers
+    )
+    assert ok.status_code == 200
+    gone = await client.delete(f"{path}/{cancelled}", headers=auth_headers2)
+    assert gone.status_code == 204
+
+    late = await client.post(
+        f"{path}/{accepted}/respond", json={"accept": False}, headers=auth_headers
+    )
+    assert late.status_code == 400
+    late = await client.post(
+        f"{path}/{cancelled}/respond", json={"accept": False}, headers=auth_headers3
+    )
+    assert late.status_code == 404
+    assert await _type_of(client, praxis_id, auth_headers2) == "collab"

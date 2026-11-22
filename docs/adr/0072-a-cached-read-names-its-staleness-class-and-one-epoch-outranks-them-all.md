@@ -91,6 +91,11 @@ into a general cache: a twelve-line pub-sub that fires on accept, decline,
 submit, unsubmit, leave and delete is not a poor imitation of a cache, it is the
 correct shape for data whose freshness requirement is *zero*.
 
+*Amendment (#4193):* obligations are invalidated on local mutation **and** on an
+external signal: a request-kind push (the service worker messages open pages) or
+the tab regaining visibility. A request someone else sends is not a local
+mutation. Still no TTL and no polling.
+
 ### The era rollover — a version key, not a bound
 
 Both `/auth/me` and `/game-config` carry `era_name` (now `Era.id`; see the Amendment). `utils/cacheEpoch`

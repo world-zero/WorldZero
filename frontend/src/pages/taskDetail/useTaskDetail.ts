@@ -10,7 +10,8 @@ import {
   deletePraxis,
   type PraxisCardOut,
 } from "../../api/praxis";
-import { cancelChallenge } from "../../api/duel";
+import { cancelChallenge, getDuelDetail } from "../../api/duel";
+import { DUEL_STATES_THAT_BLOCK_DROP } from "../../utils/duelDrop";
 import type { ConfirmRequest } from "../../components/confirm/composerConfirms";
 import { dropConfirmFor } from "./dropConfirm";
 import { listRelationships } from "../../api/relationships";
@@ -83,6 +84,8 @@ export interface TaskDetailState {
   handleSignup: () => Promise<void>;
   /** ASK to drop this task: opens {@link dropConfirm}, does not delete (#2215). */
   handleDrop: () => void;
+  /** False while the draft is a side of a duel that can no longer be dissolved (Q5). */
+  canDrop: boolean;
   /** The pending drop confirmation, rendered by the dispatcher; null when none. */
   dropConfirm: DropConfirmState | null;
 }
@@ -220,6 +223,24 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     setDropTarget(inProgressPraxis);
   }, [task, inProgressPraxis]);
 
+  // Unknown until read, so a duel side hides Drop rather than flashing it.
+  const [duelState, setDuelState] = useState<string | null>(null);
+  const duelId = inProgressPraxis?.duel_id ?? null;
+  useEffect(() => {
+    setDuelState(null);
+    if (duelId === null) return;
+    let live = true;
+    getDuelDetail(duelId)
+      .then((d) => live && setDuelState(d.state))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [duelId]);
+  const canDrop =
+    duelId === null ||
+    (duelState !== null && !DUEL_STATES_THAT_BLOCK_DROP.has(duelState));
+
   const cancelDrop = useCallback(() => setDropTarget(null), []);
 
   /** The confirmed half: dissolve any duel, delete, then resync the task. */
@@ -327,6 +348,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     signupError,
     handleSignup,
     handleDrop,
+    canDrop,
     dropConfirm,
   };
 }

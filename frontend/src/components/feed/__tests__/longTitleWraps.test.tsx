@@ -94,6 +94,7 @@ describe('an 80-char unbroken title wraps (#3802)', () => {
       <FeedCardCollabInvite
         item={item('collab_invite', {
           praxis_id: 12,
+    task_id: 1,
           invite_id: 3,
           task_title: URL_TITLE,
           task_point_value: 5,

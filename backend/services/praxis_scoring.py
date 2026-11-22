@@ -271,6 +271,9 @@ async def compute_owner_contributions(
                 is_winner=winner_character_id == character.id,
                 is_tied=winner_character_id is None,
                 era=era,
+                has_votes=bool(
+                    own_tally.points_from_votes or opp_tally.points_from_votes
+                ),
             )
 
         else:

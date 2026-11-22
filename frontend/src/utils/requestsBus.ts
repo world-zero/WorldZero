@@ -27,3 +27,8 @@ export function onRequestsChanged(fn: Listener): () => void {
     listeners.delete(fn)
   }
 }
+
+/** The service worker's `postMessage` for a request-kind push: ring the bus so the rail refetches. */
+export function onSwMessage(e: { data?: { type?: string } }): void {
+  if (e.data?.type === 'wz-request-push') notifyRequestsChanged()
+}

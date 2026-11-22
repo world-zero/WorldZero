@@ -93,7 +93,7 @@ test.describe('duel lifecycle', () => {
 
   // D2 (#956): scoped to the challenge card's action row so an unrelated
   // "cancel" on /updates can't satisfy it.
-  test('D2: the opponent can withdraw a pending challenge', async ({ browser }) => {
+  test('D2: a pending challenge offers exactly Accept Duel and Decline', async ({ browser }) => {
     const seed = await seedChallenge(browser)
     const { challenger, opponent, challengerPraxisId } = seed
     try {
@@ -107,8 +107,11 @@ test.describe('duel lifecycle', () => {
       await expect(accept).toBeVisible()
 
       const actionRow = accept.locator('..')
-      await actionRow.getByRole('button', { name: feed.duelChallenge.withdraw }).click()
-      await expect(opponentPage.getByText(feed.duelChallenge.withdrawn)).toBeVisible()
+      await expect(actionRow.getByRole('button')).toHaveText(['Accept Duel', 'Decline'])
+      await actionRow.getByRole('button', { name: 'Decline' }).click()
+      await expect(
+        opponentPage.getByText(feed.duelChallenge.declined, { exact: true }),
+      ).toBeVisible()
     } finally {
       await closeSeed(seed)
     }

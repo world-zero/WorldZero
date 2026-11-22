@@ -712,6 +712,23 @@ async def test_archiving_a_collab_invite_leaves_it_pending(
     assert target.endswith(ITEM_KEY_SEPARATOR + str(invite.id))
 
 
+@pytest.mark.asyncio
+async def test_duel_and_collab_cards_carry_the_task_id(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    full_feed: dict,
+    auth_headers: dict,
+):
+    """The recipient can't open the in-progress praxis, so the cards link the task."""
+    feed = await _feed(client, auth_headers, REQUESTS_FILTER)
+    duel = await db_session.get(Duel, full_feed["duel_id"])
+    invite = await db_session.get(PraxisInvite, full_feed["collab_invite_id"])
+    invited_praxis = await db_session.get(Praxis, invite.praxis_id)
+    payloads = {item["type"]: item["payload"] for item in feed["items"]}
+    assert payloads[FEED_ITEM_TYPE_DUEL_CHALLENGE]["task_id"] == duel.task_id
+    assert payloads[FEED_ITEM_TYPE_COLLAB_INVITE]["task_id"] == invited_praxis.task_id
+
+
 # --- 5. Bulk + the archived view ---
 
 @pytest.mark.asyncio

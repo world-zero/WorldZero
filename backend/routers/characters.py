@@ -14,7 +14,12 @@ from dependencies import (
 from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.character import Character, CharacterStatus
-from schemas.character import CharacterCreate, CharacterOut, CharacterUpdate
+from schemas.character import (
+    CharacterCreate,
+    CharacterOut,
+    CharacterSearchOut,
+    CharacterUpdate,
+)
 from schemas.params import Id, Page
 from services.auth import get_current_account
 from services.badge import list_badges_for_character
@@ -25,6 +30,7 @@ from services.character import (
     create_character,
     list_characters_for_viewer,
     soft_delete_character,
+    task_blocked_character_ids,
     update_character,
 )
 from services.era import load_current_era_stats
@@ -33,7 +39,7 @@ from services.media import process_and_save_avatar
 router = APIRouter()
 
 
-@router.get("", response_model=list[CharacterOut])
+@router.get("", response_model=list[CharacterSearchOut])
 async def list_characters(
     search: Optional[str] = None,
     faction: Optional[str] = None,
@@ -47,7 +53,8 @@ async def list_characters(
 ):
     """List active characters, optionally filtered by name or faction.
 
-    ``exclude_active_task_id`` hides players already on that task (#320).
+    ``exclude_active_task_id`` flags players already on that task with
+    ``unavailable_reason`` instead of dropping them (#4192).
     ``exclude_own_account`` hides the caller's own lives (ADR-0041, #1385); a
     no-op for anonymous callers. Convenience only: ``services.duel`` enforces it.
     """
@@ -55,7 +62,6 @@ async def list_characters(
         session,
         search=search,
         faction_slug=faction,
-        exclude_active_task_id=exclude_active_task_id,
         exclude_account_id=(
             viewer.account_id if exclude_own_account and viewer is not None else None
         ),
@@ -66,7 +72,21 @@ async def list_characters(
         offset=page.offset,
     )
     # Badges batched (#655).
-    return await build_character_outs(rows, session)
+    outs = await build_character_outs(rows, session)
+    blocked = (
+        await task_blocked_character_ids(
+            session, exclude_active_task_id, [c for c, _ in rows]
+        )
+        if exclude_active_task_id is not None
+        else set()
+    )
+    return [
+        CharacterSearchOut(
+            **out.model_dump(),
+            unavailable_reason="has_active_praxis" if out.id in blocked else None,
+        )
+        for out in outs
+    ]
 
 
 @router.get("/{character_id}", response_model=CharacterOut)

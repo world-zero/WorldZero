@@ -76,6 +76,7 @@ function baseState(overrides: Partial<TaskDetailState>): TaskDetailState {
     signupError: null,
     handleSignup: async () => {},
     handleDrop: async () => {},
+    canDrop: true,
     dropConfirm: null,
     ...overrides,
   };
@@ -123,6 +124,13 @@ describe("task-detail content-slot invariant", () => {
         lower.includes("earn up to") || lower.includes("sign up"),
         "signup-CTA slot",
       ).toBe(true);
+    });
+
+    it(`${slug} never says "met" under a pending below-level label (#4160)`, () => {
+      const pending = { ...TASK, status: "pending" as const, signup_reason: "below_level" as const, can_sign_up: false };
+      const { text } = render(<Archetype state={baseState({ task: pending })} />);
+      expect(text).toContain(i18n.t("tasks:proposalCard.pendingReview"));
+      expect(text).not.toContain(i18n.t("tasks:detail.signup.levelMet", { level: 3 }));
     });
 
     it(`${slug} renders the my-submission control`, () => {

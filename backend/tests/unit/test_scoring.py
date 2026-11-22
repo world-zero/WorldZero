@@ -198,6 +198,20 @@ def test_duel_tie_one_snide_snide_wins():
     assert other_result == ERA_1.factions["wow"].duel_loss_modifier
 
 
+def test_duel_tie_without_votes_pays_nobody():
+    for mine, theirs in (("snide", "wow"), ("wow", "snide")):
+        assert compute_duel_multiplier(
+            mine, theirs, is_winner=False, is_tied=True, era=ERA_1, has_votes=False
+        ) == 1.0
+
+
+def test_duel_tie_with_votes_keeps_the_perk():
+    result = compute_duel_multiplier(
+        "snide", "wow", is_winner=False, is_tied=True, era=ERA_1, has_votes=True
+    )
+    assert result == ERA_1.factions["snide"].duel_win_modifier
+
+
 def test_duel_tie_both_snide():
     result = compute_duel_multiplier("snide", "snide", is_winner=False, is_tied=True, era=ERA_1)
     assert result == 1.0

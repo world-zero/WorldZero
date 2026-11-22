@@ -93,16 +93,16 @@ function renderText(
 /** Resolved from the catalog so a copy edit moves this suite, not breaks it. */
 const TOP_OF_LADDER = i18n.t('common:sidebar.characterCard.topLevel')
 const ZERO_BAND = i18n.t('common:profile.ptsThisLevel', { current: 0, span: 0 })
-const NEXT_IS_SELF = i18n.t('common:profile.nextLevel', { level: 8 })
+// The retired "next · lvl N" label (#4198): absent everywhere.
+const NEXT_LABEL = /next · lvl/i
 
 describe('at the top of the era ladder, no profile prints a degenerate climb (#2383)', () => {
   it('has words to look for, so the loops below cannot pass by asserting nothing', () => {
-    for (const word of [TOP_OF_LADDER, ZERO_BAND, NEXT_IS_SELF]) {
+    for (const word of [TOP_OF_LADDER, ZERO_BAND]) {
       expect(word.length).toBeGreaterThan(0)
     }
     // The exact strings the bug report showed.
     expect(ZERO_BAND).toContain('0 / 0')
-    expect(NEXT_IS_SELF).toContain('8')
   })
 
   for (const formFactor of FORM_FACTORS) {
@@ -112,7 +112,7 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
         const text = renderText(slug, AT_THE_TOP, 8)
         expect(text, `${slug}/${formFactor}: top-of-ladder line`).toContain(TOP_OF_LADDER)
         expect(text, `${slug}/${formFactor}: 0 / 0 band`).not.toContain(ZERO_BAND)
-        expect(text, `${slug}/${formFactor}: next is itself`).not.toContain(NEXT_IS_SELF)
+        expect(text, `${slug}/${formFactor}: next label`).not.toMatch(NEXT_LABEL)
       })
     }
   }
@@ -120,13 +120,13 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
   // Mid-climb is untouched; a fix that deleted both figures would pass above.
   for (const formFactor of FORM_FACTORS) {
     for (const slug of TRACK_MOUNTS[formFactor]) {
-      it(`${slug}/${formFactor} still draws the band and the next rung mid-climb`, () => {
+      it(`${slug}/${formFactor} draws the band and no next label mid-climb`, () => {
         mocks.formFactor = formFactor
         const text = renderText(slug, MID_CLIMB, 7)
         expect(text, `${slug}/${formFactor}: band`).toContain(
           i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 }),
         )
-        expect(text, `${slug}/${formFactor}: next rung`).toContain(NEXT_IS_SELF)
+        expect(text, `${slug}/${formFactor}: next label`).not.toMatch(NEXT_LABEL)
         expect(text, `${slug}/${formFactor}: no top-of-ladder line`).not.toContain(TOP_OF_LADDER)
       })
     }
@@ -136,6 +136,6 @@ describe('at the top of the era ladder, no profile prints a degenerate climb (#2
   it('wow/mobile reads the climb like every other profile', () => {
     mocks.formFactor = 'mobile'
     expect(renderText('wow', AT_THE_TOP, 8)).toContain(TOP_OF_LADDER)
-    expect(renderText('wow', MID_CLIMB, 7)).toContain(NEXT_IS_SELF)
+    expect(renderText('wow', MID_CLIMB, 7)).not.toMatch(NEXT_LABEL)
   })
 })

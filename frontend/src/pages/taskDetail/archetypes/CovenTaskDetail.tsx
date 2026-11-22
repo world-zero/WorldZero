@@ -117,6 +117,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   if (!task) return null;
@@ -229,7 +230,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 {/* On the ward PAGE ground, so INK (#1295). */}
@@ -279,6 +280,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           <Link to={`/praxis/${inProgressPraxisId}/edit`} style={goldButton}>
             {t("detail.inProgress.continue")}
           </Link>
+          {canDrop && (
           <button
             onClick={handleDrop}
             style={{
@@ -300,6 +302,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
           >
             {t("detail.inProgress.drop")}
           </button>
+          )}
           <ErrorBanner message={signupError} />
         </div>
       )}
@@ -321,13 +324,14 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         display: "flex",
         gap: "var(--space-sm)",
         alignItems: "stretch",
+        flexWrap: "wrap",
         boxSizing: "border-box",
       }}
     >
       <div
         style={{
           ...innerBox,
-          flex: hasAction ? "0 0 auto" : "1 1 auto",
+          flex: hasAction ? "1 0 auto" : "1 1 auto",
           minWidth: COVEN_WORTH_MIN,
           display: "flex",
           alignItems: "center",
@@ -340,7 +344,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         <div
           style={{
             ...innerBox,
-            flex: 1,
+            flex: "999 1 150px",
             minWidth: 0,
             display: "flex",
             flexDirection: "column",

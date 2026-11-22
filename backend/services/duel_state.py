@@ -91,7 +91,8 @@ def duel_state(
         if casts == 2:
             return DuelState.LIVE
         return DuelState.ONE_CAST if casts else DuelState.DRAFTING
-    # resolved: a forfeit still has a winner (Q4); otherwise both must have cast.
-    # ponytail: no column records "resolved from active", so a side reopened after
-    # the close reads NO_CONTEST; store the state if that ever matters.
-    return DuelState.RESOLVED if forfeited or casts == 2 else DuelState.NO_CONTEST
+    # resolved: live_at (set once, never cleared) marks a duel that went live; a
+    # forfeit frozen from AWAITING_HONEST_SIDE has a winner too (Q4). Pending
+    # duels dissolve at close, so a forfeit here was never a declined one.
+    went_live = duel.live_at is not None or forfeited
+    return DuelState.RESOLVED if went_live else DuelState.NO_CONTEST

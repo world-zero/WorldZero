@@ -93,10 +93,10 @@ describe('CredentialCard footer sigil — spoken, never printed', () => {
   // of its own — it is cut from na's spectrum (#1891, Sigil Studies v2).
   it('gets albescent a shape of its own but never a colour of its own', () => {
     const albescent = renderToStaticMarkup(
-      <CredentialCard displayName="Wren" handle="wren" factionSlug="albescent" level={1} score={0} />,
+      <CredentialCard displayName="Wren" handle="wren" factionSlug="albescent" level={1} score={0} avatarUrl="/x.png" />,
     )
     const unaffiliated = renderToStaticMarkup(
-      <CredentialCard displayName="Wren" handle="wren" factionSlug="na" level={1} score={0} />,
+      <CredentialCard displayName="Wren" handle="wren" factionSlug="na" level={1} score={0} avatarUrl="/x.png" />,
     )
     expect(albescent, 'the labyrinth').toContain('/factionMarks/labyrinth.svg')
     expect(unaffiliated, 'the na ring, unchanged').not.toContain('/factionMarks/labyrinth.svg')
@@ -229,5 +229,27 @@ describe('CredentialCard still ring', () => {
     const themed = ring({ factionSlug: 'coven', stillRing: true })
     expect(themed).toContain('var(--fc-accent)')
     expect(themed).not.toContain('rainbow-conic')
+  })
+})
+
+/** The face is always drawn: character, else avatarUrl preview, else the card's own monogram. */
+describe('CredentialCard portrait fallback', () => {
+  const card = (props: Record<string, unknown>) =>
+    renderToStaticMarkup(
+      <CredentialCard displayName="Sable" handle="s" factionSlug="snide" level={1} score={0} {...props} />,
+    )
+
+  it.each(['snide', 'na'])('draws the name initial with no character or avatarUrl (%s)', (slug) => {
+    expect(visibleText(card({ factionSlug: slug }))).toMatch(/\bS\b/)
+  })
+
+  it('uses the fallback name initial when the name is blank', () => {
+    expect(visibleText(card({ displayName: '  ' }))).toMatch(/\bW\b/)
+  })
+
+  it('keeps the preview <img> and draws no monogram', () => {
+    const html = card({ avatarUrl: '/x.png' })
+    expect(html).toContain('src="/x.png"')
+    expect(visibleText(html)).not.toMatch(/\bS\b/)
   })
 })

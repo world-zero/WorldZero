@@ -121,6 +121,7 @@ export default function SingularityTaskDetail({
     setSubmissionSort,
     signupError,
     handleDrop,
+    canDrop,
   } = state;
 
   // Guarded non-null by the dispatcher.
@@ -427,7 +428,7 @@ export default function SingularityTaskDetail({
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: BRIGHT }}>
@@ -501,6 +502,7 @@ export default function SingularityTaskDetail({
               {prompt}
               {t("detail.inProgress.continue")}
             </Link>
+            {canDrop && (
             <button
               onClick={handleDrop}
               style={{
@@ -518,6 +520,7 @@ export default function SingularityTaskDetail({
               {prompt}
               {t("detail.inProgress.drop")}
             </button>
+            )}
           </div>
           <ErrorBanner
             message={signupError}

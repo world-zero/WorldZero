@@ -24,6 +24,7 @@ function duelItem(overrides: Partial<ActivityFeedItem> = {}): ActivityFeedItem {
     payload: {
       duel_id: 3,
       challenger_praxis_id: 777,
+      task_id: 1,
       task_title: 'Wheatpaste an original poem on a condemned wall',
       task_point_value: 30,
       task_faction_slug: 'snide',
@@ -51,6 +52,7 @@ export function HigherStakes() {
     payload: {
       duel_id: 4,
       challenger_praxis_id: 778,
+      task_id: 1,
       task_title: 'Host a sidewalk chalk festival for the block',
       task_point_value: 60,
       task_faction_slug: 'wow',
@@ -70,6 +72,7 @@ export function Accepted() {
     payload: {
       duel_id: 3,
       challenger_praxis_id: 777,
+      task_id: 1,
       task_title: 'Wheatpaste an original poem on a condemned wall',
       task_point_value: 30,
       task_faction_slug: 'snide',
