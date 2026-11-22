@@ -289,7 +289,9 @@ export default function CopyEditor() {
   const save = async () => {
     if (!target) return
     const template = currentTemplate(target) ?? ''
-    const missing = missingPlaceholders(template, draft)
+    // i18next always passes `count` to a plural form.
+    const shipped = shippedValue(target.ns, target.key) + (PLURAL_SUFFIX.test(target.key) ? ' {{count}}' : '')
+    const missing = missingPlaceholders(template, draft, shipped)
     if (missing.length > 0) {
       setNotice(t('copyEdit.missingPlaceholder', { placeholders: missing.join(' ') }))
       return
