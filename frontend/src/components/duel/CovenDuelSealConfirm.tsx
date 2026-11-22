@@ -87,7 +87,7 @@ export default function CovenDuelSealConfirm({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
           <CovenSigil size={26} color={DEEP} />
-          <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-title)', fontWeight: 600, lineHeight: 1.06 }}>
+          <h2 style={{ fontFamily: DISPLAY, fontSize: 'var(--text-title)', lineHeight: 1.06 }}>
             {copy.heading}
           </h2>
         </div>
