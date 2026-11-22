@@ -43,9 +43,8 @@ export default function NavBar() {
   }, [])
   const { user } = useAuth()
   /**
-   * The nav link carries the pending count too (#1457): 768-1023px has no rail
-   * to badge, and it matches the phone's bell. Same fetch as the rail (#1344).
-   * Two read-only pointers at one number is not ADR-0070's forbidden duplication.
+   * The nav link is the one desktop badge (#4131): the rail's fold handle has none.
+   * Same fetch as the rail (#1344).
    */
   const { pending_requests_count: pendingCount } = useSidebarPanels()
 

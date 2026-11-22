@@ -1,4 +1,3 @@
-import { useSidebarPanels } from '../../hooks/useSidebarPanels'
 import Sidebar from './Sidebar'
 import SidebarHandle from './SidebarHandle'
 
@@ -8,8 +7,6 @@ import SidebarHandle from './SidebarHandle'
  * Collapsing HIDES (`hidden`), never unmounts (#1343), so panels don't blink on
  * reopen; `hidden` leaves no box or a11y node, so collapsed still means gone.
  * Panel data ages while collapsed (staleness policy open, #1346).
- *
- * `pending_requests_count` feeds only the collapsed handle's badge.
  */
 interface SidebarColumnProps {
   readonly collapsed: boolean
@@ -28,16 +25,10 @@ interface SidebarColumnProps {
 const SIDEBAR_COLUMN = 'hidden lg:block lg:col-start-1 lg:row-start-1 lg:self-stretch'
 
 export default function SidebarColumn({ collapsed, onToggle }: SidebarColumnProps) {
-  const { pending_requests_count: pendingCount } = useSidebarPanels()
-
   return (
     <div className={SIDEBAR_COLUMN}>
       <div className={collapsed ? 'lg:sticky lg:top-14' : undefined}>
-        <SidebarHandle
-          collapsed={collapsed}
-          onToggle={onToggle}
-          pendingCount={pendingCount}
-        />
+        <SidebarHandle collapsed={collapsed} onToggle={onToggle} />
       </div>
       <div hidden={collapsed}>
         <Sidebar />

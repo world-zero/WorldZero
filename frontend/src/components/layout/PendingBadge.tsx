@@ -4,9 +4,8 @@ import type { CSSProperties } from 'react'
  * The count of unanswered obligations, drawn as the one badge shape the app has.
  *
  * Extracted at #1457, when the same fifteen-pixel pill acquired its third and
- * fourth call site — the mobile bell, the desktop sidebar handle (in BOTH
- * states now), and NavBar's `Updates` link. Four hand-copies of the same
- * geometry is four places for it to drift apart, and a badge that means "there
+ * fourth call site; now the mobile bell and NavBar's `Updates` link. Hand-copies
+ * of the same geometry drift apart, and a badge that means "there
  * are three things waiting on you" has to look identical everywhere or it stops
  * reading as one fact about one queue.
  *
