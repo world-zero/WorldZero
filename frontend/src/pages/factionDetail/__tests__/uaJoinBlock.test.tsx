@@ -52,7 +52,7 @@ describe('UA draws a join block like any other faction', () => {
   it('tells a member they practise here', () => {
     const out = render('member')
     expect(out).toContain(REGISTRY_HEADING)
-    expect(out).toContain('I dunno, you&#x27;re here I guess?')
+    expect(out).toContain('Regular at the Art Circle')
     // Whole line: a stray `{" "}` once shifted the `<1>` child so i18next dropped it.
     expect(out).toContain('Standing · practicing')
   })
@@ -60,12 +60,12 @@ describe('UA draws a join block like any other faction', () => {
   it('offers an invited viewer the practice', () => {
     const out = render('eligible')
     expect(out).toContain('Begin the practice')
-    expect(out).toContain('Make one true piece a day')
+    expect(out).toContain('The brush is ready for you to pick up')
   })
 
   it('shows the soft gate to a viewer who is not invited yet', () => {
     const out = render('gate')
-    expect(out).toContain('Aware of the Art Circle')
+    expect(out).toContain('Come back at the next Open Hours')
     expect(out).not.toContain(ERA_NOTICE)
   })
 
@@ -74,7 +74,7 @@ describe('UA draws a join block like any other faction', () => {
     expect(out).toContain('Closed for this era')
     expect(out).toContain(ERA_NOTICE)
     expect(out, 'the burn is not "keep tasking"').not.toContain(
-      'Aware of the Art Circle',
+      'Come back at the next Open Hours',
     )
   })
 })

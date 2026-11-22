@@ -139,7 +139,7 @@ describe('FieldDesk form-factor dispatch', () => {
     mocks.user = currentUser('coven', true)
     const html = render()
     expect(html).not.toContain('data-skin=')
-    expect(html.replace(/<[^>]*>/g, '')).toContain('Whose shoes today?')
+    expect(html.replace(/<[^>]*>/g, '')).toContain('Who are you today?')
   })
 
   it('leaves no empty install-nudge band above the mobile skin', () => {
@@ -153,7 +153,7 @@ describe('FieldDesk form-factor dispatch', () => {
     mocks.user = currentUser('coven')
     const html = render()
     expect(html).not.toContain('data-skin=')
-    expect(html.replace(/<[^>]*>/g, '')).not.toContain('Whose shoes today?')
+    expect(html.replace(/<[^>]*>/g, '')).not.toContain('Who are you today?')
   })
 })
 

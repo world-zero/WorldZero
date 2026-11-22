@@ -100,8 +100,8 @@ describe('the desktop FieldDesk keeps the roster and gains the new sections (#15
   it('still asks whose shoes today, above the new sections', () => {
     mocks.activePraxes = [praxis({})]
     const body = text(render())
-    expect(body).toContain('Whose shoes today?')
-    expect(body.indexOf('Whose shoes today?')).toBeLessThan(body.indexOf('Continue where you left off'))
+    expect(body).toContain('Who are you today?')
+    expect(body.indexOf('Who are you today?')).toBeLessThan(body.indexOf('Continue where you left off'))
   })
 
   it('shows the continue card when something is in flight', () => {

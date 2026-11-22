@@ -87,8 +87,8 @@ test.describe('collaboration lifecycle', () => {
       await page.goto('/')
       // Scoped to the panel (#1676): the task also appears under "Recent
       // activity", legitimately; `.first()` would stop asserting WHICH section.
-      // `exact` excludes the "Collapse In progress tasks" control.
-      const inProgress = page.getByLabel('In progress tasks', { exact: true })
+      // `exact` excludes the "Collapse In-progress tasks" control.
+      const inProgress = page.getByLabel('In-progress tasks', { exact: true })
       await expect(inProgress.locator(`a[href="/praxis/${draft.praxisId}/edit"]`)).toBeVisible()
       await expect(inProgress.getByText(draft.task.title)).toBeVisible()
     } finally {

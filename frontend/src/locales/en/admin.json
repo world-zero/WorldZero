@@ -235,7 +235,7 @@
   "copySheet": {
     "button": "Open the {{name}} copy sheet",
     "title": "{{name}} copy sheet",
-    "intro": "Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Press “edit copy” and click any wording to change it.",
+    "intro": "lol I can edit this. Every place this faction speaks in its own words, beyond its name and description, on one page with sample data. Press “edit copy” and click any wording to change it.",
     "popups": "Letters and marks",
     "pickerHint": "Pick a faction to edit the wording only it uses."
   },
@@ -515,9 +515,18 @@
       "loadError": "Couldn't load the small world rules.",
       "saveError": "Couldn't save that change.",
       "setAll": "Set all to small world",
-      "cols": { "rule": "Rule", "small": "Small world", "full": "Full game", "using": "Using", "changed": "Last changed" },
+      "cols": {
+        "rule": "Rule",
+        "small": "Small world",
+        "full": "Full game",
+        "using": "Using",
+        "changed": "Last changed"
+      },
       "turnUp": "Turn up when: {{when}}",
-      "side": { "small": "Small world", "full": "Full game" },
+      "side": {
+        "small": "Small world",
+        "full": "Full game"
+      },
       "on": "on",
       "off": "off",
       "default": "Launch default",
@@ -528,19 +537,37 @@
       "note": "A change posts a feed announcement in the world's voice and refreshes every player's rules. Nothing already posted is taken back.",
       "modLog": "Mod log",
       "rules": {
-        "praxis_post_cooldown": { "name": "Post cooldown",
-        "value": "{{praxis_post_cooldown_hours}} h", "when": "someone posts three or more a day for a week" },
-        "vote_requires_received_vote": { "name": "A vote needs a vote received",
-        "value": "{{vote_requires_received_vote}}", "when": "you spot a suspected second account" },
-        "comment_level": { "name": "Comments unlock at level",
-        "value": "level {{comment_level_required}}", "when": "a level-1 comment is flagged as rude" },
-        "duel_level": { "name": "Duels unlock at level",
-        "value": "level {{duel_level_required}}", "when": "new players decline most duels" },
-        "invitation": { "name": "Faction invitation (tasks, points)",
-        "value_one": "{{invitation_task_threshold}} task · {{invitation_point_threshold}} pts",
-        "value_other": "{{invitation_task_threshold}} tasks · {{invitation_point_threshold}} pts", "when": "a faction reaches about five in one community" },
-        "flag_level": { "name": "Flagging unlocks at level",
-        "value": "level {{flag_level_required}}", "when": "flags start getting overturned" }
+        "praxis_post_cooldown": {
+          "name": "Post cooldown",
+          "value": "{{praxis_post_cooldown_hours}} h",
+          "when": "someone posts three or more a day for a week"
+        },
+        "vote_requires_received_vote": {
+          "name": "A vote needs a vote received",
+          "value": "{{vote_requires_received_vote}}",
+          "when": "you spot a suspected second account"
+        },
+        "comment_level": {
+          "name": "Comments unlock at level",
+          "value": "level {{comment_level_required}}",
+          "when": "a level-1 comment is flagged as rude"
+        },
+        "duel_level": {
+          "name": "Duels unlock at level",
+          "value": "level {{duel_level_required}}",
+          "when": "new players decline most duels"
+        },
+        "invitation": {
+          "name": "Faction invitation (tasks, points)",
+          "value_one": "{{invitation_task_threshold}} task · {{invitation_point_threshold}} pts",
+          "value_other": "{{invitation_task_threshold}} tasks · {{invitation_point_threshold}} pts",
+          "when": "a faction reaches about five in one community"
+        },
+        "flag_level": {
+          "name": "Flagging unlocks at level",
+          "value": "level {{flag_level_required}}",
+          "when": "flags start getting overturned"
+        }
       }
     },
     "modlog": {
@@ -595,11 +622,11 @@
         "permission_grant": "granted a permission to",
         "permission_revoke": "revoked a permission from",
         "era_roll": "rolled into",
-      "task_import": "imported tasks",
-      "message_archive": "archived a message",
-      "message_unarchive": "restored a message",
-      "small_world_on": "turned Small world on",
-      "small_world_off": "turned Small world off"
+        "task_import": "imported tasks",
+        "message_archive": "archived a message",
+        "message_unarchive": "restored a message",
+        "small_world_on": "turned Small world on",
+        "small_world_off": "turned Small world off"
       },
       "to": {
         "character": "character {{name}}",
