@@ -3,6 +3,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TaskCard from "../../../components/taskCard/TaskCard";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
+import { WALL_PLAIN } from "../../../components/factionMarks/snideAtoms";
 import { TaskCrown } from "../../../components/factionMarks/TaskCrown";
 import { factionName, factionDescription } from "../../../utils/factions";
 import { mediaUrl } from "../../../utils/media";
@@ -233,8 +234,7 @@ export default function SnideFactionBody({ state }: { state: FactionDetailState 
       {/* ② ABOUT — tilted xerox flyer */}
       <div style={{ position: "relative", transform: "rotate(-0.6deg)" }}>
         {/* Offset register (#1609), uniform 40% (#2302). */}
-        <div style={{ ...WALL_PANEL, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
-          <Halftone />
+        <div style={{ ...WALL_PANEL, background: WALL_PLAIN, boxShadow: "4px 6px 0 color-mix(in srgb, var(--color-print-offset) 40%, transparent)", padding: "var(--space-xl)" }}>
           <SectionHeading>{t("detail.aboutHeading")}</SectionHeading>
           <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-md)" }}>
             {paragraphs.length ? (
