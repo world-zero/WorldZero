@@ -36,6 +36,7 @@ beforeEach(() => {
   vi.stubGlobal('sessionStorage', { getItem: () => null, setItem: () => {}, removeItem: () => {} })
   vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} }))
   vi.stubGlobal('scrollTo', () => {})
+  vi.mocked(acceptTerms).mockClear()
   vi.mocked(createCharacter).mockReset().mockResolvedValue({ id: 5, display_name: 'King Biscuit' } as never)
   vi.mocked(listTasks).mockReset().mockResolvedValue([makeTask({ id: 42, title: 'First light', point_value: 10, start_here: true, primary_faction_slug: 'na' })])
 })
@@ -70,7 +71,7 @@ describe('character then arrival', () => {
     expect(vi.mocked(listTasks)).toHaveBeenCalledTimes(1)
   })
 
-  it('Back from arrival never shows the creation form again', async () => {
+  it('arrival offers no Back, so the creation form is never shown a second time', async () => {
     render(
       <MemoryRouter>
         <AuthContext.Provider value={{ user: USER, loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
@@ -85,15 +86,13 @@ describe('character then arrival', () => {
     fireEvent.click(await screen.findByRole('button', { name: /create|begin|born/i }))
     await screen.findByText('King Biscuit has entered World Zero.')
 
-    fireEvent.click(screen.getByRole('button', { name: /back/i }))
-    await waitFor(() => expect(screen.queryByText('King Biscuit has entered World Zero.')).toBeNull())
-    expect(screen.queryByPlaceholderText(/name/i)).toBeNull()
+    expect(screen.queryByRole('button', { name: /back/i })).toBeNull()
     expect(vi.mocked(createCharacter)).toHaveBeenCalledTimes(1)
   })
 })
 
 describe('consent is written once per mount', () => {
-  it('Back to the contract and Accept again does not write a second row', async () => {
+  it('Back to the beats, on to the contract and Accept again does not write a second row', async () => {
     vi.mocked(acceptTerms).mockClear()
     render(
       <MemoryRouter>
@@ -108,6 +107,7 @@ describe('consent is written once per mount', () => {
     await screen.findByPlaceholderText(/name/i)
 
     fireEvent.click(screen.getByRole('button', { name: /back/i }))
+    fireEvent.click(screen.getByTestId('onboarding-skip'))
     fireEvent.click(await screen.findByTestId('onboarding-accept-terms'))
     expect(await screen.findByPlaceholderText(/name/i)).toBeTruthy()
     expect(vi.mocked(acceptTerms)).toHaveBeenCalledTimes(1)
@@ -115,7 +115,7 @@ describe('consent is written once per mount', () => {
 })
 
 describe('resumed after sign-in with a held contract click', () => {
-  it('Back from arrival leaves the contract through the contract-on-file pass', async () => {
+  it('the arrival after a resume has no Back and no second hand-off', async () => {
     vi.stubGlobal('sessionStorage', { getItem: (k: string) => (k === 'wz_terms_accepted' ? 'true' : null), setItem: () => {}, removeItem: () => {} })
     const onAccepted = vi.fn()
     function Host() {
@@ -132,8 +132,10 @@ describe('resumed after sign-in with a held contract click', () => {
     await screen.findByText('King Biscuit has entered World Zero.')
     expect(onAccepted).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: /back/i }))
-    await waitFor(() => expect(onAccepted).toHaveBeenCalledTimes(1))
+    expect(screen.queryByRole('button', { name: /back/i })).toBeNull()
+    expect(screen.queryByText(/loading/i)).toBeNull()
+    expect(acceptTerms).toHaveBeenCalledTimes(1)
+    expect(onAccepted).not.toHaveBeenCalled()
   })
 
   it('a returning player with a character is handed off exactly once', async () => {
@@ -153,7 +155,7 @@ describe('resumed after sign-in with a held contract click', () => {
     expect(onAccepted).toHaveBeenCalledTimes(1)
   })
 
-  it('Back from the character step shows the contract, not a loading line', async () => {
+  it('terms on file and no character goes straight to the form: no Back, no second write', async () => {
     vi.stubGlobal('sessionStorage', { getItem: (k: string) => (k === 'wz_terms_accepted' ? 'true' : null), setItem: () => {}, removeItem: () => {} })
     const user = { ...USER, has_accepted_terms: true } as CurrentUser
     render(
@@ -164,8 +166,30 @@ describe('resumed after sign-in with a held contract click', () => {
       </MemoryRouter>,
     )
     await screen.findByPlaceholderText(/name/i)
+    expect(screen.queryByRole('button', { name: /back/i })).toBeNull()
+    expect(screen.queryByText(/loading/i)).toBeNull()
+    expect(vi.mocked(acceptTerms)).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('terms on file, no character, cold run (O4)', () => {
+  it('skips the contract for the form and writes no second row', async () => {
+    const user = { ...USER, has_accepted_terms: true } as CurrentUser
+    render(
+      <MemoryRouter>
+        <AuthContext.Provider value={{ user, loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
+          <OnboardingFlow resumed={false} onAccepted={vi.fn()} />
+        </AuthContext.Provider>
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByTestId('onboarding-start'))
+    fireEvent.click(screen.getByTestId('onboarding-skip'))
+    expect(await screen.findByPlaceholderText(/name/i)).toBeTruthy()
+    expect(screen.queryByTestId('onboarding-accept-terms')).toBeNull()
+    expect(vi.mocked(acceptTerms)).not.toHaveBeenCalled()
+    // Back lands on the beats, not on a contract that would bounce forward again.
     fireEvent.click(screen.getByRole('button', { name: /back/i }))
-    expect(await screen.findByTestId('onboarding-accept-terms')).toBeTruthy()
+    await waitFor(() => expect(document.querySelector('.ob-next')).toBeTruthy())
   })
 })
 

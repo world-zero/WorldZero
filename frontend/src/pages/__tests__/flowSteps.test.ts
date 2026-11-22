@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { back, decline, initialFlow, next, skip, toArrival, toCharacter, toSignIn, type Flow } from '../onboarding/flowSteps'
+import { back, decline, initialFlow, next, onboardingState, skip, STATE_EXIT, toArrival, toCharacter, toSignIn, type Flow, type Step, type StateInputs } from '../onboarding/flowSteps'
 
 const times = (f: Flow, n: number) => Array.from({ length: n }).reduce<Flow>((acc) => next(acc), f)
 
@@ -32,7 +32,9 @@ describe('flowSteps', () => {
   it('an OAuth resume starts at the contract', () => {
     expect(initialFlow(true).step).toBe('contract')
     expect(initialFlow(false, true).step).toBe('returning')
-    expect(initialFlow(true, true).step).toBe('contract')
+    // A failed OAuth (resume mark + ?login) reopens the sign-in card with the contract behind it (O2).
+    expect(initialFlow(true, true)).toEqual({ step: 'signin', history: ['contract'] })
+    expect(back(initialFlow(true, true)).step).toBe('contract')
   })
 
   it('the contract comes before sign-in, and Back from sign-in returns to it', () => {
@@ -57,5 +59,37 @@ describe('flowSteps', () => {
   it('the creation form is unreachable once a character exists', () => {
     const f = times(initialFlow(false), 8)
     expect(toCharacter(f, true)).toBe(f)
+  })
+})
+
+const STEPS: Step[] = ['title', 1, 4, 7, 'contract', 'declined', 'signin', 'returning', 'character', 'arrival']
+const BOOLS = [false, true]
+
+describe('onboardingState', () => {
+  it('every input combination maps to a state with an exit', () => {
+    let count = 0
+    for (const step of STEPS)
+      for (const stepsLoaded of BOOLS)
+        for (const stepsFailed of BOOLS)
+          for (const authLoading of BOOLS)
+            for (const recording of BOOLS)
+              for (const signedIn of BOOLS)
+                for (const termsOnFile of BOOLS)
+                  for (const creationBanned of BOOLS) {
+                    const i: StateInputs = { step, stepsLoaded, stepsFailed, authLoading, recording, signedIn, termsOnFile, creationBanned }
+                    const s = onboardingState(i)
+                    count++
+                    expect(STATE_EXIT[s], JSON.stringify(i)).toBeTruthy()
+                    // The two pending states can only be produced while something is pending that will clear them.
+                    if (s === 'RECORDING_TERMS') expect(recording).toBe(true)
+                    if (s === 'CONTRACT_ON_FILE') expect(signedIn && termsOnFile).toBe(true)
+                  }
+    expect(count).toBe(STEPS.length * 128)
+  })
+
+  it('a finished recording on a contract with terms on file is the auto hand-off, never a stuck card (#4187)', () => {
+    const base = { step: 'contract', stepsLoaded: true, stepsFailed: false, authLoading: false, signedIn: true, termsOnFile: true, creationBanned: false } as const
+    expect(onboardingState({ ...base, recording: true })).toBe('RECORDING_TERMS')
+    expect(onboardingState({ ...base, recording: false })).toBe('CONTRACT_ON_FILE')
   })
 })

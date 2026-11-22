@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 /** `?login` on /start and the failure notice on the step a failed sign-in resumes at. Seam: `Onboarding` page, router + auth context real. */
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import '../../i18n'
 import { AuthContext } from '../../auth/AuthContext'
 import type { CurrentUser } from '../../api/auth'
-import { markOnboardingHandoff } from '../../utils/onboardingResume'
+import { holdTermsAcceptance, markOnboardingHandoff, termsAcceptanceHeld } from '../../utils/onboardingResume'
 import home from '../../locales/en/home.json'
 import Onboarding from '../Onboarding'
 
@@ -57,11 +57,22 @@ describe('/start?login', () => {
   })
 })
 
-describe('a failed sign-in that resumes at the contract', () => {
-  it('draws the failure notice above the terms card', async () => {
+describe('a failed sign-in that resumes (O2)', () => {
+  it('opens the sign-in card with the failure notice, and Back reaches the contract', async () => {
     markOnboardingHandoff()
     mount('/start?login=required', null)
-    await screen.findByTestId('onboarding-accept-terms')
+    await screen.findByTestId('sign-in-google')
     expect(screen.getByText(home.loginRequired)).toBeTruthy()
+    fireEvent.click(screen.getByTestId('onboarding-back'))
+    await screen.findByTestId('onboarding-accept-terms')
+  })
+
+  it('keeps the held contract click', async () => {
+    markOnboardingHandoff()
+    holdTermsAcceptance()
+    mount('/start?login=required', null)
+    await screen.findByTestId('sign-in-google')
+    await new Promise((r) => setTimeout(r, 20))
+    expect(termsAcceptanceHeld()).toBe(true)
   })
 })
