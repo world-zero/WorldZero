@@ -1,3 +1,4 @@
+import { PlayerLink } from '../../../components/PlayerName'
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -250,7 +251,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
       {/* Stacked discs, one per member; no member rows still credits the creator. */}
       <span style={{ display: 'flex', alignItems: 'center' }}>
         {bylineFaces(praxis).map((author, index) => (
-          <Link
+          <PlayerLink state={author.state}
             key={author.id}
             to={`/characters/${author.id}`}
             style={{
@@ -265,7 +266,7 @@ export default function WowPraxisDetail({ state }: { state: PraxisDetailState })
               avatarUrl={author.avatarUrl}
               size={size.disc}
             />
-          </Link>
+          </PlayerLink>
         ))}
       </span>
       <div style={{ minWidth: 0, flex: 1 }}>

@@ -1,3 +1,4 @@
+import { usePlayerLabel } from "../PlayerName";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -215,14 +216,15 @@ export function PraxisByline({
   divider?: ReactNode;
 }) {
   const authorHref = `/characters/${praxis.created_by_id}`;
-  const authorName = praxis.created_by_display_name || `#${praxis.created_by_id}`;
+  const label = usePlayerLabel();
+  const authorName = label(praxis.created_by_display_name, praxis.created_by_name_state);
   /*
    * #2125: on the author's own character page the name is plain text, not a
    * link to the current page (screen readers still announce one). Compared by
    * whole path, character to character, never by account.
    */
   const here = useLocation().pathname.replace(/\/+$/, "");
-  const onAuthorsOwnPage = here === authorHref;
+  const onAuthorsOwnPage = here === authorHref || praxis.created_by_name_state !== "ok";
   // The 8px is padding on the name, not row `gap` (#1633): a display face's
   // last glyph can overhang its advance width (Poiret One).
   //

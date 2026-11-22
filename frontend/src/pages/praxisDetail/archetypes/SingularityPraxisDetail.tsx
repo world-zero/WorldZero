@@ -1,3 +1,4 @@
+import { PlayerLink } from '../../../components/PlayerName'
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -240,13 +241,13 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
       {/* `bylineFaces` credits the creator even with no member rows. */}
       <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
         {bylineFaces(praxis).map((author) => (
-          <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
+          <PlayerLink state={author.state} key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
             <MemberCell
               name={author.name}
               avatarUrl={author.avatarUrl}
               size={desktop ? 40 : 34}
             />
-          </Link>
+          </PlayerLink>
         ))}
       </span>
       <div style={{ minWidth: 0, flex: 1 }}>

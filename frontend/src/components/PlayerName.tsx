@@ -19,9 +19,12 @@ export function usePlayerLabel(): (name: string, state: NameState) => string {
 /** A link to a player's profile, or plain text when there is no profile to open. */
 export function PlayerLink({
   state,
+  name,
   children,
   ...linkProps
-}: LinkProps & { state: NameState; children?: ReactNode }) {
+}: LinkProps & { state: NameState; name?: string; children?: ReactNode }) {
+  const label = usePlayerLabel()
+  children = name === undefined ? children : label(name, state)
   if (state === 'ok') return <Link {...linkProps}>{children}</Link>
   const { to: _to, className, style, ...rest } = linkProps
   return (

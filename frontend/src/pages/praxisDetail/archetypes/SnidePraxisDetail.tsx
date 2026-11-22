@@ -21,6 +21,7 @@
  * (`--faction-snide-card-accent`). The ground is the column's, not the
  * viewport's (§5, #1028), so `.snide-backdrop` is not used here.
  */
+import { PlayerLink } from '../../../components/PlayerName'
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -272,14 +273,14 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
           credits its creator. */}
       <span style={{ display: "flex", alignItems: "center", gap: "var(--space-xs)" }}>
         {bylineFaces(praxis).map((author, index) => (
-          <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
+          <PlayerLink state={author.state} key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
             <PosterChip
               name={author.name}
               avatarUrl={author.avatarUrl}
               size={desktop ? 44 : 38}
               tilt={index % 2 === 0 ? -3 : 2.5}
             />
-          </Link>
+          </PlayerLink>
         ))}
       </span>
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -300,7 +301,7 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
             }}
           />
         ) : (
-          <Link
+          <PlayerLink state={praxis.created_by_name_state} name={praxis.created_by_display_name}
             to={`/characters/${praxis.created_by_id}`}
             style={{
               fontFamily: TYPE,
@@ -310,8 +311,8 @@ export default function SnidePraxisDetail({ state }: { state: PraxisDetailState 
               borderBottom: "2px solid var(--faction-snide-acid-deep)",
             }}
           >
-            {praxis.created_by_display_name}
-          </Link>
+            
+          </PlayerLink>
         )}
         <div style={{ ...eyebrow, marginTop: "var(--space-xs)" }}>
           {t("detail.filed", {
