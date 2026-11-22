@@ -8,8 +8,8 @@ import pytest
 from models.account import AccountStatus
 from models.character import CharacterStatus
 from services.standing import (
-    AccountStanding as A,
-    LifeStanding as L,
+    AccountStanding,
+    LifeStanding,
     PublicName,
     account_standing,
     counts_as_voter,
@@ -19,6 +19,7 @@ from services.standing import (
     public_name,
 )
 
+A, L = AccountStanding, LifeStanding
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
 
