@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from eras.era_1 import ERA_1
+from models.character import NameState
 from models.duel import DuelStatus
 from models.praxis import PraxisStatus
 from services.activity_feed import _duel_challenge_item
@@ -19,7 +20,7 @@ def _row(age_days, status=DuelStatus.pending):
         forfeited_by_character_id=None, live_at=None, challenger_praxis_id=2,
         task_id=3, challenger_character_id=4, task_title="t", task_point_value=10,
         task_faction_slug="snide", actor_display_name="a", actor_faction_slug="snide",
-        actor_avatar_url=None,
+        actor_avatar_url=None, actor_name_state=NameState.ok,
         challenger_praxis_status=PraxisStatus.in_progress,
         opponent_praxis_status=None,
     )

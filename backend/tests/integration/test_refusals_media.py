@@ -84,6 +84,7 @@ async def test_voter_roster_shape(
             "character_id": character2.id,
             "display_name": character2.display_name,
             "avatar_url": character2.avatar_url,
+            "name_state": "ok",
             "faction_slug": character2.faction_slug,
             "value": vote.value,
         }

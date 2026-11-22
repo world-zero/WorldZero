@@ -17,7 +17,7 @@ const CREATOR_ID = 1;
 const JOINER_ID = 2;
 
 function member(id: number): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,

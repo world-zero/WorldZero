@@ -6,7 +6,7 @@ import { openSideFor, type DuelSideKey } from '../openSide'
 import type { DuelDetailOut, DuelSideOut } from '../../../api/duel'
 
 function side(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
-  return {
+  return { name_state: 'ok',
     avatar_url: '',
     character_id: 1,
     display_name: 'Wren Ashgrove',

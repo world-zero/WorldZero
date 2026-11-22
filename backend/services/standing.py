@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Iterable, Optional
 
 from models.account import AccountStatus
-from models.character import Character, CharacterStatus
+from models.character import Character, CharacterStatus, NameState
 
 
 class AccountStanding(enum.Enum):
@@ -99,3 +99,25 @@ def public_name(name: str, account: AccountStanding, life: LifeStanding) -> Publ
     if account == AccountStanding.SUSPENDED:
         return PublicName(name, True, False)
     return PublicName(name, False, True)
+
+
+@dataclass(frozen=True)
+class PublicIdentity:
+    """A character as others see it. Absent loses name, username and face (S2b);
+    the UI shows the label. Admin surfaces fall back to the id."""
+
+    display_name: str
+    username: str
+    avatar_url: str
+    name_state: NameState
+
+
+def public_identity(character: Character) -> PublicIdentity:
+    # vars(), never getattr: an unloaded or expired name_state would lazy-load from
+    # sync code (MissingGreenlet). A just-created character reads as ok.
+    state = NameState(vars(character).get("name_state", NameState.ok.value))
+    if state == NameState.absent:
+        return PublicIdentity("", "", "", state)
+    return PublicIdentity(
+        character.display_name, character.username, character.avatar_url, state
+    )

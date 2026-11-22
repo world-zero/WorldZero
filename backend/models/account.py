@@ -163,3 +163,30 @@ class AccountTombstone(CreatedAtMixin, Base):
     carried_from_account_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("account.id"), nullable=True
     )
+
+
+# How a character's name shows to others (#4238). Same rule as
+# ``services.standing.public_name``; a test pins the two together. A column so every
+# ORM read of a Character carries it, with no session or Account load.
+from sqlalchemy import case, select  # noqa: E402
+from sqlalchemy.orm import column_property  # noqa: E402
+
+from models.character import Character, CharacterStatus, NameState  # noqa: E402
+
+_owner_status = (
+    select(Account.status)
+    .where(Account.id == Character.account_id)
+    .correlate_except(Account)
+    .scalar_subquery()
+)
+Character.name_state = column_property(
+    case(
+        (
+            (Character.status != CharacterStatus.active)
+            | (_owner_status == AccountStatus.deleted),
+            NameState.absent.value,
+        ),
+        (_owner_status == AccountStatus.suspended, NameState.suspended.value),
+        else_=NameState.ok.value,
+    )
+)

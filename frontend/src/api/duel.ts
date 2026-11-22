@@ -1,4 +1,5 @@
 import { apiGet, apiPost } from './client'
+import { playerLabel } from '../utils/playerLabel'
 import { notifyRequestsChanged } from '../utils/requestsBus'
 import { castTallyClock, clearCastTallies } from '../utils/castTallies'
 import type { components } from './generated/schema'
@@ -40,7 +41,14 @@ export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
     ),
     asked,
   )
-  return data
+  return { ...data, challenger: labelled(data.challenger), opponent: labelled(data.opponent) }
+}
+
+/** Absent or suspended sides read as their label everywhere the page shows a name (#4238). */
+function labelled(side: DuelSideOut): DuelSideOut {
+  return side.name_state === 'ok'
+    ? side
+    : { ...side, display_name: playerLabel(side.display_name, side.name_state) }
 }
 
 export async function respondToChallenge(duelId: number, data: DuelRespondIn): Promise<DuelOut> {

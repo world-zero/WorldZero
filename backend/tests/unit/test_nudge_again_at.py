@@ -16,7 +16,7 @@ def test_again_at_is_nudged_at_plus_cooldown_and_null_with_it():
 
 def test_member_row_carries_both_or_neither():
     class _Char:
-        display_name = "A"
+        display_name = username = "A"
         avatar_url = ""
 
     class _Member:

@@ -1,3 +1,5 @@
+import { playerLabel } from '../../../utils/playerLabel'
+import { PlayerLink } from '../../../components/PlayerName'
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
@@ -110,7 +112,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
   const isMetatask = task.task_type === "metatask";
   const eyebrowFaction = headerFactionName(task);
   const cta = detailSignupCta(state);
-  const authorName = task.created_by_display_name ?? "";
+  const authorName = playerLabel(task.created_by_display_name ?? "", task.created_by_name_state);
   const hasAction =
     !!cta || !!mySubmission || (isInProgress && inProgressPraxisId !== null);
 
@@ -424,7 +426,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             flexWrap: "wrap",
           }}
         >
-          <Link
+          <PlayerLink state={task.created_by_name_state}
             to={`/characters/${task.created_by}`}
             style={{
               display: "flex",
@@ -466,7 +468,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                   boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
                 }}
               >
-                {initialsOf(authorName)}
+                {task.created_by_name_state === "absent" ? "" : initialsOf(task.created_by_display_name ?? "")}
               </span>
             )}
             <span
@@ -479,7 +481,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
             >
               {authorName}
             </span>
-          </Link>
+          </PlayerLink>
           <span style={UA_EYEBROW}>
             {t("detail.author", { level: task.created_by_level ?? 0 })}
           </span>

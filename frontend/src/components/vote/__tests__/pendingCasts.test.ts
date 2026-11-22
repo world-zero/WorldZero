@@ -30,6 +30,7 @@ const ADA = {
   display_name: 'Ada',
   avatar_url: '/ada.png',
   faction_slug: 'coven',
+  name_state: 'ok' as const,
 }
 
 const BRAM: VoterDetail = {
@@ -37,6 +38,7 @@ const BRAM: VoterDetail = {
   display_name: 'Bram',
   avatar_url: '/bram.png',
   faction_slug: 'ephemerists',
+  name_state: 'ok' as const,
   value: 5,
 }
 

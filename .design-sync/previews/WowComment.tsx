@@ -22,7 +22,7 @@ function wowComment(over: Partial<CommentOut>): CommentOut {
     is_edited: false,
     created_at: '2026-06-28T09:12:00Z',
     updated_at: '2026-06-28T09:12:00Z',
-    author: {
+    author: { name_state: 'ok',
       id: 19,
       username: 'pip_marigold',
       display_name: 'Pip Marigold',

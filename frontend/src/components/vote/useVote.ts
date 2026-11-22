@@ -49,6 +49,7 @@ export function useVote(praxisId: number, currentValue?: number) {
             display_name: user.character.display_name,
             avatar_url: user.character.avatar_url,
             faction_slug: user.character.faction_slug,
+            name_state: 'ok',
           }
         : null,
     )

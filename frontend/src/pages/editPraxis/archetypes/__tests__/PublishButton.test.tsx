@@ -22,7 +22,7 @@ import {
 } from "../controls";
 
 function member(id: number, cast: boolean): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,
@@ -109,6 +109,7 @@ function duelSide(characterId: number, submitted: boolean) {
     display_name: `C${characterId}`,
     faction_slug: "na",
     avatar_url: "",
+    name_state: "ok" as const,
     points_from_votes: 0,
     is_submitted: submitted,
     nudged_at: null,

@@ -44,7 +44,7 @@ function makeCharacter(overrides: Partial<CharacterOut> = {}): CharacterOut {
 }
 
 function makePraxis(): PraxisCardOut {
-  return {
+  return { created_by_name_state: 'ok', opponent_name_state: 'ok',
     id: 101,
     task_id: 5,
     task_title: 'Map a hidden gap',
@@ -88,7 +88,7 @@ function makePraxis(): PraxisCardOut {
 }
 
 function makeTask(): TaskOut {
-  return {
+  return { created_by_name_state: 'ok',
     id: 55,
     title: 'Plant a tree',
     description: 'Dig a hole and plant a native sapling.',

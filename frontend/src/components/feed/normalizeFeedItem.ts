@@ -1,4 +1,5 @@
 import type { ActivityFeedItem } from '../../api/activityFeed'
+import { playerLabel } from '../../utils/playerLabel'
 import i18n from '../../i18n'
 import { factionName } from '../../utils/factions'
 import { resolveTaunt } from '../../utils/taunts'
@@ -131,6 +132,12 @@ export function normalizeFeedItem(
   item: ActivityFeedItem,
   commentGate: number | null = null,
 ): FeedRow | null {
+  const row = rowFor(item, commentGate)
+  // An absent or suspended actor has no profile to open (#4238).
+  return row && (item.actor_name_state ?? 'ok') !== 'ok' ? { ...row, actorHref: null } : row
+}
+
+function rowFor(item: ActivityFeedItem, commentGate: number | null): FeedRow | null {
   if (!FACTION_ROW_TYPES.has(item.type)) return null
   const p = item.payload ?? {}
   const actor = item.actor_display_name
@@ -327,7 +334,7 @@ export function normalizeFeedItem(
               id: p.taunt_id,
               faction_slug: p.faction_slug,
               trigger_type: p.trigger_type,
-              from_name: p.from_name ?? actor ?? '',
+              from_name: (item.actor_name_state ?? 'ok') !== 'ok' ? (actor ?? '') : (p.from_name ?? actor ?? ''),
               to_name: p.to_name ?? '',
             })
           : null
@@ -367,7 +374,9 @@ export function normalizeFeedItem(
         actor,
         actorHref:
           p.challenger_character_id != null ? `/characters/${p.challenger_character_id}` : null,
-        action: i18n.t('feed:row.action.duelLive', { opponent: p.opponent_display_name ?? '' }),
+        action: i18n.t('feed:row.action.duelLive', {
+          opponent: playerLabel(p.opponent_display_name ?? '', p.opponent_name_state ?? 'ok'),
+        }),
         badge: { type: 'duel', label: i18n.t('feed:badge.duel') },
         headline: p.task_title ?? null,
         headlineHref: p.duel_id != null ? `/duel/${p.duel_id}` : null,

@@ -23,7 +23,7 @@ function uaComment(over: Partial<CommentOut>): CommentOut {
     is_edited: false,
     created_at: '2026-06-28T09:12:00Z',
     updated_at: '2026-06-28T09:12:00Z',
-    author: {
+    author: { name_state: 'ok',
       id: 7,
       username: 'ada_reed',
       display_name: 'Ada Reed',
@@ -60,7 +60,7 @@ export function ThreadedWithMention() {
     is_edited: true,
     created_at: '2026-07-01T15:04:00Z',
     updated_at: '2026-07-01T15:04:00Z',
-    mentions: [{ character_id: 19, username: 'pip_marigold', display_name: 'Pip Marigold' }],
+    mentions: [{ name_state: 'ok', character_id: 19, username: 'pip_marigold', display_name: 'Pip Marigold' }],
   })
   return (
     <div style={wrap}>

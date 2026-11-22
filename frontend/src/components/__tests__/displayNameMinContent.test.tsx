@@ -32,7 +32,7 @@ function expectBreakable(style: string) {
 }
 
 function member(id: number, displayName: string): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,

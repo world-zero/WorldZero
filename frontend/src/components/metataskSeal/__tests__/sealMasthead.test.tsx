@@ -23,7 +23,7 @@ import type { TaskOut } from '../../../api/tasks'
 const SLUGS = FACTION_MANIFESTS.map((manifest) => manifest.slug).sort()
 
 function metatask(slug: string): TaskOut {
-  return {
+  return { created_by_name_state: 'ok',
     id: 42,
     title: 'Sealmark',
     description: '',

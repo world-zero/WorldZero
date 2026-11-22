@@ -9,7 +9,7 @@ const ME = 1;
 const THEM = 2;
 
 function member(id: number, hasSubmitted: boolean): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,

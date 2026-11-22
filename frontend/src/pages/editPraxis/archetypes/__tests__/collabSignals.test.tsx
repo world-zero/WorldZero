@@ -38,7 +38,7 @@ function member(
   id: number,
   over: Partial<PraxisMemberOut> = {},
 ): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id,
     praxis_id: 1,
     character_id: id,

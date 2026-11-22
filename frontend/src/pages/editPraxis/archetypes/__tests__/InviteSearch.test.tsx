@@ -24,7 +24,7 @@ function duelSide(
   name: string,
   isSubmitted = false,
 ): DuelSideOut {
-  return {
+  return { name_state: 'ok',
     praxis_id: characterId,
     character_id: characterId,
     display_name: name,
@@ -161,7 +161,7 @@ function member(
   name: string,
   hasSubmitted = false,
 ): PraxisMemberOut {
-  return {
+  return { character_name_state: 'ok',
     id: characterId * 10,
     praxis_id: 1,
     character_id: characterId,
@@ -177,7 +177,7 @@ function member(
 }
 
 function pendingInvite(name: string): PraxisInviteOut {
-  return {
+  return { invitee_name_state: 'ok',
     id: 55,
     praxis_id: 1,
     inviter_id: 1,

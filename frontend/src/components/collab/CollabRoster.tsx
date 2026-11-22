@@ -9,6 +9,7 @@
  * Pure display (#646): the cast / pull-back action lives in PublishButton.
  * Every word resolves through `collabCopy(factionSlug, key)`.
  */
+import { playerLabel } from '../../utils/playerLabel'
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -355,7 +356,11 @@ export function CollabRoster({
                   `RosterAvatar` stays aria-hidden. Only members can light up. */}
               <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
                 <RosterAvatar
-                  name={row.name}
+                  name={
+                    (row.member?.character_name_state ?? row.invite?.invitee_name_state) === 'absent'
+                      ? ''
+                      : row.name
+                  }
                   avatarUrl={row.avatarUrl}
                   size={AVATAR_SIZE}
                   borderColor={done ? accent : quiet}
@@ -535,7 +540,7 @@ export function CollabRoster({
         <ConfirmDialog
           request={kickMemberConfirm(
             factionSlug,
-            pendingKick.character_display_name,
+            playerLabel(pendingKick.character_display_name, pendingKick.character_name_state),
           )}
           factionSlug={factionSlug}
           onConfirm={confirmKick}

@@ -20,7 +20,7 @@ const COMMENT: CommentOut = {
   is_edited: false,
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
-  author: {
+  author: { name_state: 'ok',
     id: 42,
     username: 'ada',
     display_name: 'Adabel',
@@ -80,7 +80,7 @@ describe('DefaultComment — the na tells', () => {
     const html = row({
       ...COMMENT,
       body_text: 'thank you @bo',
-      mentions: [{ character_id: 9, username: 'bo', display_name: 'Bo' }],
+      mentions: [{ name_state: 'ok', character_id: 9, username: 'bo', display_name: 'Bo' }],
     })
     expect(html).toContain('rainbow-ink')
     expect(html).toContain('href="/characters/9"')

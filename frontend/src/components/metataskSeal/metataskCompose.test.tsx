@@ -17,7 +17,7 @@ function metatask(
   title: string,
   points: number,
 ): TaskOut {
-  return {
+  return { created_by_name_state: 'ok',
     id,
     title,
     description: `${title} — do the extra thing`,

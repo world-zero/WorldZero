@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import ConfigDict, Field, TypeAdapter, computed_field
+from models.character import NameState
 from schemas.base import WireModel
 from services.duel_state import DuelState
 
@@ -129,6 +130,7 @@ class DuelLivePayload(FeedPayloadBase):
     opponent_display_name: str
     opponent_faction_slug: str
     opponent_avatar_url: str
+    opponent_name_state: NameState = NameState.ok
     task_title: str
     task_point_value: int
     task_faction_slug: str
@@ -253,6 +255,7 @@ class FeedItemBase(WireModel):
     actor_display_name: Optional[str] = None
     actor_faction_slug: Optional[str] = None
     actor_avatar_url: Optional[str] = None
+    actor_name_state: NameState = NameState.ok
     payload: FeedPayload
 
     @computed_field  # type: ignore[prop-decorator]

@@ -5,6 +5,7 @@
  * centred panel (#494); continue is manual, never a timer. Chrome mirrors
  * LevelUpPopup: dim overlay, role="dialog", autofocused primary, `useModal` trap.
  */
+import { playerLabel } from '../../utils/playerLabel'
 import type { PraxisMemberOut, PraxisOut } from '../../api/praxis'
 import { drawAtRoot } from '../ui/drawAtRoot'
 import { useModal } from '../../hooks/useModal'
@@ -102,7 +103,7 @@ export function CollabSuccess({
                   fontWeight: member.character_id === currentCharacterId ? 700 : 400,
                 }}
               >
-                {member.character_display_name}
+                {playerLabel(member.character_display_name, member.character_name_state)}
               </span>
               {taskPointValue != null && (
                 <span

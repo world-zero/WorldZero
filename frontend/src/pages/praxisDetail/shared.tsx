@@ -9,10 +9,10 @@
  * praxes belong to the composer's waiting surface (#1071). Score: mount
  * `ScoreStamp` (ADR-0053); do not re-derive points here.
  */
+import { PlayerLink, usePlayerLabel, type NameState } from '../../components/PlayerName'
 import { CARD_CTA } from '../../components/ctaTapFloor'
 import type { CSSProperties, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import CommentThread from '../../components/comments/CommentThread'
 import DuelSealConfirm from '../../components/duel/DuelSealConfirm'
 import type { PraxisDetailState } from './usePraxisDetail'
@@ -92,6 +92,7 @@ interface BylineFace {
   name: string
   /** Raw wire path (archetype calls `mediaUrl()`); `''` means draw the monogram. */
   avatarUrl: string
+  state: NameState
 }
 
 /**
@@ -108,14 +109,20 @@ export function bylineFaces(praxis: PraxisOut): BylineFace[] {
     return [
       {
         id: praxis.created_by_id,
-        name: praxis.created_by_display_name,
+        name: praxis.created_by_name_state === 'absent' ? '' : praxis.created_by_display_name,
         avatarUrl: portrait,
+        state: praxis.created_by_name_state,
       },
     ]
   }
   return members.map((member) => ({
     id: member.character_id,
-    name: member.character_display_name || `#${member.character_id}`,
+    // Absent: no name to take initials from, so the disc stays face-less.
+    name:
+      member.character_name_state === 'absent'
+        ? ''
+        : member.character_display_name || `#${member.character_id}`,
+    state: member.character_name_state,
     // `|| ''`: a row cached before #2318 lacks the key; heals on next fetch.
     avatarUrl: member.character_avatar_url || '',
   }))
@@ -137,6 +144,7 @@ export function MemberByline({
   /** Optional wrapper for each display name (e.g. Singularity's `NODE_` prefix). */
   renderName?: (name: string) => ReactNode
 }) {
+  const label = usePlayerLabel()
   const members = orderedMembers(praxis)
   const sepStyle = separatorStyle ?? linkStyle
 
@@ -150,7 +158,7 @@ export function MemberByline({
       }}
     >
       {members.map((member, index) => {
-        const name = member.character_display_name || `#${member.character_id}`
+        const name = label(member.character_display_name, member.character_name_state)
         return (
           <span key={member.character_id}>
             {index > 0 && (
@@ -158,13 +166,14 @@ export function MemberByline({
                 {index === members.length - 1 ? ' & ' : ', '}
               </span>
             )}
-            <Link
+            <PlayerLink
+              state={member.character_name_state}
               to={`/characters/${member.character_id}`}
               className={linkClassName}
               style={linkStyle}
             >
               {renderName ? renderName(name) : name}
-            </Link>
+            </PlayerLink>
           </span>
         )
       })}

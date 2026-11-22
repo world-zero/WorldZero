@@ -139,8 +139,8 @@ describe('bylineFaces', () => {
       }),
     )
     expect(faces).toEqual([
-      { id: AUTHOR.id, name: NAME, avatarUrl: PORTRAIT },
-      { id: CREWMATE.id, name: CREWMATE.name, avatarUrl: CREWMATE.portrait },
+      { id: AUTHOR.id, name: NAME, avatarUrl: PORTRAIT, state: 'ok' },
+      { id: CREWMATE.id, name: CREWMATE.name, avatarUrl: CREWMATE.portrait, state: 'ok' },
     ])
   })
 
@@ -151,7 +151,7 @@ describe('bylineFaces', () => {
     const faces = bylineFaces(
       aPraxis({ created_by_avatar_url: PORTRAIT, members: [stale] }),
     )
-    expect(faces).toEqual([{ id: AUTHOR.id, name: NAME, avatarUrl: '' }])
+    expect(faces).toEqual([{ id: AUTHOR.id, name: NAME, avatarUrl: '', state: 'ok' }])
   })
 
   it('credits the creator when the payload carries no member rows', () => {
@@ -162,7 +162,7 @@ describe('bylineFaces', () => {
         members: [],
       }),
     )
-    expect(faces).toEqual([{ id: AUTHOR.id, name: NAME, avatarUrl: PORTRAIT }])
+    expect(faces).toEqual([{ id: AUTHOR.id, name: NAME, avatarUrl: PORTRAIT, state: 'ok' }])
   })
 
   it('falls back to `#id` for a member with no display name', () => {
@@ -172,6 +172,6 @@ describe('bylineFaces', () => {
         members: [aMember({ character_display_name: '' })],
       }),
     )
-    expect(faces).toEqual([{ id: AUTHOR.id, name: `#${AUTHOR.id}`, avatarUrl: '' }])
+    expect(faces).toEqual([{ id: AUTHOR.id, name: `#${AUTHOR.id}`, avatarUrl: '', state: 'ok' }])
   })
 })

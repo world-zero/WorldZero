@@ -21,6 +21,7 @@
  * Renders purely from props plus injectable `autoSubmitDays`/`now`, for the
  * effect-less harness.
  */
+import { playerLabel } from '../../../utils/playerLabel'
 import { duelPreLive } from '../../../components/duel/duelState'
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -451,7 +452,7 @@ export default function PraxisWaitingSurface({
   /** Names who still owes an approval (#1952, `waitingOnHeading`); fallback unreachable. */
   const outstanding = praxis.members
     .filter((member) => !member.has_approved)
-    .map((member) => member.character_display_name);
+    .map((member) => playerLabel(member.character_display_name, member.character_name_state));
   const crewHeading = waitingOnHeading(slug, outstanding);
   const heading = completed
     ? collabCopy(slug, isDuel ? "duelCompletedHeading" : "completedHeading")

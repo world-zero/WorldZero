@@ -10,6 +10,7 @@
  * colour, never an ink. `PraxisDetailSkin` owns the layout and the undressed
  * chrome (#2718); this file supplies the kit.
  */
+import { PlayerLink } from '../../../components/PlayerName'
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -297,13 +298,13 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
     >
       <span style={{ display: "flex", alignItems: "center", gap: "var(--space-sm)" }}>
         {authors.map((author) => (
-          <Link key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
+          <PlayerLink state={author.state} key={author.id} to={`/characters/${author.id}`} style={{ display: "block" }}>
             <AuthorOctagon
               name={author.name}
               avatarUrl={author.avatarUrl}
               size={size.disc}
             />
-          </Link>
+          </PlayerLink>
         ))}
       </span>
       <div style={{ minWidth: 0, flex: 1 }}>
@@ -318,7 +319,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
             }}
           />
         ) : (
-          <Link
+          <PlayerLink state={praxis.created_by_name_state} name={praxis.created_by_display_name}
             to={`/characters/${praxis.created_by_id}`}
             style={{
               fontFamily: READING,
@@ -327,8 +328,8 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
               textDecoration: "none",
             }}
           >
-            {praxis.created_by_display_name}
-          </Link>
+            
+          </PlayerLink>
         )}
         <div style={{ ...eyebrow, marginTop: "var(--space-xs)" }}>
           {t("detail.filed", {
@@ -431,7 +432,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 gap: "var(--space-sm)",
               }}
             >
-              <Link
+              <PlayerLink
+                state={voter.name_state}
+                name={voter.display_name}
                 to={`/characters/${voter.character_id}`}
                 style={{
                   flex: "0 1 auto",
@@ -444,9 +447,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   color: INK,
                   textDecoration: "none",
                 }}
-              >
-                {voter.display_name}
-              </Link>
+              />
               <span aria-hidden style={{ flex: 1, minWidth: 10, height: 1, background: LINE }} />
               <span
                 className={metalWordFits ? undefined : "sr-only"}
