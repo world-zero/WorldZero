@@ -54,7 +54,7 @@ describe('UA draws a join block like any other faction', () => {
     expect(out).toContain(REGISTRY_HEADING)
     expect(out).toContain('I dunno, you&#x27;re here I guess?')
     // Whole line: a stray `{" "}` once shifted the `<1>` child so i18next dropped it.
-    expect(out).toContain('Standing · practising')
+    expect(out).toContain('Standing · practicing')
   })
 
   it('offers an invited viewer the practice', () => {
