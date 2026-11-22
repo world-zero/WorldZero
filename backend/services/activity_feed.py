@@ -7,6 +7,7 @@ ADR-0036: each type is one ``FeedSource`` in ``FEED_SOURCES``. Badge counts are
 import logging
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
 from pydantic import ValidationError
@@ -754,6 +755,7 @@ def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
 
 def _duel_challenges_query(ctx: FeedContext) -> Select:
     """Duel challenges issued to the current character (ADR-0011, Duel table)."""
+    opponent_praxis = aliased(Praxis)
     query = (
         select(
             Duel.id,
@@ -762,6 +764,8 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
             Duel.forfeited_by_character_id,
             Duel.live_at,
             Duel.challenger_praxis_id,
+            Praxis.status.label("challenger_praxis_status"),
+            opponent_praxis.status.label("opponent_praxis_status"),
             Duel.task_id,
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
@@ -772,6 +776,7 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
             Character.avatar_url.label("actor_avatar_url"),
         )
         .join(Praxis, Duel.challenger_praxis_id == Praxis.id)
+        .outerjoin(opponent_praxis, Duel.opponent_praxis_id == opponent_praxis.id)
         .join(Task, Duel.task_id == Task.id)
         .join(Character, Praxis.created_by_id == Character.id)
         .where(
@@ -792,9 +797,14 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
 def _duel_challenge_item(
     row: Any, era: EraConfig = CURRENT_ERA
 ) -> ActivityFeedItemDC:
-    # ponytail: no praxis rows here, so a live duel may read drafting rather than
-    # one_cast; the card only cares challenged vs dissolved vs the rest.
-    state = duel_state(row, None, None, datetime.now(timezone.utc), era)
+    # duel_state reads only .status off each praxis.
+    state = duel_state(
+        row,
+        SimpleNamespace(status=row.challenger_praxis_status),
+        SimpleNamespace(status=row.opponent_praxis_status),
+        datetime.now(timezone.utc),
+        era,
+    )
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_DUEL_CHALLENGE,
         item_key=build_item_key(FEED_ITEM_TYPE_DUEL_CHALLENGE, row.id),
