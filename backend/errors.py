@@ -65,7 +65,6 @@ class ErrorCode(str, enum.Enum):
     invite_target_has_active_praxis = "INVITE_TARGET_HAS_ACTIVE_PRAXIS"
     invite_faction_not_permitted = "INVITE_FACTION_NOT_PERMITTED"
     invite_praxis_submitted = "INVITE_PRAXIS_SUBMITTED"
-    #: S3 (#4204). The inviter was banned, suspended or deleted since inviting.
     invite_inviter_gone = "INVITE_INVITER_GONE"
 
     # -- Media limits -------------------------------------------------------
@@ -201,9 +200,7 @@ class ErrorCode(str, enum.Enum):
     oauth_state_expired = "OAUTH_STATE_EXPIRED"
     #: #2162. The provider pair resolved to a suspended Account.
     account_suspended = "ACCOUNT_SUSPENDED"
-    #: S5 (#4204). A write from an account that has not accepted the current terms.
     terms_required = "TERMS_REQUIRED"
-    #: S1 (#4204). A write by an account with a mod-banned life.
     account_banned = "ACCOUNT_BANNED"
     #: #2162. Not folded into account_suspended: a self-made tombstone
     #: (ADR-0081), not an appealable moderation. Unreachable today, since

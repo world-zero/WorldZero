@@ -71,13 +71,12 @@ async def get_current_account_optional(
 
 
 _READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
-# Writes an account may make before accepting terms (S5, #4204): signing in and
-# out, accepting, the public contact and unsubscribe forms, and leaving.
+# Writes allowed without accepted terms: sign-in/out, accepting, public forms, leaving.
 _TERMS_EXEMPT_PREFIXES = ("/auth", "/terms", "/contact", "/email")
 _TERMS_EXEMPT_ROUTES = frozenset({("DELETE", "/me/account")})
 
 
-# Refused by their own coded rule (creation ban, not-your-life), so the gate stays out.
+# These keep their own coded refusals.
 _BAN_OWN_ROUTES = frozenset({("POST", "/characters"), ("POST", "/me/active-character")})
 
 
@@ -103,7 +102,6 @@ async def require_terms(
         return
     if not await has_current_terms(account.id, session):
         raise_coded(403, ErrorCode.terms_required, "Accept the terms to continue.")
-    # S1: a mod ban on any life stops the account's writes, whichever life is carried.
     if (request.method, path) not in _BAN_OWN_ROUTES and await has_mod_banned_life(
         account.id, session
     ):
