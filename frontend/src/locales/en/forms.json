@@ -153,6 +153,7 @@
       "duelVersus": "vs",
       "statusAccepted": "Challenge accepted",
       "statusChallenged": "Challenge sent",
+      "duelWaitingForAccept": "Waiting for them to accept before you can submit.",
       "statusPending": "pending",
       "statusSubmitted": "submitted",
       "cancelChallengeAria": "cancel challenge",

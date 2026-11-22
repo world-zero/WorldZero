@@ -644,6 +644,7 @@ export default function EphemeristsEditPraxis({ state }: Props) {
               />
               <DropButton
                 praxis={praxis}
+                duel={state.duel}
                 currentCharacterId={state.currentCharacterId}
                 cancel={state.cancel}
                 skin={{

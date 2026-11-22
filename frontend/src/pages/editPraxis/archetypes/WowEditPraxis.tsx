@@ -591,6 +591,7 @@ export default function WowEditPraxis({ state }: Props) {
               />
               <DropButton
                 praxis={praxis}
+                duel={state.duel}
                 currentCharacterId={state.currentCharacterId}
                 cancel={state.cancel}
                 skin={{
