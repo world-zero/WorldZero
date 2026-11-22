@@ -1,10 +1,12 @@
 import { test, expect, type Page } from '@playwright/test'
-import { appendFileSync } from 'node:fs'
+import { appendFileSync, mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 
 import forms from '../src/locales/en/forms.json' with { type: 'json' }
 import { scanPageForContrast, type Finding } from '../src/utils/contrastScan'
 import {
   assessSweep,
+  pairingRows,
   routesFor,
   SWEEP_FACTIONS,
   SWEEP_THEMES,
@@ -27,6 +29,8 @@ import {
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:8000'
 const BASELINE_OUT = process.env.CONTRAST_BASELINE_OUT
+// JSON lines, one per measured pairing, passes too; the contrast workflow uploads it.
+const PAIRINGS_OUT = process.env.CONTRAST_PAIRINGS_OUT ?? 'test-results/contrast-pairings.jsonl'
 
 // From the catalogue (ADR-0032) so a copy edit can't silently deselect the field.
 const LOCATION_PLACEHOLDER = forms.character.locationPlaceholder
@@ -85,6 +89,12 @@ for (const faction of SWEEP_FACTIONS) {
         const verdict = assessSweep({ faction, theme, viewport }, findings)
 
         if (BASELINE_OUT) appendFileSync(BASELINE_OUT, verdict.baselineEntries.join(''))
+
+        mkdirSync(dirname(PAIRINGS_OUT), { recursive: true })
+        appendFileSync(
+          PAIRINGS_OUT,
+          pairingRows({ faction, theme, viewport }, findings).map((row) => `${JSON.stringify(row)}\n`).join(''),
+        )
 
         // Always print what went unchecked, even when green (#1675).
         for (const report of verdict.reports) console.log(report)

@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { assessSweep, routesFor, SWEEP_FACTIONS, SWEEP_VIEWPORTS } from "../contrastSweep";
+import { assessSweep, pairingRows, routesFor, SWEEP_FACTIONS, SWEEP_VIEWPORTS } from "../contrastSweep";
 import type { Finding } from "../contrastScan";
 
 function finding(overrides: Partial<Finding> = {}): Finding {
@@ -55,6 +55,16 @@ function unmeasurable(css: string): Finding {
 }
 
 const run = { faction: "snide", theme: "dark", viewport: "desktop" } as const;
+
+describe("pairingRows", () => {
+  it("emits a row for a passing pairing, one per distinct pairing, and null ratio for unresolved", () => {
+    const rows = pairingRows(run, [finding(), finding(), finding({ background: null, ratio: 0 })]);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ ...run, ratio: 21, required: 4.5, pass: true, count: 2 });
+    expect(rows[1]).toMatchObject({ ground: null, ratio: null, pass: null });
+  });
+});
 
 describe("assessSweep", () => {
   it("fails a measured pairing below AA, and reports each distinct one once", () => {
