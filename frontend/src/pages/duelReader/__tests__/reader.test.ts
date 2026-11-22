@@ -34,6 +34,7 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     task_id: 101,
     status: 'settled',
     forfeited_by_character_id: null,
+    state: "drafting",
     cast_clock_started_at: null,
     winner_character_id: null,
     challenger_final_points: null,

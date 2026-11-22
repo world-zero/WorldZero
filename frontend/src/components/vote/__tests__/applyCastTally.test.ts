@@ -78,6 +78,7 @@ const DUEL: DuelDetailOut = {
   id: 5,
   task_id: 2,
   status: 'settled',
+  state: 'live',
   forfeited_by_character_id: null,
   cast_clock_started_at: null,
   challenger: MINE_SIDE,

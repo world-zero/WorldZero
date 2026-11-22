@@ -149,6 +149,7 @@ function duelState(
     id: 7,
     task_id: 3,
     status: duelStatus,
+    state: "drafting",
     forfeited_by_character_id: null,
     cast_clock_started_at: null,
     challenger: duelSide(1, overrides.isPublished ?? true),
