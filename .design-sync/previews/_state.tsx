@@ -197,6 +197,7 @@ export function editPraxisState(slug: string): EditPraxisState {
     inviteQuery: '',
     setInviteQuery: noop,
     inviteResults: [],
+    staged: null,
     inviteOpen: false,
     setInviteOpen: noop,
     inviting: false,

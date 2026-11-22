@@ -5,7 +5,7 @@
 import { useTranslation } from "react-i18next";
 import { factionFill } from "../../utils/factions";
 
-const BUTTON_BASE: React.CSSProperties = {
+export const BUTTON_BASE: React.CSSProperties = {
   fontFamily: "var(--font-body)",
   fontSize: "var(--text-md)",
   textTransform: "uppercase",

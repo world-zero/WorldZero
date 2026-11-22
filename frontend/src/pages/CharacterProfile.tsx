@@ -25,6 +25,8 @@ import { useOwnProposals } from "./characterProfile/useOwnProposals";
 import { ProposalActionsContext } from "../components/taskCard/proposalActions";
 import RelationshipBlockControl from "./characterProfile/RelationshipBlockControl";
 import AddRelationshipButtons from "./characterProfile/AddRelationshipButtons";
+import ChallengeInviteButtons from "./characterProfile/ChallengeInviteButtons";
+import { levelWithUnlock } from "../hooks/useCommentGate";
 import { useAuth } from "../auth/AuthContext";
 import { useGameConfig } from "../hooks/useGameConfig";
 import { useTaskSignup } from "../hooks/useTaskSignup";
@@ -288,6 +290,16 @@ export default function CharacterProfile() {
             </button>
           </>
         )}
+        <ChallengeInviteButtons
+            blocked={blocked}
+            targetCharacterId={character.id}
+            viewerCharacterId={user.character.id}
+            viewerLevel={user.character.level}
+            duelLevelRequired={gameConfig?.duel_level_required ?? null}
+            collabLevelRequired={levelWithUnlock(gameConfig, "start_collaboration")}
+            targetDisplayName={character.display_name}
+            factionSlug={character.faction_slug}
+          />
         {/* Unconditional: the control owns its own visibility. */}
         <RelationshipBlockControl
           viewerCharacterId={user?.character?.id}

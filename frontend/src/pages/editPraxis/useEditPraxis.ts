@@ -14,8 +14,8 @@
  * praxis and error line via `reportOutcome` (#2945). Mount-time request ORDER
  * matters (#1379).
  */
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { roomEndReason } from "./roomSeal";
 import {
   changePraxisType,
@@ -35,7 +35,7 @@ import {
   getDuelDetail,
   type DuelDetailOut,
 } from "../../api/duel";
-import type { CharacterOut } from "../../api/characters";
+import { getCharacter, type CharacterOut } from "../../api/characters";
 import { deriveCollabGate } from "../../components/collab/CollabRoster";
 import { deriveEditPraxisPhase } from "./editPraxisPhase";
 import { discardRoomStore, dropStaleRoomStores, roomState } from "./roomStore";
@@ -273,6 +273,8 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     inviteQuery,
     setInviteQuery,
     inviteResults,
+    staged,
+    setStaged,
     inviteOpen,
     setInviteOpen,
     inviting,
@@ -628,6 +630,22 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     [praxis, duel, askConfirm],
   );
 
+  // A profile's Challenge/Invite lands here (#3772): open that tab and stage the
+  // player (`with` is a character id) for a one-tap send. Consumed once, so a
+  // reload or a back-step can't flip the praxis again.
+  const [handoff, setHandoff] = useSearchParams();
+  const handoffDone = useRef(false);
+  useEffect(() => {
+    const mode = handoff.get("mode");
+    const who = Number(handoff.get("with"));
+    if (!praxis || handoffDone.current || (mode !== "duel" && mode !== "collab")) return;
+    handoffDone.current = true;
+    setHandoff({}, { replace: true });
+    void changeMode(mode).then(async () => {
+      if (who) setStaged(await getCharacter(who).catch(() => null));
+    });
+  }, [praxis, handoff, setHandoff, changeMode, setStaged]);
+
   // The room closed on us (kick or seal): refetch so the page catches up and
   // the composer can say which. A failed refetch reads as removed.
   const characterId = user?.character?.id;
@@ -721,6 +739,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     inviteQuery,
     setInviteQuery,
     inviteResults,
+    staged,
     inviteOpen,
     setInviteOpen,
     inviting,

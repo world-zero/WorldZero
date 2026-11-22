@@ -238,6 +238,7 @@ export function InviteSearch({
   inviteQuery,
   setInviteQuery,
   inviteResults,
+  staged,
   inviteOpen,
   setInviteOpen,
   inviting,
@@ -258,6 +259,7 @@ export function InviteSearch({
   | "inviteQuery"
   | "setInviteQuery"
   | "inviteResults"
+  | "staged"
   | "inviteOpen"
   | "setInviteOpen"
   | "inviting"
@@ -335,6 +337,35 @@ export function InviteSearch({
               </div>
             )}
       </div>
+      {staged && !challengeAttached && (
+        <button
+          type="button"
+          data-testid="composer-invite-staged"
+          disabled={inviting}
+          onClick={() => void onPick(staged)}
+          className="font-body"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-sm)",
+            marginBottom: "var(--space-sm)",
+            padding: "var(--space-sm) var(--space-md)",
+            background: "transparent",
+            color: skin.inputColor ?? "inherit",
+            border: skin.inputBorder ?? "1px solid currentColor",
+            cursor: inviting ? "wait" : "pointer",
+            fontFamily: skin.fontFamily,
+          }}
+        >
+          <FactionAvatar character={staged} size="sm" />
+          {t(
+            duelMode
+              ? "editPraxis.invite.stagedDuel"
+              : "editPraxis.invite.stagedCollab",
+            { name: staged.display_name },
+          )}
+        </button>
+      )}
       {/* The `+ invite` chip (#1417), in the roster's quiet tier and corner
           from the skin (#2267, #2269), never the task's faction. */}
       {!duelMode && !pickerOpen && (
