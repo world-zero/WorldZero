@@ -82,9 +82,8 @@ def test_collab_state(status, members, expected):
 
 
 @pytest.mark.parametrize("status", [IP, PE, SU])
-def test_empty_collab_raises(status):
-    # TODO(#4201): EMPTY must become unreachable; then this test goes.
-    with pytest.raises(ValueError):
+def test_empty_collab_is_unreachable(status):
+    with pytest.raises(AssertionError):
         collab_state(_collab(status, 0))
 
 

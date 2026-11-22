@@ -119,6 +119,8 @@
     "PRAXIS_NEEDS_PROOF_delete": "A published praxis keeps at least one photo, video or audio file.",
     "UNDER_REVIEW": "A moderator is reviewing this, so it can't be changed right now.",
     "PRAXIS_ALREADY_LIVE": "This praxis is already live. Reopen it to edit it.",
+    "COLLAB_LAST_MEMBER": "You are the last one on this collab, so you can't leave it. Delete it instead.",
+    "COLLAB_LIVE_LOCKED": "This collab is live. Reopen it first to change its photos.",
     "PRAXIS_ROOM_UNAVAILABLE": "The shared draft is not ready yet. Try again in a moment.",
     "PRAXIS_POST_COOLDOWN": "You can post again at {{next_post_at}}.",
     "GOOGLE_PHOTOS_UNAVAILABLE": "Google Photos is only available when you sign in with Google.",

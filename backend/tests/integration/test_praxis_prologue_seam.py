@@ -76,7 +76,8 @@ async def test_media_upload_settles_the_lapsed_window(
         headers=auth_headers,
     )
 
-    assert response.status_code == 201, response.text
+    # Settled first, so the silence-won collab is LIVE and its media is locked (#4201).
+    assert response.status_code == 409, response.text
     assert await _submitted_at(db_session, praxis_collab.id) is not None, (
         "the lapsed window was never sealed — the upload cancelled a publish "
         "the collab had already won by silence"
@@ -100,7 +101,8 @@ async def test_media_batch_settles_the_lapsed_window(
         headers=auth_headers,
     )
 
-    assert response.status_code == 201, response.text
+    # Settled first, so the silence-won collab is LIVE and its media is locked (#4201).
+    assert response.status_code == 409, response.text
     assert await _submitted_at(db_session, praxis_collab.id) is not None
 
 
@@ -127,7 +129,7 @@ async def test_media_delete_settles_the_lapsed_window(
         f"/praxes/{praxis_collab.id}/media/{media_id}", headers=auth_headers
     )
 
-    assert response.status_code == 204, response.text
+    assert response.status_code == 409, response.text
     assert await _submitted_at(db_session, praxis_collab.id) is not None
 
 

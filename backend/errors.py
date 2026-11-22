@@ -82,6 +82,10 @@ class ErrorCode(str, enum.Enum):
     praxis_doc_update_too_large = "PRAXIS_DOC_UPDATE_TOO_LARGE"
     #: 409: a submit carried a draft for a praxis that is already published.
     praxis_already_live = "PRAXIS_ALREADY_LIVE"
+    #: 409: a collab's last member can't leave; delete it instead (#4201).
+    collab_last_member = "COLLAB_LAST_MEMBER"
+    #: 409: a live collab's media is locked until a member reopens it (#4201).
+    collab_live_locked = "COLLAB_LIVE_LOCKED"
     #: 503: the shared draft's room did not come up in time; try again.
     praxis_room_unavailable = "PRAXIS_ROOM_UNAVAILABLE"
     #: 429. ``params``: ``hours`` until the next post, ``next_post_at`` (ISO).

@@ -293,6 +293,8 @@ export function InviteSearch({
   const canLeaveCollab =
     !duelMode &&
     praxis.type === "collab" &&
+    // The last member deletes instead (#4201).
+    praxis.members.length > 1 &&
     praxis.members.some((member) => member.character_id === currentCharacterId);
   // `collab.fontFamily` overrides when the roster's voice differs from the box's.
   const collabSkin: CollabSkin = { fontFamily: skin.fontFamily, ...skin.collab };

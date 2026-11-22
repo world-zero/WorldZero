@@ -53,6 +53,7 @@ from services.character_stats import (
     recalculate_members_stats,
 )
 from services.collab_consensus import _lock_praxis
+from services.collab_state import COLLAB_ALLOWED_FROM, CollabState, collab_state
 from services.duel_state import ALLOWED_FROM, DuelState
 from services.era import (
     get_current_era_row,
@@ -714,8 +715,7 @@ async def unsubmit_praxis(
 
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
-    for member in praxis.members:
-        member.has_approved = False
+    collab_consensus.clear_approvals(praxis)
     await session.flush()
     # The room reseeds from body_text on first connect (ADR-0073 rule 7).
 
@@ -833,6 +833,18 @@ async def _next_media_display_order(praxis_id: int, session: AsyncSession) -> in
     return 0 if highest is None else highest + 1
 
 
+def refuse_live_collab_media(praxis: Praxis) -> None:
+    """Q6: a published collab's media changes only after a member reopens it."""
+    if praxis.type == PraxisType.collab and (
+        collab_state(praxis) not in COLLAB_ALLOWED_FROM["media"]
+    ):
+        raise_coded(
+            409,
+            ErrorCode.collab_live_locked,
+            "This collab is live. Reopen it first to change its photos.",
+        )
+
+
 async def add_media_batch(
     praxis: Praxis,
     uploads: List[UploadFile],
@@ -849,6 +861,7 @@ async def add_media_batch(
     follows request position, appended. A successful batch cancels a pending
     publish once (ADR-0012); an all-rejected batch doesn't.
     """
+    refuse_live_collab_media(praxis)
     display_order = await _next_media_display_order(praxis.id, session)
     results: List[MediaUploadResultOut] = []
     saved_count = 0
@@ -900,6 +913,7 @@ async def delete_media_item(
     join); ``None`` means nothing on disk, and the row removal still succeeds.
     """
     refuse_if_under_review(praxis)
+    refuse_live_collab_media(praxis)
     if praxis.status == PraxisStatus.submitted:
         remaining = await session.scalar(
             select(func.count())
@@ -1135,7 +1149,7 @@ async def invite_to_praxis(
             status_code=400,
             detail="Invites are only for collab praxis. Duels use the challenge endpoint.",
         )
-    if praxis.status == PraxisStatus.submitted:
+    if collab_state(praxis) not in COLLAB_ALLOWED_FROM["invite"]:
         raise_coded(
             400,
             ErrorCode.invite_praxis_submitted,
@@ -1262,7 +1276,8 @@ async def respond_to_invite(
         invite.praxis_id, session, era, lock=True
     )
 
-    if praxis.status == PraxisStatus.submitted:
+    state = collab_state(praxis)
+    if state not in COLLAB_ALLOWED_FROM["accept"]:
         raise_coded(
             400,
             ErrorCode.invite_praxis_submitted,
@@ -1306,6 +1321,9 @@ async def respond_to_invite(
 
     invite.status = PraxisInviteStatus.accepted
     await session.flush()
+    if state == CollabState.PROPOSED:
+        # The newcomer never saw the text: the proposal restarts (Q3).
+        await collab_consensus.on_member_edit(praxis, session, era)
     await session.refresh(invite)
     return invite
 
@@ -1362,7 +1380,7 @@ async def kick_member(
     if member_id == requester_id:
         raise HTTPException(status_code=400, detail="Cannot kick yourself.")
 
-    if praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending):
+    if collab_state(praxis) not in COLLAB_ALLOWED_FROM["kick"]:
         raise HTTPException(
             status_code=422,
             detail="Cannot kick from a published praxis. Move it to editing first.",
@@ -1380,6 +1398,7 @@ async def kick_member(
 
     # Via the collection: the route reuses this praxis for its response.
     praxis.members.remove(kickee_member)
+    collab_consensus.rotate_host_if_exited(praxis, member_id)
 
     # Open sockets would otherwise keep co-writing (ADR-0073).
     close_member_sockets(praxis_id, member_id)
@@ -1406,6 +1425,12 @@ async def leave_praxis(
         raise HTTPException(status_code=400, detail="Only collab memberships can be left.")
     _require_member(praxis, character_id, "leave")
 
+    if len(praxis.members) < 2:
+        raise_coded(
+            409,
+            ErrorCode.collab_last_member,
+            "You are the last one on this collab. Delete it instead.",
+        )
     leaver = next(m for m in praxis.members if m.character_id == character_id)
     # Leaver, survivors and duel opponents in one ascending pass: the seal and
     # conversion recalcs reach all of them, and nothing is locked after this.
@@ -1419,9 +1444,10 @@ async def leave_praxis(
     praxis.members.remove(leaver)
     # ADR-0073: close the room socket too.
     close_member_sockets(praxis_id, character_id)
+    collab_consensus.rotate_host_if_exited(praxis, character_id)
     await session.flush()
 
-    await collab_consensus.on_member_leave(praxis, session, era)
+    await collab_consensus.on_member_leave(praxis, session, era, character_id)
 
     await recalculate_character_stats(character_id, session, era)
     await session.flush()
@@ -1482,14 +1508,15 @@ async def submit_praxis(
     # No doc_state: the loaded room may still hold edits inside the flush window.
     merged = loaded_room_values(praxis_id)
     if doc_state is not None:
-        # A live praxis has no room (ADR-0073); the reopen is its one road back.
         await collab_consensus.settle_if_window_lapsed(praxis, session, era)
-        if praxis.status == PraxisStatus.submitted:
-            raise_coded(
-                409,
-                ErrorCode.praxis_already_live,
-                "This praxis is already live. Reopen it to edit it.",
-            )
+    # A live praxis has no room (ADR-0073) and never re-seals; reopen is the way back.
+    if praxis.status == PraxisStatus.submitted:
+        raise_coded(
+            409,
+            ErrorCode.praxis_already_live,
+            "This praxis is already live. Reopen it to edit it.",
+        )
+    if doc_state is not None:
         merged = await merge_client_state(praxis_id, doc_state)
     # Against the stored row, not the pre-merge room: unflushed edits are unseen too.
     if any(getattr(praxis, column) != value for column, value in merged.items()):

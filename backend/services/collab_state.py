@@ -17,6 +17,18 @@ class MemberState(enum.Enum):
     APPROVED = "approved"
 
 
+# The states each collab transition may start from (#4191, rulings Q2/Q6).
+# Leave is not listed: it is allowed anywhere but for a sole member (Q2), which
+# the member count decides, since a sole host can seal a LIVE collab of one.
+_NOT_LIVE = frozenset({CollabState.ALONE, CollabState.DRAFTING, CollabState.PROPOSED})
+COLLAB_ALLOWED_FROM: dict[str, frozenset[CollabState]] = {
+    "invite": _NOT_LIVE,
+    "accept": _NOT_LIVE,
+    "kick": _NOT_LIVE,
+    "media": _NOT_LIVE,
+}
+
+
 def member_state(member: PraxisMember) -> MemberState:
     return MemberState.APPROVED if member.has_approved else MemberState.EDITING
 
@@ -24,10 +36,8 @@ def member_state(member: PraxisMember) -> MemberState:
 def collab_state(praxis: Praxis) -> CollabState:
     if praxis.type != PraxisType.collab:
         raise ValueError("collab_state is for collab praxes only")
-    # TODO(#4201): a 0-member collab (EMPTY) is reachable today; the collab-rules
-    # PR stops the last member leaving, after which this can't fire.
-    if not praxis.members:
-        raise ValueError("collab with no members")
+    # Unreachable: the last member cannot leave a collab (Q2) and a kick is never self.
+    assert praxis.members, "collab with no members"
     if praxis.status == PraxisStatus.submitted:
         return CollabState.LIVE
     if praxis.status == PraxisStatus.pending:

@@ -77,10 +77,10 @@ describe('composer confirms — each names its own consequence', () => {
     expect(request.note).toMatch(/solo/i)
   })
 
-  it('leave as the last member says it drops the praxis (ADR-0060)', () => {
+  it('leave as the last member says to delete instead (#4201)', () => {
     const request = leaveCollabConfirm('coven', 1)
     expect(request.note).toBe(collab.leaveConfirmLast)
-    expect(request.note).toMatch(/drop/i)
+    expect(request.note).toMatch(/delete/i)
   })
 
   it('kick names the member and says every approval is cleared (ADR-0013)', () => {
