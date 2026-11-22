@@ -40,10 +40,10 @@ describe("every faction hero draws its tile's tagline (#2805)", () => {
   });
 
   it.each(HEROES)("%s prints its factionSelect tagline", (slug, Hero) => {
-    // Escaped as the markup escapes apostrophes.
+    // Escaped as the markup escapes it.
     const tagline = i18n
       .t(`feed:factionSelect.${slug}.tagline`, { defaultValue: "" })
-      .replace(/'/g, "&#x27;");
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
     // "" would match anything.
     expect(tagline, `${slug} has a tagline to draw`).not.toBe("");
     expect(render(slug, Hero), `${slug}'s hero prints its tagline`).toContain(tagline);

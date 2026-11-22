@@ -12,7 +12,7 @@ import { useTitleTyping } from './useTitleTyping'
 import Wisp from './Wisp'
 import { BEATS } from './beats'
 import { HoldNextContext } from './beats/holdNext'
-import { back, decline, initialFlow, isBeat, next, skip, toArrival, toCharacter, toSignIn, type Flow, type Step } from './flowSteps'
+import { back, decline, initialFlow, isBeat, next, onboardingState, passContract, skip, toArrival, toSignIn, type Flow, type Step } from './flowSteps'
 import './flow.css'
 
 // Past START only: out of the graph the title waits on. Warmed on mount so START never meets a gap.
@@ -120,7 +120,14 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
 
   // A player with a character goes where the hand-off sends them; one without creates it here.
   const hasCharacter = !!user?.character || arrival !== null
-  const handOff = () => (hasCharacter ? onAccepted() : move((f) => toCharacter(f, hasCharacter)))
+  // Whichever door (a write, a click, terms already on file) gets there first; leaving the flow happens once, and passing to the form is idempotent.
+  const passedContract = useRef(false)
+  const leaveContract = () => {
+    if (!hasCharacter) return move(passContract)
+    if (passedContract.current) return
+    passedContract.current = true
+    onAccepted()
+  }
 
   // Returning = signed in with a character. Skipping the contract writes no row, so it needs one for the current terms.
   // Decided once when the session first settles, so a character made in this flow doesn't turn a new player into a returner.
@@ -133,12 +140,19 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
     if (flow.step === 'character' || flow.step === 'arrival' || contractOnFile) return onAccepted()
     move(skip)
   }
-  const passedContract = useRef(false)
+  const state = onboardingState({
+    step: flow.step,
+    stepsLoaded: !!steps,
+    stepsFailed,
+    authLoading: loading,
+    recording,
+    signedIn: !!user,
+    termsOnFile: !!user?.has_accepted_terms,
+    creationBanned: !!user?.character_creation_banned,
+  })
   useEffect(() => {
-    if (flow.step !== 'contract' || !contractOnFile || recording || passedContract.current) return
-    passedContract.current = true
-    onAccepted()
-  }, [flow.step, contractOnFile, recording, onAccepted])
+    if (state === 'CONTRACT_ON_FILE') leaveContract()
+  }, [state])
 
   useEffect(() => {
     if (!recording || loading || recordedOnce.current) return
@@ -150,9 +164,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
         clearTermsAcceptance()
         // Layout gates on `has_accepted_terms`; hand off only once it can see the row.
         await refetch()
-        // handOff() already leaves for a player with a character; the contract pass must not leave a second time.
-        if (hasCharacter) passedContract.current = true
-        handOff()
+        leaveContract()
         setRecording(false)
       },
       () => {
@@ -160,7 +172,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
         setRecording(false)
       },
     )
-  }, [recording, loading, user, handOff, refetch])
+  }, [recording, loading, user, leaveContract, refetch])
 
   const { step } = flow
   const n = isBeat(step) ? step : null
@@ -236,7 +248,8 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
   const screenCls = leaving ? (toBeat && beat ? '' : 'ob-lv') : cameFrom !== null && !(beat && fromBeat) ? 'ob-rew' : ''
   const stageCls = leaving ? (toBeat ? 'ob-lv' : '') : beat && fromBeat ? 'ob-rew' : ''
   const cameBack = cameFrom !== null
-  const onBack = flow.history.length ? goBack : undefined
+  // No way back from arrival, nor to a creation form once a character exists (#4239).
+  const onBack = flow.history.length && state !== 'ARRIVAL' && !(state === 'CHARACTER' && hasCharacter) ? goBack : undefined
 
   const Beat = n === null ? null : BEATS[n - 1]
   const label = n === 7 ? t('flow.toContract') : t('flow.next')
@@ -276,7 +289,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
         </span>
       )}
 
-      {step === 'title' && <Title cameBack={cameBack} returning={returning} onStart={() => move(next)} />}
+      {state === 'TITLE' && <Title cameBack={cameBack} returning={returning} onStart={() => move(next)} />}
 
       {Beat && n !== null && (
         <section className={`ob-beat ${screenCls}`}>
@@ -321,9 +334,9 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
         </section>
       )}
 
-      {!steps && step !== 'title' && !beat && (
+      {(state === 'STEPS_LOADING' || state === 'STEPS_FAILED') && (
         <section className={`${screenCls} page font-body text-muted`}>
-          {stepsFailed ? (
+          {state === 'STEPS_FAILED' ? (
             <button type="button" className="ob-ghost" data-testid="onboarding-steps-retry" onClick={() => setStepsTry((n) => n + 1)}>
               {t('flow.loadFailed')}
             </button>
@@ -335,9 +348,9 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
 
       {steps && (
         <>
-      {step === 'signin' && <div className={screenCls}><steps.AuthCard onBack={onBack} /></div>}
+      {state === 'SIGN_IN' && <div className={screenCls}><steps.AuthCard onBack={onBack} /></div>}
 
-      {step === 'character' && (
+      {(state === 'CHARACTER' || state === 'CHARACTER_BANNED') && (
         <div className={screenCls}>
           <steps.CharacterStep
             onBack={onBack}
@@ -351,28 +364,28 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
         </div>
       )}
 
-      {step === 'arrival' && arrival && (
+      {state === 'ARRIVAL' && arrival && (
         <div className={screenCls}>
           <steps.Arrival name={arrival.name} task={arrival.task} onBack={onBack} />
         </div>
       )}
 
-      {step === 'returning' && (
+      {state === 'RETURNING' && (
         <div className={screenCls}>
           <steps.SignInView onRestart={() => move(() => initialFlow(false))} />
         </div>
       )}
 
-      {step === 'declined' && (
+      {state === 'DECLINED' && (
         <div className={screenCls}>
           <steps.Declined onReconsider={onBack} />
         </div>
       )}
 
-      {step === 'contract' && (
+      {state.startsWith('CONTRACT') || state === 'RECORDING_TERMS' ? (
         <div className={screenCls}>
           <LoginNotice />
-          {loading || recording || contractOnFile ? (
+          {state !== 'CONTRACT' ? (
             <div className="page font-body text-muted">{tc('loading')}</div>
           ) : (
             <steps.TermsCard
@@ -386,7 +399,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
                     }
                   : async () => void holdTermsAcceptance()
               }
-              onAccepted={() => (user ? void refetch().then(handOff) : move(next))}
+              onAccepted={() => (user ? void refetch().then(leaveContract) : move(next))}
               onDecline={() => {
                 clearTermsAcceptance()
                 move(decline)
@@ -395,7 +408,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
             />
           )}
         </div>
-      )}
+      ) : null}
         </>
       )}
     </div>

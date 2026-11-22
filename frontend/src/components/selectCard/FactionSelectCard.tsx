@@ -17,7 +17,7 @@ import { surfaceMap } from "../../factions";
  * faction page, which owns joining. Unregistered slugs get `DefaultSelectCard`.
  */
 
-export type SelectState = "locked" | "eligible" | "member";
+export type SelectState = "locked" | "eligible" | "member" | "burned";
 
 export interface FactionSelectCardProps {
   /** Faction slug (raw slug wins; legacy slugs fall back via LEGACY_SLUG). */

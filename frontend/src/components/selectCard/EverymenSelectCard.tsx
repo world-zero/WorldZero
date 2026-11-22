@@ -10,6 +10,7 @@ import {
   SelectCardBand,
   SelectCardBody,
   SelectCardCall,
+  selectLine,
   SelectCardFooter,
   SelectCardFrame,
   SelectCardMotto,
@@ -144,11 +145,11 @@ export default function EverymenSelectCard({ state = "locked", members, onVisit 
             standingStyle={{ fontFamily: TYPED, fontSize: "var(--text-lg)", color: "var(--everymen-muted)" }}
             headcountStyle={{ ...LABEL, fontSize: "var(--text-base)", color: "var(--everymen-muted)" }}
           >
-            {i18n.t(`feed:factionSelect.everymen.status.${state}` as const)}
+            {selectLine(state, "status", (s) => i18n.t(`feed:factionSelect.everymen.status.${s}` as const))}
           </SelectCardStanding>
           {/* From the constant (#2818). */}
           <SelectCardCall onClick={onVisit} style={{ ...EVERYMEN_CARD_CTA, ...CTA_SELECT_SIZE }}>
-            {i18n.t("feed:factionSelect.everymen.cta")}
+            {selectLine(state, "cta", () => i18n.t("feed:factionSelect.everymen.cta"))}
           </SelectCardCall>
         </SelectCardFooter>
       </div>

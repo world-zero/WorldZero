@@ -104,8 +104,8 @@ export function taskDetailState(slug: string): TaskDetailState {
     signupError: null,
     handleSignup: anoop,
     handleDrop: anoop,
-    dropConfirm: null,
     canDrop: true,
+    dropConfirm: null,
   }
 }
 

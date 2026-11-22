@@ -116,10 +116,8 @@ describe.each(['desktop', 'mobile'] as const)(
       expect(html, `${slug}: the tagline slot`).toContain('max-width:22ch')
       expect(text, `${slug}: friend/foe`).toContain('Friend')
       expect(count(html, 'transition:width 300ms'), `${slug}: level bars`).toBe(1)
-      // The climb caption under the bar, once silently dropped.
-      expect(text, `${slug}: the climb caption`).toContain(
-        translate('common:profile.ptsToNext', { score: 1880, threshold: 2000 }),
-      )
+      // One points line only (#4230): the whole-climb caption is gone.
+      expect(text, `${slug}: no climb caption`).not.toContain('1880 / 2000 pts')
 
       // ② About and ③ Badges.
       expect(text, `${slug}: About`).toContain(translate('common:profile.aboutHeading'))

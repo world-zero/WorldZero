@@ -7,6 +7,7 @@ import {
   SelectCardBand,
   SelectCardBody,
   SelectCardCall,
+  selectLine,
   SelectCardFooter,
   SelectCardFrame,
   SelectCardMotto,
@@ -97,11 +98,11 @@ export default function SnideSelectCard({ state = "locked", members, onVisit }: 
           standingStyle={{ fontFamily: MARKER, fontSize: "var(--text-xl)", color: "var(--faction-snide-note-pink-ink)", transform: "rotate(-1deg)" }}
           headcountStyle={{ fontFamily: MARKER, fontSize: "var(--text-md)", letterSpacing: "0.06em", textTransform: "uppercase", color: MUTED }}
         >
-          {i18n.t(`feed:factionSelect.snide.status.${state}` as const)}
+          {selectLine(state, "status", (s) => i18n.t(`feed:factionSelect.snide.status.${s}` as const))}
         </SelectCardStanding>
         {/* The task card's CTA (#2818), label only. */}
         <SelectCardCall onClick={onVisit} style={{ ...SNIDE_CARD_CTA, ...CTA_SELECT_SIZE }}>
-          {i18n.t("feed:factionSelect.snide.cta")}
+          {selectLine(state, "cta", () => i18n.t("feed:factionSelect.snide.cta"))}
         </SelectCardCall>
       </SelectCardFooter>
     </SelectCardFrame>

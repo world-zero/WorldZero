@@ -102,6 +102,18 @@ describe("Leave — every member's exit, the creator included (#1074)", () => {
   });
 });
 
+describe("A collab down to one member", () => {
+  it("shows no Leave and keeps the Drop button", () => {
+    const state = praxisState({ currentCharacterId: CREATOR_ID, memberIds: [CREATOR_ID] });
+    expect(renderToStaticMarkup(<InviteSearch {...state} skin={{}} />)).not.toContain(
+      LEAVE_LABEL,
+    );
+    expect(renderToStaticMarkup(<DropButton {...state} skin={DROP_SKIN} />)).toContain(
+      DROP_SKIN.label,
+    );
+  });
+});
+
 describe("Delete — the creator's alone, and it names its cost (#1074)", () => {
   it("names the consequence when other members' parts are at stake", () => {
     const html = renderToStaticMarkup(

@@ -112,10 +112,17 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
   useEffect(() => {
     setDraftDuel(null);
     if (draftDuelId == null) return;
-    // A failed read leaves Drop showing; the backend still refuses it.
-    getDuelDetail(draftDuelId).then(setDraftDuel, () => {});
+    let live = true;
+    getDuelDetail(draftDuelId)
+      .then((d) => live && setDraftDuel(d))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
   }, [draftDuelId]);
-  const canDrop = duelCanDrop(draftDuel);
+  // Unknown until read, so a duel side hides Drop rather than flashing it.
+  const canDrop =
+    draftDuelId === null || (draftDuel !== null && duelCanDrop(draftDuel));
   const [taskSlotCount, setTaskSlotCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);

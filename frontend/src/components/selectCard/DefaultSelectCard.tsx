@@ -15,6 +15,7 @@ import {
   SelectCardBand,
   SelectCardBody,
   SelectCardCall,
+  selectLine,
   SelectCardFooter,
   SelectCardFrame,
   SelectCardMotto,
@@ -152,7 +153,7 @@ export default function DefaultSelectCard({
             marginBottom: "var(--space-md)",
           }}
         >
-          {say(`status.${state}`)}
+          {selectLine(state, "status", (s) => say(`status.${s}`))}
         </SelectCardStanding>
         {/* Visible and shut when redacted, never absent (#2409). Paint is the
             task card's `DEFAULT_CARD_CTA` (#2818); `CTA_SELECT_SIZE` last. For
@@ -162,7 +163,7 @@ export default function DefaultSelectCard({
           disabled={redacted}
           style={{ ...DEFAULT_CARD_CTA, ...CTA_SELECT_SIZE }}
         >
-          {say("cta")}
+          {selectLine(state, "cta", () => say("cta"))}
         </SelectCardCall>
       </SelectCardFooter>
     </SelectCardFrame>
