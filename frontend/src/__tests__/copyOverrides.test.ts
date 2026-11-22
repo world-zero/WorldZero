@@ -215,11 +215,12 @@ describe('saving an override', () => {
     expect(i18n.t('admin:console.people.suspendError')).toBe('no dice')
   })
 
-  it('refuses a replacement that drops a placeholder, and names it', () => {
-    const template = i18n.getResource('en', 'admin', 'copyEdit.missingPlaceholder') as string
-    expect(template).toContain('{{placeholders}}')
-    expect(missingPlaceholders(template, 'put it back')).toEqual(['{{placeholders}}'])
-    expect(missingPlaceholders(template, 'you dropped {{placeholders}}')).toEqual([])
+  it('lets a draft drop a placeholder but refuses one the template lacks, naming it', () => {
+    const template = 'Within the first {{hours}} hours'
+    expect(missingPlaceholders(template, 'Soon')).toEqual([])
+    expect(missingPlaceholders(template, 'In {{hours}} hours')).toEqual([])
+    expect(missingPlaceholders(template, 'In {{hour}} hours')).toEqual(['{{hour}}'])
+    expect(missingPlaceholders(template, 'In {{days}} days')).toEqual(['{{days}}'])
   })
 
   it('refuses a replacement that drops or renames a Trans tag', () => {
