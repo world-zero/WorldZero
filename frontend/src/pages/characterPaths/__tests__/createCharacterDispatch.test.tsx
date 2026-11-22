@@ -138,7 +138,7 @@ describe('the picker survives every skin', () => {
         })} />
       </MemoryRouter>,
     )
-    expect(html, 'the calling just picked').toContain('The Ephemerists')
+    expect(html, 'the calling just picked').toContain('Ephemerists')
     expect(html, 'and the one not picked').toContain('Cozy Coven')
   })
 })

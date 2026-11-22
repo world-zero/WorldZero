@@ -163,7 +163,7 @@ describe("FactionProfileBody dispatch", () => {
   it("shows the progression bar toward level+1", () => {
     const html = renderBody();
     expect(html).not.toContain("next · lvl");
-    expect(html).toContain("120 / 300 pts this level");
+    expect(html).toContain("120 / 300 points this level");
   });
 });
 

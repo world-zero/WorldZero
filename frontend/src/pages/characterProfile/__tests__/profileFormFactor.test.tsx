@@ -172,7 +172,7 @@ describe('na profile serves both form factors from DefaultProfileBody', () => {
     const text = html.replace(/<[^>]*>/g, '')
     expect(text, 'name (credential)').toContain('Reza')
     expect(text, 'no next-level label').not.toContain('next · lvl')
-    expect(text, 'progression points-into-level').toContain('380 / 500 pts this level')
+    expect(text, 'progression points-into-level').toContain('380 / 500 points this level')
     expect(text, 'badge').toContain('Sock Puppet')
     expect(text, 'friend/foe control').toContain('Friend')
     // Praxis is the default segment.
@@ -201,7 +201,7 @@ describe('wow profile serves both form factors from WowProfileBody', () => {
       // Any of the pavilion's three marks back means the skin is back.
       expect(html, 'the pavilion page').not.toContain('data-skin="wow"')
       expect(html, 'the pavilion header wash').not.toContain('linear-gradient(180deg, var(--faction-wow-avatar-field)')
-      expect(html, 'the level track the tally replaced').toContain('380 / 500 pts this level')
+      expect(html, 'the level track the tally replaced').toContain('380 / 500 points this level')
     },
   )
 })

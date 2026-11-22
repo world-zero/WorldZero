@@ -123,7 +123,7 @@ describe('a life before the gate is told nothing about a second one (#1560)', ()
     expect(body).not.toContain('A second self awaits')
     expect(body).not.toContain('Reach Lvl')
     expect(body).not.toContain('levels to go')
-    expect(body).not.toContain('Whose shoes today?')
+    expect(body).not.toContain('Who are you today?')
     expect(body).not.toContain('life in play')
     expect(body).not.toContain('cut a new pair from whole cloth')
     expect(body).not.toContain('Begin a new self')
@@ -138,14 +138,14 @@ describe('a life before the gate is told nothing about a second one (#1560)', ()
 describe('the roster is shown whenever it has a choice to offer (#1560)', () => {
   it('shows it once the gate has opened', () => {
     const body = render(currentUser({ can_create_additional_character: true }))
-    expect(body).toContain('Whose shoes today?')
+    expect(body).toContain('Who are you today?')
   })
 
   it('shows it to an account carrying no life at all, so signup cannot dead-end', () => {
     // The roster is the create-your-first-life path.
     const body = render(currentUser({ character: null }))
     expect(body).toContain('Nothing in the drawer yet.')
-    expect(body).not.toContain('Whose shoes today?')
+    expect(body).not.toContain('Who are you today?')
   })
 })
 
@@ -162,7 +162,7 @@ describe('the page keeps its level-1 heading whatever the gate does (#1794)', ()
 
   it('still asks whose shoes once the gate opens', () => {
     const heads = h1s(renderRaw(currentUser({ can_create_additional_character: true })))
-    expect(heads).toEqual(['Whose shoes today?'])
+    expect(heads).toEqual(['Who are you today?'])
   })
 
   it('still has exactly one for an account playing nobody', () => {

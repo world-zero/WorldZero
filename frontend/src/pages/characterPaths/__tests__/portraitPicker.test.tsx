@@ -35,7 +35,7 @@ describe('PortraitPicker — the readout agrees with the state, not with input.f
     const { text } = render(
       <PortraitPicker onChange={() => {}} chosenFile={null} hasCurrentPortrait />,
     )
-    expect(text, 'not "none chosen" — there IS one').toContain('Keeping your current photo')
+    expect(text, 'not "none chosen" — there IS one').toContain('Unlike Dorian Gray, you will age faster than your portrait.')
     expect(text).not.toContain('No photo chosen yet')
     expect(text).toContain('Change photo')
   })

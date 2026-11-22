@@ -1,9 +1,9 @@
 {
   "popup": {
-    "senseEyebrow": "A curious sense",
+    "senseEyebrow": "New Responsibility",
     "abilityEyebrow": "New ability",
-    "levelReached": "Level Reached",
-    "nowUnlocked": "Now Unlocked",
+    "levelReached": "You are now a",
+    "nowUnlocked": "Unlocks",
     "continue": "Continue"
   },
   "rankLead": {
@@ -17,51 +17,51 @@
     "paragon": "You are now"
   },
   "ranks": {
-    "trailhead": "Trailhead",
-    "ranger": "Ranger",
-    "surveyor": "Surveyor",
-    "warden": "Warden",
-    "voyager": "Voyager",
-    "chronicler": "Chronicler",
-    "luminary": "Luminary",
-    "paragon": "Paragon"
+    "trailhead": "Whippersnapper",
+    "ranger": "Bug Pal",
+    "surveyor": "Kickflip",
+    "warden": "Big Shot",
+    "voyager": "BAMF",
+    "chronicler": "Champ",
+    "luminary": "Legend",
+    "paragon": "Ascendent"
   },
   "unlocks": {
     "start_collaboration": {
-      "name": "Start a collaboration",
-      "desc": "Pool a task with other questers and split the work."
+      "name": "Start a Collaboration",
+      "desc": "Life is more meaningful when shared with others."
     },
     "vote": {
-      "name": "Vote on praxis",
-      "desc": "Once another quester rates your proof, you can rate theirs and send points their way.",
+      "name": "Vote on Praxis",
+      "desc": "Vote nerds",
       "descOpen": "Rate other players' proof and send points their way."
     },
     "worn_paths": {
-      "name": "Notice the paths already worn",
-      "desc": "Well-trodden ground hums faintly underfoot. You'll learn to trust it."
+      "name": "Create more Puns",
+      "desc": "You have a duty to your fellows. Make it so."
     },
     "duels": {
-      "name": "Challenge a duel",
-      "desc": "Stake reputation against another quester and settle it in the field."
+      "name": "Challenge players to a Duel",
+      "desc": "Your honor will be on the line. Wagers are encouraged."
     },
     "comment": {
       "name": "Communicate",
-      "desc": "Speak words of power and let the ripple out into the world. Or leave a comment."
+      "desc": "Speak words of power and let them ripple out into the world. Or leave a comment."
     },
     "retired_tasks": {
-      "name": "See retired tasks",
-      "desc": "The archive opens — browse tasks the board has since retired."
+      "name": "Look into the past",
+      "desc": "See what could have been, and also Retired Tasks. You can also talk to bugs."
     },
     "weather_early": {
-      "name": "Read weather a day early",
-      "desc": "Clouds tell you their plans before the sky commits to them."
+      "name": "Spread the word",
+      "desc": "Let's face it, you like World Zero. You are now committed to the bit. Get your friends and foes involved."
     },
     "propose_task": {
-      "name": "Propose a task",
-      "desc": "Draft a task of your own and submit it to the board."
+      "name": "Propose a Task",
+      "desc": "Draft a Task of your own and submit it to the board."
     },
     "pending_tasks": {
-      "name": "See pending tasks",
+      "name": "See Pending Tasks",
       "desc": "Watch proposals move through review before they go live."
     },
     "shortcut_sense": {
@@ -69,28 +69,28 @@
       "desc": "Some routes simply feel correct. You've started to notice which."
     },
     "flag_praxis": {
-      "name": "Flag a praxis",
-      "desc": "Send questionable praxis to moderation review."
+      "name": "Flag a Praxis",
+      "desc": "Help us maintain our community. You know what it is to play and task well. The bugs may not talk back, but they are your pals, I promise."
     },
     "second_character": {
-      "name": "Create a second character",
-      "desc": "Start a new character on this account, independent of this one."
+      "name": "Create a second Character",
+      "desc": "It's never too late to start anew."
     },
     "lie_pitch": {
-      "name": "Hear a lie land wrong",
-      "desc": "Untrue words ring a half-step flat. Useful, if unsettling."
+      "name": "Make eye contact with people who make you uncomfortable",
+      "desc": "The best of friends can come from unexpected places."
     },
     "distance_taste": {
-      "name": "Taste distance in the air",
-      "desc": "Far-off places have a flavor. You're close enough now to notice."
+      "name": "Stand up for what's right",
+      "desc": "You don't have excuses anymore. You know you can be brave."
     },
     "see_metatasks": {
-      "name": "See the metatask list",
-      "desc": "The metatask board unlocks — read what the factions are rallying around."
+      "name": "See the Metatask List",
+      "desc": "The Metatask Board is unlocked - read what the Factions are rallying around."
     },
     "propose_metatask": {
-      "name": "Propose a metatask",
-      "desc": "Draft a task built for your whole faction to apply to."
+      "name": "Propose a Metatask",
+      "desc": "Draft a Task for your whole Faction to apply to."
     },
     "albescent_glimpse": {
       "name": "Now mysteries will reveal themselves to you"
@@ -101,23 +101,23 @@
     },
     "apply_metatasks": {
       "name": "Add Metatasks",
-      "desc": "Attach a metatask to your praxis for its bonus — any faction's, not just your own."
+      "desc": "Attach a Metatask to your Praxis for its bonus — any Faction's, not just your own."
     },
     "multiple_metatasks": {
-      "name": "Stack multiple metatasks",
-      "desc": "Attach more than one metatask to a single praxis."
+      "name": "Stack multiple Metatasks",
+      "desc": "Attach more than one Metatask to a single Praxis."
     },
     "three_plans": {
       "name": "Hold three plans at once without confusion",
       "desc": "Your mind now files contingencies the way it once filed excuses."
     },
     "join_albescent": {
-      "name": "Join The Chroma",
-      "desc": "Defect a life you carry to The Chroma — the order is joined in the field, never picked at creation."
+      "name": "[REDACTED]",
+      "desc": "You no longer need to be told what you are able to do. You have done so much to get here."
     },
     "underline_foresight": {
-      "name": "See the underline before it's drawn",
-      "desc": "You've read enough field stamps to know how this sentence ends."
+      "name": "Maintain This Community",
+      "desc": "Cherish this community you have put so much time and energy into. Like SF0 before it, we never know when good things will fade. Don't let this place fade. Even if there are no more levels, even if you can't win, keep tasking."
     }
   }
 }

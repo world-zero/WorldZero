@@ -198,7 +198,7 @@ describe('the profile kits share one set of copy in the catalog', () => {
   it('interpolates the two copy fields that take a named variable', () => {
     expect(i18n.t('common:profile.praxisEyebrow', { name: 'Reza' })).toBe('Submitted by Reza')
     expect(i18n.t('common:profile.ptsThisLevel', { current: 380, span: 500 })).toBe(
-      '380 / 500 pts this level',
+      '380 / 500 points this level',
     )
   })
 })
@@ -413,7 +413,7 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
     // strings; the owner may rewrite it. `coven.mobile` is gone with the
     // `{F}.mobile.eyebrow` family (#1911).
     expect(factions.coven.join).not.toHaveProperty('windowTitle')
-    expect(factions.coven.join.heading).toBe('the circle')
+    expect(factions.coven.join.heading).toBe('bubble, bubble, toil and trouble')
     expect(factions.coven).not.toHaveProperty('mobile')
   })
 
@@ -782,7 +782,7 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
   it('resolves each repointed masthead to the faction name it used to spell', () => {
     // `factionName()` is the single source (ADR-0038).
     expect(factionName('snide')).toBe('S.N.I.D.E.')
-    expect(factionName('ephemerists')).toBe('The Ephemerists')
+    expect(factionName('ephemerists')).toBe('Ephemerists')
     expect(factionName('coven')).toBe('Cozy Coven')
     expect(factionName('singularity')).toBe('Singularity')
   })
@@ -796,12 +796,7 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
  *   3. `ua` is the full name; `albescent` has no leading slash.
  */
 describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () => {
-  const PLACEHOLDERS = [
-    'factions.json:descriptions.albescent',
-    'factions.json:descriptions.coven',
-    'factions.json:descriptions.ephemerists',
-    'factions.json:descriptions.singularity',
-  ].sort()
+  const PLACEHOLDERS: string[] = []
 
   it('holds the placeholder exactly where the owner put it, and nowhere else', () => {
     const found = catalogLeaves()
@@ -813,8 +808,8 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
 
   it("keeps S.N.I.D.E.'s punk register masked exactly as written", () => {
     // Character-for-character: each mask and casing is distinct.
-    expect(i18n.t('feed:factionSelect.snide.status.eligible')).toBe("Let's F%$*ing GO")
-    expect(i18n.t('feed:factionSelect.snide.status.locked')).toBe('Go BREAK something!')
+    expect(i18n.t('feed:factionSelect.snide.status.eligible')).toBe('tighten your belt')
+    expect(i18n.t('feed:factionSelect.snide.status.locked')).toBe("when you're up for it")
     expect(i18n.t('factions:snide.invitation.headline')).toBe('Wanna F%&* some S^&* up?')
   })
 

@@ -161,7 +161,7 @@ describe('the rotation is decoration over a stable accessible name (#2148)', () 
   it('leaves the wordmark in English', () => {
     // Text, not markup: the band link's `aria-label` names it too (#2167).
     const html = renderCard()
-    expect(html.replace(/<[^>]*>/g, '').match(/The Ephemerists/gi)?.length).toBe(1)
+    expect(html.replace(/<[^>]*>/g, '').match(/Ephemerists/gi)?.length).toBe(1)
   })
 
   it('says nothing but the reason on a card that cannot be signed up for', () => {

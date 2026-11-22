@@ -202,7 +202,7 @@
   "invitationLetter": {
     "kicker": "Faction Invitation",
     "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
-    "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice.",
+    "body": "You may belong to exactly one faction. Does this group call to you?",
     "viewFactions": "View Factions →",
     "everymen": {
       "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
@@ -222,7 +222,7 @@
     },
     "singularity": {
       "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
-      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+      "body": "You may join only one faction. Does this group call to you?"
     },
     "wow": {
       "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
@@ -295,8 +295,8 @@
       "eyebrow": "World Zero · H4CKZ3R$",
       "eyebrowSpoken": "Hackers",
       "stats": {
-        "members_one": "node online",
-        "members_other": "nodes online"
+        "members_one": "H4CK3R online",
+        "members_other": "H4CK3R$ online"
       }
     },
     "snide": {
@@ -334,24 +334,24 @@
   },
   "factionSelect": {
     "ua": {
-      "tagline": "Make it anyway",
-      "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. We dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
+      "tagline": "Make It Anyway",
+      "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. \n\nWe dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
       "status": {
         "locked": "Collect your art supplies, then come back",
         "eligible": "A seat is kept for you.",
-        "member": "Practicing — one true piece a day."
+        "member": "At a Steady Pace,"
       },
       "cta": "Create With Us"
     },
     "coven": {
-      "tagline": "Community is Magic",
-      "blurb": "Gather round the cauldron, hold our hands and feel the power of what we can accomplish together",
+      "tagline": "Join The Circle And Resonate",
+      "blurb": "There's something special about all of us. Through holding hands, lending warmth, focusing intent, together, we move the world.",
       "status": {
-        "locked": "Keep Working Together ✦",
-        "eligible": "The circle has opened for you ✦",
-        "member": "You’re one of us now ✦"
+        "locked": "Keep building connections",
+        "eligible": "You're being summoned",
+        "member": "Welcome back, witch ✦"
       },
-      "cta": "Approach the Circle ✦"
+      "cta": "Approach the Coven ✦"
     },
     "wow": {
       "tagline": "Jousting, Justice and Jubilation",
@@ -367,45 +367,45 @@
       "tagline": "Let's GOOO",
       "blurb": "Life is meaningless until you give it meaning.  Banksy enthusiasts and culture jammers unite! Join us and put banana peels on society's sidewalk.",
       "status": {
-        "locked": "Go BREAK something!",
-        "eligible": "Let's F%$*ing GO",
-        "member": "Active operative — welcome to the mess."
+        "locked": "when you're up for it",
+        "eligible": "tighten your belt",
+        "member": "oh hey good to see you"
       },
-      "cta": "Jump In"
+      "cta": "Smash Down The Door"
     },
     "ephemerists": {
-      "tagline": "Lose yourself. Find yourself",
-      "blurb": "We journey through space, time, identity and ideology. We break and make anew. We are here to explore and document the phenomena of existence for those who would wander in a parallel world or time",
+      "tagline": "The map is not the territory",
+      "blurb": "We journey though space, time, identity and ideology. We break and make anew. We are here to explore and document the phenomena of existence for those who would wander with and after us.",
       "status": {
         "locked": "Keep Wandering",
         "eligible": "Wander with us",
         "member": "Fellow wanderer — mind the tides."
       },
-      "cta": "Check the Map"
+      "cta": "Embark"
     },
     "singularity": {
-      "tagline": "There is always a vulnerability",
-      "blurb": "The signal does not sleep. A distributed intelligence resolving noise into signal, one verified task at a time.",
+      "tagline": "'; drop table chains; --",
+      "blurb": "Try as you might, you can't keep us out. We have mastered the digital realm and are here to master world zero",
       "status": {
-        "locked": "// Keep Hacking",
-        "eligible": "// access granted — welcome, operator",
-        "member": "// node online"
+        "locked": "// access denied",
+        "eligible": "// access granted",
+        "member": "// welcome H4CK3R"
       },
-      "cta": "visit_node --enter"
+      "cta": "user --enter"
     },
     "everymen": {
       "tagline": "Strive, Fail, Persist, Succeed. Repeat >>",
       "blurb": "There is no better feeling than noticing your own radiant glow beneath a sheen of hard-earned sweat. Join the Everymen to harness this power and deliver it with expedience back into the world. Prepare to toil, learn to fail, and obliterate self-imposed limitations.",
       "status": {
-        "locked": "Keep bettering yourself",
+        "locked": "Never Stop Improving",
         "eligible": "JOIN UP",
         "member": "On the line with us."
       },
-      "cta": "FALL IN"
+      "cta": "READY?"
     },
     "albescent": {
       "tagline": "You don't stop playing when you get old, you get old when you stop playing",
-      "blurb": "Secrets secrets",
+      "blurb": "Secret secrets",
       "status": {
         "locked": "Keep Playing",
         "eligible": "Every door is still open.",
