@@ -7,6 +7,7 @@ import {
   SelectCardBand,
   SelectCardBody,
   SelectCardCall,
+  selectLine,
   SelectCardFooter,
   SelectCardFrame,
   SelectCardMotto,
@@ -99,11 +100,11 @@ export default function UaSelectCard({ state = "locked", members, onVisit }: Omi
           separator=" · "
           style={{ fontFamily: UA_TEXT, fontSize: "var(--text-content)", color: "var(--leaf-faction-select-card-quiet)", marginBottom: "var(--space-md)" }}
         >
-          {i18n.t(`feed:factionSelect.ua.status.${state}` as const)}
+          {selectLine(state, "status", (s) => i18n.t(`feed:factionSelect.ua.status.${s}` as const))}
         </SelectCardStanding>
         {/* The leaf's chip (#2818); geometry is `CTA_SELECT_SIZE`. */}
         <SelectCardCall onClick={onVisit} style={{ ...UA_CARD_CTA, ...CTA_SELECT_SIZE }}>
-          {i18n.t("feed:factionSelect.ua.cta")}
+          {selectLine(state, "cta", () => i18n.t("feed:factionSelect.ua.cta"))}
         </SelectCardCall>
       </SelectCardFooter>
     </SelectCardFrame>

@@ -87,6 +87,11 @@ jobs:
       - name: Backup-pull reporting (stubbed)
         run: bash deploy/test-wz-backup-pull
 
+      # Copy the owner edited live on dev may not be rewritten or removed by a PR.
+      - name: Owner copy guard
+        if: github.event_name == 'pull_request'
+        run: python3 scripts/promote_copy.py --guard origin/${{ github.base_ref }}
+
   # The API contract gate (#1400). `backend/openapi.json` and the TypeScript
   # types generated from it are committed artifacts, and this job is what keeps
   # them honest: regenerate, then refuse a diff. Backend shape changes that the

@@ -20,6 +20,7 @@ import {
   SelectCardBand,
   SelectCardBody,
   SelectCardCall,
+  selectLine,
   SelectCardFooter,
   SelectCardFrame,
   SelectCardMotto,
@@ -56,7 +57,7 @@ import { factionBodyVars } from "../../utils/factionBodyFace"
 const SEAL_SIZE = 26;
 
 export default function CovenSelectCard({ state = "locked", members, onVisit }: Omit<FactionSelectCardProps, "faction">) {
-  const status = i18n.t(`feed:factionSelect.coven.status.${state}` as const);
+  const status = selectLine(state, "status", (s) => i18n.t(`feed:factionSelect.coven.status.${s}` as const));
   return (
     <SelectCardFrame
       style={{
@@ -107,7 +108,7 @@ export default function CovenSelectCard({ state = "locked", members, onVisit }: 
         </SelectCardStanding>
       {/* From the one place it is written (#2818). */}
         <SelectCardCall onClick={onVisit} style={{ ...COVEN_CARD_CTA, ...CTA_SELECT_SIZE }}>
-          {i18n.t("feed:factionSelect.coven.cta")}
+          {selectLine(state, "cta", () => i18n.t("feed:factionSelect.coven.cta"))}
         </SelectCardCall>
       </SelectCardFooter>
     </SelectCardFrame>

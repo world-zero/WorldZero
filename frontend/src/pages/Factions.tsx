@@ -55,6 +55,7 @@ export function FactionsDirectory({ state }: { state: FactionsDirectoryState }) 
     const status = statusFor(slug)
     if (status === STATUS_MEMBER) return 'member'
     if (status === STATUS_INVITED || status === STATUS_CAN_RETURN) return 'eligible'
+    if (status === STATUS_DEFECTED) return 'burned'
     return 'locked'
   }
 
