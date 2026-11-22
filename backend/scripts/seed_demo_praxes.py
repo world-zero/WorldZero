@@ -36,7 +36,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.vote import Vote
-from services.character import record_level_reached
+from services.character import ensure_current_terms, record_level_reached
 from services.era import get_current_era_row
 
 TITLE_MARKER = "[demo] "
@@ -213,6 +213,7 @@ async def get_or_create_metatask_owner(
         session.add(existing)
         await session.flush()
         account.active_character_id = existing.id
+        await ensure_current_terms(account.id, session)
 
     level = era.metatask_apply_level
     score = (
@@ -566,6 +567,7 @@ async def get_or_create_players(
         )
         session.add(character)
         await session.flush()
+        await ensure_current_terms(account.id, session)
         chars[username] = character
     return chars
 

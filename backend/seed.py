@@ -28,6 +28,7 @@ from models.faction import Faction, FactionStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.roles import OWNER_ROLE_NAME, AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
+from services.character import ensure_current_terms
 from services.era_tasks import sync_era_tasks
 
 
@@ -90,6 +91,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     returns Pixie's character (``created_by`` for seeded tasks)."""
     if pixie_acc is not None:
         print("  >Pixie account already exists — skipping account/era/admin setup")
+        await ensure_current_terms(pixie_acc.id, session)
         return (await session.execute(
             select(Character).where(Character.account_id == pixie_acc.id).limit(1)
         )).scalar_one()
@@ -115,6 +117,7 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     )
     session.add(pixie_char)
     await session.flush()
+    await ensure_current_terms(pixie_acc.id, session)
 
     print(f"  >{era.name}")
     era_row = Era(
@@ -322,6 +325,7 @@ async def seed_dev_demo(session, created_by_id: int) -> None:
             votes_spent_this_era=0,
         ))
         dev_acc.active_character_id = molly.id
+        await ensure_current_terms(dev_acc.id, session)
 
         task = (await session.execute(
             select(Task)
