@@ -205,6 +205,34 @@
     "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
     "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice.",
     "viewFactions": "View Factions →",
+    "everymen": {
+      "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+    },
+    "ua": {
+      "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+    },
+    "ephemerists": {
+      "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+    },
+    "snide": {
+      "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+    },
+    "singularity": {
+      "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+    },
+    "wow": {
+      "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+    },
+    "coven": {
+      "sentence": "You've received an invitation to join <1>{{faction}}</1>.",
+      "body": "Complete faction tasks to prove your dedication, or visit the factions page to make your choice."
+    },
     "accepted": "Joined {{faction}}",
     "setAside": "Set aside — the invitation still stands",
     "error": "Couldn't answer that invitation.",
