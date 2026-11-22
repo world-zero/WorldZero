@@ -58,7 +58,6 @@ export default function TaskCard({
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
   const can = useCan()
-  const showAdminControls = user?.is_admin && adminMode
 
   /**
    * The write's own answer, so the card redraws itself without a page reload.
@@ -69,6 +68,7 @@ export default function TaskCard({
    */
   const [moderated, setModerated] = useState<TaskOut | null>(null)
   const shown = displayedTask(task, moderated)
+  const showAdminControls = user?.is_admin && adminMode && (can('tasks') || can(taskStatusNeed(shown.status)))
   // Read off the SHOWN task so the write's answer refreshes it.
   const shownInProgressCount = inProgressCount ?? shown.in_progress_count
 

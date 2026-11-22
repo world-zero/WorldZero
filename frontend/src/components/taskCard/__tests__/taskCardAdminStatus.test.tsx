@@ -8,10 +8,10 @@ import { describe, it, expect, vi } from 'vitest'
 import '../../../i18n'
 import type { TaskOut } from '../../../api/tasks'
 
-const mocks = vi.hoisted(() => ({ isAdmin: true, adminMode: true }))
+const mocks = vi.hoisted(() => ({ isAdmin: true, adminMode: true, perms: null as string[] | null }))
 
 vi.mock('../../../auth/AuthContext', () => ({
-  useAuth: () => ({ user: { is_admin: mocks.isAdmin, permissions: ALL_PERMISSIONS } }),
+  useAuth: () => ({ user: { is_admin: mocks.isAdmin, permissions: mocks.perms ?? ALL_PERMISSIONS } }),
 }))
 vi.mock('../../../auth/AdminModeContext', () => ({
   useAdminMode: () => ({ adminMode: mocks.adminMode }),
@@ -67,6 +67,12 @@ describe('the admin control set follows the displayed status', () => {
     mocks.isAdmin = false
     expect(card(TASK)).not.toContain('retire')
     mocks.isAdmin = true
+  })
+
+  it('shows no strip to an admin who can act on neither tasks nor this status', () => {
+    mocks.perms = ['handle_reports']
+    expect(card(TASK)).not.toContain('justify-content:flex-end')
+    mocks.perms = null
   })
 })
 

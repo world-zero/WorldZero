@@ -38,6 +38,8 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
   const config = useGameConfig()
   const can = useCan()
   const canStatus = can(taskStatusNeed(task.status))
+  const canEdit = can('editTask')
+  const frozen = task.status === 'active' || !canEdit
   const [form, setForm] = useState({
     title: task.title,
     description: task.description,
@@ -68,7 +70,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
     setBusy(true)
     setError(null)
     try {
-      if (dirty) {
+      if (dirty && canEdit) {
         await adminPatchTask(task.id, {
           title: form.title || undefined,
           description: form.description,
@@ -126,25 +128,25 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
       )}
       <label className="adm-field">
         {t('console.tasks.panel.title')}
-        <input className="adm-input" value={form.title} disabled={locked} onChange={set('title')} />
+        <input className="adm-input" value={form.title} disabled={frozen} onChange={set('title')} />
       </label>
       <label className="adm-field">
         {t('console.tasks.panel.description')}
-        <textarea className="adm-input adm-textarea" value={form.description} disabled={locked} onChange={set('description')} />
+        <textarea className="adm-input adm-textarea" value={form.description} disabled={frozen} onChange={set('description')} />
       </label>
       <div className="adm-fields3">
         <label className="adm-field">
           {t('tasks.pointsLabel')}
-          <input className="adm-input" type="number" min={1} value={form.points} disabled={locked} onChange={set('points')} />
+          <input className="adm-input" type="number" min={1} value={form.points} disabled={frozen} onChange={set('points')} />
         </label>
         <label className="adm-field">
           {t('console.tasks.panel.level')}
-          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} disabled={locked} onChange={set('level')} />
+          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} disabled={frozen} onChange={set('level')} />
         </label>
         {factions.length > 0 && (
           <label className="adm-field">
             {t('tasks.factionLabel')}
-            <select className="adm-input" value={form.faction} disabled={locked} onChange={set('faction')}>
+            <select className="adm-input" value={form.faction} disabled={frozen} onChange={set('faction')}>
               {factions.map((f) => (
                 <option key={f.slug} value={f.slug}>
                   {f.label}
@@ -158,11 +160,11 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
         <>
           <label className="adm-field">
             {t('tasks.backdoor.opens')}
-            <input className="adm-input" type="datetime-local" value={form.opens} onChange={set('opens')} />
+            <input className="adm-input" type="datetime-local" disabled={frozen} value={form.opens} onChange={set('opens')} />
           </label>
           <label className="adm-field">
             {t('tasks.backdoor.closes')}
-            <input className="adm-input" type="datetime-local" value={form.closes} onChange={set('closes')} />
+            <input className="adm-input" type="datetime-local" disabled={frozen} value={form.closes} onChange={set('closes')} />
           </label>
         </>
       )}
