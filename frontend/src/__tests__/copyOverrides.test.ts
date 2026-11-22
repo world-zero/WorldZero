@@ -27,7 +27,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { listCopyOverrides, putCopyOverride } from '../api/copy'
-import { pluralForms, revertCopy, saveCopy, shippedValue } from '../components/admin/CopyEditor'
+import { baseOf, pluralForms, revertCopy, saveCopy, shippedValue } from '../components/admin/CopyEditor'
 import i18n, { lazyShipped, loadCopyOverrides } from '../i18n'
 import {
   COPY_ANCESTOR_LIMIT,
@@ -254,6 +254,17 @@ describe('the boot load', () => {
     expect(request.method).toBe('GET')
     expect(new URL(request.url).pathname).toBe('/copy-overrides')
     expect(i18n.t('admin:tasks.deleteError')).toBe('waiting')
+  })
+
+  it('sends the shipped text as base when the server row holds it', async () => {
+    const shipped = shippedValue('admin', 'copyEdit.arm')
+    const target = { ns: 'admin', key: 'copyEdit.arm' }
+    expect(baseOf(target)).toBeNull()
+    wire.replyWith(json([{ ...target, value: shipped }]))
+    await loadCopyOverrides()
+    expect(baseOf(target)).toBe(shipped)
+    await revertCopy(target)
+    expect(baseOf(target)).toBeNull()
   })
 
   it('emits languageChanged so components that call i18n.t directly re-read', async () => {
