@@ -65,6 +65,15 @@ const NEUTRAL: Skin = {
   border: '1px solid var(--color-border-strong)',
 }
 
+/** FactionAvatar's monogram reads `username[0]`, so the card's own name stands in for it. */
+function monogramOf(name: string, factionSlug: string | null | undefined): CharacterOut {
+  return {
+    all_time_score: 0, avatar_url: '', badges: [], bio: '', created_at: '', display_name: name,
+    faction_slug: factionSlug ?? '', id: 0, invitations: [], level: 0, location: '', score: 0,
+    status: 'active', tagline: '', username: name,
+  }
+}
+
 export default function CredentialCard({
   displayName,
   handle,
@@ -164,7 +173,9 @@ export default function CredentialCard({
                   alt={name}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-              ) : null}
+              ) : (
+                <FactionAvatar character={monogramOf(name, factionSlug)} size={128} badge={false} />
+              )}
             </div>
           )
           // One string for tooltip and accessible name; it only opens a file input — no drop (#1263).
