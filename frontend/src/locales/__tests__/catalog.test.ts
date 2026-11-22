@@ -276,13 +276,14 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     'factions.json:coven.invitation.pitch',
     // Plain English "signal", the owner's own words.
     'factions.json:descriptions.everymen',
-    // Singularity broadcasts signals; that survives.
-    'factions.json:singularity.invitation.pitch',
-    'feed.json:factionSelect.singularity.blurb',
+    // Singularity broadcasts signals; that survives (the owner's taunt, 1.0 bake).
+    'taunts.json:singularity.score_overtake.0',
+    // Ephemerists keep the chronicle: the owner's words, 1.0 bake.
+    'factions.json:ephemerists.invitation.pitch',
+    'taunts.json:ephemerists.score_overtake.0',
     // "filed under 'us'": a filing cabinet.
     'factions.json:snide.invitation.perks.2.desc',
     // "the ranks": membership, not level.
-    'factions.json:everymen.invitation.headline',
     'taunts.json:coven.level_up.0',
     'taunts.json:wow.level_up.0',
     // "another sheet": a fresh page.
