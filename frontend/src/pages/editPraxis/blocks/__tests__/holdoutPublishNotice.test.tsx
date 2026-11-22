@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest";
 import "../../../../i18n";
 import type { PraxisMemberOut } from "../../../../api/praxis";
 import { collabCopy } from "../../../../components/collab/collabCopy";
+import { CollabRoster } from "../../../../components/collab/CollabRoster";
 import HoldoutPublishNotice from "../HoldoutPublishNotice";
 
 const ME = 1;
@@ -35,6 +36,7 @@ function render(props: Partial<Parameters<typeof HoldoutPublishNotice>[0]> = {})
   return renderToStaticMarkup(
     <HoldoutPublishNotice
       members={HOLDOUT}
+      collabState="proposed"
       currentCharacterId={ME}
       factionSlug={SLUG}
       submitProposedAt={OPENED}
@@ -97,5 +99,32 @@ describe("the number comes from the era, not from this file", () => {
     expect(html).toContain(
       collabCopy(SLUG, "holdoutClockLine", { days: 1, hours: 0 }),
     );
+  });
+});
+
+describe("a proposal whose proposer left (Q3)", () => {
+  const CREW = [member(ME, false), member(THEM, false)];
+  const roster = () =>
+    renderToStaticMarkup(
+      <CollabRoster
+        praxisType="collab"
+        members={CREW}
+        invites={[]}
+        currentCharacterId={ME}
+        collabState="proposed"
+        factionSlug={SLUG}
+        taskPointValue={10}
+      />,
+    );
+
+  it("shows the roster's holdout banner and the countdown together", () => {
+    expect(roster()).toContain(collabCopy(SLUG, "bannerHoldout"));
+    expect(render({ members: CREW, collabState: "proposed" })).toContain(
+      collabCopy(SLUG, "holdoutClockCaption"),
+    );
+  });
+
+  it("shows neither once the proposal is gone", () => {
+    expect(render({ members: CREW, collabState: "drafting" })).toBe("");
   });
 });

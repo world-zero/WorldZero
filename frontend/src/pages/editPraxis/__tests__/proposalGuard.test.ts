@@ -4,6 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import type { PraxisMemberOut } from '../../../api/praxis'
+import { deriveCollabGate } from '../../../components/collab/collabGate'
 import {
   editNeedsProposalConfirm,
   proposalIsLive,
@@ -45,7 +46,11 @@ describe('proposalIsLive', () => {
   })
 
   it('stays live when the proposer left and nobody has approved (Q3)', () => {
-    expect(proposalIsLive(praxis({ members: [member(1), member(2)] }))).toBe(true)
+    // Leaving keeps status and submit_proposed_at; only kick/edit clear them.
+    const left = praxis({ submit_proposed_at: AT, members: [member(1), member(2)] })
+    expect(left.members.some((m) => m.has_approved)).toBe(false)
+    expect(proposalIsLive(left)).toBe(true)
+    expect(deriveCollabGate(left.members, 1, left.collab_state).state).toBe('holdout')
   })
 
   it('is never live for solo or a duel side, which have one member', () => {

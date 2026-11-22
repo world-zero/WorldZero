@@ -48,7 +48,7 @@ const render = (
 ) =>
   stripResourceHints(
     renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={members}
         invites={invites}
@@ -60,17 +60,17 @@ const render = (
 
 describe('deriveCollabGate — the consensus state machine (#591)', () => {
   it('nobody cast → writing', () => {
-    const g = deriveCollabGate([member(1, false), member(2, false)], 1)
+    const g = deriveCollabGate([member(1, false), member(2, false)], 1, null)
     expect(g).toMatchObject({ castCount: 0, memberCount: 2, iCast: false, state: 'writing' })
   })
   it('I cast, another has not → waiting', () => {
-    expect(deriveCollabGate([member(1, true), member(2, false)], 1).state).toBe('waiting')
+    expect(deriveCollabGate([member(1, true), member(2, false)], 1, null).state).toBe('waiting')
   })
   it('another cast, I have not → holdout', () => {
-    expect(deriveCollabGate([member(1, false), member(2, true)], 1).state).toBe('holdout')
+    expect(deriveCollabGate([member(1, false), member(2, true)], 1, null).state).toBe('holdout')
   })
   it('everyone cast → published', () => {
-    expect(deriveCollabGate([member(1, true), member(2, true)], 1).state).toBe('published')
+    expect(deriveCollabGate([member(1, true), member(2, true)], 1, null).state).toBe('published')
   })
 })
 
@@ -85,7 +85,7 @@ describe('deriveCollabGate — an open proposal whose proposer left (Q3)', () =>
 
 describe('deriveCollabGate — one member is awaiting, never published (#1274)', () => {
   it('a lone member who has not submitted → awaiting', () => {
-    expect(deriveCollabGate([member(1, false)], 1)).toMatchObject({
+    expect(deriveCollabGate([member(1, false)], 1, null)).toMatchObject({
       memberCount: 1,
       castCount: 0,
       state: 'awaiting',
@@ -93,18 +93,18 @@ describe('deriveCollabGate — one member is awaiting, never published (#1274)',
   })
 
   it('a lone member who HAS submitted → awaiting, not published', () => {
-    expect(deriveCollabGate([member(1, true)], 1).state).toBe('awaiting')
+    expect(deriveCollabGate([member(1, true)], 1, null).state).toBe('awaiting')
   })
 
   it('an empty roster → awaiting', () => {
-    expect(deriveCollabGate([], 1).state).toBe('awaiting')
+    expect(deriveCollabGate([], 1, null).state).toBe('awaiting')
   })
 })
 
 describe('CollabRoster render', () => {
   it('renders nothing for a solo praxis', () => {
     expect(renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="solo"
         members={[member(1, false)]}
         currentCharacterId={1}
@@ -116,7 +116,7 @@ describe('CollabRoster render', () => {
   // A duel side is `type='solo'` + `duel_id` (ADR-0011); see `praxisType`.
   it('renders nothing for a duel side (type solo, whatever the member count)', () => {
     expect(renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="solo"
         members={[member(1, true), member(2, false)]}
         currentCharacterId={1}
@@ -124,7 +124,7 @@ describe('CollabRoster render', () => {
       />,
     )).toBe('')
     expect(renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="duel"
         members={[member(1, true), member(2, false)]}
         currentCharacterId={1}
@@ -136,7 +136,7 @@ describe('CollabRoster render', () => {
   // Faction-voiced wording is covered in collabCopy.test.ts.
   it('pills each member by submission state, and tallies the count once', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug={null} />,
+      <CollabRoster collabState={null} praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug={null} />,
     )
     expect(html).toContain(collabCopy(null, 'pillCast'))
     expect(html).toContain(collabCopy(null, 'pillWeaving'))
@@ -146,7 +146,7 @@ describe('CollabRoster render', () => {
   // #1812: status reads the same everywhere; catalog half in collabCopy.test.ts.
   it('reads the same on a faction task as on an unaffiliated one', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug="everymen" />,
+      <CollabRoster collabState={null} praxisType="collab" members={[member(1, true), member(2, false)]} currentCharacterId={1} factionSlug="everymen" />,
     )
     expect(html).toContain(collabCopy(null, 'pillCast'))
     expect(html).toContain(collabCopy(null, 'pillWeaving'))
@@ -161,7 +161,7 @@ describe('CollabRoster render', () => {
 describe('CollabRoster — a one-member collab (#1274)', () => {
   const html = (invites?: PraxisInviteOut[]) =>
     renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, false)]}
         currentCharacterId={1}
@@ -196,7 +196,7 @@ describe('CollabRoster — a one-member collab (#1274)', () => {
 
   it('does not announce a published collab for a lone author who submitted', () => {
     const lone = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, true)]}
         currentCharacterId={1}
@@ -265,7 +265,7 @@ describe('CollabRoster — the four-state pill (#1416)', () => {
 describe('CollabRoster — the panel header (#1416)', () => {
   const header = (members: PraxisMemberOut[]) =>
     renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={members}
         currentCharacterId={1}
@@ -295,7 +295,7 @@ describe('CollabRoster — the panel header (#1416)', () => {
   // Counts MEMBERS, not rows.
   it('counts members, not invites', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, true), member(2, false)]}
         invites={[invite(3, 'Asked', 'pending')]}
@@ -313,7 +313,7 @@ describe('CollabRoster rescind × visibility (#1416)', () => {
   const rescind = () => {}
   const html = (status: PraxisInviteOut['status']) =>
     renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, false)]}
         invites={[invite(2, 'Asked', status)]}
@@ -334,7 +334,7 @@ describe('CollabRoster rescind × visibility (#1416)', () => {
   it('withholds it where no handler is passed', () => {
     expect(
       renderToStaticMarkup(
-        <CollabRoster
+        <CollabRoster collabState={null}
           praxisType="collab"
           members={[member(1, false)]}
           invites={[invite(2, 'Asked', 'pending')]}
@@ -353,7 +353,7 @@ describe('CollabRoster rescind × visibility (#1416)', () => {
 describe('CollabRoster — the live presence dot (#1744)', () => {
   const rosterHtml = (present?: readonly number[]) =>
     renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, false), member(2, false)]}
         invites={[invite(7, 'Asked', 'pending')]}
@@ -392,7 +392,7 @@ describe('CollabRoster kick × visibility (#959, #1076)', () => {
 
   it('offers the × on another member while the collab is still open', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, true), member(2, false)]}
         currentCharacterId={1}
@@ -406,7 +406,7 @@ describe('CollabRoster kick × visibility (#959, #1076)', () => {
 
   it('withholds the × once every member has cast (the praxis is published)', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, true), member(2, true)]}
         currentCharacterId={1}
@@ -419,7 +419,7 @@ describe('CollabRoster kick × visibility (#959, #1076)', () => {
 
   it('withholds the × from a non-member viewer', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, false), member(2, false)]}
         currentCharacterId={99}
@@ -477,7 +477,7 @@ describe('CollabRoster — the supporting line (#1952)', () => {
   it('says nothing about "yours" to somebody who is not on the crew', () => {
     // Drawn to strangers on the detail page; they owe the crew nothing.
     const html = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, true), member(2, false)]}
         currentCharacterId={99}
@@ -518,7 +518,7 @@ describe('CollabRoster — the bulk press in the header (#1952)', () => {
     crewNudge: { sent: number; skipped: number; skippedIds: number[] } | null = null,
   ) =>
     renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={members}
         currentCharacterId={1}
@@ -554,7 +554,7 @@ describe('CollabRoster — the bulk press in the header (#1952)', () => {
 
   it('draws none for a member who has not approved — the row rule, once', () => {
     const html = renderToStaticMarkup(
-      <CollabRoster
+      <CollabRoster collabState={null}
         praxisType="collab"
         members={[member(1, false), member(2, false), member(3, true)]}
         currentCharacterId={1}

@@ -335,6 +335,7 @@ export function InviteSearch({
                     everyone else, so mounted unconditionally. */}
                 <HoldoutPublishNotice
                   members={praxis.members}
+                  collabState={praxis.collab_state}
                   currentCharacterId={currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   submitProposedAt={praxis.submit_proposed_at}

@@ -124,7 +124,7 @@ export function CollabRoster({
    * (membership is checked server-side, #1740).
    */
   presentCharacterIds?: readonly number[]
-  collabState?: PraxisOut["collab_state"]
+  collabState: PraxisOut["collab_state"]
   /** See {@link CollabSkin}. Only the composer passes one. */
   skin?: CollabSkin
   /**

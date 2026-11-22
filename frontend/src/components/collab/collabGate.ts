@@ -31,7 +31,7 @@ export interface CollabGate {
 export function deriveCollabGate(
   members: readonly PraxisMemberOut[],
   currentCharacterId: number | null | undefined,
-  collabState?: PraxisOut['collab_state'],
+  collabState: PraxisOut['collab_state'],
 ): CollabGate {
   const memberCount = members.length
   const castCount = members.filter((m) => m.has_approved).length

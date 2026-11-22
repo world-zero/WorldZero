@@ -591,6 +591,7 @@ export default function PraxisWaitingSurface({
             /* Completed: no kick/nudge (the backend would refuse). */
             <CollabRoster
               praxisType={praxis.type}
+              collabState={praxis.collab_state}
               members={praxis.members}
               invites={praxis.invites}
               currentCharacterId={currentCharacterId}
