@@ -52,6 +52,12 @@ describe('title for a returning visitor (#3563)', () => {
     expect(headline()).toBe(onboarding.flow.welcome)
   })
 
+  it('reads 0 in the points disc, never ?', () => {
+    mount()
+    expect(document.querySelector('.ob-ring .ob-disc b')!.textContent).toBe('0')
+    expect(document.querySelector('.ob-ring')!.textContent).not.toContain('?')
+  })
+
   it('remembers a START tap before the title has finished', () => {
     mount()
     expect(localStorage.getItem(SEEN)).toBeNull()

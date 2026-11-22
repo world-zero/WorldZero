@@ -67,7 +67,7 @@ function Title({ cameBack, returning, onStart }: { cameBack: boolean; returning:
         </div>
         <div className="ob-ring">
           <div className="ob-disc">
-            <b>?</b>
+            <b>0</b>
             <span className="ob-cap">{t('flow.points')}</span>
           </div>
         </div>
