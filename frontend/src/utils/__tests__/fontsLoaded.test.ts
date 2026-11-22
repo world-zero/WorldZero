@@ -758,6 +758,7 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
     "components/taskCard/CovenTaskCard.tsx",
     "components/feed/CovenFeedFrame.tsx",
     "components/comments/voices/CovenComment.tsx",
+    "pages/taskDetail/archetypes/CovenTaskDetail.tsx",
   ]);
 
   it("derives the one-cut families from the sheets rather than a list", () => {

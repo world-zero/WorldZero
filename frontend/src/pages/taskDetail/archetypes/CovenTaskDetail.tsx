@@ -3,7 +3,7 @@ import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PraxisCard from "../../../components/praxisCard/PraxisCard";
-import { CovenCat, SLIP_SHEET } from "../../../components/factionMarks/covenSlip";
+import { CAPTION_FONT, CovenCat, SLIP_SHEET } from "../../../components/factionMarks/covenSlip";
 import { CovenSigil } from "../../../components/sigil/CovenSigil";
 import { useFormFactor } from "../../../hooks/useFormFactor";
 import { factionFill, factionName } from "../../../utils/factions";
@@ -72,7 +72,7 @@ const SIZES: Record<"desktop" | "mobile", SizeSet> = {
 };
 
 const CAPTION: CSSProperties = {
-  fontFamily: CHROME,
+  fontFamily: CAPTION_FONT,
   fontWeight: 700,
   letterSpacing: "0.16em",
   textTransform: "uppercase",
