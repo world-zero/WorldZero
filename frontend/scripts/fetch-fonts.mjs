@@ -418,6 +418,23 @@ async function main() {
     console.log(`${family.padEnd(20)} 1 subset cut (${woff2.length} B)`)
   }
 
+  // Caveat's digits stand ~530 units against ~700 caps; the Coven uppercase
+  // caption leads with this digits-only face (same woff2, no new request).
+  rules.push({
+    family: 'Caveat',
+    css:
+      `/* Caveat Figures 700 — digits at cap height (#4126) */\n` +
+      `@font-face {\n` +
+      `  font-family: 'Caveat Figures';\n` +
+      `  font-style: normal;\n` +
+      `  font-weight: 700;\n` +
+      `  font-display: swap;\n` +
+      `  src: url('./assets/fonts/caveat-400to700-latin.woff2') format('woff2');\n` +
+      `  unicode-range: U+0030-0039;\n` +
+      `  size-adjust: 130%;\n` +
+      `}`,
+  })
+
   const shell = rules.filter((rule) => SHELL_FAMILIES.has(rule.family))
   const faction = rules.filter((rule) => !SHELL_FAMILIES.has(rule.family))
   // A sheet with no rules would be an empty @import or a chunk with no CSS —

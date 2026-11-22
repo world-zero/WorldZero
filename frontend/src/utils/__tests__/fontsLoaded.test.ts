@@ -753,7 +753,22 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
     "components/praxisCard/desktop/EphemeristsPraxisCard.tsx",
     // #2797: S.N.I.D.E. is the one skin ruled to use 400.
     "components/praxisCard/desktop/SnidePraxisCard.tsx",
+    // #4126: the caption stack's 700 is for the Caveat letters behind the one-cut digits face.
+    "components/factionMarks/covenSlip.tsx",
+    "components/taskCard/CovenTaskCard.tsx",
+    "components/feed/CovenFeedFrame.tsx",
+    "components/comments/voices/CovenComment.tsx",
+    "pages/taskDetail/archetypes/CovenTaskDetail.tsx",
   ]);
+
+  it("ships Caveat Figures as a 700 cut for the digits only (#4126)", () => {
+    const blocks = fontFaceBlocks().filter((b) =>
+      /caveat figures/i.test(blockField(b, "font-family") ?? ""),
+    );
+    expect(blocks).toHaveLength(1);
+    expect(blockField(blocks[0], "font-weight")).toBe("700");
+    expect(blockField(blocks[0], "unicode-range")).toBe("U+0030-0039");
+  });
 
   it("derives the one-cut families from the sheets rather than a list", () => {
     for (const family of [

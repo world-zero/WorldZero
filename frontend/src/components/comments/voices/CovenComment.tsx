@@ -13,6 +13,7 @@ import {
 } from '../OwnerControls'
 import { CommentFlagControl, canFlagComment } from '../FlagControl'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
+import { CAPTION_FONT } from '../../factionMarks/covenSlip'
 
 /**
  * Cozy Coven — the candlelit slip, as a comment (#1197). Grenze Gotisch byline,
@@ -21,7 +22,6 @@ import { factionBodyVars } from '../../../utils/factionBodyFace'
  * One responsive component, no mobile twin (ADR-0063).
  */
 
-const CHROME = 'var(--font-faction-script)' /* Caveat */
 const READING = 'var(--font-faction-spectral)' /* Spectral */
 const HAND = 'var(--font-faction-script)' /* Caveat */
 const DISPLAY = 'var(--font-faction-witch)' /* Grenze Gotisch */
@@ -35,7 +35,7 @@ const ON_ACCENT = 'var(--faction-coven-slip-cta-ink)'
 const FIELD = 'var(--faction-coven-slip-from)'
 
 const CAPTION: CSSProperties = {
-  fontFamily: CHROME,
+  fontFamily: CAPTION_FONT,
   fontWeight: 700,
   fontSize: 'var(--text-md)',
   letterSpacing: '0.16em',
