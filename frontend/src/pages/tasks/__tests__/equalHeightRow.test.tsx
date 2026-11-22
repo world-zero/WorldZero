@@ -245,12 +245,12 @@ describe('a sibling CTA row holding a link stays off the slack chain (#2380)', (
 })
 
 describe('the dispatcher wrapper the row actually lays out', () => {
-  it('is a plain positioned box with no display of its own', () => {
+  it('is a plain class-sized box with no display of its own', () => {
     dispatch.formFactor = 'desktop'
     const out = markup(
       <TaskCard task={TASK} basePoints={TASK.point_value} multiplier={1} inProgressCount={0} />,
     )
     // `.task-card-row > *`: must be free to become a column.
-    expect(out.slice(0, out.indexOf('>') + 1)).toBe('<div style="position:relative">')
+    expect(out.slice(0, out.indexOf('>') + 1)).toBe('<div class="task-fit-card">')
   })
 })
