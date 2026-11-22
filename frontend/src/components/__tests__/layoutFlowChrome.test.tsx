@@ -6,9 +6,9 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import '../../i18n'
-import { AuthContext, useAuth } from '../../auth/AuthContext'
+import { AuthContext } from '../../auth/AuthContext'
+import Onboarding from '../../pages/Onboarding'
 import Layout from '../Layout'
-import { useHidePhoneChrome } from '../layout/FlowChrome'
 
 const form = vi.hoisted(() => ({ current: 'mobile' }))
 vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => form.current }))
@@ -18,18 +18,15 @@ vi.mock('../LevelUpWatcher', () => ({ default: () => null }))
 vi.mock('../InvitationWatcher', () => ({ default: () => null }))
 vi.mock('../NavBar', () => ({ default: () => <nav data-testid="top-nav" /> }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => <nav data-testid="tab-bar" /> }))
+vi.mock('../../pages/onboarding/OnboardingFlow', () => ({ default: () => null }))
 vi.mock('../layout/Sidebar', () => ({ default: () => null, panelStyle: {} }))
 
-function Flow() {
-  useHidePhoneChrome(!useAuth().user)
-  return null
-}
 function Page() {
   const [inFlow, setInFlow] = useState(true)
   return (
     <>
       <button onClick={() => setInFlow(false)}>arrive</button>
-      {inFlow && <Flow />}
+      {inFlow && <Onboarding />}
     </>
   )
 }
