@@ -1384,6 +1384,11 @@ async def kick_member(
     if member_id == requester_id:
         raise HTTPException(status_code=400, detail="Cannot kick yourself.")
 
+    # A stale page can kick after a collab converted to solo.
+    if praxis.type != PraxisType.collab:
+        raise HTTPException(
+            status_code=400, detail="Only collab memberships can be kicked."
+        )
     if collab_state(praxis) not in COLLAB_ALLOWED_FROM["kick"]:
         raise HTTPException(
             status_code=422,

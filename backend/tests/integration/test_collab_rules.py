@@ -277,3 +277,22 @@ async def test_leave_seal_exempts_only_a_leaver_who_is_admin(
     await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
     await client.post(f"/praxes/{praxis_collab.id}/leave", headers=auth_headers2)
     assert (await _row(db_session, praxis_collab.id)).status.value != "submitted"
+
+
+async def test_kick_on_a_praxis_converted_to_solo_is_a_400(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    praxis_id = await _collab_with_members(
+        client, active_task, auth_headers2, [(character.id, auth_headers)]
+    )
+    left = await client.post(f"/praxes/{praxis_id}/leave", headers=auth_headers)
+    assert left.status_code == 200
+    stale = await client.post(
+        f"/praxes/{praxis_id}/kick/{character.id}", headers=auth_headers2
+    )
+    assert stale.status_code == 400
