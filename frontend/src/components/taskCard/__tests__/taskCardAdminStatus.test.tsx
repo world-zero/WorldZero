@@ -101,6 +101,6 @@ describe('the moderation cluster sits in the foot, not over it (#2049)', () => {
   it('leaves the wrapper the plain positioned box the equal-height row needs', () => {
     // An inline `display` would beat `.task-card-row > *` (#1945).
     const out = card(TASK)
-    expect(out.slice(0, out.indexOf('>') + 1)).toBe('<div style="position:relative">')
+    expect(out.slice(0, out.indexOf('>') + 1)).toBe('<div class="task-fit-card">')
   })
 })

@@ -81,7 +81,7 @@ export default function TaskCard({
   const Card = resolveVariant(surfaceMap('taskCard'), shown.primary_faction_slug)
   const isMetatask = shown.task_type === 'metatask'
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="task-fit-card">
       <Card
         task={shown}
         basePoints={basePoints}
