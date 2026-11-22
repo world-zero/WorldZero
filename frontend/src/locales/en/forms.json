@@ -97,7 +97,7 @@
       "challenge": "Could not challenge {{name}}.",
       "cancelChallenge": "Could not cancel the challenge.",
       "updateMetatask": "Could not update metatask.",
-      "duelUnderway": "This duel is already underway — it can't be cancelled from here.",
+      "duelUnderway": "This duel is already underway — it can't be canceled from here.",
       "fileTooLarge_one": "File too large (50 MB limit): {{names}}.",
       "fileTooLarge_other": "Files too large (50 MB limit): {{names}}.",
       "notMedia_one": "Only photos, video and audio can be added here. Left out: {{names}}.",
