@@ -18,7 +18,7 @@ import {
 } from "../../api/praxis";
 import { getDuelDetail, issueChallenge, type DuelDetailOut } from "../../api/duel";
 import { nudgeTheCrew, sendNudge, type NudgeResultOut } from "../../api/nudge";
-import { listCharacters, type CharacterOut } from "../../api/characters";
+import { listCharacters, type CharacterOut, type CharacterSearchOut } from "../../api/characters";
 import { listRelationships } from "../../api/relationships";
 import { useAuth } from "../../auth/AuthContext";
 import { useBlockedIds } from "../../hooks/useBlockedIds";
@@ -73,7 +73,7 @@ const NOTHING_TO_REPORT: RosterOutcome = { kind: "unchanged" };
 interface ComposerRoster {
   inviteQuery: string;
   setInviteQuery: (value: string) => void;
-  inviteResults: CharacterOut[];
+  inviteResults: CharacterSearchOut[];
   staged: CharacterOut | null;
   setStaged: (character: CharacterOut | null) => void;
   inviteOpen: boolean;
@@ -98,7 +98,7 @@ export function useComposerRoster(options: {
   const { user } = useAuth();
 
   const [inviteQuery, setInviteQuery] = useState("");
-  const [inviteResults, setInviteResults] = useState<CharacterOut[]>([]);
+  const [inviteResults, setInviteResults] = useState<CharacterSearchOut[]>([]);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [stagedRaw, setStaged] = useState<CharacterOut | null>(null);
   const [inviting, setInviting] = useState(false);
@@ -158,7 +158,8 @@ export function useComposerRoster(options: {
           );
         }
         setInviteResults(filtered);
-        setInviteOpen(filtered.length > 0);
+        // Open even when empty: the picker says "no one matches" (#4192).
+        setInviteOpen(true);
       } catch {
         if (!cancelled) {
           setInviteResults([]);

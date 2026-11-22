@@ -10,7 +10,7 @@ import { describe, it, expect, vi } from "vitest";
 import "../../../../i18n";
 import type { PraxisInviteOut, PraxisMemberOut, PraxisOut } from "../../../../api/praxis";
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from "../../../../api/duel";
-import type { CharacterOut } from "../../../../api/characters";
+import type { CharacterOut, CharacterSearchOut } from "../../../../api/characters";
 import type { EditPraxisState } from "../../useEditPraxis";
 import { anEditPraxisState } from "../../../../test/fixtures";
 import { InviteSearch, type InviteSearchSkin } from "../controls";
@@ -251,10 +251,24 @@ describe("InviteSearch — a staged player from a profile (#3772)", () => {
 
 /** #1417: the `+ invite` chip. Static markup, so only the closed state. */
 describe("InviteSearch — the + invite chip (#1417)", () => {
-  it("draws the chip instead of a permanently open search box", () => {
-    const html = chipHtml(collabState([]));
+  it("draws the chip instead of an open search box once someone is invited", () => {
+    const html = chipHtml(collabState([pendingInvite("Asked Player")]));
     expect(html).toContain("+ invite");
     expect(html).not.toContain("search players to invite");
+  });
+
+  it("opens the search from the chip", () => {
+    const state = collabState([pendingInvite("Asked Player")]);
+    render(<InviteSearch {...state} praxis={state.praxis!} skin={SKIN} />);
+    expect(screen.queryByTestId("composer-invite-search")).toBeNull();
+    fireEvent.click(screen.getByTestId("composer-invite-open"));
+    expect(screen.getByTestId("composer-invite-search")).toBeTruthy();
+  });
+
+  it("starts a fresh collab with the search open and no chip", () => {
+    const html = chipHtml(collabState([]));
+    expect(html).toContain("search players to invite");
+    expect(html).not.toContain("+ invite");
   });
 
   // `invite_to_praxis` refuses only once the PRAXIS is submitted.
@@ -297,7 +311,11 @@ function searchResult(
 }
 
 /** No duel attached, so the box shows. */
-function searchState(results: CharacterOut[]): EditPraxisState {
+function searchState(
+  results: CharacterOut[],
+  duelMode = true,
+): EditPraxisState {
+  const rows = results.map((row) => ({ unavailable_reason: null, ...row }));
   const praxis = {
     id: 1,
     type: "solo",
@@ -305,14 +323,14 @@ function searchState(results: CharacterOut[]): EditPraxisState {
     created_by_id: 1,
     task_faction_slug: "na",
     members: [],
-    invites: [],
+    invites: duelMode ? [] : [pendingInvite("Asked Player")],
   } as unknown as PraxisOut;
   return anEditPraxisState({
     praxis,
-    duelMode: true,
+    duelMode,
     currentCharacterId: 1,
     inviteQuery: "pixie",
-    inviteResults: results,
+    inviteResults: rows,
     inviteOpen: true,
   });
 }
@@ -337,5 +355,31 @@ describe("InviteSearch — a result row names the person (#1962)", () => {
   it("falls back to the handle's monogram when there is no portrait", () => {
     const html = chipHtml(searchState([NAMESAKES[1]]));
     expect(html).toContain(">P<");
+  });
+});
+
+describe("InviteSearch — a blocked player is shown with the reason (#4192)", () => {
+  const BLOCKED: CharacterSearchOut = {
+    ...searchResult(2, "Taken Tam", "tam"),
+    unavailable_reason: "has_active_praxis",
+  };
+  const FREE: CharacterSearchOut = {
+    ...searchResult(3, "Free Fay", "fay"),
+    unavailable_reason: null,
+  };
+
+  it.each([true, false])("greys the row out in duelMode=%s", (duelMode) => {
+    const state = searchState([BLOCKED, FREE], duelMode);
+    render(<InviteSearch {...state} praxis={state.praxis!} skin={SKIN} />);
+    // Collab hides the box behind the `+ invite` chip.
+    if (!duelMode) fireEvent.click(screen.getByTestId("composer-invite-open"));
+    const taken = screen.getByText("Taken Tam").closest("button")!;
+    expect(taken.disabled).toBe(true);
+    expect(taken.textContent).toContain("already has a praxis on this task");
+    expect(screen.getByText("Free Fay").closest("button")!.disabled).toBe(false);
+  });
+
+  it("says no one matches when a 2+ character query finds nobody offerable", () => {
+    expect(chipHtml(searchState([]))).toContain("no one matches");
   });
 });
