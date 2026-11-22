@@ -72,6 +72,12 @@ describe('own pending proposal card (#3771)', () => {
     for (const label of [EDIT, WITHDRAW]) expect(html).not.toContain(label)
   })
 
+  it.each(['below_level', 'is_metatask'] as const)('a %s denial on a pending task still reads Pending review', (reason) => {
+    const cta = taskCardSignupCta({ ...pendingTask('default'), signup_reason: reason }, () => {})
+    expect(cta?.label).toBe(PENDING)
+    expect(cta?.pending).toBe(true)
+  })
+
   it('a retired task keeps No longer open', () => {
     const cta = taskCardSignupCta({ ...pendingTask('default'), status: 'retired' }, () => {})
     expect(cta?.label).toBe(i18n.t('tasks:detail.signup.denied.taskStatusClosed'))

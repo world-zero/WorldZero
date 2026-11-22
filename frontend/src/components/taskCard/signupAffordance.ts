@@ -68,7 +68,7 @@ export function taskCardSignupCta(
         };
       }
     }
-    if (task.signup_reason === "task_status_closed" && task.status === "pending") {
+    if (task.status === "pending") {
       return { label: i18n.t("tasks:proposalCard.pendingReview"), taskId: task.id, denied: true, pending: true };
     }
     // `level` is only read by `denied.belowLevel`; harmless elsewhere.
