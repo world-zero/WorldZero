@@ -6,7 +6,7 @@
 
 Thin CLI over ``services.era.apply_era_reset`` (semantics: ADR-0042). Irreversible
 and NOT idempotent: without ``--yes`` it prints the plan and exits 1. ``USERNAME``
-must be an admin (``Era.started_by_id`` audit FK). The primary door is
+must be the owner or an admin holding ``roll_era`` (``Era.started_by_id`` audit FK). The primary door is
 ``PUT /admin/eras/live`` (ADR-0091); this re-opens the era the DB says is live,
 for outages, and refuses an unregistered ``config_key`` rather than fall back.
 Unlike the route it allows re-opening the live era (a new season, same rules).

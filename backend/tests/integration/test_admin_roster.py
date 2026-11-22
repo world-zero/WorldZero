@@ -1,10 +1,12 @@
 """The owner-only admin roster (#3258)."""
+import dependencies
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
 from models.account import Account, AccountStatus
 from models.mod_action import ModAction
+from models.roles import Permission
 from tests.integration.factories import make_admin, make_owner
 
 
@@ -144,3 +146,22 @@ async def test_refusals_carry_their_codes(
 
     r = await client.delete(f"/admin/admins/{other.username}", headers=hdr)
     assert (r.status_code, code(r)) == (404, "ADMIN_NOT_AN_ADMIN")
+
+
+async def test_a_deleted_account_cannot_be_granted_and_is_off_the_roster(
+    client, db_session, account, account2, character, other, hdr, owner_is_account,
+):
+    await make_owner(db_session, account)
+    r = await client.put(PUT_URL.format(other.username, "edit_copy"), json=ON, headers=hdr)
+    assert r.status_code == 204
+    account2.status = AccountStatus.deleted
+    await db_session.commit()
+    names = [a["username"] for a in (await client.get("/admin/admins", headers=hdr)).json()]
+    assert other.username not in names
+
+    r = await client.put(PUT_URL.format(other.username, "read_messages"), json=ON, headers=hdr)
+    assert (r.status_code, r.json()["detail"]["code"]) == (409, "ACCOUNT_DELETED")
+    held = await dependencies.account_permissions(account2.id, db_session)
+    assert held == {Permission.edit_copy}
+    r = await client.put(PUT_URL.format(other.username, "edit_copy"), json=OFF, headers=hdr)
+    assert r.status_code == 204
