@@ -505,6 +505,7 @@ export default function PraxisWaitingSurface({
         <TaskSlip
           praxis={praxis}
           task={task}
+          collapsible={false}
           label={collabCopy(slug, isDuel ? "duelAwaitingTaskLabel" : "awaitingTaskLabel")}
           {...dress.slip}
         />

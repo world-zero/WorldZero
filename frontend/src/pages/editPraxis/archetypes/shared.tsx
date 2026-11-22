@@ -661,6 +661,8 @@ interface TaskSlipProps {
   mark?: ReactNode;
   /** Eyebrow; defaults to `The task` (the waiting surface passes `The duel`). */
   label?: ReactNode;
+  /** False shows the slip in full on a phone; the waiting surface has nothing to write. */
+  collapsible?: boolean;
   style?: CSSProperties;
   labelStyle?: CSSProperties;
   titleStyle?: CSSProperties;
@@ -677,6 +679,7 @@ export function TaskSlip({
   task,
   mark,
   label,
+  collapsible = true,
   style,
   labelStyle,
   titleStyle,
@@ -684,7 +687,7 @@ export function TaskSlip({
   pillStyle,
 }: TaskSlipProps) {
   const { t } = useTranslation("forms");
-  const mobile = useFormFactor() === "mobile";
+  const mobile = useFormFactor() === "mobile" && collapsible;
   const [open, setOpen] = useState(false);
   const rowStyle: CSSProperties = {
     display: "flex",
