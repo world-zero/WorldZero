@@ -221,6 +221,20 @@ describe('saving an override', () => {
     expect(missingPlaceholders(template, 'put it back')).toEqual(['{{placeholders}}'])
     expect(missingPlaceholders(template, 'you dropped {{placeholders}}')).toEqual([])
   })
+
+  it('refuses a replacement that drops or renames a Trans tag', () => {
+    const template = 'Standing · <1>card-carrying</1>'
+    expect(missingPlaceholders(template, 'Standing · card-carrying')).toEqual(['<1>', '</1>'])
+    expect(missingPlaceholders(template, 'Rank · <2>card-carrying</2>')).toEqual(['<1>', '</1>'])
+    expect(missingPlaceholders(template, 'Rank · <1>sworn</1>')).toEqual([])
+  })
+
+  it('finds a Trans value by its tag-free DOM text', () => {
+    setCopyRecording(true)
+    recordRenderedCopy('Standing · <1>card-carrying</1>', { ns: 'factions', key: 'x' })
+    expect(copyTargetsForText('Standing · card-carrying')).toEqual([{ ns: 'factions', key: 'x' }])
+    setCopyRecording(false)
+  })
 })
 
 describe('reverting to the shipped wording', () => {

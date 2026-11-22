@@ -201,7 +201,7 @@
     "saveError": "Could not save that wording.",
     "changedUnderYou": "Someone else changed this while you were editing. Theirs now reads: “{{theirs}}”. Save again to replace it with yours, or cancel to keep theirs.",
     "revertError": "Could not put the default wording back.",
-    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to fill in a value.",
+    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to render.",
     "scopeFaction": "Belongs to one faction — only that faction's screens change.",
     "scopeShared": "Shared wording — changing it changes every faction."
   },
