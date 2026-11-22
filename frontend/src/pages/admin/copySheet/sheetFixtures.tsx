@@ -520,6 +520,8 @@ export function praxisCardsFor(slug: string): PraxisCardOut[] {
       id: 601, task_id: 101, task_faction_slug: slug, status: 'submitted',
       task_title: TASK_TITLE_BY_SLUG[slug ?? 'ua'] ?? 'Plant a native tree',
       title: 'Charcoal study, north portico',
+      // 30 x 1 + 12 + 3 + 5 = 50: shows every stamp row
+      habit_bonus_points: 3, rival_bonus_points: 5, score: 50,
     }),
     makePraxisCard({
       id: 602, task_id: 108, task_faction_slug: slug, status: 'in_progress',
