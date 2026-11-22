@@ -52,8 +52,9 @@ def duel_state(
     if status == DuelStatus.active:
         if forfeited:
             return DuelState.AWAITING_HONEST_SIDE
+        # Both cast but not yet settled (settling is a write): already live.
         if casts == 2:
-            raise ValueError("active duel with both sides cast should be settled")
+            return DuelState.LIVE
         return DuelState.ONE_CAST if casts else DuelState.DRAFTING
     # resolved: a forfeit still has a winner (Q4); otherwise both must have cast.
     # ponytail: no column records "resolved from active", so a side reopened after

@@ -57,9 +57,8 @@ def test_pending_never_lapses_without_a_window():
     assert duel_state(_duel(P, STALE), DRAFT, None, NOW, era) is DuelState.CHALLENGED
 
 
-def test_active_with_both_cast_is_unreachable():
-    with pytest.raises(ValueError):
-        duel_state(_duel(A), CAST, CAST, NOW, ERA_1)
+def test_active_with_both_cast_reads_live_before_the_settle_write():
+    assert duel_state(_duel(A), CAST, CAST, NOW, ERA_1) is DuelState.LIVE
 
 
 def _collab(status, member_count, kind=PraxisType.collab):
