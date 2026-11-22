@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { useFormFactor } from '../../hooks/useFormFactor'
 import LoginNotice from '../../components/LoginNotice'
 import { useAuth } from '../../auth/AuthContext'
 import { acceptTerms } from '../../api/terms'
@@ -93,6 +94,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
   const { user, loading, refetch } = useAuth()
   const { t } = useTranslation('onboarding')
   const { t: tc } = useTranslation('common')
+  const phone = useFormFactor() === 'mobile'
   const [flow, setFlow] = useState<Flow>(() => initialFlow(resumed, signIn && !user))
   const [returning] = useState(titleSeen)
   const [reveal, setReveal] = useState(0)
@@ -241,9 +243,11 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
       <span aria-hidden="true" className="ob-aurora" style={{ animationDelay: step === 'title' && !cameBack && !returning ? '3.4s' : '0s' }} />
       <header className="ob-header">
         <span>
-          <span className={`ob-brand ob-cap ${step === 'title' ? '' : 'ob-brand-hide'}`}>
-            {t('flow.brand')} <i />
-          </span>
+          {phone && (
+            <span className={`ob-brand ob-cap ${step === 'title' ? '' : 'ob-brand-hide'}`}>
+              {t('flow.brand')} <i />
+            </span>
+          )}
         </span>
         <span>
           {(beat || canSkip) && (
@@ -256,7 +260,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
               {t(player ? 'flow.skipReturning' : 'flow.skip')}
             </button>
           )}
-          {!user && (step === 'title' || beat) && (
+          {phone && !user && (step === 'title' || beat) && (
             <button type="button" className="ob-ghost ob-cap" onClick={() => move(toSignIn)} data-testid="onboarding-header-sign-in">
               {t('flow.signIn')}
             </button>
