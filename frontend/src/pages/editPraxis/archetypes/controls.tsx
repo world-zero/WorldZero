@@ -709,15 +709,6 @@ interface DropButtonSkin {
   className?: string;
 }
 
-/** States a duel can't be dissolved from (Q5), so its side can't be dropped. */
-const DUEL_STATES_THAT_BLOCK_DROP = new Set<string>([
-  "awaiting_honest_side",
-  "live",
-  "live_forfeited",
-  "resolved",
-  "no_contest",
-]);
-
 export function DropButton({
   praxis,
   duel,
