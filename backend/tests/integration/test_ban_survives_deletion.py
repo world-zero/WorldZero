@@ -13,6 +13,7 @@ from models.roles import Permission
 from services.account_deletion import TOMBSTONE_RETENTION_DAYS, delete_account
 from services.character import load_account_eligibility
 from tests.integration.factories import make_admin, make_character
+from tests.integration.query_capture import capture_selects
 from tests.integration.test_returning_player_gate import (
     _RETURNING_EMAIL,
     _SUB,
@@ -141,3 +142,42 @@ async def test_clearing_a_carried_ban_needs_the_ban_permission(
         403,
         "ADMIN_PERMISSION_REQUIRED",
     )
+
+
+async def _tombstoned(db_session, era, n: int, tag: str) -> None:
+    for i in range(n):
+        old = Account(email=f"{tag}{i}@example.com")
+        db_session.add(old)
+        await db_session.flush()
+        db_session.add(
+            AccountTombstone(
+                account_id=old.id,
+                provider=_GOOGLE,
+                provider_user_hash=f"{tag}{i}",
+                mod_banned=True,
+            )
+        )
+        await make_character(db_session, era, username=f"{tag}{i}", account=old)
+    await db_session.commit()
+
+
+@pytest.mark.asyncio
+async def test_the_admin_roster_resolves_carried_bans_in_a_fixed_query_count(
+    client: AsyncClient, db_session: AsyncSession, era, some_faction, account,
+    auth_headers,
+) -> None:
+    await make_admin(db_session, account, permissions=[Permission.ban_suspend])
+
+    async def selects() -> tuple[int, list]:
+        with capture_selects() as seen:
+            resp = await client.get("/admin/characters", headers=auth_headers)
+        assert resp.status_code == 200
+        return len(seen), resp.json()
+
+    await _tombstoned(db_session, era, 2, "few")
+    few, rows = await selects()
+    await _tombstoned(db_session, era, 5, "many")
+    many, rows = await selects()
+
+    assert sum(r["carried_ban_until"] is not None for r in rows) == 7
+    assert many == few

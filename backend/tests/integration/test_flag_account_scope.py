@@ -14,6 +14,7 @@ from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
 from services.auth import create_jwt
+from services.praxis import can_flag_praxis
 from tests.integration.factories import DEFAULT_FACTION_SLUG
 
 FLAG_LEVEL = CURRENT_ERA.flag_level_required
@@ -430,3 +431,30 @@ async def test_stranger_cannot_flag_an_unsealed_duel_side(
         f"/praxes/{side.id}/flag", json={"reason": "spam"}, headers=auth_headers3
     )
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_can_flag_is_false_for_a_stranger_looking_at_another_players_draft(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account2: Account,
+    character2: Character,
+    active_task: Task,
+    era: Era,
+    some_faction: Faction,
+    auth_headers2: dict,
+):
+    created = await client.post(
+        "/praxes",
+        json={"task_id": active_task.id, "type": "solo", "title": "Work"},
+        headers=auth_headers2,
+    )
+    assert created.status_code == 201, created.text
+    draft = await db_session.get(Praxis, created.json()["id"])
+    assert draft.status == PraxisStatus.in_progress
+    account3 = Account(email="stranger@example.com")
+    db_session.add(account3)
+    await db_session.flush()
+    stranger = await _seed_life(db_session, account3, era, username="stranger")
+
+    assert await can_flag_praxis(stranger, draft, db_session) is False

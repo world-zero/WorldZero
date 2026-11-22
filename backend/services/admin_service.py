@@ -58,7 +58,7 @@ from services.character_stats import (
 )
 from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_duels_collect
-from services.account_deletion import carried_ban_until
+from services.account_deletion import carried_bans_until
 from services.mod_log import log_mod_action
 from services.praxis import moderate_praxis
 from services.praxis_room import close_character_sockets
@@ -127,10 +127,7 @@ async def list_characters(
     result = await session.execute(query)
     rows = result.all()
 
-    carried = {
-        account_id: await carried_ban_until(account_id, session)
-        for account_id in {row[0].account_id for row in rows}
-    }
+    carried = await carried_bans_until({row[0].account_id for row in rows}, session)
     return [
         CharacterSummary(
             id=character.id,

@@ -121,7 +121,8 @@ async def test_voter_roster_is_404_for_anyone_who_may_not_see_the_praxis(
         hidden_other.status_code,
         draft_non_member.status_code,
     ] == [404] * 4
-    assert hidden_other.json() == missing.json()
+    for refused in (hidden_anon, hidden_other, draft_non_member):
+        assert refused.json() == missing.json()
 
 
 # Row 12 - comment moderation

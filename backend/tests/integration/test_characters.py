@@ -10,11 +10,12 @@ from errors import ErrorCode, detail_code
 from faction_slugs import real_faction_slugs
 from game_config import CURRENT_ERA
 from models.account import Account
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.era import Era
 from models.faction import Faction
 from models.task import Task
+from services.account_deletion import delete_account
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_character
 
 #: Any live-era faction other than the fixtures' default; derived, never named (#2708).
@@ -49,6 +50,24 @@ async def test_get_character(client: AsyncClient, character: Character):
 async def test_get_character_not_found(client: AsyncClient):
     resp = await client.get("/characters/99999")
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_a_banned_or_deleted_character_404s_like_an_absent_id(
+    client: AsyncClient, db_session: AsyncSession, era: Era, character: Character
+):
+    banned = await make_character(
+        db_session, era, username="bannedone", status=CharacterStatus.banned
+    )
+    gone = await make_character(db_session, era, username="goneone")
+    await delete_account(gone.account_id, db_session, era)
+    await db_session.commit()
+
+    absent = await client.get("/characters/99999")
+    for hidden in (banned, gone):
+        resp = await client.get(f"/characters/{hidden.id}")
+        assert resp.status_code == 404
+        assert resp.json() == absent.json()
 
 
 @pytest.mark.asyncio
