@@ -8,8 +8,6 @@ import enum
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
-from sqlalchemy import inspect
-
 from models.account import AccountStatus
 from models.character import Character, CharacterStatus, NameState
 
@@ -115,9 +113,9 @@ class PublicIdentity:
 
 
 def public_identity(character: Character) -> PublicIdentity:
-    # ponytail: an object not yet re-read after insert has no loaded name_state;
-    # a just-created character is ok, so default to that rather than lazy-load.
-    state = NameState(inspect(character).dict.get("name_state", NameState.ok.value))
+    # vars(), never getattr: an unloaded or expired name_state would lazy-load from
+    # sync code (MissingGreenlet). A just-created character reads as ok.
+    state = NameState(vars(character).get("name_state", NameState.ok.value))
     avatar_url = "" if state == NameState.absent else character.avatar_url
     return PublicIdentity(
         character.display_name, character.username, avatar_url, state

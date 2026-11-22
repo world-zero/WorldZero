@@ -23,18 +23,20 @@ async def test_name_state_column_agrees_with_public_name(
     client, db_session, account, character, praxis_solo,
     account_status, life, departed_at, expected,
 ):
+    praxis_id = praxis_solo.id
     account.status = account_status
     character.status = life
     character.departed_at = departed_at
     await db_session.commit()
     db_session.expire_all()
+    await db_session.refresh(account)
     await db_session.refresh(character)
 
     shown = public_name(character.display_name, *standing_of(account.status, character))
     assert (expected == NameState.absent) == (shown.name is None)
     assert (expected == NameState.suspended) == shown.suspended
 
-    praxis = await client.get(f"/praxes/{praxis_solo.id}")
+    praxis = await client.get(f"/praxes/{praxis_id}")
     if praxis.status_code == 200:
         body = praxis.json()
         assert body["created_by_name_state"] == expected.value
