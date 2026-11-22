@@ -29,6 +29,7 @@ const item = {
   payload: {
     duel_id: 7,
     challenger_praxis_id: 9,
+    task_id: 1,
     challenger_character_id: 3,
     task_title: 'Build a shed',
     task_point_value: 40,
@@ -53,6 +54,10 @@ describe('duel challenge card', () => {
     expect(html).not.toContain('>Duel<')
     expect(html).not.toContain('Withdraw')
     expect(html.match(/<button/g)).toHaveLength(2)
+  })
+
+  it('links the task title to /tasks/<task_id>', () => {
+    expect(html).toContain('href="/tasks/1"')
   })
 })
 

@@ -40,7 +40,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   // Duel payload fields, not collab's; the shared hook owns the endpoint (#346).
   const {
     duel_id,
-    challenger_praxis_id,
+    task_id,
     task_title,
     task_point_value,
     task_faction_slug,
@@ -66,7 +66,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
   const landOnPraxis = (praxisId: number | null) => {
     // Accepting creates the opponent's praxis server-side; land on its editor.
     navigate(
-      praxisId ? `/praxis/${praxisId}/edit` : `/praxis/${challenger_praxis_id}`,
+      praxisId ? `/praxis/${praxisId}/edit` : `/tasks/${task_id}`,
     );
   };
 
@@ -194,11 +194,11 @@ export default function FeedCardDuelChallenge({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          {/* The body's anchor (#1893): the challenger's praxis. Its id is NULL
-              before that praxis exists, and then the body is plain. */}
-          {challenger_praxis_id != null ? (
+          {/* The body's anchor (#1893): the task. The challenger's praxis is
+              in-progress, members-only (ADR-0024), so the recipient can't open it. */}
+          {task_id != null ? (
             <Link
-              to={`/praxis/${challenger_praxis_id}`}
+              to={`/tasks/${task_id}`}
               className="font-body"
               style={{ ...TITLE_STYLE, textDecoration: "none" }}
             >
@@ -285,7 +285,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
         {status === "accepted" && (
           <div style={{ marginTop: "var(--space-sm)", marginLeft: "var(--space-3xl)" }}>
             <Link
-              to={`/praxis/${challenger_praxis_id}`}
+              to={`/tasks/${task_id}`}
               className="label-caption"
               style={{ color: "var(--badge-duel)", textDecoration: "none", ...FEED_BODY_LIFTED }}
             >

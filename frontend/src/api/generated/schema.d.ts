@@ -2630,6 +2630,8 @@ export interface components {
             praxis_id: number;
             /** Task Faction Slug */
             task_faction_slug: string;
+            /** Task Id */
+            task_id: number;
             /** Task Level Required */
             task_level_required: number;
             /** Task Point Value */
@@ -3134,6 +3136,8 @@ export interface components {
             duel_status: string;
             /** Task Faction Slug */
             task_faction_slug: string;
+            /** Task Id */
+            task_id: number;
             /** Task Point Value */
             task_point_value: number;
             /** Task Title */

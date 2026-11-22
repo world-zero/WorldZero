@@ -42,6 +42,7 @@ const TITLE_STYLE = {
 export default function FeedCardCollabInvite({ item }: Props) {
   const {
     praxis_id,
+    task_id,
     invite_id,
     task_title,
     task_point_value,
@@ -197,11 +198,11 @@ export default function FeedCardCollabInvite({ item }: Props) {
               flexShrink: 0,
             }}
           />
-          {/* The body's anchor (#1893): the praxis you're invited into. A named
-              link, so the added tab stop is readable. */}
-          {praxis_id != null ? (
+          {/* The body's anchor (#1893): the task; the praxis is members-only until
+              you accept (ADR-0024). A named link, so the added tab stop is readable. */}
+          {task_id != null ? (
             <Link
-              to={`/praxis/${praxis_id}`}
+              to={`/tasks/${task_id}`}
               className="font-body"
               style={{ ...TITLE_STYLE, textDecoration: "none" }}
             >

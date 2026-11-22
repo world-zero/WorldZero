@@ -24,6 +24,7 @@ function collabItem(overrides: Partial<ActivityFeedItem> = {}): ActivityFeedItem
     context_faction_slug: 'everymen',
     payload: {
       praxis_id: 501,
+      task_id: 1,
       invite_id: 1,
       task_title: 'Organize a neighborhood tool library',
       task_point_value: 45,
@@ -52,6 +53,7 @@ export function LongTitle() {
     context_faction_slug: 'ua',
     payload: {
       praxis_id: 502,
+      task_id: 1,
       invite_id: 2,
       task_title: 'Render the old library facade in charcoal, then annotate the cornices',
       task_point_value: 30,
@@ -72,6 +74,7 @@ export function Accepted() {
   const item = collabItem({
     payload: {
       praxis_id: 501,
+      task_id: 1,
       invite_id: 1,
       task_title: 'Organize a neighborhood tool library',
       task_point_value: 45,

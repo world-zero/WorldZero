@@ -1039,6 +1039,10 @@
             "title": "Task Faction Slug",
             "type": "string"
           },
+          "task_id": {
+            "title": "Task Id",
+            "type": "integer"
+          },
           "task_level_required": {
             "title": "Task Level Required",
             "type": "integer"
@@ -1055,6 +1059,7 @@
         "required": [
           "invite_id",
           "praxis_id",
+          "task_id",
           "task_title",
           "task_point_value",
           "task_faction_slug",
@@ -2150,6 +2155,10 @@
             "title": "Task Faction Slug",
             "type": "string"
           },
+          "task_id": {
+            "title": "Task Id",
+            "type": "integer"
+          },
           "task_point_value": {
             "title": "Task Point Value",
             "type": "integer"
@@ -2162,6 +2171,7 @@
         "required": [
           "duel_id",
           "challenger_praxis_id",
+          "task_id",
           "challenger_character_id",
           "task_title",
           "task_point_value",
