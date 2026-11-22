@@ -151,6 +151,7 @@ export default function OnboardingFlow({ resumed, signIn = false, onAccepted }: 
         // Layout gates on `has_accepted_terms`; hand off only once it can see the row.
         await refetch()
         handOff()
+        setRecording(false)
       },
       () => {
         clearTermsAcceptance()

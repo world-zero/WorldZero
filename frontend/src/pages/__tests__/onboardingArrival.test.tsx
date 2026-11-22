@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** Character step and arrival inside the flow. Seam: `OnboardingFlow` with the API clients mocked. */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { useState } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -110,6 +111,44 @@ describe('consent is written once per mount', () => {
     fireEvent.click(await screen.findByTestId('onboarding-accept-terms'))
     expect(await screen.findByPlaceholderText(/name/i)).toBeTruthy()
     expect(vi.mocked(acceptTerms)).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('resumed after sign-in with a held contract click', () => {
+  it('Back from arrival leaves the contract through the contract-on-file pass', async () => {
+    vi.stubGlobal('sessionStorage', { getItem: (k: string) => (k === 'wz_terms_accepted' ? 'true' : null), setItem: () => {}, removeItem: () => {} })
+    const onAccepted = vi.fn()
+    function Host() {
+      const [user, setUser] = useState<CurrentUser>({ ...USER, has_accepted_terms: true } as CurrentUser)
+      return (
+        <AuthContext.Provider value={{ user, loading: false, refetch: async () => setUser((u) => ({ ...u, character: { id: 5 } }) as CurrentUser), applyUser: setUser, signOut: async () => {} }}>
+          <OnboardingFlow resumed onAccepted={onAccepted} />
+        </AuthContext.Provider>
+      )
+    }
+    render(<MemoryRouter><Host /></MemoryRouter>)
+    fireEvent.change(await screen.findByPlaceholderText(/name/i), { target: { value: 'King Biscuit' } })
+    fireEvent.click(await screen.findByRole('button', { name: /create|begin|born/i }))
+    await screen.findByText('King Biscuit has entered World Zero.')
+    expect(onAccepted).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: /back/i }))
+    await waitFor(() => expect(onAccepted).toHaveBeenCalledTimes(1))
+  })
+
+  it('Back from the character step shows the contract, not a loading line', async () => {
+    vi.stubGlobal('sessionStorage', { getItem: (k: string) => (k === 'wz_terms_accepted' ? 'true' : null), setItem: () => {}, removeItem: () => {} })
+    const user = { ...USER, has_accepted_terms: true } as CurrentUser
+    render(
+      <MemoryRouter>
+        <AuthContext.Provider value={{ user, loading: false, refetch: async () => {}, applyUser: () => {}, signOut: async () => {} }}>
+          <OnboardingFlow resumed onAccepted={vi.fn()} />
+        </AuthContext.Provider>
+      </MemoryRouter>,
+    )
+    await screen.findByPlaceholderText(/name/i)
+    fireEvent.click(screen.getByRole('button', { name: /back/i }))
+    expect(await screen.findByTestId('onboarding-accept-terms')).toBeTruthy()
   })
 })
 
