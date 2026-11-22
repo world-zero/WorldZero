@@ -53,6 +53,7 @@ describe('characterRedirectTarget with acceptance on file', () => {
   it('never bounces an account that already has a character', () => {
     expect(characterRedirectTarget(false, true, true, true, '/tasks')).toBeNull()
     expect(characterRedirectTarget(false, true, true, true, '/settings')).toBeNull()
+    expect(characterRedirectTarget(false, true, true, true, '/')).toBeNull()
   })
 })
 
@@ -88,9 +89,26 @@ describe('characterRedirectTarget', () => {
     expect(characterRedirectTarget(false, true, false, false, '/')).toBeNull()
   })
 
-  it('never fires while loading, signed out, or with a character', () => {
+  it('never fires while loading or signed out', () => {
     expect(characterRedirectTarget(true, true, false, false, '/tasks')).toBeNull()
     expect(characterRedirectTarget(false, false, false, false, '/tasks')).toBeNull()
-    expect(characterRedirectTarget(false, true, true, false, '/tasks')).toBeNull()
+  })
+})
+
+describe('characterRedirectTarget for a character without current terms', () => {
+  it('sends it to the contract from anywhere, the home page included', () => {
+    for (const pathname of ['/', '/tasks', '/admin']) {
+      expect(characterRedirectTarget(false, true, true, false, pathname)).toBe('/start')
+    }
+  })
+
+  it('lets it reach the contract, contact, and settings (sign-out, deletion)', () => {
+    for (const pathname of ['/start', '/start/again', '/contact', '/settings']) {
+      expect(characterRedirectTarget(false, true, true, false, pathname)).toBeNull()
+    }
+  })
+
+  it('leaves it alone once accepted', () => {
+    expect(characterRedirectTarget(false, true, true, true, '/tasks')).toBeNull()
   })
 })

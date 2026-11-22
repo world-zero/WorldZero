@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** The contract gate through the real `Layout` + `Onboarding` (#3468): the OAuth return and the unaccepted bounce. */
 import { useState, type ReactNode } from 'react'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -99,6 +99,15 @@ describe('Layout with the contract', () => {
     expect(await screen.findByTestId('onboarding-accept-terms')).toBeTruthy()
     expect(screen.getByTestId('where').textContent).toBe('/start')
     expect(acceptTerms).not.toHaveBeenCalled()
+  })
+
+  it('a character without acceptance is sent to the contract, accepts, and leaves for the app', async () => {
+    const legacy = { ...noAcceptance, character: { id: 1 } } as unknown as CurrentUser
+    render(<App user={legacy} at="/tasks" />)
+
+    fireEvent.click(await screen.findByTestId('onboarding-accept-terms'))
+    await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/'))
+    expect(acceptTerms).toHaveBeenCalledTimes(1)
   })
 
   it('header sign-in return: a returning player with a character stays on /', () => {
