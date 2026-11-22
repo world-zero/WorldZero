@@ -28,7 +28,6 @@ from models.faction import Faction, FactionStatus
 from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.roles import OWNER_ROLE_NAME, AccountRole, Role
 from models.task import Task, TaskStatus, TaskType
-from services.character import ensure_current_terms
 from services.era_tasks import sync_era_tasks
 
 
@@ -89,6 +88,9 @@ async def upsert_era_factions(session, era) -> tuple[int, int]:
 async def bootstrap_admin(session, era, pixie_acc) -> Character:
     """Ensure the Pixie admin account, character, role and Era row exist;
     returns Pixie's character (``created_by`` for seeded tasks)."""
+    # Lazy: services.era imports seed, so a top-level import is circular.
+    from services.character import ensure_current_terms
+
     if pixie_acc is not None:
         print("  >Pixie account already exists — skipping account/era/admin setup")
         await ensure_current_terms(pixie_acc.id, session)
@@ -292,6 +294,9 @@ async def ensure_duel_fixture_task(session, created_by_id: int) -> bool:
 
 async def seed_dev_demo(session, created_by_id: int) -> None:
     """Dev-only, idempotent: the dev-login character plus demo praxes."""
+    # Lazy: services.era imports seed, so a top-level import is circular.
+    from services.character import ensure_current_terms
+
     dev_oauth = (await session.execute(
         select(OAuthProvider).where(
             OAuthProvider.provider == AuthProvider.DEV,
