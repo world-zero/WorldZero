@@ -761,6 +761,15 @@ describe("a one-cut family is never asked for a weight (#2597)", () => {
     "pages/taskDetail/archetypes/CovenTaskDetail.tsx",
   ]);
 
+  it("ships Caveat Figures as a 700 cut for the digits only (#4126)", () => {
+    const blocks = fontFaceBlocks().filter((b) =>
+      /caveat figures/i.test(blockField(b, "font-family") ?? ""),
+    );
+    expect(blocks).toHaveLength(1);
+    expect(blockField(blocks[0], "font-weight")).toBe("700");
+    expect(blockField(blocks[0], "unicode-range")).toBe("U+0030-0039");
+  });
+
   it("derives the one-cut families from the sheets rather than a list", () => {
     for (const family of [
       "share tech mono",
