@@ -388,8 +388,8 @@
     .page {
       @apply px-0;
     }
-    .ob-sheet-outer {
-      padding-inline: 0 !important; /* beats the card's inline padding */
+    .ob-sheet-outer:not(.ob-bleed *) {
+      padding-inline: 0 !important; /* bleed region has no shell inset; beats the card's inline padding */
     }
     .composer-slip,
     .profile-frame,

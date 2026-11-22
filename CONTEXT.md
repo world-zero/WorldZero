@@ -257,8 +257,14 @@ soft-delete of its character. The forfeiter takes their **loss** modifier, the f
 and the duel stays `live`.
 _Avoid_: "withdraw" for this in user-facing copy — a duelist's control says **Forfeit** and states
 the consequence. Reserve **withdraw** for the reversible solo/collab unsubmit, **decline** for an
-opponent refusing a `pending` challenge, **cancel** for a challenger revoking their own, and
+opponent refusing a `pending` challenge, **call off** for either side ending a pending/active duel (see Call off), and
 **leave** for a collab member dropping out.
+
+**Call off** *(duel only)*:
+Either participant ending a `pending` or `active` duel with no penalty (`POST /duels/{id}/cancel`); both
+sides revert to solo praxes. Not **Forfeit** (a `live` duel, costs a penalty) and not **Decline** (the
+opponent's reply to the invitation).
+_Avoid_: "dissolve" and "withdraw" for this action in user-facing copy.
 
 **Duel voice** *(per-faction wording; ADR-0031)*:
 Each faction names the duel in its own register — "BEEF", "IN DISPUTE", "witch duel", "Salon Duel",

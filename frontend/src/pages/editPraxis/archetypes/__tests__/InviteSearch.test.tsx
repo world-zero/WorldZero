@@ -122,19 +122,19 @@ describe("InviteSearch — the compose-stage duel pair (#1417)", () => {
 
   // Absent from the design mock, but not removed (#1417).
   it("keeps the dissolve control on an accepted duel", () => {
-    expect(chipHtml(duelState(1))).toContain("dissolve the duel");
+    expect(chipHtml(duelState(1))).toContain("call off the duel");
   });
 
   it("keeps the rescind control on a still-pending challenge", () => {
     const html = chipHtml(duelState(1, { status: "pending" }));
-    expect(html).toContain("cancel challenge");
+    expect(html).toContain("call off challenge");
     expect(html).toContain("Challenge sent");
   });
 
   // `useComposerDuel` swallows fetch failures; the rescind must survive that.
   it("still offers the rescind when the duel detail never arrived", () => {
     const html = chipHtml(duelState(1, { detailMissing: true }));
-    expect(html).toContain("cancel challenge");
+    expect(html).toContain("call off challenge");
     expect(html).not.toContain(">vs<");
   });
 });

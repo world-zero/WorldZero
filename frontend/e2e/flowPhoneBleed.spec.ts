@@ -18,4 +18,7 @@ test('phone flow fills the screen: innerWidth 375 and no inset on every step', a
   await check()
   await page.getByTestId('onboarding-start').click()
   await passBeats(page, check)
+  const card = await page.locator('.ob-sheet').first().boundingBox()
+  expect(card!.x, 'terms card keeps a gutter off the bezel').toBeGreaterThan(0)
+  expect(375 - card!.x - card!.width).toBeGreaterThan(0)
 })

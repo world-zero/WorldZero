@@ -29,7 +29,7 @@ const praxisCss = readFileSync(
 )
 
 describe('phone breakpoint', () => {
-  it.each(["--profile-pad", "--feed-bar-pad"])(
+  it.each(["--profile-pad", "--feed-archive-inset"])(
     'the block opening with %s uses MOBILE_QUERY verbatim',
     (first) => {
       expect(css).toContain(`@media ${MOBILE_QUERY} {\n  :root, [data-theme] {\n    ${first}`)

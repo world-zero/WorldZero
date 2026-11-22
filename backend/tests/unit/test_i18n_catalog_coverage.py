@@ -175,3 +175,12 @@ def test_every_catalog_placeholder_is_supplied_by_a_raise_site(error_codes):
             f"raise site for {base} passes in params — extractError will skip "
             f"the catalog entirely and fall back to backend prose"
         )
+
+
+def test_every_rank_has_a_lead(progression):
+    for level, profile in enumerate(CURRENT_ERA.level_profiles):
+        if level == 0:
+            continue
+        assert progression["rankLead"].get(profile.rank_key), (
+            f"progression:rankLead.{profile.rank_key} (level {level}) missing"
+        )

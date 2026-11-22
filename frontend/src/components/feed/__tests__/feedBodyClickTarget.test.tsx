@@ -148,6 +148,7 @@ describe('FeedRowContent — the body-wide target', () => {
 describe('the two bespoke bodies that were ruled in', () => {
   const collabPayload = {
     praxis_id: 12,
+    task_id: 21,
     invite_id: 3,
     task_title: 'Build a shed',
     task_point_value: 5,
@@ -155,12 +156,12 @@ describe('the two bespoke bodies that were ruled in', () => {
     inviter_character_id: 4,
   }
 
-  it('points the collab invite at the praxis it is inviting you into', () => {
+  it('points the collab invite at the task, which a pending invitee can open', () => {
     const html = renderCompanion(
       <FeedCardCollabInvite item={item('collab_invite', collabPayload)} />,
     )
     expect(overlayCount(html)).toBe(1)
-    expect(stretchedHref(html)).toBe('/praxis/12')
+    expect(stretchedHref(html)).toBe('/tasks/21')
   })
 
   it('keeps Accept and Decline discrete on top of the collab overlay', () => {
@@ -172,35 +173,25 @@ describe('the two bespoke bodies that were ruled in', () => {
     expect(html.split(LIFT).length - 1).toBeGreaterThanOrEqual(2)
   })
 
-  it('points the duel challenge at the challenger praxis', () => {
-    const html = renderCompanion(
-      <FeedCardDuelChallenge
-        item={item('duel_challenge', {
-          duel_id: 2,
-          challenger_praxis_id: 30,
-          task_title: 'Run a mile',
-          task_point_value: 4,
-          challenger_character_id: 4,
-        })}
-      />,
-    )
-    expect(overlayCount(html)).toBe(1)
-    expect(stretchedHref(html)).toBe('/praxis/30')
-  })
-
-  it('renders a plain duel body in the run-up, where there is no praxis yet', () => {
-    const html = renderCompanion(
-      <FeedCardDuelChallenge
-        item={item('duel_challenge', {
-          duel_id: 2,
-          challenger_praxis_id: null,
-          task_title: 'Run a mile',
-          task_point_value: 4,
-          challenger_character_id: 4,
-        })}
-      />,
-    )
-    expect(overlayCount(html)).toBe(0)
-    expect(html).not.toContain('/praxis/null')
-  })
+  it.each(['pending', 'accepted', 'declined', 'dissolved'])(
+    'points the duel challenge at the task when %s',
+    (duel_status) => {
+      const html = renderCompanion(
+        <FeedCardDuelChallenge
+          item={item('duel_challenge', {
+            duel_id: 2,
+            challenger_praxis_id: 30,
+            task_id: 7,
+            duel_status,
+            task_title: 'Run a mile',
+            task_point_value: 4,
+            challenger_character_id: 4,
+          })}
+        />,
+      )
+      expect(overlayCount(html)).toBe(1)
+      expect(stretchedHref(html)).toBe('/tasks/7')
+      expect(html).not.toContain('/praxis/30')
+    },
+  )
 })

@@ -65,6 +65,7 @@ export function CollabInvite() {
     context_faction_slug: 'everymen',
     payload: {
       praxis_id: 501,
+      task_id: 1,
       invite_id: 1,
       task_title: 'Organize a neighborhood tool library',
       task_point_value: 45,
@@ -90,6 +91,7 @@ export function DuelChallenge() {
     payload: {
       duel_id: 3,
       challenger_praxis_id: 777,
+      task_id: 1,
       task_title: 'Wheatpaste an original poem on a condemned wall',
       task_point_value: 30,
       task_faction_slug: 'snide',

@@ -86,6 +86,7 @@ class CollabInvitePayload(FeedPayloadBase):
 
     invite_id: int
     praxis_id: int
+    task_id: int
     task_title: str
     task_point_value: int
     task_faction_slug: str
@@ -99,6 +100,7 @@ class DuelChallengePayload(FeedPayloadBase):
 
     duel_id: int
     challenger_praxis_id: int
+    task_id: int
     challenger_character_id: int
     task_title: str
     task_point_value: int
