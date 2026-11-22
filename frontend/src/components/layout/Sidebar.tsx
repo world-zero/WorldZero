@@ -549,7 +549,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                     {kicker}
                   </div>
                   {href ? (
-                    <Link to={href} className="font-display block truncate" style={titleStyle}>
+                    <Link to={href} className={letterFaction ? 'font-display block' : 'font-display block truncate'} style={titleStyle}>
                       {headline}
                     </Link>
                   ) : (
