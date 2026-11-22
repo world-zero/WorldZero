@@ -29,6 +29,7 @@ const item = {
   payload: {
     duel_id: 7,
     challenger_praxis_id: 9,
+    task_id: 1,
     challenger_character_id: 3,
     task_title: 'Build a shed',
     task_point_value: 40,

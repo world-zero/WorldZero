@@ -690,6 +690,7 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
             PraxisInvite.status,
             PraxisInvite.inviter_id,
             PraxisInvite.praxis_id,
+            Praxis.task_id,
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
@@ -739,6 +740,7 @@ def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
         payload=CollabInvitePayload(
             invite_id=row.id,
             praxis_id=row.praxis_id,
+            task_id=row.task_id,
             task_title=row.task_title,
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
@@ -757,6 +759,7 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
             Duel.created_at,
             Duel.status,
             Duel.challenger_praxis_id,
+            Duel.task_id,
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
@@ -794,6 +797,7 @@ def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
         payload=DuelChallengePayload(
             duel_id=row.id,
             challenger_praxis_id=row.challenger_praxis_id,
+            task_id=row.task_id,
             challenger_character_id=row.challenger_character_id,
             task_title=row.task_title,
             task_point_value=row.task_point_value,
