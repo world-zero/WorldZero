@@ -266,7 +266,7 @@ export default function FeedCardInvitationLetter({ item, onNotNow }: Props) {
                   {i18n.t("common:actions.accept")}
                 </button>
               )}
-              {onNotNow && (
+              {onNotNow && mode !== "suppressed" && (
                 <button type="button" className="feed-action" data-invitation-not-now onClick={onNotNow} style={QUIET}>
                   {i18n.t("factions:invitation.dismiss")}
                 </button>
