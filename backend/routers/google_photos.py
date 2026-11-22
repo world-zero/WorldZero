@@ -24,13 +24,17 @@ MESSAGE_SOURCE = "wz-google-photos"
 
 
 def _handback_page(succeeded: bool) -> HTMLResponse:
-    """The popup's last page: tell the opener, close, or fall back to the site."""
+    """The popup's last page: tell the opener, or fall back to the site.
+
+    Success leaves the window open: the opener navigates it to the picker.
+    """
     frontend = urlsplit(settings.FRONTEND_URL)
     origin = f"{frontend.scheme}://{frontend.netloc}"
     message = {"source": MESSAGE_SOURCE, "status": "ok" if succeeded else "failed"}
+    close = "" if succeeded else ";window.close()"
     script = (
         f"var m={json.dumps(message)},o={json.dumps(origin)};"
-        "if(window.opener){window.opener.postMessage(m,o);window.close()}"
+        f"if(window.opener){{window.opener.postMessage(m,o){close}}}"
         f"else{{location.replace({json.dumps(settings.FRONTEND_URL)})}}"
     ).replace("<", "\\u003c")
     return HTMLResponse(

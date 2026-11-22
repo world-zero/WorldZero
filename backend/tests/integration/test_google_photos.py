@@ -150,6 +150,7 @@ async def _authorise(client: AsyncClient, headers: dict) -> None:
         headers=headers,
     )
     assert '"status": "ok"' in back.text
+    assert "window.close()" not in back.text  # the opener navigates this window on
 
 
 async def _praxis_id(client: AsyncClient, task: Task, headers: dict) -> int:
@@ -192,6 +193,7 @@ async def test_callback_refuses_a_forged_state(
         headers=auth_headers,
     )
     assert '"status": "failed"' in back.text
+    assert "window.close()" in back.text
     assert not google_photos._GRANTS
     assert not google.calls
 
