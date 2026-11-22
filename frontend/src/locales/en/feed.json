@@ -333,7 +333,7 @@
       "tagline": "Make it anyway",
       "blurb": "It's hard to be vulnerable, to make things, to put one's self out there. We dedicate ourselves to the practice of creation regardless, because it makes the world and ourselves better.",
       "status": {
-        "locked": "Keep Practice Art",
+        "locked": "Collect your art supplies, then come back",
         "eligible": "A seat is kept for you.",
         "member": "Practicing — one true piece a day."
       },
@@ -353,7 +353,7 @@
       "tagline": "Jousting, Justice and Jubilation",
       "blurb": "Only the bravest and most daring will wear polka-dots and stripes. Work with us to SLAY the mundane.",
       "status": {
-        "locked": "Keep Jousting",
+        "locked": "Insufficient whimsy :(",
         "eligible": "TO ADVENTURE",
         "member": "Sworn, sealed and gloriously daft."
       },
@@ -361,7 +361,7 @@
     },
     "snide": {
       "tagline": "Let's GOOO",
-      "blurb": "This text is Lame because Ty Odin didn't edit it. \n\nWe didn't write the rules. You should be able to sign up for us if you want to. If you can't sign up, hack the game or something until you can.",
+      "blurb": "Life is meaningless until you give it meaning.  Banksy enthusiasts and culture jammers unite! Join us and put banana peels on society's sidewalk.",
       "status": {
         "locked": "Go BREAK something!",
         "eligible": "Let's F%$*ing GO",
@@ -390,7 +390,7 @@
       "cta": "visit_node --enter"
     },
     "everymen": {
-      "tagline": "Fail Again, Fail Better",
+      "tagline": "Strive, Fail, Persist, Succeed. Repeat >>",
       "blurb": "There is no better feeling than noticing your own radiant glow beneath a sheen of hard-earned sweat. Join the Everymen to harness this power and deliver it with expedience back into the world. Prepare to toil, learn to fail, and obliterate self-imposed limitations.",
       "status": {
         "locked": "Keep bettering yourself",
