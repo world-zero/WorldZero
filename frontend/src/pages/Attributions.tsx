@@ -11,8 +11,8 @@ const attributions = [
   // The typefaces (#1977). Self-hosted, so the licences ship in
   // frontend/src/assets/fonts/licences/.
   {
-    name: 'Archivo Black, Bebas Neue, Caveat, Cinzel, Cormorant Garamond, '
-      + 'Courier Prime, EB Garamond, Grenze Gotisch, Lora, '
+    name: 'Archivo Black, Bebas Neue, Berkshire Swash, Caveat, Cinzel, Cormorant Garamond, '
+      + 'Courier Prime, EB Garamond, Lora, '
       + 'MedievalSharp, Permanent Marker, Poiret One, Quicksand, Share Tech Mono, '
       + 'Special Elite, Spectral',
     url: 'https://fonts.google.com',

@@ -69,3 +69,7 @@ owned by the survivor — at any status.**
 ## Amendment (2026-11-19, #3426)
 
 "ADR-0047's display follows automatically ... `(base + meta) x faction_mult + votes` rather than collapsing to Merit" is stale. ADR-0053 retired Merit and ADR-0086 moved the multiplier onto the base alone: `base x mult + meta + votes + habit` (`backend/schemas/praxis.py`). The behaviour this record decides (a collab that loses its last member becomes solo) is unchanged.
+
+## Amendment (2026-11-21, #4189)
+
+"At any status" is narrowed. While a collab is editable (in progress or pending), a leave or kick removes only that member, and "remaining members and pending invites are dropped" no longer applies there: the praxis converts only when it has one member and no pending invites, since the host is still waiting on those invitees. A submitted collab converts on member count alone, as above, because its invites can never be accepted. One predicate (`is_sole_member_no_pending_invites`) carries the rule so the last decline (#4185) can use it too.

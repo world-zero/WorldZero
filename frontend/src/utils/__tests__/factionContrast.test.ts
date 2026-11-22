@@ -571,6 +571,12 @@ const ARCHETYPE_PAIRS: Pair[] = [
   // Everymen — "the paper surface + its text FLIP in dark".
   // `.em-backdrop` ramps paper -> deep stock with a 55% deep vignette (#2133).
   { what: "everymen cream element, ink", surface: "--everymen-cream", text: "--everymen-ink" },
+  // Profile header ramp (#4167): `headerMuted` is cream, measured on both stops.
+  ...["--everymen-band-top", "--everymen-band-bottom"].map((surface) => ({
+    what: `everymen profile header ${surface.slice(11)}, headerMuted`,
+    surface,
+    text: "--everymen-cream",
+  })),
   { what: "everymen gold element, ink", surface: "--everymen-gold", text: "--everymen-ink" },
 
   // S.N.I.D.E. — the wall is the one SNIDE surface that flips.

@@ -38,7 +38,7 @@ export function heroCounts(
 ): HeroCount[] {
   return [
     { key: "members", value: counts.members, label: membersLabel },
-    { key: "tasks", value: counts.tasks, label: i18n.t("feed:factionHero.stats.tasks") },
+    { key: "tasks", value: counts.tasks, label: i18n.t("feed:factionHero.stats.tasks", { count: counts.tasks }) },
     { key: "praxes", value: counts.praxes, label: i18n.t("feed:factionHero.stats.praxes") },
   ];
 }

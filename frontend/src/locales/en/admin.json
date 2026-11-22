@@ -201,7 +201,7 @@
     "saveError": "Could not save that wording.",
     "changedUnderYou": "Someone else changed this while you were editing. Theirs now reads: “{{theirs}}”. Save again to replace it with yours, or cancel to keep theirs.",
     "revertError": "Could not put the default wording back.",
-    "missingPlaceholder": "Put {{placeholders}} back — the wording needs it to render.",
+    "missingPlaceholder": "{{placeholders}} isn't filled in here — keep the original's tags and use only the placeholders it has.",
     "scopeFaction": "Belongs to one faction — only that faction's screens change.",
     "scopeShared": "Shared wording — changing it changes every faction."
   },
@@ -332,9 +332,11 @@
         "unsuspend": "Unsuspend account",
         "removeAll": "Remove all their flagged ({{count}})",
         "removeAllConfirm": {
-          "heading": "Remove {{count}} flagged posts by {{name}}?",
+          "heading_one": "Remove {{count}} flagged post by {{name}}?",
+          "heading_other": "Remove {{count}} flagged posts by {{name}}?",
           "lead": "Every post by {{name}} (@{{username}}) with an open flag is removed. Their unflagged posts are untouched.",
-          "submit": "confirm — remove {{count}} posts"
+          "submit_one": "confirm — remove {{count}} post",
+          "submit_other": "confirm — remove {{count}} posts"
         },
         "banConfirm": {
           "heading": "Ban {{name}}?",

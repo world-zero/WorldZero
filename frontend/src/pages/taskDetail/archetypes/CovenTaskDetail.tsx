@@ -185,7 +185,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       <span
         style={{
           fontFamily: DISPLAY,
-          fontWeight: 600,
           fontSize: COVEN_HEADING,
           lineHeight: 1.06,
           letterSpacing: "0.02em",
@@ -230,7 +229,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 {/* On the ward PAGE ground, so INK (#1295). */}
@@ -397,7 +396,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
       <h1
         style={{
           fontFamily: DISPLAY,
-          fontWeight: 600,
           fontSize: COVEN_TITLE,
           lineHeight: 1.06,
           letterSpacing: "0.005em",
@@ -562,7 +560,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
         <span
           style={{
             fontFamily: DISPLAY,
-            fontWeight: 600,
             fontSize: COVEN_HEADING,
             lineHeight: 1.06,
             letterSpacing: "0.02em",
@@ -642,7 +639,6 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
                 border: "none",
                 cursor: "pointer",
                 fontFamily: DISPLAY,
-                fontWeight: 600,
                 fontSize: "var(--text-content)",
                 // Unpanelled, on the ward PAGE: INK, not DEEP (#1295).
                 color: INK,

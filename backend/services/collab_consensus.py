@@ -384,11 +384,26 @@ async def convert_to_solo(
     await session.flush()
 
 
+def is_sole_member_no_pending_invites(praxis: Praxis) -> bool:
+    """One member left and nobody still invited: the collab has no one to wait for."""
+    return len(praxis.members) == 1 and not any(
+        invite.status == PraxisInviteStatus.pending for invite in praxis.invites
+    )
+
+
 async def convert_if_sole_member(
     praxis: Praxis, session: AsyncSession, era: EraConfig
 ) -> None:
-    """The one ``collab → solo`` trigger for any exit (leave or kick, ADR-0060)."""
-    if praxis.type == PraxisType.collab and len(praxis.members) == 1:
+    """The one ``collab → solo`` trigger for any exit (leave or kick, ADR-0060).
+
+    An editable collab with a pending invite stays a collab; a submitted one
+    can never accept its invites, so it converts on member count alone.
+    """
+    submitted = praxis.status == PraxisStatus.submitted
+    if praxis.type == PraxisType.collab and (
+        is_sole_member_no_pending_invites(praxis)
+        or (submitted and len(praxis.members) == 1)
+    ):
         survivor_character_id = praxis.members[0].character_id
         await convert_to_solo(praxis, survivor_character_id, session, era)
         if praxis.status == PraxisStatus.submitted:

@@ -209,7 +209,7 @@ describe('unsubmit confirm copy (#1094)', () => {
           })}
         />,
       )
-      expect(rendered).toMatch(/pull my entry back/i)
+      expect(rendered).toMatch(/pull back \(free until they submit\)/i)
       expect(rendered).not.toMatch(/forfeit/i)
     },
   )

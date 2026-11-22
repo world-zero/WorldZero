@@ -617,6 +617,7 @@ describe("duel — sealed, waiting on the rival", () => {
 
   it("exits neutrally — pull back, never forfeit", () => {
     expect(html).toContain(collabCopy(SLUG, "duelPullBackAction"));
+    expect(html).toContain("Pull back (free until they submit)");
     expect(html.toLowerCase()).not.toContain("forfeit");
   });
 
