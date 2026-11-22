@@ -72,37 +72,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      # A slow apt mirror once took 21 minutes for this 66 MB; it normally takes
-      # under a minute. Cap each try and retry, so a stall costs minutes, not the run.
-      - name: Install ffmpeg (media metadata strip, #3589)
-        if: needs.scope.outputs.scope != 'copy'
-        timeout-minutes: 8
-        run: |
-          for try in 1 2 3; do
-            sudo timeout 150 sh -c 'apt-get update && apt-get install -y --no-install-recommends ffmpeg' && exit 0
-            echo "::warning::ffmpeg install try $try stalled or failed; retrying"
-            sudo dpkg --configure -a || true
-          done
-          exit 1
-
-      - name: Install dependencies
-        run: pip install -r backend/requirements.txt
-
-      - name: Run migrations
-        run: python -m alembic upgrade head
-        working-directory: backend
-
-      - name: Run tests with coverage
-        if: needs.scope.outputs.scope != 'copy'
-        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=96
-        working-directory: backend
-
-      # A copy-only PR can still break a backend test that reads the catalogs
-      # (emitted keys, error codes, perk quotes); those are the only ones it runs.
-      - name: Run the backend tests that read the catalogs
-        if: needs.scope.outputs.scope == 'copy'
-        run: pytest $(grep -rl --include='test_*.py' locales tests)
-        working-directory: backend
+      # The seconds-long gates go first, so their failures don't wait on pytest.
 
       # Ruff findings may only shrink (#2427); config in .bros.toml. Inside this
       # required job so the ratchet stays a merge gate.
@@ -121,6 +91,38 @@ jobs:
       - name: Owner copy guard
         if: github.event_name == 'pull_request'
         run: python3 scripts/promote_copy.py --guard origin/${{ github.base_ref }}
+
+      # A slow apt mirror once took 21 minutes for this 66 MB; it normally takes
+      # under a minute. Cap each try and retry, so a stall costs minutes, not the run.
+      - name: Install ffmpeg (media metadata strip, #3589)
+        if: needs.scope.outputs.scope != 'copy' && needs.scope.outputs.scope != 'frontend'
+        timeout-minutes: 8
+        run: |
+          for try in 1 2 3; do
+            sudo timeout 150 sh -c 'apt-get update && apt-get install -y --no-install-recommends ffmpeg' && exit 0
+            echo "::warning::ffmpeg install try $try stalled or failed; retrying"
+            sudo dpkg --configure -a || true
+          done
+          exit 1
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run migrations
+        run: python -m alembic upgrade head
+        working-directory: backend
+
+      - name: Run tests with coverage
+        if: needs.scope.outputs.scope != 'copy' && needs.scope.outputs.scope != 'frontend'
+        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=96
+        working-directory: backend
+
+      # A frontend-only PR can still break a backend test that reads the
+      # catalogs (emitted keys, error codes, perk quotes); those are all it runs.
+      - name: Run the backend tests that read the catalogs
+        if: needs.scope.outputs.scope == 'copy' || needs.scope.outputs.scope == 'frontend'
+        run: pytest $(grep -rl --include='test_*.py' locales tests)
+        working-directory: backend
 
   # The API contract gate (#1400). `backend/openapi.json` and the TypeScript
   # types generated from it are committed artifacts, and this job is what keeps

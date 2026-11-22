@@ -14,6 +14,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a PR cancels the sweep of the commit it replaced.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Same gate as test.yml's scope job; a failure here runs the sweep.
   scope:
