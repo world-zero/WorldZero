@@ -6,13 +6,13 @@
   "character": {
     "namePlaceholder": "Character name",
     "bioPlaceholder": "Character bio",
-    "taglinePlaceholder": "Character Catchphrase",
+    "taglinePlaceholder": "Character catchphrase",
     "locationPlaceholder": "Location (SFO, PDX, YYZ)",
     "handlePlaceholder": "Handle",
     "portrait": "Portrait"
   },
   "createCharacter": {
-    "heading": "Who is your character",
+    "heading": "Who is your character?",
     "charsLeft": "{{count}} left",
     "optional": "· optional",
     "callingLabel": "Answer a calling",

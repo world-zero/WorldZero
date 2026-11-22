@@ -63,7 +63,6 @@ function SectionHead({ children }: { children: ReactNode }) {
       <span
         style={{
           fontFamily: DISPLAY,
-          fontWeight: 600,
           fontSize: "var(--text-heading)",
           lineHeight: 1.06,
           letterSpacing: "0.02em",

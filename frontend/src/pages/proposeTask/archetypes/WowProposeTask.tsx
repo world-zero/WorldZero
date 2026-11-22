@@ -35,13 +35,11 @@ import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
   factionCssVar,
   factionName,
-  getAllFactions,
   isKnownFaction,
-  sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
-import { UNAFFILIATED_FACTION_SLUG, type ProposeTaskState } from '../useProposeTask'
+import { type ProposeTaskState } from '../useProposeTask'
 import {
   ComposerFooter,
   ComposerHeading,
@@ -147,7 +145,7 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -172,14 +170,6 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
 
   // #1695 review window; `null` until `/game-config` lands, and then UNDRAWN.
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
-
-  // Unaffiliated first (ADR-0039), then rainbow order.
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({ slug: f.slug })),
-    ).map((f) => f.slug),
-  ]
 
   /* Task card's head order: ribbon, then bunting (#2032). */
   const masthead = (

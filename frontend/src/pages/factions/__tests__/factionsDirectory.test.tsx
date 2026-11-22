@@ -149,6 +149,12 @@ describe('factions directory', () => {
     expect(member.html).not.toContain('sidebar-card')
   })
 
+  it('unaffiliated banner leads with the na ring, not an empty disc', () => {
+    const { html } = dir(STATUS, { user: VIEWER(null) })
+    expect(html).toContain('--faction-default-rainbow-conic')
+    expect(html).not.toContain('unaffiliated-banner-disc')
+  })
+
   it('stretches the row and makes each tile wrapper a column, so calls line up (#3139)', () => {
     const { html } = dir(STATUS)
     const at = html.indexOf('data-testid="faction-tile-row"')

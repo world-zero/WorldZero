@@ -84,7 +84,6 @@ export default function CovenFactionHero({
             slug={slug}
             style={{
               fontFamily: DISPLAY,
-              fontWeight: 600,
               fontSize: "var(--text-title)",
               letterSpacing: "0.02em",
               color: INK,

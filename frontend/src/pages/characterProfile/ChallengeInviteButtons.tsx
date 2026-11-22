@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { listPraxes, type PraxisCardOut } from "../../api/praxis";
 import BottomSheet from "../../components/ui/BottomSheet";
+import { FIND_TASK_LINK } from "../fieldDesk/homeDestinations";
 import { factionFill } from "../../utils/factions";
 import { BUTTON_BASE } from "./AddRelationshipButtons";
 
@@ -105,7 +106,7 @@ export default function ChallengeInviteButtons({
                   ? "relationships.pickNoneChallenge"
                   : "relationships.pickNone",
               )}{" "}
-              <Link to="/tasks" className="underline">
+              <Link to={FIND_TASK_LINK} className="underline">
                 {t("relationships.pickNoneLink")}
               </Link>
             </p>
