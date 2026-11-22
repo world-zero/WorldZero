@@ -468,7 +468,7 @@ export default function UaTaskDetail({ state }: { state: TaskDetailState }) {
                   boxShadow: "0 0 0 1.5px var(--faction-ua-card-frame)",
                 }}
               >
-                {initialsOf(authorName)}
+                {task.created_by_name_state === "absent" ? "" : initialsOf(task.created_by_display_name ?? "")}
               </span>
             )}
             <span

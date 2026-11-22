@@ -302,7 +302,7 @@ export default function EverymenTaskDetail({
                   color: ACCENT,
                 }}
               >
-                {initialsOf(authorName)}
+                {task.created_by_name_state === "absent" ? "" : initialsOf(task.created_by_display_name ?? "")}
               </span>
             )}
             <span

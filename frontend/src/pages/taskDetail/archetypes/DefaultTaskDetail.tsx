@@ -481,7 +481,7 @@ export default function DefaultTaskDetail({
                   boxShadow: "0 0 0 2px var(--color-border)",
                 }}
               >
-                {initialsOf(authorName)}
+                {task.created_by_name_state === "absent" ? "" : initialsOf(task.created_by_display_name ?? "")}
               </span>
             )}
             <span

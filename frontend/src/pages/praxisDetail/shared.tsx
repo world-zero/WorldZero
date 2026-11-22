@@ -109,7 +109,7 @@ export function bylineFaces(praxis: PraxisOut): BylineFace[] {
     return [
       {
         id: praxis.created_by_id,
-        name: praxis.created_by_display_name,
+        name: praxis.created_by_name_state === 'absent' ? '' : praxis.created_by_display_name,
         avatarUrl: portrait,
         state: praxis.created_by_name_state,
       },
@@ -117,7 +117,11 @@ export function bylineFaces(praxis: PraxisOut): BylineFace[] {
   }
   return members.map((member) => ({
     id: member.character_id,
-    name: member.character_display_name || `#${member.character_id}`,
+    // Absent: no name to take initials from, so the disc stays face-less.
+    name:
+      member.character_name_state === 'absent'
+        ? ''
+        : member.character_display_name || `#${member.character_id}`,
     state: member.character_name_state,
     // `|| ''`: a row cached before #2318 lacks the key; heals on next fetch.
     avatarUrl: member.character_avatar_url || '',

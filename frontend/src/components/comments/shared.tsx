@@ -34,7 +34,8 @@ export function authorToCharacter(
 ): CharacterOut {
   return {
     id: author.id,
-    username: author.username,
+    // Absent: no initial to draw, the avatar stays a face-less disc.
+    username: author.name_state === 'absent' ? '' : author.username,
     display_name: author.display_name,
     avatar_url: author.avatar_url,
     faction_slug: author.faction_slug,

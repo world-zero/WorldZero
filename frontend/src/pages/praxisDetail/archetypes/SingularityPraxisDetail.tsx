@@ -351,7 +351,9 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
             key={voter.character_id}
             style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}
           >
-            <Link
+            <PlayerLink
+              state={voter.name_state}
+              name={voter.display_name}
               to={`/characters/${voter.character_id}`}
               style={{
                 flex: "1 1 auto",
@@ -364,9 +366,7 @@ export default function SingularityPraxisDetail({ state }: { state: PraxisDetail
                 color: BRIGHT,
                 textDecoration: "none",
               }}
-            >
-              {voter.display_name}
-            </Link>
+            />
             <span
               aria-hidden
               style={{

@@ -183,7 +183,10 @@ function faceAsCharacter(face: {
 function authorAsCharacter(praxis: PraxisCardOut): CharacterOut {
   return faceAsCharacter({
     id: praxis.created_by_id,
-    name: praxis.created_by_display_name || `#${praxis.created_by_id}`,
+    name:
+      praxis.created_by_name_state === 'absent'
+        ? ''
+        : praxis.created_by_display_name || `#${praxis.created_by_id}`,
     avatarUrl: praxis.created_by_avatar_url,
     factionSlug: praxis.created_by_faction_slug,
   });
@@ -520,7 +523,7 @@ export function PraxisRoster({
             style={{ marginLeft: index === 0 ? undefined : "calc(var(--space-sm) * -1)" }}
           >
             <RosterAvatar
-              name={playerLabel(member.character_display_name, member.character_name_state)}
+              name={member.character_name_state === 'absent' ? '' : member.character_display_name}
               avatarUrl={member.character_avatar_url}
               accent={accent}
               paper={paper}

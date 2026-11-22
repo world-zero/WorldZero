@@ -374,7 +374,7 @@ export default function EphemeristsTaskDetail({
                   color: BAND_INK,
                 }}
               >
-                {initialsOf(authorName)}
+                {task.created_by_name_state === "absent" ? "" : initialsOf(task.created_by_display_name ?? "")}
               </span>
             )}
             <span

@@ -369,7 +369,9 @@ export default function EverymenPraxisDetail({
               gap: "var(--space-md)",
             }}
           >
-            <Link
+            <PlayerLink
+              state={voter.name_state}
+              name={voter.display_name}
               to={`/characters/${voter.character_id}`}
               style={{
                 flex: "1 1 auto",
@@ -382,9 +384,7 @@ export default function EverymenPraxisDetail({
                 color: INK,
                 textDecoration: "none",
               }}
-            >
-              {voter.display_name}
-            </Link>
+            />
             <span
               aria-hidden
               style={{

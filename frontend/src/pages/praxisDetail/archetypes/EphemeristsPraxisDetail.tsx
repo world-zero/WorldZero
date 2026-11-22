@@ -432,7 +432,9 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                 gap: "var(--space-sm)",
               }}
             >
-              <Link
+              <PlayerLink
+                state={voter.name_state}
+                name={voter.display_name}
                 to={`/characters/${voter.character_id}`}
                 style={{
                   flex: "0 1 auto",
@@ -445,9 +447,7 @@ export default function EphemeristsPraxisDetail({ state }: { state: PraxisDetail
                   color: INK,
                   textDecoration: "none",
                 }}
-              >
-                {voter.display_name}
-              </Link>
+              />
               <span aria-hidden style={{ flex: 1, minWidth: 10, height: 1, background: LINE }} />
               <span
                 className={metalWordFits ? undefined : "sr-only"}

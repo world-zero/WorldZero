@@ -356,7 +356,11 @@ export function CollabRoster({
                   `RosterAvatar` stays aria-hidden. Only members can light up. */}
               <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
                 <RosterAvatar
-                  name={row.name}
+                  name={
+                    (row.member?.character_name_state ?? row.invite?.invitee_name_state) === 'absent'
+                      ? ''
+                      : row.name
+                  }
                   avatarUrl={row.avatarUrl}
                   size={AVATAR_SIZE}
                   borderColor={done ? accent : quiet}

@@ -489,7 +489,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
                   color: PLUM,
                 }}
               >
-                {initialsOf(authorName)}
+                {task.created_by_name_state === "absent" ? "" : initialsOf(task.created_by_display_name ?? "")}
               </span>
             )}
             <span

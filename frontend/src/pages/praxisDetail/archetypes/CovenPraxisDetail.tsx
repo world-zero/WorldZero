@@ -342,7 +342,9 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
             key={voter.character_id}
             style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}
           >
-            <Link
+            <PlayerLink
+              state={voter.name_state}
+              name={voter.display_name}
               to={`/characters/${voter.character_id}`}
               style={{
                 flex: '1 1 auto',
@@ -355,9 +357,7 @@ export default function CovenPraxisDetail({ state }: { state: PraxisDetailState 
                 color: INK,
                 textDecoration: 'none',
               }}
-            >
-              {voter.display_name}
-            </Link>
+            />
             <span
               aria-hidden
               style={{
