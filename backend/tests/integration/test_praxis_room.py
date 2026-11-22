@@ -1844,6 +1844,100 @@ async def test_deleting_a_praxis_evicts_its_room_and_sockets(
         assert name not in rooms.server._flushers
 
 
+async def test_a_closing_flush_never_waits_on_a_delete_under_the_open_lock(
+    db_session, collab, account, character, monkeypatch
+) -> None:
+    """The last socket closing with unflushed text, while a delete has flushed its
+    row DELETE and waits to evict. Postgres cannot see the open lock."""
+    import services.praxis as praxis_service
+
+    real_evict = praxis_service.evict_room
+    flushed = asyncio.Event()
+    go = asyncio.Event()
+
+    async def evict_after_the_socket_closes(praxis_id: int) -> None:
+        flushed.set()
+        await go.wait()
+        await real_evict(praxis_id)
+
+    monkeypatch.setattr(praxis_service, "evict_room", evict_after_the_socket_closes)
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30.0
+    ) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            doc.get(ROOM_BODY_KEY, type=Text).insert(0, "last words ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"last words {SEED_BODY}", "the room"
+            )
+
+            async def delete() -> None:
+                async with rooms.sessions() as session:
+                    await delete_praxis(collab.id, character.id, session)
+                    await session.commit()
+
+            deleting = asyncio.create_task(delete())
+            await asyncio.wait_for(flushed.wait(), 5)
+            await socket.disconnect()
+            # Let the release take the open lock and start its flush.
+            await asyncio.sleep(0.3)
+            go.set()
+        await asyncio.wait_for(deleting, 5)
+        await _wait_for(
+            lambda: not rooms.server._connections, "the socket to be released"
+        )
+        assert room_name_for(collab.id) not in rooms.server.rooms
+
+
+async def test_a_reopen_and_seal_wait_for_the_closing_flush(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """An older snapshot's closing write must not commit after a newer seal."""
+    real_write = praxis_room._RoomFlusher.write
+    hold, entered = asyncio.Event(), asyncio.Event()
+
+    async def held_write(self) -> None:
+        entered.set()
+        await hold.wait()
+        await real_write(self)
+
+    monkeypatch.setattr(praxis_room._RoomFlusher, "write", held_write)
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30.0
+    ) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            text = doc.get(ROOM_BODY_KEY, type=Text)
+            text.insert(0, "old ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"old {SEED_BODY}", "the room"
+            )
+            # Keystrokes the socket never delivered (#3611).
+            offline = Doc()
+            offline.apply_update(doc.get_update())
+            offline.get(ROOM_BODY_KEY, type=Text).insert(0, "newer ")
+            state = base64.b64encode(offline.get_update()).decode()
+            await asyncio.sleep(0.5)  # a teardown mid-store-write poisons the session
+        await socket.disconnect()
+        await asyncio.wait_for(entered.wait(), 5)
+
+        async def reopen_and_seal() -> None:
+            await praxis_room.merge_client_state(collab.id, state)
+            async with rooms.sessions() as session:
+                praxis = await session.get(Praxis, collab.id)
+                await rooms.server.discard_document(praxis, session)
+                await session.commit()
+
+        sealing = asyncio.create_task(reopen_and_seal())
+        await asyncio.sleep(0.3)
+        hold.set()
+        await asyncio.wait_for(sealing, 5)
+        await _settle()
+        assert (await _record(rooms, collab.id))[1] == f"newer old {SEED_BODY}"
+
+
 async def test_publishing_after_a_restart_cannot_drop_an_over_cap_document(
     db_session, active_task, character, monkeypatch
 ) -> None:

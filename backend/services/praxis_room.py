@@ -20,6 +20,7 @@ ASGI WebSocket route in this app (``main.py``). Server-side rules:
    first.
 """
 
+import asyncio
 import base64
 import binascii
 import logging
@@ -90,6 +91,7 @@ _DISCONNECTED: dict[str, Any] = {"type": "websocket.disconnect", "code": 1000}
 # tail of updates, like pycrdt's SQLiteYStore.
 _SQUASH_UPDATES_ABOVE = 200
 
+_CLOSING_WAIT_SECONDS = 5.0
 _OBSERVER_WAIT_SECONDS = 5.0
 
 # Session-level advisory lock key; arbitrary, readable in ``pg_locks``.
@@ -466,6 +468,7 @@ class PraxisRoomServer(WebsocketServer):
         self._flush_debounce_seconds = flush_debounce_seconds
         self._connections: set[_RoomConnection] = set()
         self._flushers: dict[str, _RoomFlusher] = {}
+        self._closing: dict[str, asyncio.Task[None]] = {}
         self.__open_lock: Lock | None = None
 
     @property
@@ -479,6 +482,7 @@ class PraxisRoomServer(WebsocketServer):
         """Open the room for ``name``, seeding it once if new — all under one lock
         so two simultaneous connects can't both seed.
         """
+        await self._await_closing(name)
         async with self._open_lock:
             room = self.rooms.get(name)
             if room is not None:
@@ -564,7 +568,11 @@ class PraxisRoomServer(WebsocketServer):
         self._connections.add(connection)
 
     async def release(self, connection: _RoomConnection) -> None:
-        """Forget a socket, and drop its room once nobody is left in it."""
+        """Forget a socket, and drop its room once nobody is left in it.
+
+        No DB wait under ``_open_lock`` (a cycle Postgres cannot see): the
+        closing flush runs after it is released.
+        """
         self._connections.discard(connection)
         # Shielded: runs in a ``finally`` a disconnect may have cancelled.
         with anyio.CancelScope(shield=True):
@@ -575,16 +583,38 @@ class PraxisRoomServer(WebsocketServer):
                     room.awareness.remove_awareness_states(
                         list(connection.awareness_ids), "local"
                     )
-                await self._drop_if_idle(connection.room_name)
-
-    async def _drop_if_idle(self, name: str) -> None:
-        """Caller holds ``_open_lock``."""
-        room = self.rooms.get(name)
-        if room is not None and not room.clients:
-            flusher = self._flushers.pop(name, None)
+                flusher = await self._drop_if_idle(connection.room_name)
             if flusher is not None:
-                await flusher.close()
-            await self.delete_room(room=room)
+                await self._close_flusher(connection.room_name, flusher)
+
+    async def _close_flusher(self, name: str, flusher: _RoomFlusher) -> None:
+        """Closing flush, registered so a reopen or seal for ``name`` waits for it
+        before the lock: an older snapshot must not commit after newer state."""
+        task = asyncio.ensure_future(flusher.close())
+        self._closing[name] = task
+        task.add_done_callback(
+            lambda done: self._closing.get(name) is done and self._closing.pop(name)
+        )
+        await task
+
+    async def _await_closing(self, name: str) -> None:
+        # Never under ``_open_lock``. Bounded: the caller's own transaction may hold
+        # the praxis row lock the flush queues on, a cycle Postgres cannot see.
+        while task := self._closing.get(name):
+            _, pending = await asyncio.wait([task], timeout=_CLOSING_WAIT_SECONDS)
+            if pending:
+                logger.warning("praxis room %s closing flush still pending", name)
+                return
+
+    async def _drop_if_idle(self, name: str) -> _RoomFlusher | None:
+        """Detach an empty room; the caller closes the returned flusher after
+        releasing ``_open_lock``. Caller holds ``_open_lock``."""
+        room = self.rooms.get(name)
+        if room is None or room.clients:
+            return None
+        flusher = self._flushers.pop(name, None)
+        await self.delete_room(room=room)
+        return flusher
 
     def _check_update(self, doc: Doc, update: bytes) -> dict[str, str]:
         """The column values ``doc`` would have after ``update``, on a scratch copy;
@@ -649,6 +679,7 @@ class PraxisRoomServer(WebsocketServer):
         nothing, the check and the discard under one lock hold.
         """
         name = room_name_for(praxis.id)
+        await self._await_closing(name)
         async with self._open_lock:
             room = self.rooms.get(name)
             doc = await self._current_doc(name, room)
@@ -707,7 +738,9 @@ class PraxisRoomServer(WebsocketServer):
         except HTTPException:
             if opened:
                 async with self._open_lock:
-                    await self._drop_if_idle(name)
+                    flusher = await self._drop_if_idle(name)
+                if flusher is not None:
+                    await self._close_flusher(name, flusher)
             raise
         room.ydoc.apply_update(update)
         return values
