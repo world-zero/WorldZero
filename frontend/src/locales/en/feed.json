@@ -136,6 +136,7 @@
     "taskMeta": "{{points}} pts · lvl {{level}}",
     "accepted": "Accepted — view collaboration",
     "declined": "Declined",
+    "closed": "Submitted without you — view praxis",
     "bankFull": {
       "title": "Task bank full",
       "body": "You have {{max}} in-progress tasks. Drop one to accept this collaboration:",
