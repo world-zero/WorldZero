@@ -5,7 +5,7 @@
  * reaches it; must never import `@playwright/test`.
  */
 
-import { baselineKey, bucket, triageFindings } from './contrastBaseline';
+import { baselineKey, bucket, RENDERED_BASELINE, triageFindings } from './contrastBaseline';
 import type { Finding } from './contrastScan';
 
 /**
@@ -135,10 +135,28 @@ type PairingRow = SweepRun & {
   required: number;
   pass: boolean | null;
   count: number;
+  /** Every custom property that resolves to `text` / `ground` on the page; several can share a colour. */
+  textTokens: string[];
+  groundTokens: string[];
+  /** First node behind the row. */
+  where: string;
+  sample: string;
+  /** CI retries once, so a failing combination writes twice. */
+  attempt: number;
+  /** Below AA but allowed by RENDERED_BASELINE. */
+  baselined: boolean;
 };
 
+/** Resolved rgb string -> custom-property names, read from the live page. */
+export type TokenIndex = Record<string, string[]>;
+
 /** One row per distinct text/ground/required in a run, counting the nodes behind it. */
-export function pairingRows(run: SweepRun, findings: readonly Finding[]): PairingRow[] {
+export function pairingRows(
+  run: SweepRun,
+  findings: readonly Finding[],
+  tokens: TokenIndex,
+  attempt: number,
+): PairingRow[] {
   const rows = new Map<string, PairingRow>();
   for (const f of findings) {
     const measured = f.background !== null;
@@ -154,6 +172,15 @@ export function pairingRows(run: SweepRun, findings: readonly Finding[]): Pairin
         required: f.required,
         pass: measured ? f.ratio >= f.required : null,
         count: 1,
+        textTokens: tokens[f.text] ?? [],
+        groundTokens: (f.background && tokens[f.background]) || [],
+        where: f.where,
+        sample: f.sample,
+        attempt,
+        baselined:
+          measured &&
+          f.ratio < f.required &&
+          baselineKey(run.theme, f.text, f.background!, f.required) in RENDERED_BASELINE,
       });
   }
   return [...rows.values()];

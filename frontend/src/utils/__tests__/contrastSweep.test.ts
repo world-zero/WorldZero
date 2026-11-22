@@ -58,11 +58,50 @@ const run = { faction: "snide", theme: "dark", viewport: "desktop" } as const;
 
 describe("pairingRows", () => {
   it("emits a row for a passing pairing, one per distinct pairing, and null ratio for unresolved", () => {
-    const rows = pairingRows(run, [finding(), finding(), finding({ background: null, ratio: 0 })]);
+    const rows = pairingRows(run, [finding(), finding(), finding({ background: null, ratio: 0 })], {}, 0);
 
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({ ...run, ratio: 21, required: 4.5, pass: true, count: 2 });
     expect(rows[1]).toMatchObject({ ground: null, ratio: null, pass: null });
+  });
+});
+
+describe("pairingRows tokens", () => {
+  const tokens = {
+    "rgb(0, 0, 0)": ["--faction-snide-card-notice"],
+    "rgb(255, 255, 255)": ["--faction-snide-card-bg", "--color-surface"],
+  };
+
+  it("names every token behind the text and ground colours, and keeps where, retry and rgb", () => {
+    const [row] = pairingRows(run, [finding()], tokens, 1);
+
+    expect(row.textTokens).toEqual(["--faction-snide-card-notice"]);
+    expect(row.groundTokens).toEqual(["--faction-snide-card-bg", "--color-surface"]);
+    expect(row).toMatchObject({ text: "rgb(0, 0, 0)", ground: "rgb(255, 255, 255)", where: "div > div > span", attempt: 1 });
+  });
+
+  it("leaves token lists empty for a colour no custom property carries, and for an unresolved ground", () => {
+    const [plain] = pairingRows(run, [finding()], {}, 0);
+    const [open] = pairingRows(run, [finding({ background: null, ratio: 0 })], tokens, 0);
+
+    expect(plain.textTokens).toEqual([]);
+    expect(open.groundTokens).toEqual([]);
+  });
+
+  it("marks only below-AA rows the baseline allows", () => {
+    const allowed = finding({
+      text: "rgb(111, 174, 0)",
+      background: "rgb(244, 241, 232)",
+      ratio: 2.41,
+      required: 4.5,
+    });
+    const [baselined] = pairingRows(run, [allowed], {}, 0);
+    const [unbaselined] = pairingRows(run, [belowAA()], {}, 0);
+    const [passing] = pairingRows(run, [finding()], {}, 0);
+
+    expect(baselined.baselined).toBe(true);
+    expect(unbaselined.baselined).toBe(false);
+    expect(passing.baselined).toBe(false);
   });
 });
 

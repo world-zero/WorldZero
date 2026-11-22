@@ -14,6 +14,7 @@ import {
   type SweepFaction,
   type SweepTheme,
   type SweepViewport,
+  type TokenIndex,
 } from '../src/utils/contrastSweep'
 
 /**
@@ -57,6 +58,35 @@ async function loginAs(page: Page, faction: SweepFaction): Promise<{ characterId
   return { characterId: body.character_id }
 }
 
+// Invert the page's custom properties to rgb, so rows name tokens, not just colours.
+async function readTokens(page: Page): Promise<TokenIndex> {
+  return page.evaluate(() => {
+    const names = new Set<string>()
+    const walk = (rules: CSSRuleList) => {
+      for (const rule of Array.from(rules)) {
+        if (rule instanceof CSSStyleRule) {
+          for (const prop of Array.from(rule.style)) if (prop.startsWith('--')) names.add(prop)
+        } else if ('cssRules' in rule) walk((rule as CSSGroupingRule).cssRules)
+      }
+    }
+    for (const sheet of Array.from(document.styleSheets)) {
+      try { walk(sheet.cssRules) } catch { /* cross-origin sheet */ }
+    }
+    const probe = document.createElement('span')
+    document.documentElement.appendChild(probe)
+    const index: Record<string, string[]> = {}
+    for (const name of names) {
+      // An invalid var() would compute to the inherited colour, so filter first.
+      if (!CSS.supports('color', getComputedStyle(document.documentElement).getPropertyValue(name).trim())) continue
+      probe.style.color = `var(${name})`
+      const rgb = getComputedStyle(probe).color
+      ;(index[rgb] ??= []).push(name)
+    }
+    probe.remove()
+    return index
+  })
+}
+
 async function useTheme(page: Page, theme: SweepTheme): Promise<void> {
   // Seed before first navigation: index.html reads it before React hydrates.
   await page.addInitScript((value) => {
@@ -70,13 +100,14 @@ for (const faction of SWEEP_FACTIONS) {
       // The phone layout needs a touch-first device (#3182): `(pointer: coarse)`.
       test.describe(`${faction} · ${theme} · ${viewport}`, () => {
       test.use({ hasTouch: viewport === 'mobile' })
-      test(`${faction} · ${theme} · ${viewport} clears WCAG AA`, async ({ page }) => {
+      test(`${faction} · ${theme} · ${viewport} clears WCAG AA`, async ({ page }, testInfo) => {
         test.setTimeout(120_000)
         await page.setViewportSize(SWEEP_VIEWPORTS[viewport])
         await useTheme(page, theme)
         await loginAs(page, faction)
 
         const findings: Finding[] = []
+        const tokens: TokenIndex = {}
         for (const route of routesFor(faction)) {
           await page.goto(route)
           // The skin waits on /auth/me.
@@ -84,6 +115,10 @@ for (const faction of SWEEP_FACTIONS) {
           await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
 
           findings.push(...((await page.evaluate(scanPageForContrast)) as Finding[]))
+          // Per route: faction/eph vars can be scoped to a surface.
+          for (const [rgb, names] of Object.entries(await readTokens(page))) {
+            tokens[rgb] = [...new Set([...(tokens[rgb] ?? []), ...names])]
+          }
         }
 
         const verdict = assessSweep({ faction, theme, viewport }, findings)
@@ -93,7 +128,7 @@ for (const faction of SWEEP_FACTIONS) {
         mkdirSync(dirname(PAIRINGS_OUT), { recursive: true })
         appendFileSync(
           PAIRINGS_OUT,
-          pairingRows({ faction, theme, viewport }, findings).map((row) => `${JSON.stringify(row)}\n`).join(''),
+          pairingRows({ faction, theme, viewport }, findings, tokens, testInfo.retry).map((row) => `${JSON.stringify(row)}\n`).join(''),
         )
 
         // Always print what went unchecked, even when green (#1675).
