@@ -468,6 +468,8 @@
   --everymen-ink: #0d0907;
   --everymen-red: #e2433f;
   --everymen-red-deep: #b32a28;
+  --everymen-band-top: #c1272d;
+  --everymen-band-bottom: #8d1c20;
   --everymen-red-light: rgba(226, 67, 63, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #221a16;
   --everymen-paper-deep: #17110d;

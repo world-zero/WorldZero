@@ -1308,6 +1308,8 @@
   --everymen-ink: #221a12;
   --everymen-red: #c1272d;
   --everymen-red-deep: #8d1c20;
+  --everymen-band-top: var(--everymen-red); /* profile header stops; dark pins the light reds (#4167) */
+  --everymen-band-bottom: var(--everymen-red-deep);
   --everymen-red-light: rgba(193, 39, 45, 0.08); /* low-alpha red wash — error-banner field */
   --everymen-paper: #ece1c6;
   --everymen-paper-deep: #ddceac;
