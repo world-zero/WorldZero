@@ -94,6 +94,8 @@ class ErrorCode(str, enum.Enum):
     #: ``DELETE /praxes/{id}/media/{id}`` can 404 for either reason: dead link
     #: vs stale media list.
     media_item_not_found = "MEDIA_ITEM_NOT_FOUND"
+    #: 409: flagged/hidden/deleted content can't be rewritten out from under a mod.
+    under_review = "UNDER_REVIEW"
 
     # -- Tasks and characters as targets (#1652 slice two) -------------------
     #: Distinct from praxis_not_found: sibling comment routes 404 for different ids.

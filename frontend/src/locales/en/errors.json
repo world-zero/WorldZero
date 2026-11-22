@@ -115,6 +115,7 @@
     "PRAXIS_DOC_UPDATE_INVALID": "Your draft couldn't be sent with the submit. If the post is very long (over {{max_title}} characters in the title or {{max_body}} in the body), shorten it. Otherwise copy your text somewhere safe, reload and try again.",
     "PRAXIS_DOC_UPDATE_TOO_LARGE": "Your draft is too big to send with the submit. Cut some text, then try again.",
     "PRAXIS_NEEDS_PROOF_delete": "A published praxis keeps at least one photo, video or audio file.",
+    "UNDER_REVIEW": "A moderator is reviewing this, so it can't be changed right now.",
     "PRAXIS_ALREADY_LIVE": "This praxis is already live. Reopen it to edit it.",
     "PRAXIS_ROOM_UNAVAILABLE": "The shared draft is not ready yet. Try again in a moment.",
     "PRAXIS_POST_COOLDOWN": "You can post again at {{next_post_at}}.",

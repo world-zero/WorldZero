@@ -28,7 +28,12 @@ from services.block_service import blocked_by
 from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_comment
 from services.mod_log import log_mod_action
-from services.praxis import account_already_flagged, can_view_praxis, resolve_flags
+from services.praxis import (
+    account_already_flagged,
+    can_view_praxis,
+    refuse_if_under_review,
+    resolve_flags,
+)
 from services.push import notify_comment
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.
@@ -237,6 +242,7 @@ async def edit_comment(
         raise HTTPException(
             status_code=403, detail="Cannot edit another character's comment."
         )
+    refuse_if_under_review(comment)
     body_text = _clean_body(body_text)
 
     comment.body_text = body_text
