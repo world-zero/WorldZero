@@ -169,7 +169,7 @@ export default function CredentialCard({
               }}
             >
               {character ? (
-                <FactionAvatar character={{ ...character, faction_slug: stillFace(character.faction_slug) }} size={128} badge={false} />
+                <FactionAvatar character={{ ...character, faction_slug: stillRing ? stillFace(character.faction_slug) : character.faction_slug }} size={128} badge={false} />
               ) : avatarUrl ? (
                 <img
                   src={avatarUrl}
