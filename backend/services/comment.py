@@ -63,8 +63,21 @@ async def can_comment(
     )
 
 
+async def _viewer_sees_target(
+    viewer: Character, comment: Comment, session: AsyncSession
+) -> bool:
+    if comment.praxis_id is None:
+        return True
+    praxis = await session.get(Praxis, comment.praxis_id)
+    return praxis is not None and await can_view_praxis(viewer, praxis, session)
+
+
 async def get_comment(
-    comment_id: int, session: AsyncSession, *, removed_is_missing: bool = False
+    comment_id: int,
+    session: AsyncSession,
+    *,
+    removed_is_missing: bool = False,
+    viewer: Optional[Character] = None,
 ) -> Comment:
     result = await session.execute(
         select(Comment)
@@ -74,11 +87,18 @@ async def get_comment(
         .where(Comment.id == comment_id)
     )
     comment = result.scalar_one_or_none()
-    # A removed comment answers as a missing one, so a flagger can't tell them apart.
-    if comment is None or (
-        removed_is_missing
+    # A removed or hidden-praxis comment answers as a missing one, so a flagger
+    # can't tell them apart.
+    removed = (
+        comment is not None
+        and removed_is_missing
         and comment.moderation_status
         in (ModerationStatus.hidden, ModerationStatus.deleted)
+    )
+    if (
+        comment is None
+        or removed
+        or (viewer and not await _viewer_sees_target(viewer, comment, session))
     ):
         raise HTTPException(status_code=404, detail="Comment not found.")
     return comment
@@ -283,7 +303,9 @@ async def flag_comment(
     era: EraConfig = CURRENT_ERA,
 ) -> Comment:
     """Flag for moderation; mirrors :func:`services.praxis.flag_praxis`."""
-    comment = await get_comment(comment_id, session, removed_is_missing=True)
+    comment = await get_comment(
+        comment_id, session, removed_is_missing=True, viewer=flagged_by
+    )
 
     # Account-scoped (#328): the review threshold is 1, so a second life could
     # otherwise queue its own account's comment.

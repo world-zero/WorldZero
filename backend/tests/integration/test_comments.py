@@ -9,9 +9,10 @@ from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
 from models.comment import MAX_COMMENT_BODY, Comment
+from models.duel import Duel, DuelStatus
 from models.era import Era
 from models.flag import Flag
-from models.praxis import ModerationStatus, Praxis
+from models.praxis import ModerationStatus, Praxis, PraxisStatus
 from models.task import Task
 from services.comment import create_comment
 from tests.integration.factories import DEFAULT_FACTION_SLUG, make_admin
@@ -284,6 +285,91 @@ async def test_flag_requires_level(
         headers=auth_headers,
     )
     assert resp.status_code == 403
+
+
+async def _seed_comment(
+    db_session: AsyncSession, praxis: Praxis, author: Character
+) -> int:
+    comment = Comment(praxis_id=praxis.id, created_by_id=author.id, body_text="secret")
+    db_session.add(comment)
+    await db_session.commit()
+    return comment.id
+
+
+async def _assert_flag_refused(
+    client: AsyncClient, db_session: AsyncSession, comment_id: int, headers: dict
+) -> None:
+    resp = await client.post(
+        f"/comments/{comment_id}/flag", json={"reason": "spam"}, headers=headers
+    )
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Comment not found."
+    flags = await db_session.execute(select(Flag).where(Flag.comment_id == comment_id))
+    assert flags.scalars().all() == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("flagger_level", [1, 5])
+async def test_flag_on_a_draft_praxis_comment_is_a_404_for_a_stranger(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    era: Era,
+    auth_headers2: dict,
+    flagger_level: int,
+):
+    praxis_solo.status = PraxisStatus.in_progress
+    comment_id = await _seed_comment(db_session, praxis_solo, character)
+    await _set_level(db_session, character2, era, flagger_level)
+
+    await _assert_flag_refused(client, db_session, comment_id, auth_headers2)
+
+
+@pytest.mark.asyncio
+async def test_flag_on_an_unsealed_duel_side_comment_is_a_404_for_a_stranger(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    active_task: Task,
+    era: Era,
+    auth_headers2: dict,
+):
+    db_session.add(
+        Duel(
+            task_id=active_task.id,
+            challenger_praxis_id=praxis_solo.id,
+            opponent_character_id=character2.id,
+            status=DuelStatus.pending,
+        )
+    )
+    comment_id = await _seed_comment(db_session, praxis_solo, character)
+    await _set_level(db_session, character2, era, 5)
+
+    await _assert_flag_refused(client, db_session, comment_id, auth_headers2)
+
+
+@pytest.mark.asyncio
+async def test_a_viewer_can_still_flag_a_comment_on_a_visible_praxis(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    praxis_solo: Praxis,
+    era: Era,
+    auth_headers2: dict,
+):
+    comment_id = await _seed_comment(db_session, praxis_solo, character)
+    await _set_level(db_session, character2, era, 5)
+
+    resp = await client.post(
+        f"/comments/{comment_id}/flag", json={"reason": "spam"}, headers=auth_headers2
+    )
+
+    assert resp.status_code == 200, resp.text
 
 
 # Backend facts the frontend mention card relies on (#1196).
