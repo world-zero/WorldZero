@@ -6,8 +6,9 @@ from annotated_types import Ge, Le
 from fastapi import Query
 
 INT32_MAX = 2**31 - 1
+INT64_MAX = 2**63 - 1
 
-Id = Annotated[int, Ge(1), Le(2**63 - 1)]
+Id = Annotated[int, Ge(1), Le(INT64_MAX)]
 Int32 = Annotated[int, Ge(0), Le(INT32_MAX)]
 
 PAGE_MAX = 200

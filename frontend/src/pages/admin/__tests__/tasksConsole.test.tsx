@@ -120,7 +120,8 @@ describe('the task panel', () => {
     at('/admin/tasks?task=1')
     const panel = await screen.findByRole('complementary', { name: 'Task' })
     for (const label of ['Title', 'Description', 'Points', 'Level', 'Faction']) {
-      expect((within(panel).getByLabelText(label) as HTMLInputElement).disabled).toBe(true)
+      const el = within(panel).getByLabelText(label) as HTMLInputElement
+      expect(el.disabled || el.readOnly).toBe(true)
     }
     expect(within(panel).queryByRole('button', { name: /^save$/i })).toBeNull()
     expect(within(panel).getByText(/Retire it to edit/)).toBeTruthy()

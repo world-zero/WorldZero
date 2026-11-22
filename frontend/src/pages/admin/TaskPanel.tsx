@@ -128,20 +128,20 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
       )}
       <label className="adm-field">
         {t('console.tasks.panel.title')}
-        <input className="adm-input" value={form.title} disabled={frozen} onChange={set('title')} />
+        <input className="adm-input" value={form.title} readOnly={frozen} onChange={set('title')} />
       </label>
       <label className="adm-field">
         {t('console.tasks.panel.description')}
-        <textarea className="adm-input adm-textarea" value={form.description} disabled={frozen} onChange={set('description')} />
+        <textarea className="adm-input adm-textarea" value={form.description} readOnly={frozen} onChange={set('description')} />
       </label>
       <div className="adm-fields3">
         <label className="adm-field">
           {t('tasks.pointsLabel')}
-          <input className="adm-input" type="number" min={1} value={form.points} disabled={frozen} onChange={set('points')} />
+          <input className="adm-input" type="number" min={1} value={form.points} readOnly={frozen} onChange={set('points')} />
         </label>
         <label className="adm-field">
           {t('console.tasks.panel.level')}
-          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} disabled={frozen} onChange={set('level')} />
+          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} readOnly={frozen} onChange={set('level')} />
         </label>
         {factions.length > 0 && (
           <label className="adm-field">
@@ -207,7 +207,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
               </button>
             )}
           </div>
-          <p className="adm-muted">{t(locked ? 'console.tasks.panel.hintActive' : 'console.tasks.panel.hint')}</p>
+          <p className="adm-muted">{t(locked ? 'console.tasks.panel.hintActive' : canEdit ? 'console.tasks.panel.hint' : 'console.tasks.panel.hintReadOnly')}</p>
           {task.status !== 'deleted' && !task.has_history && can('deleteTask') && (
             <button type="button" className="adm-btn adm-btn-dng" onClick={() => setConfirmDelete(true)}>
               {t('tasks.actions.delete')}
