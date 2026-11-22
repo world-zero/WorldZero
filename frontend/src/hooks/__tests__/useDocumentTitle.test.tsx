@@ -4,13 +4,13 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect } from 'vitest'
 import '../../i18n'
 import About from '../../pages/About'
-import Donate from '../../pages/Donate'
+import Disclaimer from '../../pages/Disclaimer'
 
 describe('a page titles itself', () => {
   it('sets "<page> · World Zero" per page', () => {
     render(<MemoryRouter><About /></MemoryRouter>)
     expect(document.title).toBe('About World Zero · World Zero')
-    render(<MemoryRouter><Donate /></MemoryRouter>)
+    render(<MemoryRouter><Disclaimer /></MemoryRouter>)
     expect(document.title).not.toBe('About World Zero · World Zero')
     expect(document.title).toMatch(/ · World Zero$/)
   })

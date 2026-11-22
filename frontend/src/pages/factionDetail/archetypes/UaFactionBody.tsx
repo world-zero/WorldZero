@@ -252,7 +252,7 @@ export default function UaFactionBody({ state }: { state: FactionDetailState }) 
                   {/* Keep the span right after the text: a `{" "}` node
                       shifts the catalog's `<1>` and i18next drops the span. */}
                   <Trans t={t} i18nKey="ua.join.memberStanding">
-                    Standing · <span style={{ color: "var(--leaf-faction-body-accent)" }}>practising</span>
+                    Standing · <span style={{ color: "var(--leaf-faction-body-accent)" }}>practicing</span>
                   </Trans>
                 </div>
               </div>

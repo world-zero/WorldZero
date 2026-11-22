@@ -94,8 +94,13 @@ describe('the controls the card actually draws', () => {
     // Withheld in the Archived tab, where the action is restore.
     expect(render('coven', () => {})).toContain(NOT_NOW)
     expect(render('coven')).not.toContain(NOT_NOW)
-    // Survives suppression: a deferral, never an answer (ADR-0070).
-    expect(render(LETTER_SLUG, () => {})).toContain(NOT_NOW)
+    expect(render('na', () => {})).toContain(NOT_NOW)
+  })
+
+  it('draws neither Accept nor Not now for a member of the letter faction', () => {
+    const html = render(LETTER_SLUG, () => {})
+    expect(html).not.toContain(NOT_NOW)
+    expect(html).not.toContain('data-invitation-accept')
   })
 
   it('says "Not now", never "Decline" — the letter stays valid', () => {

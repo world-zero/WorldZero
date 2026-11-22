@@ -68,7 +68,7 @@ const SIZES: Record<MastheadScale, MastheadSize> = {
     sigil: 62,
     wordmark: "var(--text-title)",
     datum: "var(--text-md)",
-    padding: "var(--space-xl) var(--space-xl) var(--space-lg)",
+    padding: "var(--space-xl) var(--detail-pad, var(--space-2xl)) var(--space-lg)",
     gap: "var(--space-xl)",
     inlineSigil: 14,
   },

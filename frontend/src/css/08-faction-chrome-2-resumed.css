@@ -29,6 +29,12 @@
   display: none;
 }
 
+/* The rail's character-card hairline doubles the ring the same way (#4121). A
+   member's rail carries `data-rail-face` and has the ring off, so only theirs stays. */
+#wz-sidebar:not([data-rail-face]) .rail-hairline {
+  display: none;
+}
+
 /* Albescent AVATAR (#2502, ADR-0048): `DefaultAvatar` + one span redrawing the
    2px conic ring on top; motion.ornament.css turns it.
    Annulus by RADIAL mask: the content-box exclude idiom would mask a rectangle

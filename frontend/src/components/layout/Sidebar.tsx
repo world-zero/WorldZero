@@ -460,6 +460,7 @@ function ActiveTasksBody({
 /** "Recent activity" panel body. */
 function RecentActivityBody({ recentActivity }: { readonly recentActivity: ActivityFeedItem[] }) {
   const { t } = useTranslation('common')
+  const { t: tFeed } = useTranslation('feed')
 
   return (
     <>
@@ -478,8 +479,12 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
             const row = normalizeFeedItem(item)
             // `row` is null for `era_announcement` (#1192 decision 6);
             // `friend_defection` has no headline, only an action line.
-            const headline = row?.headline ?? row?.action ?? feedItemTitle(item)
-            const href = row?.headlineHref ?? null
+            const letterFaction =
+              item.type === 'invitation_letter' ? String(item.payload.faction_slug) : null
+            const headline = letterFaction
+              ? tFeed('invitationLetterRail', { faction: factionName(letterFaction) })
+              : (row?.headline ?? row?.action ?? feedItemTitle(item))
+            const href = letterFaction ? '/factions' : (row?.headlineHref ?? null)
             const kicker = item.actor_display_name
               ? `${feedKicker(item.type)} · ${item.actor_display_name}`
               : feedKicker(item.type)
@@ -544,7 +549,7 @@ function RecentActivityBody({ recentActivity }: { readonly recentActivity: Activ
                     {kicker}
                   </div>
                   {href ? (
-                    <Link to={href} className="font-display block truncate" style={titleStyle}>
+                    <Link to={href} className={letterFaction ? 'font-display block' : 'font-display block truncate'} style={titleStyle}>
                       {headline}
                     </Link>
                   ) : (
@@ -655,6 +660,7 @@ export default function Sidebar() {
           {/* Signature hairline: with the avatar ring and level track, one
               mark at three scales (#1553). */}
           <span
+            className="rail-hairline"
             style={{
               position: 'absolute',
               top: 0,

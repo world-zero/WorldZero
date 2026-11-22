@@ -519,7 +519,8 @@ export default function EphemeristsTaskDetail({
 
   // The worth beside the summons, on one plate.
   const actionPanel = (
-    <div style={{ position: "relative" }}>
+    // Padding = the outline's reach (offset 3 + 1px), so the frame's outer edge meets the column inset (#4152).
+    <div style={{ position: "relative", padding: "var(--space-xs)" }}>
       <div
         style={{
           ...plate,

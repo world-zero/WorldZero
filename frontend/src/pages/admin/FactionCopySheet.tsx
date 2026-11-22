@@ -12,11 +12,13 @@ import { useEffect, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router-dom'
 
+import type { ActivityFeedItem } from '../../api/activityFeed'
 import { surfaceMap, type FactionSurface } from '../../factions'
 import { resolveVariant } from '../../utils/factionDispatch'
 import { ALBESCENT_FACTION_SLUG, factionName } from '../../utils/factions'
 import PageTitle from '../../components/ui/PageTitle'
 import InvitationLetterPopup from '../../components/InvitationLetterPopup'
+import FeedCardInvitationLetter from '../../components/feed/FeedCardInvitationLetter'
 import AlbescentInvitation from '../../components/AlbescentInvitation'
 import { EphemeristsColophon } from '../../components/factionMarks/EphemeristsMasthead'
 import AlbescentSecretPlaceholder from '../AlbescentSecretPlaceholder'
@@ -168,6 +170,19 @@ export function useFocusWithoutScroll() {
   }, [])
 }
 
+function invitationItem(slug: string): ActivityFeedItem {
+  return {
+    type: 'invitation_letter',
+    item_key: `invitation_letter:${slug}`,
+    timestamp: '2026-01-01T00:00:00Z',
+    actor_display_name: '',
+    actor_faction_slug: null,
+    actor_avatar_url: null,
+    payload: { faction_slug: slug },
+    context_faction_slug: slug,
+  }
+}
+
 export default function FactionCopySheet() {
   // Subscribing re-renders on arm (`languageChanged`) so the registry indexes
   // the fixtures' `i18n.t` calls.
@@ -198,6 +213,11 @@ export default function FactionCopySheet() {
           <Frame height={820}>
             <InvitationLetterPopup factionSlug={slug} onClose={noop} preview />
           </Frame>
+        </Section>
+      )}
+      {slug !== ALBESCENT_FACTION_SLUG && (
+        <Section id="FeedCardInvitationLetter">
+          <FeedCardInvitationLetter item={invitationItem(slug)} onNotNow={noop} />
         </Section>
       )}
       {(EXTRAS[slug] ?? []).map(({ id, render }) => (

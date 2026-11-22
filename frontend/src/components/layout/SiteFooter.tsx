@@ -19,7 +19,7 @@ export default function SiteFooter() {
       <Link to="/contact" className="hit-y hit-pad hover:underline">{t('footer.contact')}</Link>
       <Link to="/disclaimer" className="hit-y hit-pad hover:underline">{t('footer.disclaimer')}</Link>
       <Link to="/attributions" className="hit-y hit-pad hover:underline">{t('footer.attributions')}</Link>
-      <Link to="/donate" className="hit-y hit-pad hover:underline">{t('footer.donate')}</Link>
+      <Link to="/ai" className="hit-y hit-pad hover:underline">{t('footer.ai')}</Link>
     </footer>
   )
 }

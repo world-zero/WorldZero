@@ -86,7 +86,7 @@ describe('Layout shell', () => {
     const html = render('mobile')
     const hrefs = [...html.matchAll(/href="(\/[a-z]+)"/g)].map((m) => m[1])
     expect(hrefs.filter((h) => h !== '/tasks')).toEqual(
-      expect.arrayContaining(['/about', '/contact', '/disclaimer', '/attributions', '/donate']),
+      expect.arrayContaining(['/about', '/contact', '/disclaimer', '/attributions', '/ai']),
     )
     expect(html.indexOf('<footer')).toBeGreaterThan(html.indexOf(PAGE_MARKER))
   })

@@ -116,6 +116,11 @@
   font-family: var(--rail-face);
 }
 
+/* The faked italic of a script face leans past the advance width and `truncate` clips it. */
+[data-rail-face] .font-display.italic.truncate {
+  padding-inline-end: 0.2em;
+}
+
 /* ══ COMPOSER SIZES: the design's SIZES table (ADR-0065 §2) ══
    Read through `useComposerSizes()` as var() strings, so the browser resolves phone
    vs desktop in the first style pass. The query must equal `MOBILE_QUERY` in

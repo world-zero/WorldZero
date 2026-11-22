@@ -79,3 +79,14 @@ jobs:
           name: contrast-report
           path: frontend/playwright-report/
           retention-days: 14
+
+      # Every pairing measured, passes included (#2698): the evidence for which
+      # authored rows in factionContrast.test.ts the sweep already covers.
+      - name: Upload measured pairings
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: contrast-pairings
+          path: frontend/test-results/contrast-pairings.jsonl
+          if-no-files-found: warn
+          retention-days: 14

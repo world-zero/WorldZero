@@ -155,3 +155,20 @@ describe('the ring is colour, the drift is motion — different sheets (#2404)',
     ).toContain('prefers-reduced-motion: no-preference')
   })
 })
+
+describe('the card hairline is hidden wherever the ring carries the spectrum (#4121)', () => {
+  const RESUMED = sheet('css/08-faction-chrome-2-resumed.css')
+
+  it('hides the hairline on a rail with no faction face, never on a member', () => {
+    expect(ruleBody(RESUMED, '#wz-sidebar:not([data-rail-face]) .rail-hairline')).toContain(
+      'display: none',
+    )
+    expect(renderAs('na')).not.toContain('data-rail-face')
+    expect(renderAs('albescent')).not.toContain('data-rail-face')
+    for (const slug of ['coven', 'snide', 'ua']) {
+      const html = renderAs(slug)
+      expect(html, slug).toContain('data-rail-face')
+      expect(html, slug).toContain('rail-hairline')
+    }
+  })
+})

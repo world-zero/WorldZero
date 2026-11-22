@@ -52,7 +52,7 @@ describe("runPick", () => {
     const out = await runPick(deps, new AbortController().signal);
     expect(out.kind).toBe("authorized");
     expect(calls).toEqual([
-      "open", "start", expect.stringContaining("/auth/google/photos/authorize"), "await", "close",
+      "open", "start", expect.stringContaining("/auth/google/photos/authorize"), "await", "start", "close",
     ]);
   });
 
@@ -83,11 +83,34 @@ describe("runPick", () => {
     expect(calls).toContain("abandon s1");
   });
 
-  it("a picker window closed with nothing picked is abandoned after the grace", async () => {
-    const { deps, calls, popup } = fakes({ polls: [] });
+  it("a popup that reads closed from the first poll does not end the pick", async () => {
+    const { deps, calls, popup } = fakes({ polls: ["waiting", "waiting", "waiting", "waiting", "picked"] });
     popup.closed = true;
-    expect((await runPick(deps, new AbortController().signal)).kind).toBe("abandoned");
-    expect(calls).toContain("abandon s1");
+    expect((await runPick(deps, new AbortController().signal)).kind).toBe("ingested");
+    expect(calls.some((c) => c.startsWith("abandon"))).toBe(false);
+  });
+
+  it("consent then ready in one call navigates the same popup to the picker", async () => {
+    let starts = 0;
+    const { deps, calls } = fakes({
+      start: async () => (calls.push("start"), ++starts === 1 ? NEEDS_AUTH : READY),
+    });
+    const out = await runPick(deps, new AbortController().signal);
+    expect(out.kind).toBe("ingested");
+    expect(calls.filter((c) => c === "open")).toHaveLength(1);
+    expect(calls).toContain(`navigate ${READY.picker_uri}`);
+  });
+
+  it("consent but start still needs authorization ends as authorized", async () => {
+    const { deps } = fakes({ start: async () => NEEDS_AUTH });
+    expect((await runPick(deps, new AbortController().signal)).kind).toBe("authorized");
+  });
+
+  it("cancel while polling abandons once", async () => {
+    const abort = new AbortController();
+    const { deps, calls } = fakes({ polls: ["waiting"], sleep: async () => abort.abort() });
+    expect((await runPick(deps, abort.signal)).kind).toBe("abandoned");
+    expect(calls.filter((c) => c === "abandon s1")).toHaveLength(1);
   });
 
   it("a blocked popup is reported", async () => {

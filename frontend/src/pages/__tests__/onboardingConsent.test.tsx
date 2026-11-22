@@ -68,6 +68,20 @@ describe('which sign-in leaves a resume mark', () => {
   })
 })
 
+describe('flow header by form factor', () => {
+  it('leaves out the brand and Sign in at desktop, keeps them at mobile', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }))
+    mount(null, false)
+    expect(screen.queryByTestId('onboarding-header-sign-in')).toBeNull()
+    expect(document.querySelector('.ob-brand')).toBeNull()
+    cleanup()
+    vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} }))
+    mount(null, false)
+    expect(screen.getByTestId('onboarding-header-sign-in')).toBeTruthy()
+    expect(document.querySelector('.ob-brand')).toBeTruthy()
+  })
+})
+
 describe('guest round trip', () => {
   it('holds the click at the contract, shows sign-in, and writes one row after the redirect', async () => {
     mount(null, false)

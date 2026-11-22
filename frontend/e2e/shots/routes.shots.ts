@@ -114,7 +114,9 @@ async function shootFlow(page: Page, prefix: string, suffix: string) {
   }
   await openTitle(page)
   await shoot('title')
-  await page.getByTestId('onboarding-header-sign-in').click()
+  // Desktop's nav carries Sign in; the flow header's is phone-only.
+  const header = page.getByTestId('onboarding-header-sign-in')
+  await ((await header.count()) ? header : page.getByRole('link', { name: 'Sign in' })).click()
   await expect(page.locator('.ob-lora > span')).toHaveText(copy.signin.title, { timeout: 15_000 })
   await shoot('returning')
   await page.goto('/')

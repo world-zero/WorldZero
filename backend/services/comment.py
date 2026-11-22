@@ -22,7 +22,7 @@ from models.comment import (
 )
 from models.flag import Flag, FlagReason
 from models.praxis import ModerationStatus, Praxis
-from models.task import Task, TaskStatus
+from models.task import TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.block_service import blocked_by
 from services.era import get_current_era_row, get_or_create_stats
@@ -35,6 +35,7 @@ from services.praxis import (
     resolve_flags,
 )
 from services.push import notify_comment
+from services.task import get_task_for_viewer
 
 # Unresolved handles stay plain text; render linkifies the resolved set only.
 MENTION_RE = re.compile(r"@([A-Za-z0-9_]+)")
@@ -158,8 +159,9 @@ async def _assert_commentable_target(
     task_id: Optional[int],
     session: AsyncSession,
     author: Optional[Character] = None,
+    era: EraConfig = CURRENT_ERA,
 ) -> None:
-    """Exactly one target, open for comments: a visible praxis or active task."""
+    """Exactly one target, open for comments: a visible praxis or task."""
     if (praxis_id is None) == (task_id is None):
         raise_coded(
             422,
@@ -181,10 +183,11 @@ async def _assert_commentable_target(
                 "This praxis is not open for comments.",
             )
     else:
-        task = await session.get(Task, task_id)
+        # Same visibility gate as GET /tasks/{id}; withheld answers 404 like absent.
+        task = await get_task_for_viewer(session, task_id, author, era=era)
         if task is None:
             raise_coded(404, ErrorCode.task_not_found, "Task not found.")
-        if task.status != TaskStatus.active:
+        if task.status is TaskStatus.backdoor:
             raise_coded(
                 403,
                 ErrorCode.task_not_open_for_comments,
@@ -209,7 +212,9 @@ async def create_comment(
             {"level": era.comment_level_required},
         )
     body_text = _clean_body(body_text)
-    await _assert_commentable_target(praxis_id, task_id, session, author=author)
+    await _assert_commentable_target(
+        praxis_id, task_id, session, author=author, era=era
+    )
 
     comment = Comment(
         praxis_id=praxis_id,

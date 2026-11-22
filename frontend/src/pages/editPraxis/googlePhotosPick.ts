@@ -1,10 +1,10 @@
 /**
  * The Google Photos pick as a state machine (#559).
  *
- *   start -> [authorization_needed -> authorize popup -> "authorized": the
- *             player presses again, the token is held, no second popup needed]
+ *   start -> [authorization_needed -> authorize popup -> start again; ready
+ *             carries on in the same popup, else "authorized": press again]
  *         -> ready -> picker popup -> poll until picked | expired
- *         -> ingest.   Abandoned at any point after a session exists -> DELETE.
+ *         -> ingest.   Cancel at any point after a session exists -> DELETE.
  *
  * Every side effect comes in through `PickDeps`, so the flow is pinned in
  * `__tests__/googlePhotosPick.test.ts` without a browser. The real consent ->
@@ -50,8 +50,8 @@ export type PickOutcome =
   | { kind: "authorized" }
   | { kind: "popupBlocked" };
 
-/** Polls still made after the picker window is gone: autoclose precedes the answer. */
-export const CLOSED_GRACE_POLLS = 2;
+// `popup.closed` lies under Cross-Origin-Opener-Policy, so it never ends a pick.
+const NEEDS_AUTH = { status: "authorization_needed" } as PickerSessionStart;
 
 export async function runPick(
   deps: PickDeps,
@@ -70,23 +70,26 @@ export async function runPick(
         popup.close();
         return { kind: "abandoned" };
       }
-      popup.close();
-      // A second window.open here has no click left and gets blocked. The
-      // backend holds the token until a pick ends, so the next press opens
-      // the picker inside its own gesture.
-      return { kind: auth === "failed" ? "authFailed" : "authorized" };
+      if (auth === "failed") {
+        popup.close();
+        return { kind: "authFailed" };
+      }
+      // The callback page leaves its window open, so this one press can go on
+      // to the picker; a second window.open would have no click left.
+      started = popup.closed ? NEEDS_AUTH : await deps.start();
+      if (started.status === "authorization_needed") {
+        popup.close();
+        return { kind: "authorized" };
+      }
     }
     if (started.status !== "ready" || !started.session_id || !started.picker_uri) {
       popup.close();
       return { kind: "authFailed" };
     }
     sessionId = started.session_id;
-
-    const picker = popup;
-    picker.navigate(started.picker_uri);
+    popup.navigate(started.picker_uri);
 
     const interval = (started.poll_interval_seconds ?? 2) * 1000;
-    let closedPolls = 0;
     for (;;) {
       await deps.sleep(interval, signal);
       if (signal.aborted) break;
@@ -97,9 +100,8 @@ export async function runPick(
         sessionId = null; // ingest drops the session, success or not
         return { kind: "ingested", results: await deps.ingest(id) };
       }
-      if (picker.closed && ++closedPolls > CLOSED_GRACE_POLLS) break;
     }
-    picker.close();
+    popup.close();
     return { kind: "abandoned" };
   } finally {
     // Anything still holding a session (abandon, or a throw) lets Google's go.
@@ -150,8 +152,7 @@ export const realDeps: Omit<PickDeps, "ingest"> = {
       const onAbort = () => done("closed");
       window.addEventListener("message", onMessage);
       signal.addEventListener("abort", onAbort);
-      // The callback closes its own window right after posting; the grace
-      // lets that message win before a closed popup reads as abandoned.
+      // Grace lets a message already in flight win over a closed window.
       const timer = setInterval(() => {
         if (!popup.closed) return;
         clearInterval(timer);

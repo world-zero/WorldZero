@@ -57,8 +57,9 @@ export function LevelJumpBanner({ state }: { state: TaskDetailState }) {
 }
 
 /**
- * The one comments slot every archetype mounts; owns the `status === "active"`
- * gate (ADR-0006) so no skin can forget it. A `heading` suppresses the thread's
+ * The one comments slot every archetype mounts; owns the status
+ * gate so no skin can forget it: anyone who sees a task can comment, except
+ * on deleted and backdoor tasks. A `heading` suppresses the thread's
  * own `<h3>`; omit it for the default heading.
  */
 export function TaskDetailComments({
@@ -71,7 +72,9 @@ export function TaskDetailComments({
   style?: CSSProperties;
 }) {
   const { task, comments } = state;
-  if (!task || task.status !== "active") return null;
+  if (!task || !["active", "pending", "retired"].includes(task.status)) {
+    return null;
+  }
   return (
     <section style={style}>
       {heading}

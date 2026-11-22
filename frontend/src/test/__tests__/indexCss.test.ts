@@ -124,6 +124,14 @@ describe('the assembled stylesheet', () => {
     expect(depth, `${selector} sits inside a block in ${homes[0].name} — in a layer, a utility beats it`).toBe(0)
   })
 
+  it('gives the rail name inline-end room for a script face\'s slanted last glyph (#4146)', () => {
+    const rule = stripComments(readIndexCss()).match(
+      /\[data-rail-face\] \.font-display\.italic\.truncate\s*\{([^}]*)\}/,
+    )
+    expect(rule, 'the rail name overhang rule is gone').not.toBeNull()
+    expect(rule![1]).toMatch(/padding-inline-end:\s*0\.2em/)
+  })
+
   it('pins every repo token whose NAME is one of Tailwind v4 theme keys (#2918)', () => {
     // The repo's label tier `--text-xs`..`--text-xl` shadowed v4's scale and halved the type, with CI
     // green. Read from Tailwind's theme.css so the set cannot rot on upgrade.

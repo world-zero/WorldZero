@@ -23,6 +23,7 @@ vi.mock('../../../hooks/useGameConfig', () => ({
   useGameConfig: () => null,
 }))
 
+import { factionName } from '../../../utils/factions'
 import Sidebar from '../Sidebar'
 
 function item(partial: Partial<ActivityFeedItem> & { type: string }): ActivityFeedItem {
@@ -136,5 +137,26 @@ describe('the panel carries the whole live feed, not just global news', () => {
 
   it('never prints the deleted placeholder title', () => {
     expect(render()).not.toContain('a task')
+  })
+})
+
+describe('an invitation letter row', () => {
+  it('kicks with the type alone and heads with the faction name', () => {
+    const html = render([
+      item({
+        type: 'invitation_letter',
+        item_key: 'invitation_letter:3',
+        actor_faction_slug: 'coven',
+        context_faction_slug: 'coven',
+        payload: { letter_id: 3, faction_slug: 'coven' },
+      }),
+    ])
+    expect(html).toContain(`>${i18n.t('feed:kicker.invitation_letter')}<`)
+    // Static markup escapes the apostrophe.
+    expect(html).toContain(
+      i18n.t('feed:invitationLetterRail', { faction: factionName('coven') }).replace("'", '&#x27;'),
+    )
+    expect(html).not.toMatch(/>coven</i)
+    expect(html).toContain('href="/factions"')
   })
 })
