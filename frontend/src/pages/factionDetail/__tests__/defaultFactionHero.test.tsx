@@ -96,7 +96,7 @@ describe("a faction with no bespoke hero gets the na frontispiece (#2504)", () =
     expect(html).toContain("faction-hero-name");
     expect(html).toContain("faction-hero-counts");
     expect((html.match(/faction-hero-count-value/g) ?? []).length).toBe(3);
-    expect(html).toContain(i18n.t("feed:factionHero.stats.tasks"));
+    expect(html).toContain(i18n.t("feed:factionHero.stats.tasks", { count: 2 }));
   });
 
   it("prints the tagline the design canvas puts under the name (#2519)", () => {

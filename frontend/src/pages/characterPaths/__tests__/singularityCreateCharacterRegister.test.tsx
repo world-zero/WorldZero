@@ -150,7 +150,7 @@ describe('the page keeps the contract the archetype is only a dress on', () => {
     // Placeholder-only (#2793); registry sweep is `createCharacterFields.test.tsx`.
     const names = [...html.matchAll(/aria-label="([^"]+)"/g)].map((m) => m[1])
     expect(names, 'the three character fields, named').toEqual(
-      expect.arrayContaining(['Character name', 'Character bio', 'Character Catchphrase']),
+      expect.arrayContaining(['Character name', 'Character bio', 'Character catchphrase']),
     )
     expect(html, 'and no label survives to name them twice').not.toContain('<label')
   })
