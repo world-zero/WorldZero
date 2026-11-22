@@ -673,7 +673,7 @@ async def unsubmit_praxis(
     """
     # Settles: a lapsed window must read as submitted, not pending.
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, character_id, "reopen", session, era
+        praxis_id, character_id, "reopen", session, era, lock=True
     )
 
     # Withdraw is a group cancellation, same as a keystroke (ADR-0079).
@@ -1288,9 +1288,9 @@ async def cancel_invite(
     Any member, not just the inviter (#1415, ADR-0013 co-ownership).
     Outsiders, including the invitee, get 403; the invitee declines instead.
     """
-    # Plain read: no status guard, 204 response.
+    # Locked: a cancel racing an accept must not leave the accept a stale row.
     praxis = await get_praxis_for_member(
-        praxis_id, requester_id, "rescind an invite to", session
+        praxis_id, requester_id, "rescind an invite to", session, lock=True
     )
 
     invite = next(
@@ -1407,7 +1407,7 @@ async def set_member_done(
     """
     # Settles: the only load on the path, and the praxis is returned.
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, character_id, "mark done on", session, era
+        praxis_id, character_id, "mark done on", session, era, lock=True
     )
     await collab_consensus.mark_done(praxis, character_id, is_done, session)
     return await get_praxis(praxis_id, session)

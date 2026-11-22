@@ -334,8 +334,10 @@ async def upload_media_route(
     character: Character = Depends(get_current_character),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
+    # ponytail: the praxis lock is held through upload processing; process bytes
+    # first and lock only around the row insert + consensus edit if it hurts.
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, character.id, "add media to", session, CURRENT_ERA
+        praxis_id, character.id, "add media to", session, CURRENT_ERA, lock=True
     )
     media_item = await process_and_save_media(
         file, praxis_id, character.id, display_order
@@ -361,8 +363,10 @@ async def ingest_google_photos_route(
 ):
     """Attach Google Photos picker items (#559); ``/media/batch`` shape."""
     await google_photos.require_google_account(character.account_id, session)
+    # ponytail: the praxis lock is held through upload processing; process bytes
+    # first and lock only around the row insert + consensus edit if it hurts.
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, character.id, "add media to", session, CURRENT_ERA
+        praxis_id, character.id, "add media to", session, CURRENT_ERA, lock=True
     )
     return await google_photos.ingest_picked_media(
         praxis=praxis,
@@ -395,8 +399,10 @@ async def upload_media_batch_route(
     request (Starlette ``max_files``, whole-request 400); no app-level total cap
     (parts spool to temp files); Caddy 413s a body over 120 MB, so clients chunk.
     """
+    # ponytail: the praxis lock is held through upload processing; process bytes
+    # first and lock only around the row insert + consensus edit if it hurts.
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, character.id, "add media to", session, CURRENT_ERA
+        praxis_id, character.id, "add media to", session, CURRENT_ERA, lock=True
     )
     return await add_media_batch(
         praxis=praxis,
@@ -415,7 +421,7 @@ async def delete_media_route(
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     praxis = await get_praxis_settling_consensus_for_member(
-        praxis_id, character.id, "delete media from", session, CURRENT_ERA
+        praxis_id, character.id, "delete media from", session, CURRENT_ERA, lock=True
     )
     media_item = await session.get(MediaItem, media_id)
     if media_item is None or media_item.praxis_id != praxis_id:
