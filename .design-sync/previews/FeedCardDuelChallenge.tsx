@@ -78,6 +78,7 @@ export function Accepted() {
       task_faction_slug: 'snide',
       challenger_character_id: 21,
       duel_status: 'active',
+      duel_state: 'live',
     },
   })
   return (

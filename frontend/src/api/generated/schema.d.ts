@@ -3174,6 +3174,7 @@ export interface components {
             challenger_praxis_id: number;
             /** Duel Id */
             duel_id: number;
+            duel_state: components["schemas"]["DuelState"];
             /** Duel Status */
             duel_status: string;
             /** Task Faction Slug */
