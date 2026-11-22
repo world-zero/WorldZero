@@ -39,9 +39,7 @@ import {
   factionCssVar,
   factionFill,
   factionName,
-  getAllFactions,
   isKnownFaction,
-  sortFactionsByRainbowOrder,
 } from "../../../utils/factions";
 import {
   ComposerFooter,
@@ -106,7 +104,7 @@ export default function DefaultProposeTask({
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -135,16 +133,6 @@ export default function DefaultProposeTask({
   // `/game-config` lands, and unknown means undrawn.
   const adminReviewHours =
     useGameConfig()?.pending_task_admin_review_hours ?? null;
-
-  // Unaffiliated leads: a state, not a faction (ADR-0039). Then rainbow order (#352).
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({
-        slug: f.slug,
-      })),
-    ).map((f) => f.slug),
-  ];
 
   /** The counter under a capped field: quiet, then notice, then alarm (#1609). */
   const counter = (used: number, notice: number, max: number) => (

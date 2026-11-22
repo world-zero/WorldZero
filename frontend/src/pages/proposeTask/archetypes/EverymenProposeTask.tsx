@@ -26,8 +26,6 @@ import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
   factionCssVar,
   factionName,
-  getAllFactions,
-  sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
 import { factionBodyVars } from '../../../utils/factionBodyFace'
@@ -46,7 +44,6 @@ import {
 } from '../../editPraxis/archetypes/shared'
 import { ErrorBanner } from '../../../components/ui/ErrorBanner'
 import {
-  UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
 
@@ -115,7 +112,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -316,13 +313,6 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
     )
   }
 
-  /* Unaffiliated leads (ADR-0039), then rainbow order (#352). */
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({ slug: f.slug })),
-    ).map((f) => f.slug),
-  ]
 
   return (
     <ComposerPage

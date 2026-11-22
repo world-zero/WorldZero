@@ -9,7 +9,7 @@ import type { ComponentType } from 'react'
 import { resolvedArchetype } from '../../../factions/lazyArchetype'
 import { resolveVariant } from '../../../utils/factionDispatch'
 import { surfaceMap } from '../../../factions'
-import { UNAFFILIATED_FACTION_SLUG, type ProposeTaskState } from '../useProposeTask'
+import { UNAFFILIATED_FACTION_SLUG, proposeFactionOptions, type ProposeTaskState } from '../useProposeTask'
 
 /** An eligible proposer at the opening position: nothing typed, unaffiliated. */
 export function proposeTaskState(
@@ -22,6 +22,7 @@ export function proposeTaskState(
     currentLevel: 6,
     success: false,
     factions: [],
+    factionOptions: proposeFactionOptions([]),
     title: '',
     setTitle: () => {},
     description: '',

@@ -24,12 +24,9 @@ import { useGameConfig } from '../../../hooks/useGameConfig'
 import {
   factionCssVar,
   factionName,
-  getAllFactions,
   isKnownFaction,
-  sortFactionsByRainbowOrder,
 } from '../../../utils/factions'
 import {
-  UNAFFILIATED_FACTION_SLUG,
   type ProposeTaskState,
 } from '../useProposeTask'
 import {
@@ -103,7 +100,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
   const {
     canProposeMetatask,
     success,
-    factions,
+    factionOptions,
     title,
     setTitle,
     description,
@@ -129,13 +126,6 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
   /* The #1695 review window from the era; undrawn until `/game-config` lands. */
   const adminReviewHours = useGameConfig()?.pending_task_admin_review_hours ?? null
 
-  /* Unaffiliated leads (ADR-0039), then rainbow order (#352). */
-  const factionOptions: string[] = [
-    UNAFFILIATED_FACTION_SLUG,
-    ...sortFactionsByRainbowOrder(
-      (factions.length > 0 ? factions : getAllFactions()).map((f) => ({ slug: f.slug })),
-    ).map((f) => f.slug),
-  ]
 
   /** Section heads sit on the wall, where the prose tier is measured. */
   const sectionLabel = { fontFamily: BODY_FACE, color: MUTED }
