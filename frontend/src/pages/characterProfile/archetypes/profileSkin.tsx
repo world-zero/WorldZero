@@ -23,7 +23,6 @@ import CredentialCard from '../../../components/CredentialCard'
 import SegmentedRail from '../../../components/ui/FilterBar/SegmentedRail'
 import PraxisCard from '../../../components/praxisCard/PraxisCard'
 import TaskCard from '../../../components/taskCard/TaskCard'
-import { mediaUrl } from '../../../utils/media'
 import {
   PROFILE_SECTIONS,
   SectionPanel,
@@ -380,7 +379,7 @@ export function ProfileSkin({
       factionSlug={character.faction_slug}
       level={character.level}
       score={character.score}
-      avatarUrl={character.avatar_url ? mediaUrl(character.avatar_url) : null}
+      character={character}
     />
   )
 
