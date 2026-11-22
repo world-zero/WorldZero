@@ -178,7 +178,7 @@ describe('CopyEditor, <Trans> copy', () => {
     render(
       <>
         <p>
-          <Trans i18nKey="transProbe" ns={NS} components={{ 1: <b /> }} />
+          <Trans i18nKey={'transProbe' as 'brand'} ns={NS} components={{ 1: <b /> }} />
         </p>
         <CopyEditor />
       </>,
