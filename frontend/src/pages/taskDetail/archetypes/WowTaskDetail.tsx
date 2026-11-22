@@ -268,7 +268,7 @@ export default function WowTaskDetail({ state }: { state: TaskDetailState }) {
           </CardCtaControl>
           <div style={{ ...quietNote, textAlign: "center", marginTop: "var(--space-sm)" }}>
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 <span style={{ color: "var(--color-success)" }}>

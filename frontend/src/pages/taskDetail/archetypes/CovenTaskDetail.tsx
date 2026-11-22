@@ -230,7 +230,7 @@ export default function CovenTaskDetail({ state }: { state: TaskDetailState }) {
             }}
           >
             {t("detail.signup.slots", { open: slotsOpen, max: maxTaskSlots })}
-            {!levelJumpSignup && (
+            {!levelJumpSignup && !cta.pending && (
               <>
                 {" · "}
                 {/* On the ward PAGE ground, so INK (#1295). */}
