@@ -1890,6 +1890,54 @@ async def test_a_closing_flush_never_waits_on_a_delete_under_the_open_lock(
         assert room_name_for(collab.id) not in rooms.server.rooms
 
 
+async def test_a_reopen_and_seal_wait_for_the_closing_flush(
+    db_session, collab, account, monkeypatch
+) -> None:
+    """An older snapshot's closing write must not commit after a newer seal."""
+    real_write = praxis_room._RoomFlusher.write
+    hold, entered = asyncio.Event(), asyncio.Event()
+
+    async def held_write(self) -> None:
+        entered.set()
+        await hold.wait()
+        await real_write(self)
+
+    monkeypatch.setattr(praxis_room._RoomFlusher, "write", held_write)
+    async with running_rooms(
+        db_session, monkeypatch, flush_debounce_seconds=30.0
+    ) as rooms:
+        socket = await rooms.open(collab.id, account.id)
+        async with client_doc(socket) as doc:
+            await _wait_for_body(doc, SEED_BODY, "the first client")
+            text = doc.get(ROOM_BODY_KEY, type=Text)
+            text.insert(0, "old ")
+            await _wait_for_body(
+                rooms.room_doc(collab.id), f"old {SEED_BODY}", "the room"
+            )
+            # Keystrokes the socket never delivered (#3611).
+            offline = Doc()
+            offline.apply_update(doc.get_update())
+            offline.get(ROOM_BODY_KEY, type=Text).insert(0, "newer ")
+            state = base64.b64encode(offline.get_update()).decode()
+            await asyncio.sleep(0.5)  # a teardown mid-store-write poisons the session
+        await socket.disconnect()
+        await asyncio.wait_for(entered.wait(), 5)
+
+        async def reopen_and_seal() -> None:
+            await praxis_room.merge_client_state(collab.id, state)
+            async with rooms.sessions() as session:
+                praxis = await session.get(Praxis, collab.id)
+                await rooms.server.discard_document(praxis, session)
+                await session.commit()
+
+        sealing = asyncio.create_task(reopen_and_seal())
+        await asyncio.sleep(0.3)
+        hold.set()
+        await asyncio.wait_for(sealing, 5)
+        await _settle()
+        assert (await _record(rooms, collab.id))[1] == f"newer old {SEED_BODY}"
+
+
 async def test_publishing_after_a_restart_cannot_drop_an_over_cap_document(
     db_session, active_task, character, monkeypatch
 ) -> None:
