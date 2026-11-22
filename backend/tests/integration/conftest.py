@@ -31,6 +31,7 @@ from models.era import Era
 from models.faction import Faction
 from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 from models.task import Task
+from models.terms_acceptance import CURRENT_TERMS_VERSION, TermsAcceptance
 from models.vote import Vote
 from services.auth import create_jwt
 from tests.integration.factories import DEFAULT_FACTION_SLUG, attach_proof
@@ -44,6 +45,28 @@ def stamp_sealed_praxes(request):
     _stamping["on"] = request.node.get_closest_marker("unstamped_praxis") is None
     yield
     _stamping["on"] = True
+
+
+_terms = {"on": True}
+
+
+@pytest.fixture(autouse=True)
+def accept_terms_on_insert(request):
+    """Fixture accounts have accepted the terms (S5 refuses writes otherwise);
+    ``needs_terms`` opts a test out."""
+    _terms["on"] = request.node.get_closest_marker("needs_terms") is None
+    yield
+    _terms["on"] = True
+
+
+@event.listens_for(Account, "after_insert")
+def _accept_terms(mapper, connection, account: Account) -> None:
+    if _terms["on"]:
+        connection.execute(
+            TermsAcceptance.__table__.insert().values(
+                account_id=account.id, version=CURRENT_TERMS_VERSION
+            )
+        )
 
 
 @event.listens_for(Praxis, "before_insert")

@@ -50,7 +50,8 @@ ACCOUNT_CASES = [
     (ACC.active, True, [L.MOD_BANNED], False, A.CREATION_BANNED),
     (ACC.active, True, [L.MOD_BANNED, L.DEPARTED], False, A.CREATION_BANNED),
     (ACC.active, True, [L.ACTIVE], False, A.PLAYING),
-    (ACC.active, True, [L.ACTIVE, L.MOD_BANNED], True, A.PLAYING),
+    (ACC.active, True, [L.ACTIVE, L.MOD_BANNED], True, A.CREATION_BANNED),
+    (ACC.active, True, [L.ACTIVE, L.DEPARTED], False, A.PLAYING),
 ]
 
 

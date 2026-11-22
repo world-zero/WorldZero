@@ -26,6 +26,7 @@ from models.praxis import (
     MediaItem,
     Praxis,
     PraxisInviteStatus,
+    PraxisMember,
     PraxisStatus,
     PraxisType,
 )
@@ -93,6 +94,29 @@ async def _apply_seal(
     for member in praxis.members:
         await fan_out_taunt(member.character_id, TauntTriggerType.praxis_complete, session)
     return True
+
+
+async def _playable_members(
+    praxis: Praxis, session: AsyncSession
+) -> list[PraxisMember]:
+    """The members whose approval a seal needs: absent ones keep their part but
+    don't block (S2a, #4204)."""
+    # Deferred: services.character imports services.praxis.
+    from services.character import is_playable
+
+    characters = {
+        c.id: c
+        for c in await session.scalars(
+            select(Character).where(
+                Character.id.in_([m.character_id for m in praxis.members])
+            )
+        )
+    }
+    return [
+        m
+        for m in praxis.members
+        if await is_playable(characters[m.character_id], session)
+    ]
 
 
 async def _admin_among(character_ids: list[int], session: AsyncSession) -> bool:
@@ -327,7 +351,8 @@ async def on_submit(
             "Add a photo, video or audio file before you submit.",
         )
     completes = all(
-        m.has_approved or m.character_id == character_id for m in praxis.members
+        m.has_approved or m.character_id == character_id
+        for m in await _playable_members(praxis, session)
     )
     first_seal = completes and praxis.submitted_at is None
     account: Account | None = None
@@ -351,7 +376,7 @@ async def on_submit(
     await session.flush()
     await session.refresh(praxis)
 
-    if all(m.has_approved for m in praxis.members):
+    if all(m.has_approved for m in await _playable_members(praxis, session)):
         await _apply_seal(praxis, session, era)
         if account is not None:
             account.last_praxis_posted_at = praxis.submitted_at
@@ -440,11 +465,11 @@ async def on_member_leave(
     one-member collab to solo (ADR-0060). Order matters: converting first would
     discard the consensus the departure just completed.
     """
-    remaining = praxis.members
+    playable = await _playable_members(praxis, session)
     if (
-        remaining
+        playable
         and praxis.status != PraxisStatus.submitted
-        and all(m.has_approved for m in remaining)
+        and all(m.has_approved for m in playable)
     ):
         await seal_to_live(praxis, session, era, leaver_id)
 

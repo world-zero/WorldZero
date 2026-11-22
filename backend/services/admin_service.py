@@ -60,7 +60,7 @@ from services.era_tasks import sync_era_tasks, tasks_to_reactivate
 from services.duel import forfeit_duels_collect
 from services.account_deletion import carried_bans_until
 from services.mod_log import log_mod_action
-from services.praxis import moderate_praxis
+from services.praxis import cancel_pending_invites_for, moderate_praxis
 from services.praxis_room import close_character_sockets
 from services.era import (
     apply_era_reset,
@@ -434,6 +434,14 @@ async def apply_ban(
         character.status = CharacterStatus.banned
         rescore_ids = await forfeit_duels_collect([character.id], session)
         close_character_sockets(character.id)
+        # S1: the ban stops every life, so every life's invites go.
+        await cancel_pending_invites_for(
+            list(await session.scalars(
+                select(Character.id).where(Character.account_id == character.account_id)
+            )),
+            session,
+            era,
+        )
     else:
         character.status = CharacterStatus.active
 
@@ -651,6 +659,7 @@ async def suspend_account(
         rescore_ids = await forfeit_duels_collect(character_ids, session)
         for character_id in character_ids:
             close_character_sockets(character_id)
+        await cancel_pending_invites_for(list(character_ids), session, era)
     await log_mod_action(
         session,
         actor_id,

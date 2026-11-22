@@ -50,11 +50,21 @@ def account_standing(
     if not has_accepted_terms:
         return AccountStanding.NEEDS_TERMS
     lives = list(lives)
-    if LifeStanding.ACTIVE in lives:
-        return AccountStanding.PLAYING
+    # S1 (#4204): a mod ban on any life stops the whole account, not one life.
     if carried_ban or LifeStanding.MOD_BANNED in lives:
         return AccountStanding.CREATION_BANNED
+    if LifeStanding.ACTIVE in lives:
+        return AccountStanding.PLAYING
     return AccountStanding.NO_CHARACTER
+
+
+def standing_of(
+    status: AccountStatus, character: Character
+) -> tuple[AccountStanding, LifeStanding]:
+    """Both standings from one row pair, for the set-wide queries that don't load
+    terms or siblings (a hidden or counted check never reads them)."""
+    life = life_standing(character)
+    return account_standing(status, True, [life]), life
 
 
 def is_playable(account: AccountStanding, life: LifeStanding) -> bool:

@@ -65,6 +65,7 @@ class ErrorCode(str, enum.Enum):
     invite_target_has_active_praxis = "INVITE_TARGET_HAS_ACTIVE_PRAXIS"
     invite_faction_not_permitted = "INVITE_FACTION_NOT_PERMITTED"
     invite_praxis_submitted = "INVITE_PRAXIS_SUBMITTED"
+    invite_inviter_gone = "INVITE_INVITER_GONE"
 
     # -- Media limits -------------------------------------------------------
     media_type_unsupported = "MEDIA_TYPE_UNSUPPORTED"
@@ -199,6 +200,8 @@ class ErrorCode(str, enum.Enum):
     oauth_state_expired = "OAUTH_STATE_EXPIRED"
     #: #2162. The provider pair resolved to a suspended Account.
     account_suspended = "ACCOUNT_SUSPENDED"
+    terms_required = "TERMS_REQUIRED"
+    account_banned = "ACCOUNT_BANNED"
     #: #2162. Not folded into account_suspended: a self-made tombstone
     #: (ADR-0081), not an appealable moderation. Unreachable today, since
     #: ``delete_account`` removes the ``OAuthProvider`` rows.

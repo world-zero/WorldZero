@@ -176,3 +176,11 @@ Still no reason, date or character data comes with it.
 **Known gap:** delete, return, delete again re-tombstones on the newer account and
 drops the link, so the ban is found only through the newest account. Left open on
 purpose; the 90 days still run from the original deletion time.
+
+## Amendment (#4204 S1): a mod ban stops the whole account
+
+A moderator ban on any one life makes the account non-playable on every life, not
+just the banned one: `AccountStanding.CREATION_BANNED` now outranks a live sibling,
+so `is_playable` is false for all of them and a write as the account is refused
+(`ACCOUNT_BANNED`). Per-life granularity remains only for a player's own delete.
+Unbanning restores play; the duels the ban forfeited stay forfeited.
