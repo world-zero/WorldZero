@@ -456,6 +456,12 @@
 .spectrum-dial {
   background-image: var(--faction-default-rainbow-conic);
 }
+/* #4113: marks on the praxis detail sheet share one gradient space (vars set by useSharedSpectrum). */
+.spectrum-shared .spectrum-rule {
+  background-size: var(--spec-w, 100%) 100%;
+  background-position: calc(-1 * var(--spec-x, 0px)) 0;
+  background-repeat: no-repeat;
+}
 
 /* ── `.spectrum-wash`: the spectrum as a card ground (#2730, ADR-0088 §2) ──
    For the podium leader card: themed leaders get a `color-mix` tint, which

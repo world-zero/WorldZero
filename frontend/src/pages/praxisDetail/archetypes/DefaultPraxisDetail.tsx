@@ -12,7 +12,7 @@
  * §3; twin of `DefaultTaskDetail`'s `worthSlot`). Ornament only, no data; the
  * sheet's `overflow: hidden` clips it to the component.
  */
-import type { CSSProperties, ReactNode } from 'react'
+import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import MediaGallery from '../../../components/MediaGallery'
@@ -20,6 +20,7 @@ import MarkdownPreview from '../../editPraxis/blocks/MarkdownPreview'
 import VoteUI from '../../../components/vote/VoteUI'
 import { CollabRoster } from '../../../components/collab/CollabRoster'
 import { useFormFactor } from '../../../hooks/useFormFactor'
+import { useSharedSpectrum } from '../../../hooks/useSharedSpectrum'
 import { formatTimestamp } from '../../../utils/dates'
 import { factionSheet } from '../../../utils/factions'
 import { factionRoleVars } from '../../../utils/factionRoles'
@@ -115,6 +116,8 @@ export default function DefaultPraxisDetail({
 }) {
   const { t } = useTranslation('praxis')
   const desktop = useFormFactor() !== 'mobile'
+  const bandRef = useRef<HTMLSpanElement>(null)
+  useSharedSpectrum(bandRef)
   const { praxis, voters } = state
 
   // Guarded non-null by the dispatcher.
@@ -394,6 +397,7 @@ export default function DefaultPraxisDetail({
       state={state}
       kit={{
         pageStyle: { position: 'relative' },
+        sheetClassName: 'spectrum-shared',
         sheetStyle: {
           // Role map (#2672) on the sheet, not the box above it, which also
           // holds the neutral `Breadcrumb`. Pinned to na: `factionSheet()`
@@ -413,6 +417,7 @@ export default function DefaultPraxisDetail({
         sheetPrelude: (
           <>
             <span
+              ref={bandRef}
               aria-hidden
               className="spectrum-rule"
               style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4 }}
