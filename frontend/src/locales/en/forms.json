@@ -206,7 +206,7 @@
       "leaveTitle": "Leave this collab?",
       "leaveConfirm": "You come off the crew and the others carry on with the praxis without you. Getting back in takes a fresh invite.",
       "leaveConfirmSolo": "You are one of two. When you go, the member who stays holds it alone — the praxis turns solo, and is scored as a solo praxis from then on.",
-      "leaveConfirmLast": "You are the last one on this collab, so leaving drops the praxis itself.",
+      "leaveConfirmLast": "You are the last one on this collab, so you can't leave it. Delete it instead.",
       "leaveConfirmAction": "Leave the collab",
       "kickTitle": "Remove {{name}}?",
       "kickConfirm": "{{name}} comes off this collab. It also clears every approval, yours included, and sends the group back to drafting.",

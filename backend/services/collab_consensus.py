@@ -10,6 +10,7 @@ Also owns ``collab → solo`` (ADR-0060). Duel settling lives in
 ``services.praxis`` to avoid a ``services.duel`` import cycle.
 """
 import math
+import random
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
@@ -112,15 +113,18 @@ async def _admin_among(character_ids: list[int], session: AsyncSession) -> bool:
 
 
 async def _has_proof(
-    praxis: Praxis, character_ids: list[int], session: AsyncSession
+    praxis: Praxis, actor_id: int | None, session: AsyncSession
 ) -> bool:
-    """One media item from any member, or an admin among ``character_ids`` (#3473)."""
+    """The one proof rule for every seal: a media item, or the caller is an admin
+    (#3473). A clock seal has no caller, so no exemption."""
     count = await session.scalar(
         select(func.count())
         .select_from(MediaItem)
         .where(MediaItem.praxis_id == praxis.id)
     )
-    return bool(count) or await _admin_among(character_ids, session)
+    return bool(count) or (
+        actor_id is not None and await _admin_among([actor_id], session)
+    )
 
 
 def _check_post_cooldown(account: Account, now: datetime, era: EraConfig) -> None:
@@ -142,15 +146,20 @@ def _check_post_cooldown(account: Account, now: datetime, era: EraConfig) -> Non
     )
 
 
-async def seal_to_live(praxis: Praxis, session: AsyncSession, era: EraConfig) -> None:
-    """Seal a collab to Live and recalc members. Used by timeout and leave.
+async def seal_to_live(
+    praxis: Praxis,
+    session: AsyncSession,
+    era: EraConfig,
+    actor_id: int | None = None,
+) -> None:
+    """Seal a collab to Live and recalc members. Used by timeout and leave
+    (``actor_id`` is the leaver; none for the clock).
 
     No one completes these seals, so the daily cap neither gates nor charges them.
     A collab with no proof or an over-cap draft stays unsealed (reads must not raise).
     ``ponytail:`` timeout seals dodge the cap; charge the proposer if that is abused.
     """
-    member_ids = [member.character_id for member in praxis.members]
-    if not await _has_proof(praxis, member_ids, session):
+    if not await _has_proof(praxis, actor_id, session):
         return
     if not await _apply_seal(praxis, session, era, skip_over_cap=True):
         return
@@ -171,7 +180,7 @@ async def _lock_praxis(praxis_id: int, session: AsyncSession) -> None:
 async def settle_if_window_lapsed(
     praxis: Praxis, session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> None:
-    """Lazy-on-access timeout (ADR-0012): auto-publish a pending collab whose window elapsed.
+    """Lazy-on-access timeout (ADR-0012): auto-publish a proposed collab whose window elapsed.
 
     Called from the read paths, so no scheduler is needed.
 
@@ -181,7 +190,7 @@ async def settle_if_window_lapsed(
     """
     if (
         praxis.type != PraxisType.collab
-        or praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending)
+        or praxis.status != PraxisStatus.pending
         or praxis.submit_proposed_at is None
     ):
         return
@@ -196,7 +205,7 @@ async def settle_if_window_lapsed(
         .execution_options(populate_existing=True)
     )
     if (
-        praxis.status not in (PraxisStatus.in_progress, PraxisStatus.pending)
+        praxis.status != PraxisStatus.pending
         or praxis.submit_proposed_at is None
         or datetime.now(timezone.utc)
         < praxis.submit_proposed_at + timedelta(days=era.collab_auto_submit_days)
@@ -218,7 +227,7 @@ async def seal_lapsed_at_era_close(
         await session.scalars(
             select(Praxis).where(
                 Praxis.type == PraxisType.collab,
-                Praxis.status.in_((PraxisStatus.in_progress, PraxisStatus.pending)),
+                Praxis.status == PraxisStatus.pending,
                 Praxis.submit_proposed_at.is_not(None),
                 Praxis.submit_proposed_at + window <= func.now(),
             )
@@ -227,7 +236,7 @@ async def seal_lapsed_at_era_close(
     sealed: set[int] = set()
     for praxis in lapsed:
         member_ids = [m.character_id for m in praxis.members]
-        if not await _has_proof(praxis, member_ids, session):
+        if not await _has_proof(praxis, None, session):
             continue
         deadline = praxis.submit_proposed_at + window
         if not await _apply_seal(
@@ -256,27 +265,28 @@ async def mark_done(
     await session.flush()
 
 
+def clear_approvals(praxis: Praxis) -> None:
+    """The one way approvals are cleared: unsubmit, edit and kick all call it."""
+    for member in praxis.members:
+        member.has_approved = False
+        member.approved_at = None
+
+
 async def on_member_edit(
     praxis: Praxis, session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> None:
     """Hard reset on a collab edit (ADR-0012): cancel proposal, clear approvals.
+    A LIVE collab is never edited in place: it is reopened first (#4201).
 
     The one implementation: media changes, Withdraw (``pullBack``) and room text
     edits all route here. ``is_done`` is deliberately untouched (ADR-0079).
     """
-    if praxis.type != PraxisType.collab:
+    if praxis.type != PraxisType.collab or praxis.status != PraxisStatus.pending:
         return
-    if praxis.submit_proposed_at is None and praxis.status != PraxisStatus.submitted:
-        return
-    was_live = praxis.status == PraxisStatus.submitted
     praxis.submit_proposed_at = None
     praxis.status = PraxisStatus.in_progress
-    for member in praxis.members:
-        member.has_approved = False
-        member.approved_at = None
+    clear_approvals(praxis)
     await session.flush()
-    if was_live:
-        await recalculate_members_stats(praxis, session, era)
 
 
 async def on_room_edit(
@@ -310,7 +320,7 @@ async def on_submit(
     first seal, inside the account's post cooldown (#3474); the cooldown is
     charged to that account only. Resubmits (``submitted_at`` already set) are free.
     """
-    if not await _has_proof(praxis, [character_id], session):
+    if not await _has_proof(praxis, character_id, session):
         raise_coded(
             422,
             ErrorCode.praxis_needs_proof,
@@ -412,8 +422,19 @@ async def convert_if_sole_member(
             await session.flush()
 
 
+def pick_new_host(praxis: Praxis) -> int:
+    """The one place the successor is chosen (Q7), so a test can seed it."""
+    return random.choice(praxis.members).character_id
+
+
+def rotate_host_if_exited(praxis: Praxis, exited_id: int) -> None:
+    """Call after removing ``exited_id``: the host role passes on (Q7, #4201)."""
+    if praxis.created_by_id == exited_id and praxis.members:
+        praxis.created_by_id = pick_new_host(praxis)
+
+
 async def on_member_leave(
-    praxis: Praxis, session: AsyncSession, era: EraConfig
+    praxis: Praxis, session: AsyncSession, era: EraConfig, leaver_id: int | None = None
 ) -> None:
     """Call after removing the leaver: seal if the rest approved, then convert a
     one-member collab to solo (ADR-0060). Order matters: converting first would
@@ -425,7 +446,7 @@ async def on_member_leave(
         and praxis.status != PraxisStatus.submitted
         and all(m.has_approved for m in remaining)
     ):
-        await seal_to_live(praxis, session, era)
+        await seal_to_live(praxis, session, era, leaver_id)
 
     await convert_if_sole_member(praxis, session, era)
 
@@ -435,9 +456,7 @@ async def on_member_kicked(
 ) -> None:
     """Call after removing the kicked member: group re-consents (ADR-0013), or
     converts to solo if one member is left. ``is_done`` survives."""
-    for member in praxis.members:
-        member.has_approved = False
-        member.approved_at = None
+    clear_approvals(praxis)
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
     await session.flush()

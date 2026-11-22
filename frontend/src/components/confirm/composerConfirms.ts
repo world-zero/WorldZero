@@ -58,7 +58,7 @@ export function deleteCollabConfirm(factionSlug: Slug): ConfirmRequest {
 
 /**
  * Leave a collab; the crew keeps the praxis (ADR-0013). At 2 members the rest
- * converts to solo (ADR-0060); at 1 (should be unreachable) it's a drop.
+ * converts to solo (ADR-0060); at 1 Leave is hidden (#4201), so that note is only a fallback.
  */
 export function leaveCollabConfirm(
   factionSlug: Slug,
