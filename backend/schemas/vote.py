@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import ConfigDict
+from models.character import NameState
 from schemas.base import WireModel
 
 
@@ -71,5 +72,6 @@ class VoterDetail(WireModel):
     character_id: int
     display_name: str
     avatar_url: str
+    name_state: NameState = NameState.ok
     faction_slug: str
     value: int

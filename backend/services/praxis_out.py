@@ -14,7 +14,7 @@ from sqlalchemy.orm import aliased, selectinload
 
 from dependencies import account_has_admin_role
 from game_config import CURRENT_ERA, EraConfig
-from models.character import Character
+from models.character import Character, NameState
 from models.duel import Duel, DuelStatus
 from models.meta_task import PraxisMetaTask
 from models.praxis import (
@@ -38,6 +38,7 @@ from schemas.task import TaskOut
 from services.nudge import nudge_again_at, nudged_at_map
 from services.praxis import can_flag_praxis
 from services.praxis_scoring import Contribution, compute_owner_contributions
+from services.standing import public_identity
 from services.vote import viewer_can_vote, viewer_can_vote_map
 from services.vote_tally import (
     get_tally,
@@ -53,12 +54,14 @@ def _build_member_out(
     nudged_at: Optional[datetime] = None,
 ) -> PraxisMemberOut:
     """One roster row. ``nudged_at`` is detail-only: cards have no nudge button."""
+    identity = public_identity(member.character)
     return PraxisMemberOut(
         id=member.id,
         praxis_id=member.praxis_id,
         character_id=member.character_id,
-        character_display_name=member.character.display_name,
-        character_avatar_url=member.character.avatar_url,
+        character_display_name=identity.display_name,
+        character_avatar_url=identity.avatar_url,
+        character_name_state=identity.name_state,
         has_approved=member.has_approved,
         is_done=member.is_done,
         approved_at=member.approved_at,
@@ -69,13 +72,15 @@ def _build_member_out(
 
 
 def _build_invite_out(invite: PraxisInvite) -> PraxisInviteOut:
+    identity = public_identity(invite.invitee)
     return PraxisInviteOut(
         id=invite.id,
         praxis_id=invite.praxis_id,
         inviter_id=invite.inviter_id,
         invitee_id=invite.invitee_id,
-        invitee_display_name=invite.invitee.display_name,
-        invitee_avatar_url=invite.invitee.avatar_url,
+        invitee_display_name=identity.display_name,
+        invitee_avatar_url=identity.avatar_url,
+        invitee_name_state=identity.name_state,
         status=invite.status,
         created_at=invite.created_at,
     )
@@ -161,11 +166,11 @@ async def build_praxis_out(
     if crowned_ids is None:
         crowned_ids = await crowned_praxis_ids([praxis.task_id], session)
 
-    created_by_display_name = praxis.created_by.display_name if praxis.created_by else ""
+    author = public_identity(praxis.created_by) if praxis.created_by else None
+    created_by_display_name = author.display_name if author else ""
+    created_by_name_state = author.name_state if author else NameState.ok
     created_by_faction_slug = praxis.created_by.faction_slug if praxis.created_by else None
-    created_by_avatar_url = (
-        praxis.created_by.avatar_url if praxis.created_by else None
-    ) or ""
+    created_by_avatar_url = (author.avatar_url if author else None) or ""
 
     applied_metatasks: list[TaskOut] = []
     metatask_tasks_result = await session.execute(
@@ -204,6 +209,7 @@ async def build_praxis_out(
         room_generation=praxis.room_generation,
         created_by_id=praxis.created_by_id,
         created_by_display_name=created_by_display_name,
+        created_by_name_state=created_by_name_state,
         created_by_avatar_url=created_by_avatar_url,
         created_by_faction_slug=created_by_faction_slug,
         created_at=praxis.created_at,
@@ -336,6 +342,16 @@ class DuelOpponent:
     faction_slug: Optional[str]
     #: Relative media path, or "" for none (banner shows the monogram).
     avatar_url: str
+    name_state: NameState = NameState.ok
+
+
+def _duel_side(
+    name: Optional[str], avatar: Optional[str], state: Optional[str]
+) -> dict:
+    name_state = NameState(state or NameState.ok.value)
+    if name_state == NameState.absent:
+        return dict(display_name="", avatar_url="", name_state=name_state)
+    return dict(display_name=name or "", avatar_url=avatar or "", name_state=name_state)
 
 
 async def duel_opponents_for(
@@ -366,9 +382,11 @@ async def duel_opponents_for(
             challenger_author.display_name,
             challenger_author.faction_slug,
             challenger_author.avatar_url,
+            challenger_author.name_state,
             opponent_author.display_name,
             opponent_author.faction_slug,
             opponent_author.avatar_url,
+            opponent_author.name_state,
         )
         .join(challenger_praxis, challenger_praxis.id == Duel.challenger_praxis_id)
         .join(challenger_author, challenger_author.id == challenger_praxis.created_by_id)
@@ -396,23 +414,23 @@ async def duel_opponents_for(
         challenger_name,
         challenger_faction,
         challenger_avatar,
+        challenger_state,
         opponent_name,
         opponent_faction,
         opponent_avatar,
+        opponent_state,
     ) in rows.all():
         if challenger_praxis_id in praxis_ids and opponent_praxis_id is not None:
             opponents[challenger_praxis_id] = DuelOpponent(
                 praxis_id=opponent_praxis_id,
-                display_name=opponent_name or "",
+                **_duel_side(opponent_name, opponent_avatar, opponent_state),
                 faction_slug=opponent_faction,
-                avatar_url=opponent_avatar or "",
             )
         if opponent_praxis_id is not None and opponent_praxis_id in praxis_ids:
             opponents[opponent_praxis_id] = DuelOpponent(
                 praxis_id=challenger_praxis_id,
-                display_name=challenger_name or "",
+                **_duel_side(challenger_name, challenger_avatar, challenger_state),
                 faction_slug=challenger_faction,
-                avatar_url=challenger_avatar or "",
             )
     return opponents
 
@@ -521,10 +539,10 @@ async def build_praxis_card_out(
     task_title = praxis.task.title if praxis.task else ""
     task_point_value = praxis.task.point_value if praxis.task else 0
     task_level_required = praxis.task.level_required if praxis.task else 0
-    created_by_display_name = praxis.created_by.display_name if praxis.created_by else ""
-    created_by_avatar_url = (
-        praxis.created_by.avatar_url if praxis.created_by else None
-    ) or ""
+    author = public_identity(praxis.created_by) if praxis.created_by else None
+    created_by_display_name = author.display_name if author else ""
+    created_by_name_state = author.name_state if author else NameState.ok
+    created_by_avatar_url = (author.avatar_url if author else None) or ""
 
     viewer_vote_info = viewer_votes.get(praxis.id) if viewer_votes else None
 
@@ -586,6 +604,7 @@ async def build_praxis_card_out(
         moderation_status=praxis.moderation_status,
         created_by_id=praxis.created_by_id,
         created_by_display_name=created_by_display_name,
+        created_by_name_state=created_by_name_state,
         created_by_avatar_url=created_by_avatar_url,
         created_at=praxis.created_at,
         updated_at=praxis.updated_at,
@@ -612,6 +631,7 @@ async def build_praxis_card_out(
         duel_id=praxis_duel_id,
         opponent_praxis_id=opponent.praxis_id if opponent else None,
         opponent_display_name=opponent.display_name if opponent else None,
+        opponent_name_state=opponent.name_state if opponent else NameState.ok,
         opponent_faction_slug=opponent.faction_slug if opponent else None,
         opponent_avatar_url=opponent.avatar_url if opponent else "",
     )

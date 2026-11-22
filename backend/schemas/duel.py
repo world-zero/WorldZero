@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from schemas.base import WireModel
+from models.character import NameState
 from models.duel import DuelStatus
 from services.duel_state import DuelState
 
@@ -33,6 +34,7 @@ class DuelSideOut(WireModel):
     praxis_id: Optional[int]
     character_id: int
     display_name: str
+    name_state: NameState = NameState.ok
     faction_slug: str
     avatar_url: str
     points_from_votes: int

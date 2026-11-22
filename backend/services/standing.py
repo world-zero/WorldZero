@@ -8,8 +8,10 @@ import enum
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
+from sqlalchemy import inspect
+
 from models.account import AccountStatus
-from models.character import Character, CharacterStatus
+from models.character import Character, CharacterStatus, NameState
 
 
 class AccountStanding(enum.Enum):
@@ -99,3 +101,24 @@ def public_name(name: str, account: AccountStanding, life: LifeStanding) -> Publ
     if account == AccountStanding.SUSPENDED:
         return PublicName(name, True, False)
     return PublicName(name, False, True)
+
+
+@dataclass(frozen=True)
+class PublicIdentity:
+    """What a viewer may see of a character (S2b): blank when absent."""
+
+    display_name: str
+    username: str
+    avatar_url: str
+    name_state: NameState
+
+
+def public_identity(character: Character) -> PublicIdentity:
+    # ponytail: an object not yet re-read after insert has no loaded name_state;
+    # a just-created character is ok, so default to that rather than lazy-load.
+    state = NameState(inspect(character).dict.get("name_state", NameState.ok.value))
+    if state == NameState.absent:
+        return PublicIdentity("", "", "", state)
+    return PublicIdentity(
+        character.display_name, character.username, character.avatar_url, state
+    )

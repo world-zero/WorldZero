@@ -11,7 +11,7 @@ from errors import ErrorCode, raise_coded
 from faction_slugs import CROSS_FACTION_SLUG, faction_filter_slugs
 from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
-from models.character import Character
+from models.character import Character, NameState
 from models.character_stats import CharacterStats
 from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
@@ -52,6 +52,7 @@ from services.signup_eligibility import (
     signup_reason,
     submitted_praxis_ids,
 )
+from services.standing import public_identity
 
 
 async def _validate_proposal(
@@ -253,6 +254,7 @@ class TaskAuthor:
     avatar_url: str
     faction_slug: Optional[str]
     level: int
+    name_state: NameState = NameState.ok
 
 
 #: Unreachable given the FK; keeps the builder total.
@@ -289,18 +291,22 @@ async def authors_for_tasks(
             Character.avatar_url,
             Character.faction_slug,
             CharacterStats.level,
+            Character.name_state,
         )
         .outerjoin(CharacterStats, stats_join)
         .where(Character.id.in_(creator_ids))
     )
+    rows = result.all()
     return {
         character_id: TaskAuthor(
-            display_name=display_name or "",
-            avatar_url=avatar_url or "",
+            display_name="" if absent else display_name or "",
+            avatar_url="" if absent else avatar_url or "",
             faction_slug=faction_slug,
             level=int(level or 0),
+            name_state=NameState(state),
         )
-        for character_id, display_name, avatar_url, faction_slug, level in result.all()
+        for character_id, display_name, avatar_url, faction_slug, level, state in rows
+        for absent in [state == NameState.absent.value]
     }
 
 
@@ -341,6 +347,7 @@ async def build_task_out(
         backdoor_closes_at=task.backdoor_closes_at,
         in_progress_count=in_progress_count,
         created_by_display_name=author.display_name,
+        created_by_name_state=author.name_state,
         created_by_avatar_url=author.avatar_url,
         created_by_faction_slug=author.faction_slug,
         created_by_level=author.level,
@@ -488,10 +495,12 @@ def build_task_signup_out(
     Picks columns explicitly: ``Character.account_id`` must never reach a public
     response.
     """
+    identity = public_identity(character)
     return TaskSignupOut(
         character_id=character.id,
-        display_name=character.display_name,
-        avatar_url=character.avatar_url,
+        display_name=identity.display_name,
+        name_state=identity.name_state,
+        avatar_url=identity.avatar_url,
         faction_slug=character.faction_slug,
         level=level,
         praxis_type=praxis.type,

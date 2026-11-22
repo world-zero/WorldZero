@@ -89,7 +89,7 @@
   "services/media_sweep.py::I001": 1,
   "services/praxis.py::E501": 16,
   "services/praxis_metatask.py::E501": 1,
-  "services/praxis_out.py::E501": 8,
+  "services/praxis_out.py::E501": 6,
   "services/praxis_out.py::I001": 1,
   "services/praxis_room.py::E501": 1,
   "services/praxis_scoring.py::E501": 1,

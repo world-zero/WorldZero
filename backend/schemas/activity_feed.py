@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Annotated, Literal, Optional, Union
 
 from pydantic import ConfigDict, Field, TypeAdapter, computed_field
+from models.character import NameState
 from schemas.base import WireModel
 
 
@@ -251,6 +252,7 @@ class FeedItemBase(WireModel):
     actor_display_name: Optional[str] = None
     actor_faction_slug: Optional[str] = None
     actor_avatar_url: Optional[str] = None
+    actor_name_state: NameState = NameState.ok
     payload: FeedPayload
 
     @computed_field  # type: ignore[prop-decorator]

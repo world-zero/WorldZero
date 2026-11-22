@@ -2315,6 +2315,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -2636,6 +2638,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -2694,6 +2698,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -2748,6 +2754,8 @@ export interface components {
             faction_slug: string;
             /** Id */
             id: number;
+            /** @default ok */
+            name_state: components["schemas"]["NameState"];
             /** Username */
             username: string;
         };
@@ -2764,6 +2772,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -2794,6 +2804,8 @@ export interface components {
             character_id: number;
             /** Display Name */
             display_name: string;
+            /** @default ok */
+            name_state: components["schemas"]["NameState"];
             /** Username */
             username: string;
         };
@@ -2821,6 +2833,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3142,6 +3156,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3217,6 +3233,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3260,6 +3278,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3353,6 +3373,8 @@ export interface components {
              * @default 1
              */
             loss_multiplier: number;
+            /** @default ok */
+            name_state: components["schemas"]["NameState"];
             /** Nudge Again At */
             nudge_again_at: string | null;
             /** Nudged At */
@@ -3395,6 +3417,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3755,6 +3779,8 @@ export interface components {
             created_by_faction_slug: string | null;
             /** Created By Id */
             created_by_id: number;
+            /** @default ok */
+            created_by_name_state: components["schemas"]["NameState"];
             /**
              * Display Multiplier
              * @default 1
@@ -3851,6 +3877,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3880,6 +3908,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3927,6 +3957,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3956,6 +3988,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -3997,6 +4031,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -4079,6 +4115,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -4150,6 +4188,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -4352,6 +4392,12 @@ export interface components {
          */
         ModerationStatus: "visible" | "flagged" | "hidden" | "failed" | "deleted";
         /**
+         * NameState
+         * @description How other players see a name: as is, with "(Suspended)", or not at all.
+         * @enum {string}
+         */
+        NameState: "ok" | "suspended" | "absent";
+        /**
          * NearbyAirportsOut
          * @description Codes near the viewer's carried character; ``None`` when they have none
          *     or it is not a recognised airport.
@@ -4422,6 +4468,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -4583,6 +4631,8 @@ export interface components {
              * @default
              */
             created_by_name: string;
+            /** @default ok */
+            created_by_name_state: components["schemas"]["NameState"];
             /** Description */
             description: string;
             /**
@@ -4720,6 +4770,8 @@ export interface components {
             created_by_faction_slug: string | null;
             /** Created By Id */
             created_by_id: number;
+            /** @default ok */
+            created_by_name_state: components["schemas"]["NameState"];
             /**
              * Display Multiplier
              * @default 1
@@ -4766,6 +4818,8 @@ export interface components {
             opponent_display_name: string | null;
             /** Opponent Faction Slug */
             opponent_faction_slug: string | null;
+            /** @default ok */
+            opponent_name_state: components["schemas"]["NameState"];
             /** Opponent Praxis Id */
             opponent_praxis_id: number | null;
             /**
@@ -4867,6 +4921,8 @@ export interface components {
             invitee_display_name: string;
             /** Invitee Id */
             invitee_id: number;
+            /** @default ok */
+            invitee_name_state: components["schemas"]["NameState"];
             /** Inviter Id */
             inviter_id: number;
             /** Praxis Id */
@@ -4891,6 +4947,8 @@ export interface components {
             character_display_name: string;
             /** Character Id */
             character_id: number;
+            /** @default ok */
+            character_name_state: components["schemas"]["NameState"];
             /** Has Approved */
             has_approved: boolean;
             /** Id */
@@ -4942,6 +5000,8 @@ export interface components {
             created_by_faction_slug: string | null;
             /** Created By Id */
             created_by_id: number;
+            /** @default ok */
+            created_by_name_state: components["schemas"]["NameState"];
             /**
              * Display Multiplier
              * @default 1
@@ -5116,6 +5176,8 @@ export interface components {
             to_display_name: string;
             /** To Faction Slug */
             to_faction_slug: string;
+            /** @default ok */
+            to_name_state: components["schemas"]["NameState"];
             /** Type */
             type: string;
         };
@@ -5230,6 +5292,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -5400,6 +5464,8 @@ export interface components {
              * @default 0
              */
             created_by_level: number;
+            /** @default ok */
+            created_by_name_state: components["schemas"]["NameState"];
             /** Description */
             description: string;
             /**
@@ -5481,6 +5547,8 @@ export interface components {
              * @default 0
              */
             level: number;
+            /** @default ok */
+            name_state: components["schemas"]["NameState"];
             praxis_type: components["schemas"]["PraxisType"];
         };
         /**
@@ -5616,6 +5684,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -5645,6 +5715,8 @@ export interface components {
             actor_display_name: string | null;
             /** Actor Faction Slug */
             actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
             /**
              * Context Faction Slug
              * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
@@ -5720,6 +5792,8 @@ export interface components {
             display_name: string;
             /** Faction Slug */
             faction_slug: string;
+            /** @default ok */
+            name_state: components["schemas"]["NameState"];
             /** Value */
             value: number;
         };

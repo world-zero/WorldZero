@@ -311,6 +311,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -349,6 +353,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -1075,6 +1080,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -1113,6 +1122,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -1219,6 +1229,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -1257,6 +1271,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -1327,6 +1342,10 @@
             "title": "Id",
             "type": "integer"
           },
+          "name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "username": {
             "title": "Username",
             "type": "string"
@@ -1337,7 +1356,8 @@
           "username",
           "display_name",
           "avatar_url",
-          "faction_slug"
+          "faction_slug",
+          "name_state"
         ],
         "title": "CommentAuthor",
         "type": "object"
@@ -1392,6 +1412,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -1430,6 +1454,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -1447,6 +1472,10 @@
             "title": "Display Name",
             "type": "string"
           },
+          "name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "username": {
             "title": "Username",
             "type": "string"
@@ -1455,7 +1484,8 @@
         "required": [
           "character_id",
           "username",
-          "display_name"
+          "display_name",
+          "name_state"
         ],
         "title": "CommentMentionOut",
         "type": "object"
@@ -1526,6 +1556,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -1564,6 +1598,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -2191,6 +2226,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -2229,6 +2268,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -2416,6 +2456,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -2454,6 +2498,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -2532,6 +2577,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -2570,6 +2619,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -2723,6 +2773,10 @@
             "title": "Loss Multiplier",
             "type": "number"
           },
+          "name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "nudge_again_at": {
             "anyOf": [
               {
@@ -2782,6 +2836,7 @@
           "praxis_id",
           "character_id",
           "display_name",
+          "name_state",
           "faction_slug",
           "avatar_url",
           "points_from_votes",
@@ -2857,6 +2912,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -2895,6 +2954,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -3607,6 +3667,10 @@
             "title": "Created By Id",
             "type": "integer"
           },
+          "created_by_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "display_multiplier": {
             "default": 1.0,
             "title": "Display Multiplier",
@@ -3811,6 +3875,7 @@
           "room_generation",
           "created_by_id",
           "created_by_display_name",
+          "created_by_name_state",
           "created_by_avatar_url",
           "created_by_faction_slug",
           "created_at",
@@ -3877,6 +3942,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -3915,6 +3984,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -3956,6 +4026,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -3994,6 +4068,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -4075,6 +4150,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -4113,6 +4192,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -4154,6 +4234,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -4192,6 +4276,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -4258,6 +4343,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -4296,6 +4385,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -4491,6 +4581,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -4529,6 +4623,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -4646,6 +4741,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -4684,6 +4783,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -5154,6 +5254,16 @@
         "title": "ModerationStatus",
         "type": "string"
       },
+      "NameState": {
+        "description": "How other players see a name: as is, with \"(Suspended)\", or not at all.",
+        "enum": [
+          "ok",
+          "suspended",
+          "absent"
+        ],
+        "title": "NameState",
+        "type": "string"
+      },
       "NearbyAirportsOut": {
         "description": "Codes near the viewer's carried character; ``None`` when they have none\nor it is not a recognised airport.",
         "properties": {
@@ -5328,6 +5438,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -5366,6 +5480,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -5659,6 +5774,10 @@
             "title": "Created By Name",
             "type": "string"
           },
+          "created_by_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -5775,6 +5894,7 @@
           "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
+          "created_by_name_state",
           "created_by_avatar_url",
           "created_by_faction_slug",
           "created_by_level",
@@ -6013,6 +6133,10 @@
             "title": "Created By Id",
             "type": "integer"
           },
+          "created_by_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "display_multiplier": {
             "default": 1.0,
             "title": "Display Multiplier",
@@ -6097,6 +6221,10 @@
               }
             ],
             "title": "Opponent Faction Slug"
+          },
+          "opponent_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
           },
           "opponent_praxis_id": {
             "anyOf": [
@@ -6233,6 +6361,7 @@
           "moderation_status",
           "created_by_id",
           "created_by_display_name",
+          "created_by_name_state",
           "created_by_avatar_url",
           "created_at",
           "updated_at",
@@ -6259,6 +6388,7 @@
           "duel_id",
           "opponent_praxis_id",
           "opponent_display_name",
+          "opponent_name_state",
           "opponent_faction_slug",
           "opponent_avatar_url"
         ],
@@ -6366,6 +6496,10 @@
             "title": "Invitee Id",
             "type": "integer"
           },
+          "invitee_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "inviter_id": {
             "title": "Inviter Id",
             "type": "integer"
@@ -6384,6 +6518,7 @@
           "inviter_id",
           "invitee_id",
           "invitee_display_name",
+          "invitee_name_state",
           "invitee_avatar_url",
           "status",
           "created_at"
@@ -6426,6 +6561,10 @@
           "character_id": {
             "title": "Character Id",
             "type": "integer"
+          },
+          "character_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
           },
           "has_approved": {
             "title": "Has Approved",
@@ -6478,6 +6617,7 @@
           "praxis_id",
           "character_id",
           "character_display_name",
+          "character_name_state",
           "character_avatar_url",
           "has_approved",
           "is_done",
@@ -6550,6 +6690,10 @@
           "created_by_id": {
             "title": "Created By Id",
             "type": "integer"
+          },
+          "created_by_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
           },
           "display_multiplier": {
             "default": 1.0,
@@ -6747,6 +6891,7 @@
           "room_generation",
           "created_by_id",
           "created_by_display_name",
+          "created_by_name_state",
           "created_by_avatar_url",
           "created_by_faction_slug",
           "created_at",
@@ -6989,6 +7134,10 @@
             "title": "To Faction Slug",
             "type": "string"
           },
+          "to_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "type": {
             "title": "Type",
             "type": "string"
@@ -7001,6 +7150,7 @@
           "type",
           "created_at",
           "to_display_name",
+          "to_name_state",
           "to_avatar_url",
           "to_faction_slug",
           "display_status"
@@ -7260,6 +7410,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -7298,6 +7452,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -7702,6 +7857,10 @@
             "title": "Created By Level",
             "type": "integer"
           },
+          "created_by_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -7813,6 +7972,7 @@
           "backdoor_closes_at",
           "in_progress_count",
           "created_by_display_name",
+          "created_by_name_state",
           "created_by_avatar_url",
           "created_by_faction_slug",
           "created_by_level",
@@ -7857,6 +8017,10 @@
             "title": "Level",
             "type": "integer"
           },
+          "name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "praxis_type": {
             "$ref": "#/components/schemas/PraxisType"
           }
@@ -7864,6 +8028,7 @@
         "required": [
           "character_id",
           "display_name",
+          "name_state",
           "avatar_url",
           "faction_slug",
           "level",
@@ -8125,6 +8290,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -8163,6 +8332,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -8204,6 +8374,10 @@
             ],
             "title": "Actor Faction Slug"
           },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "context_faction_slug": {
             "anyOf": [
               {
@@ -8242,6 +8416,7 @@
           "actor_display_name",
           "actor_faction_slug",
           "actor_avatar_url",
+          "actor_name_state",
           "payload",
           "context_faction_slug"
         ],
@@ -8353,6 +8528,10 @@
             "title": "Faction Slug",
             "type": "string"
           },
+          "name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
           "value": {
             "title": "Value",
             "type": "integer"
@@ -8362,6 +8541,7 @@
           "character_id",
           "display_name",
           "avatar_url",
+          "name_state",
           "faction_slug",
           "value"
         ],

@@ -9,6 +9,7 @@ from models.praxis import Praxis
 from schemas.params import Id
 from schemas.vote import VoterDetail
 from services.praxis import can_view_praxis
+from services.standing import public_identity
 from services.vote_tally import counted_voters
 
 # Read-only. Vote writes live in routers/praxes.py; their 404 guard is
@@ -32,8 +33,9 @@ async def list_voters(
     return [
         VoterDetail(
             character_id=character.id,
-            display_name=character.display_name,
-            avatar_url=character.avatar_url,
+            display_name=public_identity(character).display_name,
+            avatar_url=public_identity(character).avatar_url,
+            name_state=public_identity(character).name_state,
             faction_slug=character.faction_slug,
             value=vote.value,
         )

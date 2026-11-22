@@ -34,7 +34,7 @@ from sqlalchemy.orm import InstrumentedAttribute, aliased
 
 from errors import ErrorCode, raise_coded
 from game_config import era_config_for_key
-from models.character import Character
+from models.character import Character, NameState
 from models.comment import Comment, CommentMention
 from models.era import Era
 from models.faction_defection_history import FactionDefectionHistory
@@ -95,6 +95,7 @@ class ActivityFeedItemDC:
     actor_display_name: Optional[str] = None
     actor_faction_slug: Optional[str] = None
     actor_avatar_url: Optional[str] = None
+    actor_name_state: NameState = NameState.ok
 
 
 @dataclass(frozen=True)
@@ -339,7 +340,7 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
     )
 
     def build(ctx: FeedContext) -> Select:
-        voter_char = Character.__table__.alias("voter_char")
+        voter_char = aliased(Character, name="voter_char")
         query = (
             counted_votes(
                 select(
@@ -349,14 +350,15 @@ def _vote_query_factory(changed: bool) -> Callable[[FeedContext], Select]:
                     Vote.praxis_id,
                     Praxis.title.label("praxis_title"),
                     Task.point_value.label("task_point_value"),
-                    voter_char.c.display_name.label("voter_display_name"),
-                    voter_char.c.faction_slug.label("voter_faction_slug"),
-                    voter_char.c.avatar_url.label("voter_avatar_url"),
+                    voter_char.display_name.label("voter_display_name"),
+                    voter_char.faction_slug.label("voter_faction_slug"),
+                    voter_char.avatar_url.label("voter_avatar_url"),
+                    voter_char.name_state.label("actor_name_state"),
                 )
             )
             .join(Praxis, Vote.praxis_id == Praxis.id)
             .join(Task, Praxis.task_id == Task.id)
-            .join(voter_char, Vote.voter_character_id == voter_char.c.id)
+            .join(voter_char, Vote.voter_character_id == voter_char.id)
             .where(
                 _owns_praxis(ctx.character_id),
                 _VOTE_WAS_CHANGED if changed else ~_VOTE_WAS_CHANGED,
@@ -385,6 +387,7 @@ def _vote_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]:
             actor_display_name=row.voter_display_name,
             actor_faction_slug=row.voter_faction_slug,
             actor_avatar_url=row.voter_avatar_url,
+            actor_name_state=row.actor_name_state,
             payload=VoteOnMinePayload(
                 vote_id=row.id,
                 value=row.value,
@@ -426,6 +429,7 @@ def _completions_query_factory(
                 Character.display_name.label("author_display_name"),
                 Character.faction_slug.label("author_faction_slug"),
                 Character.avatar_url.label("author_avatar_url"),
+                Character.name_state.label("actor_name_state"),
             )
             .join(Task, Praxis.task_id == Task.id)
             .join(Character, actor_id == Character.id)
@@ -464,6 +468,7 @@ def _completion_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItem
             actor_display_name=row.author_display_name,
             actor_faction_slug=row.author_faction_slug,
             actor_avatar_url=row.author_avatar_url,
+            actor_name_state=row.actor_name_state,
             payload=CompletionPayload(
                 praxis_id=row.id,
                 praxis_title=row.title,
@@ -490,6 +495,7 @@ def _foe_taunts_query(ctx: FeedContext) -> Select:
             from_character.display_name.label("from_display_name"),
             from_character.faction_slug.label("from_faction_slug"),
             from_character.avatar_url.label("from_avatar_url"),
+            from_character.name_state.label("actor_name_state"),
             to_character.display_name.label("to_display_name"),
         )
         .join(from_character, TauntMessage.from_character_id == from_character.id)
@@ -518,6 +524,7 @@ def _foe_taunt_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.from_display_name,
         actor_faction_slug=row.from_faction_slug,
         actor_avatar_url=row.from_avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=FoeTauntPayload(
             taunt_id=taunt.id,
             faction_slug=taunt.faction_slug,
@@ -698,6 +705,7 @@ def _collab_invites_query(ctx: FeedContext) -> Select:
             Character.display_name.label("actor_display_name"),
             Character.faction_slug.label("actor_faction_slug"),
             Character.avatar_url.label("actor_avatar_url"),
+            Character.name_state.label("actor_name_state"),
         )
         .join(Praxis, PraxisInvite.praxis_id == Praxis.id)
         .join(Task, Praxis.task_id == Task.id)
@@ -737,6 +745,7 @@ def _collab_invite_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
         actor_avatar_url=row.actor_avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=CollabInvitePayload(
             invite_id=row.id,
             praxis_id=row.praxis_id,
@@ -767,6 +776,7 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
             Character.display_name.label("actor_display_name"),
             Character.faction_slug.label("actor_faction_slug"),
             Character.avatar_url.label("actor_avatar_url"),
+            Character.name_state.label("actor_name_state"),
         )
         .join(Praxis, Duel.challenger_praxis_id == Praxis.id)
         .join(Task, Duel.task_id == Task.id)
@@ -794,6 +804,7 @@ def _duel_challenge_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
         actor_avatar_url=row.actor_avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=DuelChallengePayload(
             duel_id=row.id,
             challenger_praxis_id=row.challenger_praxis_id,
@@ -827,6 +838,7 @@ def _duel_forfeited_query(ctx: FeedContext) -> Select:
             forfeiter.display_name.label("actor_display_name"),
             forfeiter.faction_slug.label("actor_faction_slug"),
             forfeiter.avatar_url.label("actor_avatar_url"),
+            forfeiter.name_state.label("actor_name_state"),
         )
         .join(Task, Duel.task_id == Task.id)
         .join(forfeiter, Duel.forfeited_by_character_id == forfeiter.id)
@@ -857,6 +869,7 @@ def _duel_forfeited_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
         actor_avatar_url=row.actor_avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=DuelForfeitedPayload(
             duel_id=row.id,
             praxis_id=row.praxis_id,
@@ -893,6 +906,7 @@ def _duel_live_query(ctx: FeedContext) -> Select:
             challenger.display_name.label("actor_display_name"),
             challenger.faction_slug.label("actor_faction_slug"),
             challenger.avatar_url.label("actor_avatar_url"),
+            challenger.name_state.label("actor_name_state"),
             opponent.id.label("opponent_character_id"),
             opponent.display_name.label("opponent_display_name"),
             opponent.faction_slug.label("opponent_faction_slug"),
@@ -924,6 +938,7 @@ def _duel_live_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.actor_display_name,
         actor_faction_slug=row.actor_faction_slug,
         actor_avatar_url=row.actor_avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=DuelLivePayload(
             duel_id=row.id,
             challenger_character_id=row.challenger_character_id,
@@ -949,6 +964,7 @@ def _friend_signups_query(ctx: FeedContext) -> Select:
             Character.display_name,
             Character.faction_slug,
             Character.avatar_url,
+            Character.name_state.label("actor_name_state"),
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
@@ -983,6 +999,7 @@ def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
         actor_avatar_url=row.avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=FriendSignupPayload(
             praxis_member_id=row.id,
             character_id=row.character_id,
@@ -1060,6 +1077,7 @@ def _friend_defections_query(ctx: FeedContext) -> Select:
             Character.display_name,
             Character.faction_slug.label("current_faction_slug"),
             Character.avatar_url,
+            Character.name_state.label("actor_name_state"),
         )
         .join(Character, FactionDefectionHistory.character_id == Character.id)
         .where(
@@ -1093,6 +1111,7 @@ def _friend_defection_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.display_name,
         actor_faction_slug=row.current_faction_slug,
         actor_avatar_url=row.avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=FriendDefectionPayload(
             character_id=row.character_id,
             old_faction_slug=row.faction_slug,
@@ -1112,6 +1131,7 @@ _COMMENT_COLUMNS = (
     Character.display_name.label("author_display_name"),
     Character.faction_slug.label("author_faction_slug"),
     Character.avatar_url.label("author_avatar_url"),
+    Character.name_state.label("actor_name_state"),
 )
 
 
@@ -1199,6 +1219,7 @@ def _comment_item_factory(item_type: str) -> Callable[[Any], ActivityFeedItemDC]
             actor_display_name=row.author_display_name,
             actor_faction_slug=row.author_faction_slug,
             actor_avatar_url=row.author_avatar_url,
+            actor_name_state=row.actor_name_state,
             payload=CommentPayload(
                 comment_id=row.id,
                 # The commenter; "character_id" like other actor types (#1196).
@@ -1233,6 +1254,7 @@ def _collaborator_submitted_query(ctx: FeedContext) -> Select:
             Character.display_name,
             Character.faction_slug,
             Character.avatar_url,
+            Character.name_state.label("actor_name_state"),
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
@@ -1276,6 +1298,7 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
         actor_avatar_url=row.avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=CollaboratorSubmittedPayload(
             praxis_member_id=row.id,
             character_id=row.character_id,
@@ -1382,6 +1405,7 @@ def _nudge_query(ctx: FeedContext) -> Select:
             sender.display_name.label("from_display_name"),
             sender.faction_slug.label("from_faction_slug"),
             sender.avatar_url.label("from_avatar_url"),
+            sender.name_state.label("actor_name_state"),
         )
         .join(Praxis, Nudge.praxis_id == Praxis.id)
         .join(Task, Praxis.task_id == Task.id)
@@ -1418,6 +1442,7 @@ def _nudge_item(row: Any) -> ActivityFeedItemDC:
         actor_display_name=row.from_display_name,
         actor_faction_slug=row.from_faction_slug,
         actor_avatar_url=row.from_avatar_url,
+        actor_name_state=row.actor_name_state,
         payload=NudgePayload(
             nudge_id=row.id,
             praxis_id=row.praxis_id,
@@ -1768,7 +1793,14 @@ def _map_row(source: FeedSource, row: Any) -> Optional[ActivityFeedItemDC]:
     is the alarm.
     """
     try:
-        return source.to_item(row)
+        item = source.to_item(row)
+        # Rows carry the raw SQL string; absent actors are blanked here, once.
+        state = NameState(item.actor_name_state)
+        if state == NameState.absent:
+            return replace(
+                item, actor_name_state=state, actor_display_name="", actor_avatar_url=""
+            )
+        return replace(item, actor_name_state=state)
     except ValidationError as error:
         logger.error(
             "Dropping malformed feed item %s from the feed: %s",

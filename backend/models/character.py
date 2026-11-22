@@ -31,6 +31,14 @@ class CharacterStatus(enum.Enum):
     banned = "banned"
 
 
+class NameState(enum.Enum):
+    """How other players see a name: as is, with "(Suspended)", or not at all."""
+
+    ok = "ok"
+    suspended = "suspended"
+    absent = "absent"
+
+
 class Character(TimestampMixin, Base):
     __tablename__ = "character"
 

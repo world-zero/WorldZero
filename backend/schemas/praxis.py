@@ -4,6 +4,7 @@ from pydantic import Field
 from schemas.base import WireModel
 from services.collab_state import CollabState
 from schemas.task import TaskOut
+from models.character import NameState
 from models.praxis import PRAXIS_BODY_MAX, PRAXIS_TITLE_MAX, PraxisType, PraxisStatus, PraxisInviteStatus, MediaType, ModerationStatus
 
 
@@ -39,6 +40,7 @@ class PraxisMemberOut(WireModel):
     praxis_id: int
     character_id: int
     character_display_name: str  # populated by build_praxis_out
+    character_name_state: NameState = NameState.ok
     # Relative media path, or "" (no portrait: UI shows a monogram) (#2318).
     character_avatar_url: str = ""  # populated by build_praxis_out
     has_approved: bool
@@ -75,6 +77,7 @@ class PraxisInviteOut(WireModel):
     inviter_id: int
     invitee_id: int
     invitee_display_name: str   # populated by build_praxis_out
+    invitee_name_state: NameState = NameState.ok
     # Same "" fallback as ``PraxisMemberOut.character_avatar_url`` (#2318).
     invitee_avatar_url: str = ""  # populated by build_praxis_out
     status: PraxisInviteStatus
@@ -102,6 +105,7 @@ class PraxisOut(WireModel):
     room_generation: int  # keys the browser's offline room store (#3644)
     created_by_id: int
     created_by_display_name: str  # populated by build_praxis_out
+    created_by_name_state: NameState = NameState.ok
     # Relative media path or "" (monogram fallback) (#2106).
     created_by_avatar_url: str = ""  # populated by build_praxis_out
     created_by_faction_slug: Optional[str] = None  # author's member faction; actor-scoped byline
@@ -154,6 +158,7 @@ class PraxisCardOut(WireModel):
     moderation_status: ModerationStatus
     created_by_id: int
     created_by_display_name: str
+    created_by_name_state: NameState = NameState.ok
     # Same as ``PraxisOut.created_by_avatar_url`` (#888).
     created_by_avatar_url: str = ""
     created_at: datetime
@@ -194,6 +199,7 @@ class PraxisCardOut(WireModel):
     # is still pending. Gate the banner on ``opponent_display_name``.
     opponent_praxis_id: Optional[int] = None
     opponent_display_name: Optional[str] = None
+    opponent_name_state: NameState = NameState.ok
     opponent_faction_slug: Optional[str] = None
     # "" covers both no rival and no portrait (#2128); never the draw gate.
     opponent_avatar_url: str = ""

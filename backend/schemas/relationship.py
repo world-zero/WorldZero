@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Literal
 
 from pydantic import ConfigDict
+from models.character import NameState
 from schemas.base import WireModel
 
 
@@ -38,6 +39,7 @@ class RelationshipListItem(WireModel):
     type: str
     created_at: datetime
     to_display_name: str
+    to_name_state: NameState = NameState.ok
     to_avatar_url: str
     to_faction_slug: str
     # Reverse edge's type is not emitted (#1387); display_status covers the pair.
