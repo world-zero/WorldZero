@@ -223,6 +223,13 @@ describe('saving an override', () => {
     expect(missingPlaceholders(template, 'In {{days}} days')).toEqual(['{{days}}'])
   })
 
+  it('lets a draft restore a placeholder a saved override dropped (checked against shipped)', () => {
+    const shipped = 'Within the first {{hours}} hours'
+    expect(missingPlaceholders('Soon', 'In {{hours}} hours')).toEqual(['{{hours}}'])
+    expect(missingPlaceholders('Soon', 'In {{hours}} hours', shipped)).toEqual([])
+    expect(missingPlaceholders('Soon', 'In {{hour}} hours', shipped)).toEqual(['{{hour}}'])
+  })
+
   it('refuses a replacement that drops or renames a Trans tag', () => {
     const template = 'Standing · <1>card-carrying</1>'
     expect(missingPlaceholders(template, 'Standing · card-carrying')).toEqual(['<1>', '</1>'])
