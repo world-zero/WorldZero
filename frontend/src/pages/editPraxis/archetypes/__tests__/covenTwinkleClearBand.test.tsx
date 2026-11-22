@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 /**
  * The Coven masthead's twinkles stay out of the middle (#1983): a star beside
  * the "c" read as "tozy". Stars sit at a fixed fraction of the band while
@@ -70,6 +71,22 @@ const state = anEditPraxisState({
   duelChipVisible: true,
 });
 
+/** Bounding box of an `M x y l dx dy …z` path (the only shape starPath emits). */
+function pathBox(d: string): { minX: number; maxX: number; minY: number; maxY: number } {
+  const n = d.match(/-?[\d.]+/g)!.map(Number);
+  let x = n[0];
+  let y = n[1];
+  const xs = [x];
+  const ys = [y];
+  for (let i = 2; i < n.length; i += 2) {
+    x += n[i];
+    y += n[i + 1];
+    xs.push(x);
+    ys.push(y);
+  }
+  return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+}
+
 /** Each star is its own svg, left = x/480 of the band, width = 2× its reach in viewBox units. */
 function twinkleSpans(formFactor: "mobile" | "desktop"): [number, number][] {
   mocks.formFactor = formFactor;
@@ -78,14 +95,24 @@ function twinkleSpans(formFactor: "mobile" | "desktop"): [number, number][] {
       <CovenEditPraxis state={state} />
     </MemoryRouter>,
   );
-  return Array.from(
-    markup.matchAll(/<svg width="([\d.]+)" height="([\d.]+)" viewBox="-[^>]*left:([\d.]+)%/g),
-    (m) => {
-      expect(m[1], "a twinkle must be as tall as it is wide").toBe(m[2]);
-      const x = (Number(m[3]) / 100) * 480;
-      return [x - Number(m[1]) / 2, x + Number(m[1]) / 2];
-    },
-  );
+  const doc = new DOMParser().parseFromString(markup, "text/html");
+  return Array.from(doc.querySelectorAll("svg"))
+    .filter((svg) => svg.querySelector(":scope > path") && svg.getAttribute("viewBox")?.startsWith("-"))
+    .map((svg) => {
+      const w = Number(svg.getAttribute("width"));
+      expect(svg.getAttribute("height"), "a twinkle must be as tall as it is wide").toBe(String(w));
+      const [vx, vy, vw, vh] = svg.getAttribute("viewBox")!.split(" ").map(Number);
+      const box = pathBox(svg.querySelector("path")!.getAttribute("d")!);
+      const tol = 1e-6;
+      expect(
+        box.minX >= vx - tol && box.maxX <= vx + vw + tol && box.minY >= vy - tol && box.maxY <= vy + vh + tol,
+        `star path ${JSON.stringify(box)} is clipped by its viewBox ${vx} ${vy} ${vw} ${vh}`,
+      ).toBe(true);
+      expect(Math.abs(box.maxY - box.minY - (box.maxX - box.minX)), "star must be as tall as wide").toBeLessThan(tol);
+      const left = Number(/left:\s*([\d.]+)%/.exec(svg.getAttribute("style")!)![1]);
+      const x = (left / 100) * 480;
+      return [x - w / 2, x + w / 2] as [number, number];
+    });
 }
 
 describe("Coven masthead twinkles (#1983)", () => {

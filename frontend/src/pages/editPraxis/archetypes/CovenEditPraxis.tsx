@@ -95,7 +95,7 @@ const RULE = `1.5px solid ${BORDER}`;
 /** A four-point star about the origin, arm length r. */
 function starPath(r: number): string {
   const long = r * 2.6;
-  return `M0 ${-long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
+  return `M0 ${-long - r} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
 }
 
 /** `.cvn-braid` owns the strands' pigments (index.css). */
@@ -140,7 +140,7 @@ function TwinkleField() {
             style={{
               position: "absolute",
               left: `${(x / 480) * 100}%`,
-              top: `${(y / 72) * 100}%`,
+              top: `calc(${(y / 72) * 100}% + ${r}px)`,
               transform: "translate(-50%, -50%)",
             }}
           >

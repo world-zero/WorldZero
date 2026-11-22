@@ -25,7 +25,7 @@ const COVEN_BAND_HEIGHT = 44;
 /** A four-point star about the origin, arm length r. */
 function starPath(r: number): string {
   const long = r * 2.6;
-  return `M0 ${-long} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
+  return `M0 ${-long - r} l${r} ${long} ${long} ${r} -${long} ${r} -${r} ${long} -${r} -${long} -${long} -${r} ${long} -${r} z`;
 }
 
 /** The gold twinkle field, clipped to the masthead band. */
@@ -54,7 +54,7 @@ function TwinkleField() {
             style={{
               position: "absolute",
               left: `${(x / 340) * 100}%`,
-              top: y,
+              top: y + r,
               transform: "translate(-50%, -50%)",
             }}
           >
