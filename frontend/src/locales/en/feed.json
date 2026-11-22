@@ -270,7 +270,8 @@
     "stats": {
       "members_one": "Member",
       "members_other": "Members",
-      "tasks": "Tasks open",
+      "tasks_one": "Task open",
+      "tasks_other": "Tasks open",
       "praxes": "Praxis submitted"
     },
     "albescent": {
