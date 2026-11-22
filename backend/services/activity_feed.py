@@ -1797,9 +1797,7 @@ def _map_row(source: FeedSource, row: Any) -> Optional[ActivityFeedItemDC]:
         # Rows carry the raw SQL string; absent actors are blanked here, once.
         state = NameState(item.actor_name_state)
         if state == NameState.absent:
-            return replace(
-                item, actor_name_state=state, actor_display_name="", actor_avatar_url=""
-            )
+            return replace(item, actor_name_state=state, actor_avatar_url="")
         return replace(item, actor_name_state=state)
     except ValidationError as error:
         logger.error(

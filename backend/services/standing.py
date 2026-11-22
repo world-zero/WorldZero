@@ -105,7 +105,8 @@ def public_name(name: str, account: AccountStanding, life: LifeStanding) -> Publ
 
 @dataclass(frozen=True)
 class PublicIdentity:
-    """What a viewer may see of a character (S2b): blank when absent."""
+    """A character as others see it. Absent loses its face (S2b); the
+    name stays on the wire so admin lists can name them; the UI shows the label."""
 
     display_name: str
     username: str
@@ -117,8 +118,7 @@ def public_identity(character: Character) -> PublicIdentity:
     # ponytail: an object not yet re-read after insert has no loaded name_state;
     # a just-created character is ok, so default to that rather than lazy-load.
     state = NameState(inspect(character).dict.get("name_state", NameState.ok.value))
-    if state == NameState.absent:
-        return PublicIdentity("", "", "", state)
+    avatar_url = "" if state == NameState.absent else character.avatar_url
     return PublicIdentity(
-        character.display_name, character.username, character.avatar_url, state
+        character.display_name, character.username, avatar_url, state
     )

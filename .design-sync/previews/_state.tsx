@@ -436,7 +436,7 @@ export function proposeTaskState(slug: string): ProposeTaskState {
 // faction — it dispatches the archetype AND paints the ground (the one-ground
 // ruling); each duellist's own faction rides on their sigil.
 function duelSide(overrides: Partial<DuelSideOut> = {}): DuelSideOut {
-  return {
+  return { name_state: 'ok',
     avatar_url: '',
     character_id: 7,
     display_name: 'Wren Ashgrove',
@@ -463,6 +463,7 @@ function duelPraxis(taskSlug: string | null, overrides: Partial<PraxisOut> = {})
     can_flag: false,
     created_at: '2026-08-14T09:00:00Z',
     created_by_avatar_url: '',
+    created_by_name_state: 'ok',
     created_by_display_name: 'Wren Ashgrove',
     created_by_faction_slug: 'coven',
     created_by_id: 7,

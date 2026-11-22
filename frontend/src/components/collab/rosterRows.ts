@@ -9,6 +9,7 @@
  *
  * Keep this a leaf, like `collabGate.ts` (#1397): no component imports.
  */
+import { playerLabel } from '../../utils/playerLabel'
 import type { PraxisInviteOut, PraxisMemberOut } from '../../api/praxis'
 
 export type RosterRowState = 'filed' | 'accepted' | 'invited' | 'declined'
@@ -58,7 +59,7 @@ export function buildRosterRows(
       (member): RosterRow => ({
         key: `m-${member.id}`,
         state: member.has_approved ? 'filed' : 'accepted',
-        name: member.character_display_name,
+        name: playerLabel(member.character_display_name, member.character_name_state),
         avatarUrl: member.character_avatar_url,
         member,
       }),
@@ -67,7 +68,7 @@ export function buildRosterRows(
       (invite): RosterRow => ({
         key: `i-${invite.id}`,
         state: invite.status === 'pending' ? 'invited' : 'declined',
-        name: invite.invitee_display_name,
+        name: playerLabel(invite.invitee_display_name, invite.invitee_name_state),
         avatarUrl: invite.invitee_avatar_url,
         invite,
       }),

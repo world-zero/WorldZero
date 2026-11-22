@@ -591,5 +591,6 @@
   },
   "absentPlayer": "<A Nonexistent Player>",
   "suspendedPlayer": "{{name}} (Suspended)",
-  "nowPlayingAs": "You're now playing as {{name}}."
+  "nowPlayingAs": "You're now playing as {{name}}.",
+  "nowPlayingAsDismiss": "Got it"
 }

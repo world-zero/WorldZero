@@ -9,6 +9,7 @@
  * Pure display (#646): the cast / pull-back action lives in PublishButton.
  * Every word resolves through `collabCopy(factionSlug, key)`.
  */
+import { playerLabel } from '../../utils/playerLabel'
 import { useState } from 'react'
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -535,7 +536,7 @@ export function CollabRoster({
         <ConfirmDialog
           request={kickMemberConfirm(
             factionSlug,
-            pendingKick.character_display_name,
+            playerLabel(pendingKick.character_display_name, pendingKick.character_name_state),
           )}
           factionSlug={factionSlug}
           onConfirm={confirmKick}

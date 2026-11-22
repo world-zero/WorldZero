@@ -27,7 +27,7 @@ const comment: CommentOut = {
   is_edited: false,
   created_at: '2026-08-19T09:12:00Z',
   updated_at: '2026-08-19T09:12:00Z',
-  author: {
+  author: { name_state: 'ok',
     id: 31,
     username: 'quiet_hand',
     display_name: 'Quiet Hand',

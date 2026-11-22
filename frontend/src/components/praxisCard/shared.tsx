@@ -1,3 +1,4 @@
+import { playerLabel } from '../../utils/playerLabel'
 import { usePlayerLabel } from "../PlayerName";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -224,7 +225,9 @@ export function PraxisByline({
    * whole path, character to character, never by account.
    */
   const here = useLocation().pathname.replace(/\/+$/, "");
-  const onAuthorsOwnPage = here === authorHref || praxis.created_by_name_state !== "ok";
+  const onAuthorsOwnPage = here === authorHref ||
+    praxis.created_by_name_state === "absent" ||
+    praxis.created_by_name_state === "suspended";
   // The 8px is padding on the name, not row `gap` (#1633): a display face's
   // last glyph can overhang its advance width (Poiret One).
   //
@@ -502,7 +505,7 @@ export function PraxisRoster({
   const members = praxis.members ?? [];
   if (praxis.type !== "collab" || members.length < 2) return null;
   const { names, overflow } = rosterNames(
-    members.map((member) => ({ display_name: member.character_display_name })),
+    members.map((member) => ({ display_name: playerLabel(member.character_display_name, member.character_name_state) })),
   );
   return (
     <div
@@ -517,7 +520,7 @@ export function PraxisRoster({
             style={{ marginLeft: index === 0 ? undefined : "calc(var(--space-sm) * -1)" }}
           >
             <RosterAvatar
-              name={member.character_display_name}
+              name={playerLabel(member.character_display_name, member.character_name_state)}
               avatarUrl={member.character_avatar_url}
               accent={accent}
               paper={paper}
@@ -555,8 +558,8 @@ export function PraxisDuelBanner({
   fonts?: PraxisCardFonts;
 }) {
   const { t } = useTranslation("praxis");
-  const name = praxis.opponent_display_name;
-  if (!name) return null;
+  if (praxis.opponent_display_name == null) return null;
+  const name = playerLabel(praxis.opponent_display_name, praxis.opponent_name_state);
   const { notice } = sheetInk(praxis.task_faction_slug);
   // Linked to the rival's praxis when the id is present (defensive).
   const rival = (

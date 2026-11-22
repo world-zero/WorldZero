@@ -117,7 +117,7 @@ export function bylineFaces(praxis: PraxisOut): BylineFace[] {
   }
   return members.map((member) => ({
     id: member.character_id,
-    name: member.character_display_name,
+    name: member.character_display_name || `#${member.character_id}`,
     state: member.character_name_state,
     // `|| ''`: a row cached before #2318 lacks the key; heals on next fetch.
     avatarUrl: member.character_avatar_url || '',

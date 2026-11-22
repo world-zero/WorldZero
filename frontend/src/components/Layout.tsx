@@ -1,3 +1,4 @@
+import LifeSwitchNotice from './LifeSwitchNotice'
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -84,6 +85,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </a>
       <FactionBackdrop />
       <LevelUpWatcher />
+      <LifeSwitchNotice />
       <InvitationWatcher />
       {/* Singularity's perk (#1869): renders nothing, speaks in the console. */}
       <TheArray />

@@ -22,7 +22,7 @@ function evComment(over: Partial<CommentOut>): CommentOut {
     is_edited: false,
     created_at: '2026-06-28T09:12:00Z',
     updated_at: '2026-06-28T09:12:00Z',
-    author: {
+    author: { name_state: 'ok',
       id: 12,
       username: 'sam_okafor',
       display_name: 'Sam Okafor',
@@ -59,7 +59,7 @@ export function StackedDispatches() {
       'If everyone gets a key, @ada_reed, put me down to run the Saturday open — I can cover the first two shifts and bring the coffee.',
     created_at: '2026-07-01T15:04:00Z',
     updated_at: '2026-07-01T15:04:00Z',
-    mentions: [{ character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
+    mentions: [{ name_state: 'ok', character_id: 7, username: 'ada_reed', display_name: 'Ada Reed' }],
   })
   return (
     <div style={wrap}>
