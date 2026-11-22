@@ -111,7 +111,7 @@ const OVERLAYS: [name: string, render: () => string][] = [
     'CollabSuccess',
     () =>
       renderToStaticMarkup(
-        <CollabSuccess
+        <CollabSuccess collabState={null}
           members={MEMBERS}
           currentCharacterId={1}
           factionSlug="coven"

@@ -69,6 +69,7 @@ import { listMetatasks } from "../../api/metatasks";
 import { useAuth } from "../../auth/AuthContext";
 import { extractError } from "../../utils/errors";
 import i18n from "../../i18n";
+import { duelCan } from "../../components/duel/duelState";
 
 // Re-exported for importers using this path.
 export { MAX_FILE_SIZE } from "./useComposerMedia";
@@ -380,7 +381,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       }
       // My cast closed a multi-member collab's gate: success beat (#591).
       if (refreshed) {
-        const gate = deriveCollabGate(refreshed.members, user?.character?.id);
+        const gate = deriveCollabGate(refreshed.members, user?.character?.id, refreshed.collab_state);
         if (gate.memberCount > 1 && gate.state === "published") {
           setCollabSuccess(true);
           return;
@@ -591,7 +592,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
       // UI choice, not a backend limit: an accepted duel is left via the
       // "dissolve duel" control, which confirms (#956).
-      if (inDuel && duel && duel.status !== "pending") {
+      if (inDuel && duel && !duelCan("decline", duel)) {
         setError(i18n.t("forms:editPraxis.errors.duelUnderway"));
         return;
       }

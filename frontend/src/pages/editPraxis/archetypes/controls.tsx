@@ -2,7 +2,6 @@
  * Lightly skinned, accessible control primitives shared by all archetypes.
  * Archetypes own the outer containers; these are the inner essentials.
  */
-import { DUEL_STATES_THAT_BLOCK_DROP } from "../../../utils/duelDrop";
 import { CARD_CTA } from "../../../components/ctaTapFloor";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, DragEvent, ReactNode } from "react";
@@ -31,6 +30,7 @@ import {
 } from "./bodyEditorTheme";
 import type { EditPraxisState } from "../useEditPraxis";
 import { duelSides } from "../../../components/duel/shared";
+import { duelAccepted, duelCan, duelCanDrop, duelPreLive } from "../../../components/duel/duelState";
 import { CollabRoster, deriveCollabGate } from "../../../components/collab/CollabRoster";
 import type { CollabSkin } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
@@ -142,10 +142,9 @@ function DuelPair({
   // Ink from the skin (#2267), never the task's faction; `factionSlug` is for COPY only.
   const accent = skin.collab?.accentInk ?? skin.collab?.accent ?? "currentColor";
   const quiet = skin.collab?.quiet ?? "currentColor";
-  const accepted = duel?.status === "active";
-  // A forfeit can't be dissolved away (Q5).
-  const canDissolve = accepted && duel?.state !== "awaiting_honest_side";
-  const canRescind = duel == null || duel.status === "pending";
+  const accepted = duelAccepted(duel);
+  const canDissolve = duelCan("dissolve", duel) && duel?.state !== "challenged";
+  const canRescind = duel == null || duelCan("decline", duel);
   return (
     <div
       // Nightly duel spec's proof a challenge attached (#2453).
@@ -323,6 +322,7 @@ export function InviteSearch({
                   members={praxis.members}
                   invites={praxis.invites}
                   currentCharacterId={currentCharacterId}
+                  collabState={praxis.collab_state}
                   factionSlug={praxis.task_faction_slug}
                   taskPointValue={praxis.task_point_value}
                   presentCharacterIds={room?.present}
@@ -335,6 +335,7 @@ export function InviteSearch({
                     everyone else, so mounted unconditionally. */}
                 <HoldoutPublishNotice
                   members={praxis.members}
+                  collabState={praxis.collab_state}
                   currentCharacterId={currentCharacterId}
                   factionSlug={praxis.task_faction_slug}
                   submitProposedAt={praxis.submit_proposed_at}
@@ -723,7 +724,7 @@ export function DropButton({
   // Delete is creator-only (backend `delete_praxis` enforces); others Leave (#1074).
   const isCreator = praxis?.created_by_id === currentCharacterId;
   if (isCollab && !isCreator) return null;
-  if (duel && DUEL_STATES_THAT_BLOCK_DROP.has(duel.state)) return null;
+  if (!duelCanDrop(duel)) return null;
   // With others' parts inside, "drop task" undersells it; collabCopy warns.
   const crewAtStake = isCollab && praxis.members.length > 1;
   const label = crewAtStake
@@ -1509,7 +1510,7 @@ export function PublishButton({
 }) {
   // Q1: Submit waits for the accept; drafting and media stay open. `i18n.t`,
   // not the hook: tests invoke this directly.
-  if (duelMode && duel?.state === "challenged") {
+  if (duelMode && duel?.state === "challenged" && !isPublished) {
     return (
       <p className="label-caption" data-testid="composer-duel-waiting">
         {i18n.t("forms:editPraxis.invite.duelWaitingForAccept")}
@@ -1520,11 +1521,8 @@ export function PublishButton({
   // renders the composer (phase is `composing`, waiting surface refuses), and
   // this is the author's only way back to fix the text. Ordinary casts go to
   // `PraxisWaitingSurface` instead. Pull-back is neutral before settlement
-  // (ADR-0011 §Forfeit); statuses listed, not negated, so settled/resolved stay out.
-  const duelPullBack =
-    isPublished &&
-    duelMode &&
-    (duel?.status === "active" || duel?.status === "pending");
+  // (ADR-0011 §Forfeit); live and resolved stay out.
+  const duelPullBack = isPublished && duelMode && duelPreLive(duel);
   if (isPublished && !duelPullBack) return null;
   // A multi-member collab has three signals (ADR-0079).
   if (!duelPullBack && praxis?.type === "collab" && praxis.members.length > 1) {
@@ -1638,7 +1636,7 @@ export function CollabSignals({
 }) {
   if (!praxis) return null;
   const slug = praxis.task_faction_slug;
-  const gate = deriveCollabGate(praxis.members, currentCharacterId);
+  const gate = deriveCollabGate(praxis.members, currentCharacterId, praxis.collab_state);
   const proposalLive = proposalIsLive(praxis);
   const iAmDone = praxis.members.some(
     (member) =>

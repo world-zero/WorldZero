@@ -81,7 +81,7 @@ describe("Ephemerists praxis detail — copy is neutral (ADR-0061)", () => {
     expect(live.text, "the shared live verdict").toContain("leads by");
 
     const declined = render(
-      state({ praxis: { ...PRAXIS, duel_id: 5 }, duel: { ...DUEL, status: "declined" } }),
+      state({ praxis: { ...PRAXIS, duel_id: 5 }, duel: { ...DUEL, status: "declined", state: "dissolved" } }),
     );
     expect(declined.text).not.toContain("The duel");
   });

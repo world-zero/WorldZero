@@ -3,6 +3,7 @@
  * place. {@link casterVisible} gates both the plate and the widget, so a plate
  * never outlives its control (#1429). The phone ruling is `openSide.ts`.
  */
+import { duelOutcomeReadable } from '../../components/duel/duelState'
 import { voteRegionVisible } from '../../components/vote/VoteUI'
 import type { CurrentUser } from '../../api/auth'
 import type { DuelDetailOut } from '../../api/duel'
@@ -13,7 +14,7 @@ import type { DuelSideKey } from './openSide'
  * 403s (#999), so consult this BEFORE fetching. At least one side must be readable.
  */
 export function readerMountsDuel(duel: DuelDetailOut): boolean {
-  if (duel.status !== 'settled' && duel.status !== 'resolved') return false
+  if (!duelOutcomeReadable(duel)) return false
   if (duel.challenger.praxis_id == null || duel.opponent.praxis_id == null) return false
   return duel.challenger.is_submitted || duel.opponent.is_submitted
 }
@@ -51,5 +52,5 @@ export function casterVisible(
   user: CurrentUser | null,
   viewerCanVote: boolean | undefined,
 ): boolean {
-  return duel.status === 'settled' && voteRegionVisible(user, viewerCanVote)
+  return (duel.state === 'live' || duel.state === 'live_forfeited') && voteRegionVisible(user, viewerCanVote)
 }

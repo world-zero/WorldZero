@@ -2,6 +2,7 @@
  * The waiting surface (#1080, ADR-0059). Window length and clock are props
  * because `useGameConfig` never resolves in the harness.
  */
+import { duelStateFor } from '../../../../test/fixtures'
 import { formatClockTime } from "../../../../utils/dates";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, it, expect } from "vitest";
@@ -94,7 +95,7 @@ function duelDetail(status: DuelStatus): DuelDetailOut {
     task_id: 5,
     status,
     forfeited_by_character_id: null,
-    state: "drafting",
+    state: duelStateFor(status),
     cast_clock_started_at: null,
     challenger: {
       praxis_id: 1,

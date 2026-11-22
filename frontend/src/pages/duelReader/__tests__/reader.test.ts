@@ -1,4 +1,5 @@
 /** The reader's shared rules in `../reader.ts` (#1084, #1429). */
+import { duelStateFor } from '../../../test/fixtures'
 import { describe, it, expect } from 'vitest'
 import {
   arrivedFromSide,
@@ -34,7 +35,7 @@ function duel(overrides: Partial<DuelDetailOut> = {}): DuelDetailOut {
     task_id: 101,
     status: 'settled',
     forfeited_by_character_id: null,
-    state: "drafting",
+    state: duelStateFor(overrides.status ?? "settled", overrides.forfeited_by_character_id != null),
     cast_clock_started_at: null,
     winner_character_id: null,
     challenger_final_points: null,
