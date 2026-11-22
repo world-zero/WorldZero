@@ -1,0 +1,82 @@
+# One-off for the 1.0 launch: back up prod, then wipe it, so the v2.0.0 tag
+# deploys the squashed schema (#4259) onto an empty database. It goes inert
+# once v2.0.0 exists; delete this file after the release.
+name: Prod reset (v2.0.0, one-off)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type exactly: wipe prod"
+        required: true
+
+permissions:
+  contents: read
+
+# Shares the prod deploy's lock, so a reset can never overlap a deploy.
+concurrency: deploy-prod
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse without the typed confirmation
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$CONFIRM" != "wipe prod" ]; then
+            echo "::error::confirm must be exactly 'wipe prod'."
+            exit 1
+          fi
+      - name: Refuse once v2.0.0 is tagged
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh api "repos/${{ github.repository }}/git/refs/tags/v2.0.0" >/dev/null 2>&1; then
+            echo "::error::v2.0.0 exists; prod has launched. This reset is retired."
+            exit 1
+          fi
+
+  reset:
+    needs: check
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    # The same required reviewer as a prod deploy.
+    environment: production
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      LABEL: pre-v2.0.0
+    steps:
+      - name: Load the deploy key and pinned host key
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Back up prod
+        run: |
+          set -euo pipefail
+          ssh "deploy@$SSH_HOST" "
+            set -e
+            /srv/worldzero/backup.sh prod $LABEL
+            test -s /srv/backups/prod-db-$LABEL.dump
+            test -s /srv/backups/prod-media-$LABEL.tgz
+            ls -lh /srv/backups/prod-db-$LABEL.dump /srv/backups/prod-media-$LABEL.tgz
+          "
+
+      - name: Wipe prod (database and media)
+        run: |
+          set -euo pipefail
+          ssh "deploy@$SSH_HOST" "
+            set -e
+            cd /srv/worldzero/prod
+            docker compose down -v
+            left=\$(docker volume ls -q | grep -c '^worldzero-prod_' || true)
+            if [ \"\$left\" != 0 ]; then echo \"\$left prod volume(s) survived\"; exit 1; fi
+            echo 'prod is down; its volumes are gone'
+          "
