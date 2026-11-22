@@ -251,10 +251,24 @@ describe("InviteSearch — a staged player from a profile (#3772)", () => {
 
 /** #1417: the `+ invite` chip. Static markup, so only the closed state. */
 describe("InviteSearch — the + invite chip (#1417)", () => {
-  it("draws the chip instead of a permanently open search box", () => {
-    const html = chipHtml(collabState([]));
+  it("draws the chip instead of an open search box once someone is invited", () => {
+    const html = chipHtml(collabState([pendingInvite("Asked Player")]));
     expect(html).toContain("+ invite");
     expect(html).not.toContain("search players to invite");
+  });
+
+  it("opens the search from the chip", () => {
+    const state = collabState([pendingInvite("Asked Player")]);
+    render(<InviteSearch {...state} praxis={state.praxis!} skin={SKIN} />);
+    expect(screen.queryByTestId("composer-invite-search")).toBeNull();
+    fireEvent.click(screen.getByTestId("composer-invite-open"));
+    expect(screen.getByTestId("composer-invite-search")).toBeTruthy();
+  });
+
+  it("starts a fresh collab with the search open and no chip", () => {
+    const html = chipHtml(collabState([]));
+    expect(html).toContain("search players to invite");
+    expect(html).not.toContain("+ invite");
   });
 
   // `invite_to_praxis` refuses only once the PRAXIS is submitted.
@@ -309,7 +323,7 @@ function searchState(
     created_by_id: 1,
     task_faction_slug: "na",
     members: [],
-    invites: [],
+    invites: duelMode ? [] : [pendingInvite("Asked Player")],
   } as unknown as PraxisOut;
   return anEditPraxisState({
     praxis,

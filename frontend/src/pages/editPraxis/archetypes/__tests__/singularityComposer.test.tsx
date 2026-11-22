@@ -158,12 +158,11 @@ describe("Singularity composer — structure", () => {
     }
   });
 
-  // The invite search hides behind the `+ invite` chip (#1417); the chip
-  // carries the skin face, proving skin props reach the shared control.
+  // A fresh collab shows the search open; its skinned input proves skin props reach the shared control.
   it("dresses the mode keys and the invite box through their skin props", () => {
     const html = render("desktop", state({ showInviteBox: true }));
     expect((html.match(/aria-pressed=/g) ?? []).length).toBe(3);
-    expect(html).toContain(i18n.t("forms:editPraxis.invite.addAction"));
+    expect(html).toContain("composer-invite-search");
     expect(html).toContain("--faction-singularity-card-font");
   });
 });
