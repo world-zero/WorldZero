@@ -69,7 +69,7 @@ const Contact = lazy(() => withAppCopy(import('./pages/Contact')))
 const ProposeTask = lazy(importProposeTask)
 const Disclaimer = lazy(() => withAppCopy(import('./pages/Disclaimer')))
 const Attributions = lazy(() => withAppCopy(import('./pages/Attributions')))
-const Donate = lazy(() => withAppCopy(import('./pages/Donate')))
+const AiPolicy = lazy(() => withAppCopy(import('./pages/AiPolicy')))
 const AccountDeleted = lazy(importAccountDeleted)
 const NotFound = lazy(() => withAppCopy(import('./pages/NotFound')))
 const Unsubscribe = lazy(() => withAppCopy(import('./pages/Unsubscribe')))
@@ -244,7 +244,7 @@ function PlayerRoutes() {
           <Route path="/unsubscribe" element={<Unsubscribe />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/attributions" element={<Attributions />} />
-          <Route path="/donate" element={<Donate />} />
+          <Route path="/ai" element={<AiPolicy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
