@@ -44,7 +44,9 @@ export default function Updates() {
           unanswered request is reachable. */}
       <RequestsQueue />
 
-      <UpdatesFilterBar state={state} />
+      <div className="mb-6">
+        <UpdatesFilterBar state={state} />
+      </div>
 
       {/* Only when its scope is exactly what is on screen. */}
       {items.length > 0 && !loading && !fetchError && bulkArchiveAvailable && (
