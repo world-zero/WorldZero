@@ -25,7 +25,7 @@ describe('AI page replaces Donate (#4120, #4132)', () => {
 
   it('/ai renders, signed out', async () => {
     at('/ai')
-    expect(await screen.findByRole('heading', { name: 'No AI in a Praxis' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Can I use AI in a Praxis?' })).toBeTruthy()
   })
 
   it('/donate is not found', async () => {
