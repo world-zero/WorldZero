@@ -21,6 +21,41 @@ class DuelState(enum.Enum):
     NO_CONTEST = "no_contest"
 
 
+# The states each transition may start from (#4191 tables, rulings Q1/Q4/Q5).
+# "cast" is a duel side's submit: refused while CHALLENGED (Q1). "reopen" is
+# its unsubmit: refused once forfeited, so a decided duel keeps both sides cast.
+ALLOWED_FROM: dict[str, frozenset[DuelState]] = {
+    "accept": frozenset({DuelState.CHALLENGED}),
+    "decline": frozenset({DuelState.CHALLENGED}),
+    "dissolve": frozenset(
+        {DuelState.CHALLENGED, DuelState.DRAFTING, DuelState.ONE_CAST}
+    ),
+    "cast": frozenset(
+        {
+            DuelState.DRAFTING,
+            DuelState.ONE_CAST,
+            DuelState.AWAITING_HONEST_SIDE,
+            DuelState.LIVE,
+            DuelState.LIVE_FORFEITED,
+        }
+    ),
+    "reopen": frozenset(
+        {
+            DuelState.CHALLENGED,
+            DuelState.DISSOLVED,
+            DuelState.ONE_CAST,
+            DuelState.AWAITING_HONEST_SIDE,
+            DuelState.LIVE,
+        }
+    ),
+}
+
+#: The states a winner may be named from (Q10); never a draft or a no-contest.
+CONTEST_STATES = frozenset(
+    {DuelState.LIVE, DuelState.LIVE_FORFEITED, DuelState.RESOLVED}
+)
+
+
 def challenge_lapsed(duel: Duel, now: datetime, era: EraConfig) -> bool:
     """Unanswered past ``duel_challenge_lapse_days``; ``None`` never lapses."""
     days = era.duel_challenge_lapse_days

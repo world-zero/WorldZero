@@ -154,6 +154,10 @@ class ErrorCode(str, enum.Enum):
     # -- Duel challenge lifecycle --------------------------------------------
     duel_challenge_not_yours = "DUEL_CHALLENGE_NOT_YOURS"
     duel_challenge_already_resolved = "DUEL_CHALLENGE_ALREADY_RESOLVED"
+    #: A challenger's submit waits for the accept (#4200).
+    duel_awaiting_accept = "DUEL_AWAITING_ACCEPT"
+    #: Reopen or drop of a side of a decided duel (#4200).
+    duel_side_locked = "DUEL_SIDE_LOCKED"
 
     # -- Relationships ------------------------------------------------------
     relationship_not_found = "RELATIONSHIP_NOT_FOUND"

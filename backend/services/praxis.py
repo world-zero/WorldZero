@@ -25,7 +25,6 @@ from game_config import CURRENT_ERA, EraConfig
 from models.account import Account
 from models.character import Character
 from models.character_stats import CharacterStats
-from models.duel import DuelStatus
 from models.flag import Flag, FlagReason
 from models.praxis import (
     UNSCORED_MODERATION_STATUSES,
@@ -71,8 +70,12 @@ from services.media import (
     withdraw_media_from_mount,
 )
 from services.mod_log import log_mod_action
+from services.duel_state import ALLOWED_FROM, DuelState
 from services.praxis_duel import (
     discard_dissolved_duels_for_praxis,
+    duel_blocks_delete,
+    duel_state_of,
+    forfeit_duel,
     get_duel_for_praxis,
     maybe_settle_duel,
     with_duel_opponents,
@@ -698,9 +701,16 @@ async def unsubmit_praxis(
 
     # #307: first forfeit sticks; the winner is recalculated below.
     duel = await get_duel_for_praxis(praxis_id, session)
-    if duel is not None and duel.status == DuelStatus.settled:
-        if duel.forfeited_by_character_id is None:
-            duel.forfeited_by_character_id = character_id
+    if duel is not None:
+        state = await duel_state_of(duel, session, era)
+        if state not in ALLOWED_FROM["reopen"]:
+            raise_coded(
+                409,
+                ErrorCode.duel_side_locked,
+                "This duel is decided, so this side can't be reopened.",
+            )
+        if state == DuelState.LIVE:
+            forfeit_duel(duel, character_id, datetime.now(timezone.utc))
 
     praxis.status = PraxisStatus.in_progress
     praxis.submit_proposed_at = None
@@ -792,6 +802,12 @@ async def delete_praxis(
             detail="Cannot delete a submitted praxis. Move it to editing first.",
         )
     await discard_dissolved_duels_for_praxis(praxis_id, session)
+    if await duel_blocks_delete(praxis_id, session):
+        raise_coded(
+            409,
+            ErrorCode.duel_side_locked,
+            "A side of a duel can't be dropped; dissolve the duel first.",
+        )
     # The votes cascade away in the DB; refund the voters first (#3933).
     votes = await session.scalars(select(Vote).where(Vote.praxis_id == praxis_id))
     for vote in votes:
@@ -1446,6 +1462,13 @@ async def submit_praxis(
     )
     # Praxis lock held, duel rows next: the #3655 order. A late cast stays a forfeit.
     await _settle_lapsed_duels(session, era)
+    duel = await get_duel_for_praxis(praxis_id, session)
+    if duel is not None and await duel_state_of(duel, session, era) not in ALLOWED_FROM["cast"]:
+        raise_coded(
+            409,
+            ErrorCode.duel_awaiting_accept,
+            "Your opponent has to accept the challenge before you can submit.",
+        )
 
     # The sealed text must hold every edit the browser had; sockets give no ack (#3611).
     # No doc_state: the loaded room may still hold edits inside the flush window.

@@ -8,6 +8,7 @@ import hashlib
 import hmac
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from typing import Iterable, Optional
 
 from sqlalchemy import func, or_, select
@@ -29,6 +30,7 @@ from models.era import Era
 from models.praxis import Praxis, PraxisMember
 from schemas.character import BadgeOut
 from services.duel_outcome import duel_winner
+from services.duel_state import CONTEST_STATES, duel_state
 from services.scoring import sole_tie_taker_id
 from services.vote_tally import get_tally, tally_votes
 
@@ -110,6 +112,8 @@ async def _duel_winner_facts(
                 challenger_praxis.created_by_id.label("challenger_character_id"),
                 challenger_praxis.moderation_status.label("challenger_moderation"),
                 opponent_praxis.moderation_status.label("opponent_moderation"),
+                challenger_praxis.status.label("challenger_praxis_status"),
+                opponent_praxis.status.label("opponent_praxis_status"),
                 Duel.opponent_character_id,
                 Duel.challenger_praxis_id,
                 Duel.opponent_praxis_id,
@@ -190,6 +194,19 @@ async def _duel_winner_facts(
         if row.status == DuelStatus.resolved:
             winner_character_id: Optional[int] = row.winner_character_id
         else:
+            # Q10: only a duel both sides cast counts, never a draft or one cast.
+            # The row stands in for the Duel and a bare status for each Praxis.
+            state = duel_state(
+                row,
+                SimpleNamespace(status=row.challenger_praxis_status),
+                SimpleNamespace(status=row.opponent_praxis_status)
+                if row.opponent_praxis_id is not None
+                else None,
+                _utcnow(),
+                era,
+            )
+            if state not in CONTEST_STATES:
+                continue
             opponent_points = (
                 get_tally(tallies, row.opponent_praxis_id).points_from_votes
                 if row.opponent_praxis_id is not None
