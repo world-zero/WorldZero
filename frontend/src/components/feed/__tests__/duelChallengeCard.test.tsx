@@ -1,4 +1,3 @@
-import { readFileSync, readdirSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
@@ -59,9 +58,10 @@ describe('duel challenge card', () => {
 
 describe("catalogs", () => {
   it("carry no U+2694 (tofu on faces without it)", () => {
-    const dir = new URL("../../../locales/en/", import.meta.url)
-    for (const f of readdirSync(dir).filter((n) => n.endsWith(".json"))) {
-      expect(readFileSync(new URL(f, dir), "utf8"), f).not.toContain("\u2694")
+    const catalogs = import.meta.glob("../../../locales/en/*.json", { eager: true })
+    expect(Object.keys(catalogs).length).toBeGreaterThan(5)
+    for (const [f, json] of Object.entries(catalogs)) {
+      expect(JSON.stringify(json), f).not.toContain("\u2694")
     }
   })
 })
