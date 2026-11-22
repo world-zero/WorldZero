@@ -4,7 +4,7 @@ import './motion/generated.css'
 import './motion/wisp.css'
 
 export type WispHat = 'crown' | 'wizard' | 'teacup'
-/** Install-flow poses (#4052); the CSS in `components/install/wispPoses.css` animates each. */
+/** Install-flow poses (#4052); the CSS in `components/install/installAsk.css` animates each. */
 export type WispPose = 'peek' | 'down' | 'up' | 'sign' | 'home' | 'burst' | 'knock' | 'shrink' | 'boing'
 export type WispProp = 'bindle' | 'letter'
 
