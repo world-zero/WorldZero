@@ -774,7 +774,12 @@ async def admin_edit_task(
     era: EraConfig = CURRENT_ERA,
 ) -> Task:
     """Edit editable fields on a pending or retired task. Active tasks are locked."""
-    task = await session.get(Task, task_id)
+    task = await session.scalar(
+        select(Task)
+        .where(Task.id == task_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
     if task.status == TaskStatus.active:

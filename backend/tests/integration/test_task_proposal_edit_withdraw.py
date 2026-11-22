@@ -1,4 +1,6 @@
 """A proposer edits or withdraws their own pending proposal (#3771)."""
+import re
+
 import pytest
 import pytest_asyncio
 from fastapi import HTTPException
@@ -13,10 +15,12 @@ from models.character_stats import CharacterStats
 from models.mod_action import ModAction
 from models.roles import Permission
 from models.task import Task, TaskStatus
+from schemas.admin import AdminTaskPatch
 from schemas.task import TaskCreate
-from services.admin_service import update_task_status
+from services.admin_service import admin_edit_task, update_task_status
 from services.task import edit_proposal, withdraw_proposal
 from tests.integration.factories import make_task
+from tests.integration.query_capture import capture_selects
 
 BODY = {"title": "Better title", "point_value": 12, "level_required": 1}
 BODY_MODEL = TaskCreate(**BODY)
@@ -193,3 +197,50 @@ async def test_mod_approval_sees_a_withdrawal_made_after_they_loaded_it(
 
     # Seen as deleted, leaving it needs a different permission than pending does.
     assert exc.value.status_code == 403
+
+
+def _assert_row_locked(sql: list[str]) -> None:
+    assert any(
+        re.search(r"FROM task\b", statement) and "FOR UPDATE" in statement
+        for statement in sql
+    ), sql
+
+
+@pytest.mark.asyncio
+async def test_the_writers_lock_the_task_row(db_session: AsyncSession, proposer):
+    held = frozenset({Permission.review_proposals, Permission.manage_tasks})
+    for call in (
+        lambda task: edit_proposal(task.id, proposer, BODY_MODEL, db_session),
+        lambda task: update_task_status(
+            task.id, TaskStatus.active, db_session,
+            actor_id=proposer.account_id, held=held,
+        ),
+        lambda task: admin_edit_task(
+            task.id, AdminTaskPatch(title="Edited"), db_session, proposer.account_id
+        ),
+        lambda task: withdraw_proposal(task.id, proposer, db_session),
+    ):
+        task = await _pending(db_session, proposer)
+        with capture_selects() as sql:
+            await call(task)
+        _assert_row_locked(sql)
+
+
+@pytest.mark.asyncio
+async def test_mod_edit_sees_an_activation_made_after_they_loaded_it(
+    db_session: AsyncSession, proposer
+):
+    task = await _pending(db_session, proposer)
+    stale = await _stale_session(db_session, task)
+    await update_task_status(
+        task.id, TaskStatus.active, db_session,
+        actor_id=proposer.account_id, held=frozenset({Permission.review_proposals}),
+    )
+    await db_session.commit()
+
+    with pytest.raises(HTTPException) as exc:
+        await admin_edit_task(
+            task.id, AdminTaskPatch(title="Edited"), stale, proposer.account_id
+        )
+
+    assert exc.value.status_code == 400
