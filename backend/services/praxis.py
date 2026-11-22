@@ -1226,8 +1226,18 @@ async def respond_to_invite(
             )
 
         if not accept:
+            if not locked:
+                # Praxis lock before touching the invite row, as accept/cancel/kick do.
+                await _lock_praxis(invite.praxis_id, session)
+                continue
             invite.status = PraxisInviteStatus.declined
             await session.flush()
+            # The last decline leaves no one to wait for (#4185).
+            praxis = await get_praxis(
+                invite.praxis_id, session, lock=True, refresh=True
+            )
+            if praxis.status != PraxisStatus.submitted:
+                await collab_consensus.convert_if_sole_member(praxis, session, era)
             await session.refresh(invite)
             return invite
 

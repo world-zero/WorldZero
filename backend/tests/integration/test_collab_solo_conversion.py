@@ -329,3 +329,145 @@ async def test_kicking_down_to_two_members_stays_collab(
     assert data["type"] == "collab"
     assert data["status"] == "in_progress"
     assert not any(m["has_approved"] for m in data["members"])
+
+
+# decline-triggered conversion (#4185)
+
+
+async def _invite(client, praxis_id, invitee, headers):
+    await client.post(
+        f"/praxes/{praxis_id}/invite",
+        json={"invitee_id": invitee.id},
+        headers=headers,
+    )
+
+
+async def _decline(client, praxis_id, invitee, invitee_headers, creator_headers):
+    view = await client.get(f"/praxes/{praxis_id}", headers=creator_headers)
+    invite_id = next(
+        i["id"] for i in view.json()["invites"] if i["invitee_id"] == invitee.id
+    )
+    resp = await client.post(
+        f"/praxes/{praxis_id}/invite/{invite_id}/respond",
+        json={"accept": False},
+        headers=invitee_headers,
+    )
+    assert resp.status_code == 200
+
+
+async def _type_of(client, praxis_id, headers):
+    return (await client.get(f"/praxes/{praxis_id}", headers=headers)).json()["type"]
+
+
+@pytest.mark.asyncio
+async def test_last_decline_converts_to_solo(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    praxis_id = await _collab_with_members(client, active_task, auth_headers2, [])
+    assert await _type_of(client, praxis_id, auth_headers2) == "collab"
+    await _invite(client, praxis_id, character, auth_headers2)
+    await _decline(client, praxis_id, character, auth_headers, auth_headers2)
+    assert await _type_of(client, praxis_id, auth_headers2) == "solo"
+
+
+@pytest.mark.asyncio
+async def test_decline_with_another_invite_pending_keeps_collab(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+):
+    praxis_id = await _collab_with_members(client, active_task, auth_headers2, [])
+    await _invite(client, praxis_id, character, auth_headers2)
+    await _invite(client, praxis_id, character3, auth_headers2)
+    await _decline(client, praxis_id, character, auth_headers, auth_headers2)
+    assert await _type_of(client, praxis_id, auth_headers2) == "collab"
+
+
+@pytest.mark.asyncio
+async def test_decline_on_two_member_collab_keeps_collab(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    praxis_id = await _collab_with_members(
+        client, active_task, auth_headers2, [(character.id, auth_headers)]
+    )
+    await _invite(client, praxis_id, character3, auth_headers2)
+    await _decline(client, praxis_id, character3, auth_headers3, auth_headers2)
+    assert await _type_of(client, praxis_id, auth_headers2) == "collab"
+
+
+@pytest.mark.asyncio
+async def test_decline_on_submitted_collab_stays_collab(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    praxis_id = await _collab_with_members(
+        client, active_task, auth_headers2, [(character.id, auth_headers)]
+    )
+    await _invite(client, praxis_id, character3, auth_headers2)
+    for headers in (auth_headers, auth_headers2):
+        await client.post(f"/praxes/{praxis_id}/submit", headers=headers)
+    await _decline(client, praxis_id, character3, auth_headers3, auth_headers2)
+    assert await _type_of(client, praxis_id, auth_headers2) == "collab"
+
+
+async def _invite_id(client, praxis_id, invitee, headers):
+    view = await client.get(f"/praxes/{praxis_id}", headers=headers)
+    invites = view.json()["invites"]
+    return next(i["id"] for i in invites if i["invitee_id"] == invitee.id)
+
+
+@pytest.mark.asyncio
+async def test_decline_of_an_already_resolved_invite_is_refused(
+    client: AsyncClient,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers2: dict,
+    auth_headers3: dict,
+):
+    praxis_id = await _collab_with_members(client, active_task, auth_headers2, [])
+    await _invite(client, praxis_id, character, auth_headers2)
+    await _invite(client, praxis_id, character3, auth_headers2)
+    accepted = await _invite_id(client, praxis_id, character, auth_headers2)
+    cancelled = await _invite_id(client, praxis_id, character3, auth_headers2)
+    path = f"/praxes/{praxis_id}/invite"
+    ok = await client.post(
+        f"{path}/{accepted}/respond", json={"accept": True}, headers=auth_headers
+    )
+    assert ok.status_code == 200
+    gone = await client.delete(f"{path}/{cancelled}", headers=auth_headers2)
+    assert gone.status_code == 204
+
+    late = await client.post(
+        f"{path}/{accepted}/respond", json={"accept": False}, headers=auth_headers
+    )
+    assert late.status_code == 400
+    late = await client.post(
+        f"{path}/{cancelled}/respond", json={"accept": False}, headers=auth_headers3
+    )
+    assert late.status_code == 404
+    assert await _type_of(client, praxis_id, auth_headers2) == "collab"
