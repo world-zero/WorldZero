@@ -1,9 +1,9 @@
 """The owner-only admin roster (#3258)."""
-import dependencies
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 
+import dependencies
 from models.account import Account, AccountStatus
 from models.mod_action import ModAction
 from models.roles import Permission
@@ -149,19 +149,21 @@ async def test_refusals_carry_their_codes(
 
 
 async def test_a_deleted_account_cannot_be_granted_and_is_off_the_roster(
-    client, db_session, account, account2, character, other, hdr, owner_is_account,
+    client, db_session, account, account2, character, other, hdr,
+    owner_is_account,
 ):
     await make_owner(db_session, account)
-    r = await client.put(PUT_URL.format(other.username, "edit_copy"), json=ON, headers=hdr)
+    url = PUT_URL.format(other.username, "{}")
+    r = await client.put(url.format("edit_copy"), json=ON, headers=hdr)
     assert r.status_code == 204
     account2.status = AccountStatus.deleted
     await db_session.commit()
-    names = [a["username"] for a in (await client.get("/admin/admins", headers=hdr)).json()]
-    assert other.username not in names
+    roster = await client.get("/admin/admins", headers=hdr)
+    assert other.username not in [a["username"] for a in roster.json()]
 
-    r = await client.put(PUT_URL.format(other.username, "read_messages"), json=ON, headers=hdr)
+    r = await client.put(url.format("read_messages"), json=ON, headers=hdr)
     assert (r.status_code, r.json()["detail"]["code"]) == (409, "ACCOUNT_DELETED")
     held = await dependencies.account_permissions(account2.id, db_session)
     assert held == {Permission.edit_copy}
-    r = await client.put(PUT_URL.format(other.username, "edit_copy"), json=OFF, headers=hdr)
+    r = await client.put(url.format("edit_copy"), json=OFF, headers=hdr)
     assert r.status_code == 204
