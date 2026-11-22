@@ -139,6 +139,7 @@ describe('the profile header: the band travels, the ring inside it does not', ()
           'travels on the band around it, and `.alb-moves .spectrum-dial::before` ' +
           'would put a second spectrum at a second speed on one object (#2519).',
       ).not.toContain('spectrum-dial')
+      expect(html, 'no second spinning ring inside the still hoop').not.toContain('alb-avatar-ring')
       expect(ring, 'still, not gone: the ring keeps its resting ramp').toContain(CONIC)
     })
 
@@ -156,6 +157,7 @@ describe('the profile header: the band travels, the ring inside it does not', ()
       const html = creation('albescent', width)
       expect(html).toContain('alb-moves')
       expect(portraitRing(html), 'the create ring is classed').toContain('spectrum-dial')
+      expect(html, 'the hoop owns the spectrum before upload').not.toContain('alb-avatar-ring')
     })
   }
 })

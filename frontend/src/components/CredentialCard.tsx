@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import FactionSigil, { factionSigilRing } from './sigil/FactionSigil'
-import { factionName, isKnownFaction } from '../utils/factions'
+import { ALBESCENT_FACTION_SLUG, factionName, isKnownFaction } from '../utils/factions'
 import type { CharacterOut } from '../api/auth'
 import FactionAvatar from './avatar/FactionAvatar'
 
@@ -65,11 +65,14 @@ const NEUTRAL: Skin = {
   border: '1px solid var(--color-border-strong)',
 }
 
+/** The hoop owns the spectrum (one rainbow per frame): Albescent's own avatar ring would spin inside it, so its face draws as na's disc. */
+const stillFace = (slug: string | null | undefined) => (slug === ALBESCENT_FACTION_SLUG ? '' : slug ?? '')
+
 /** FactionAvatar's monogram reads `username[0]`, so the card's own name stands in for it. */
 function monogramOf(name: string, factionSlug: string | null | undefined): CharacterOut {
   return {
     all_time_score: 0, avatar_url: '', badges: [], bio: '', created_at: '', display_name: name,
-    faction_slug: factionSlug ?? '', id: 0, invitations: [], level: 0, location: '', score: 0,
+    faction_slug: stillFace(factionSlug), id: 0, invitations: [], level: 0, location: '', score: 0,
     status: 'active', tagline: '', username: name,
   }
 }
@@ -166,7 +169,7 @@ export default function CredentialCard({
               }}
             >
               {character ? (
-                <FactionAvatar character={character} size={128} badge={false} />
+                <FactionAvatar character={{ ...character, faction_slug: stillFace(character.faction_slug) }} size={128} badge={false} />
               ) : avatarUrl ? (
                 <img
                   src={avatarUrl}
