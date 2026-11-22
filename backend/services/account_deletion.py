@@ -10,7 +10,7 @@ import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
@@ -167,18 +167,43 @@ async def clear_carried_ban(
         )
 
 
-async def carried_ban_until(account_id: int, session: AsyncSession) -> datetime | None:
-    """When the ban a live tombstone carries for this account runs out."""
-    since = (
+async def carried_bans_until(
+    account_ids: set[int], session: AsyncSession
+) -> dict[int, datetime | None]:
+    """`carried_ban_until` for many accounts in one query."""
+    rows = (
         await session.execute(
-            select(func.max(AccountTombstone.created_at)).where(
-                _carried_by(account_id), AccountTombstone.mod_banned.is_(True)
+            select(
+                AccountTombstone.account_id,
+                AccountTombstone.carried_from_account_id,
+                AccountTombstone.created_at,
+            ).where(
+                or_(
+                    AccountTombstone.account_id.in_(account_ids),
+                    AccountTombstone.carried_from_account_id.in_(account_ids),
+                ),
+                AccountTombstone.mod_banned.is_(True),
             )
         )
-    ).scalar_one()
-    if since is None or not _is_live_at(since):
-        return None
-    return since + timedelta(days=TOMBSTONE_RETENTION_DAYS)
+    ).all()
+    since: dict[int, datetime] = {}
+    for held_on, carried_from, created_at in rows:
+        for key in (held_on, carried_from):
+            if key in account_ids:
+                since[key] = max(since.get(key, created_at), created_at)
+    return {
+        account_id: (
+            since[account_id] + timedelta(days=TOMBSTONE_RETENTION_DAYS)
+            if account_id in since and _is_live_at(since[account_id])
+            else None
+        )
+        for account_id in account_ids
+    }
+
+
+async def carried_ban_until(account_id: int, session: AsyncSession) -> datetime | None:
+    """When the ban a live tombstone carries for this account runs out."""
+    return (await carried_bans_until({account_id}, session))[account_id]
 
 
 async def delete_account(

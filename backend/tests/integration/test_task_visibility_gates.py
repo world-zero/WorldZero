@@ -263,12 +263,13 @@ async def test_the_detail_door_is_shut_to_the_anonymous_web(
     fresh = await _gated_task(db_session, character2, TaskStatus.pending, FRESH_AGE)
     active = await _gated_task(db_session, character2, TaskStatus.active)
     retired = await _gated_task(db_session, character2, TaskStatus.retired)
+    absent = await client.get("/tasks/999999")
+    assert absent.json()["detail"]["code"] == "TASK_NOT_FOUND"
 
     for task in (ripe, fresh):
         response = await client.get(f"/tasks/{task.id}")
         assert response.status_code == 404, response.text
-        # Same body as a genuinely absent id.
-        assert response.json()["detail"]["code"] == "TASK_NOT_FOUND"
+        assert response.json() == absent.json()
 
     for task in (active, retired):
         assert (await client.get(f"/tasks/{task.id}")).status_code == 200

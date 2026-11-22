@@ -159,3 +159,20 @@ against the new account with its original `created_at`, so the character-creatio
 ban holds until the original 90 days run out; the bit then goes with the row.
 Refusing `DELETE /me/account` while banned was rejected: players keep the right
 to leave. A fresh Google identity still gets around it, which the owner accepts.
+
+## Amendment (#4065): a mod can clear the carried ban, and the tombstone links back
+
+The #3929 amendment said the ban holds until the 90 days run out. A moderator
+with the ban permission can now lift it early (`POST /admin/accounts/{id}/clear-carried-ban`):
+it flips `mod_banned` off on every tombstone that carries the ban for that account
+and writes a `clear_carried_ban` mod-log row. The tombstone itself stays, so the
+returning-player gate still recognises the person.
+
+`account_tombstone.carried_from_account_id` is new. When the tombstone is re-written
+against the returning account, it records the deleted account the ban came from, so
+a mod looking at the old life (or the new one) finds the carried ban from either id.
+Still no reason, date or character data comes with it.
+
+**Known gap:** delete, return, delete again re-tombstones on the newer account and
+drops the link, so the ban is found only through the newest account. Left open on
+purpose; the 90 days still run from the original deletion time.
