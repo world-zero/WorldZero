@@ -25,7 +25,7 @@ from models.praxis import ModerationStatus
 from models.push_subscription import PushSubscription
 from services import push
 from services.notification_prefs import apply_update
-from tests.integration.factories import make_solo_praxis, make_task
+from tests.integration.factories import make_character, make_solo_praxis, make_task
 
 SUBSCRIPTION = {
     "endpoint": "https://fcm.googleapis.com/fcm/send/abc",
@@ -450,3 +450,23 @@ async def test_the_commit_sends_what_notify_queued(
     await db_session.commit()
     await asyncio.gather(*push._in_flight)
     assert len(sent) == 1
+
+
+@pytest.mark.asyncio
+async def test_broadcast_goes_to_the_active_life_not_the_lower_id_banned_one(
+    db_session, account, character, era, keys_on
+):
+    await _subscribe(db_session, account)
+    account.notification_prefs = {"era_announcement": {"by_push": True}}
+    character.status = CharacterStatus.banned
+    second = await make_character(db_session, era, username="second", account=account)
+
+    await push.notify_broadcast(db_session, kind="era_announcement", tag="t", url="/")
+    ((payload, _),) = _queued(db_session)
+    assert payload["character"] == "second"
+
+    db_session.sync_session.info.pop(push._OUTBOX)
+    second.status = CharacterStatus.banned
+    await db_session.flush()
+    await push.notify_broadcast(db_session, kind="era_announcement", tag="t", url="/")
+    assert _queued(db_session) == []

@@ -6,3 +6,4 @@ from services.push import SENDERS
 
 def test_every_preference_row_has_a_sender():
     assert set(SENDERS) == {event.key for event in NOTIFICATION_EVENTS}
+

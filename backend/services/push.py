@@ -493,7 +493,10 @@ async def notify_broadcast(
     character with a device. ponytail: no call site yet; those rows default off."""
     owners = await session.scalars(
         select(func.min(Character.id))
-        .where(Character.account_id.in_(select(PushSubscription.account_id)))
+        .where(
+            Character.account_id.in_(select(PushSubscription.account_id)),
+            Character.status == CharacterStatus.active,
+        )
         .group_by(Character.account_id)
     )
     for recipient_id in owners.all():
