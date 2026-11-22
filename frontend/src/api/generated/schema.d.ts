@@ -2527,7 +2527,7 @@ export interface components {
         };
         /**
          * CharacterSearchOut
-         * @description ``GET /characters`` rows: a player the task's invite/challenge would refuse is listed, flagged.
+         * @description ``GET /characters`` row; flagged when the task's invite/challenge would 409.
          */
         CharacterSearchOut: {
             /** All Time Score */
