@@ -299,7 +299,7 @@ async def authors_for_tasks(
     rows = result.all()
     return {
         character_id: TaskAuthor(
-            display_name=display_name or "",
+            display_name="" if absent else display_name or "",
             avatar_url="" if absent else avatar_url or "",
             faction_slug=faction_slug,
             level=int(level or 0),

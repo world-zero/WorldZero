@@ -128,6 +128,7 @@ class DuelLivePayload(FeedPayloadBase):
     opponent_display_name: str
     opponent_faction_slug: str
     opponent_avatar_url: str
+    opponent_name_state: NameState = NameState.ok
     task_title: str
     task_point_value: int
     task_faction_slug: str

@@ -349,8 +349,9 @@ def _duel_side(
     name: Optional[str], avatar: Optional[str], state: Optional[str]
 ) -> dict:
     name_state = NameState(state or NameState.ok.value)
-    face = "" if name_state == NameState.absent else avatar or ""
-    return dict(display_name=name or "", avatar_url=face, name_state=name_state)
+    if name_state == NameState.absent:
+        return dict(display_name="", avatar_url="", name_state=name_state)
+    return dict(display_name=name or "", avatar_url=avatar or "", name_state=name_state)
 
 
 async def duel_opponents_for(

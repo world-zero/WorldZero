@@ -2425,6 +2425,8 @@ export interface components {
             display_name: string;
             /** Faction Slug */
             faction_slug: string;
+            /** @default ok */
+            name_state: components["schemas"]["NameState"];
         };
         /** Body_admin_import_tasks_csv_admin_tasks_import_csv_post */
         Body_admin_import_tasks_csv_admin_tasks_import_csv_post: {
@@ -3319,6 +3321,8 @@ export interface components {
             opponent_display_name: string;
             /** Opponent Faction Slug */
             opponent_faction_slug: string;
+            /** @default ok */
+            opponent_name_state: components["schemas"]["NameState"];
             /** Task Faction Slug */
             task_faction_slug: string;
             /** Task Point Value */
@@ -5792,6 +5796,8 @@ export interface components {
             display_name: string;
             /** Faction Slug */
             faction_slug: string;
+            /** @default ok */
+            name_state: components["schemas"]["NameState"];
             /** Value */
             value: number;
         };

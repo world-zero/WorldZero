@@ -911,6 +911,7 @@ def _duel_live_query(ctx: FeedContext) -> Select:
             opponent.display_name.label("opponent_display_name"),
             opponent.faction_slug.label("opponent_faction_slug"),
             opponent.avatar_url.label("opponent_avatar_url"),
+            opponent.name_state.label("opponent_name_state"),
         )
         .join(challenger_praxis, Duel.challenger_praxis_id == challenger_praxis.id)
         .join(challenger, challenger_praxis.created_by_id == challenger.id)
@@ -946,6 +947,7 @@ def _duel_live_item(row: Any) -> ActivityFeedItemDC:
             opponent_display_name=row.opponent_display_name,
             opponent_faction_slug=row.opponent_faction_slug,
             opponent_avatar_url=row.opponent_avatar_url,
+            opponent_name_state=row.opponent_name_state,
             task_title=row.task_title,
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
@@ -1784,6 +1786,16 @@ def _row_source_id(source: FeedSource, row: Any) -> Any:
     return getattr(row[0], column_name, None)
 
 
+def _blank_absent_opponent(item: ActivityFeedItemDC) -> ActivityFeedItemDC:
+    payload = item.payload
+    if getattr(payload, "opponent_name_state", NameState.ok) != NameState.absent:
+        return item
+    blanked = payload.model_copy(
+        update={"opponent_display_name": "", "opponent_avatar_url": ""}
+    )
+    return replace(item, payload=blanked)
+
+
 def _map_row(source: FeedSource, row: Any) -> Optional[ActivityFeedItemDC]:
     """One row → one item, or ``None`` if its payload does not validate (#1402).
 
@@ -1797,7 +1809,17 @@ def _map_row(source: FeedSource, row: Any) -> Optional[ActivityFeedItemDC]:
         # Rows carry the raw SQL string; absent actors are blanked here, once.
         state = NameState(item.actor_name_state)
         if state == NameState.absent:
-            return replace(item, actor_name_state=state, actor_avatar_url="")
+            item = replace(
+                item,
+                actor_name_state=state,
+                actor_display_name="",
+                actor_avatar_url="",
+            )
+            if hasattr(item.payload, "from_name"):
+                item = replace(
+                    item, payload=item.payload.model_copy(update={"from_name": ""})
+                )
+        item = _blank_absent_opponent(item)
         return replace(item, actor_name_state=state)
     except ValidationError as error:
         logger.error(

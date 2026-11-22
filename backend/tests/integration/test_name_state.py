@@ -37,8 +37,11 @@ async def test_name_state_column_agrees_with_public_name(
     assert (expected == NameState.suspended) == shown.suspended
 
     praxis = await client.get(f"/praxes/{praxis_id}")
-    if praxis.status_code == 200:
-        body = praxis.json()
-        assert body["created_by_name_state"] == expected.value
-        assert body["members"][0]["character_name_state"] == expected.value
-        assert body["created_by_avatar_url"] == "" or expected != NameState.absent
+    assert praxis.status_code == 200
+    body = praxis.json()
+    assert body["created_by_name_state"] == expected.value
+    assert body["members"][0]["character_name_state"] == expected.value
+    if expected == NameState.absent:
+        assert body["created_by_display_name"] == ""
+        assert body["created_by_avatar_url"] == ""
+        assert body["members"][0]["character_display_name"] == ""

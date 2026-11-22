@@ -111,9 +111,9 @@ export function taskDetailState(slug: string): TaskDetailState {
 
 // ── praxisDetail ─────────────────────────────────────────────────────────────
 const VOTERS: VoterDetail[] = [
-  { character_id: 12, display_name: 'Sam Okafor', avatar_url: '', faction_slug: 'everymen', value: 5 },
-  { character_id: 19, display_name: 'Pip Marigold', avatar_url: '', faction_slug: 'wow', value: 4 },
-  { character_id: 22, display_name: 'Dr. Iris Vale', avatar_url: '', faction_slug: 'ephemerists', value: 5 },
+  { character_id: 12, display_name: 'Sam Okafor', avatar_url: '', name_state: 'ok', faction_slug: 'everymen', value: 5 },
+  { character_id: 19, display_name: 'Pip Marigold', avatar_url: '', name_state: 'ok', faction_slug: 'wow', value: 4 },
+  { character_id: 22, display_name: 'Dr. Iris Vale', avatar_url: '', name_state: 'ok', faction_slug: 'ephemerists', value: 5 },
 ]
 /** A submitted praxis the viewer owns, with its voters. */
 export function praxisDetailState(slug: string): PraxisDetailState {

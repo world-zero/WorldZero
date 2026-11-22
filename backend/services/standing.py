@@ -103,8 +103,8 @@ def public_name(name: str, account: AccountStanding, life: LifeStanding) -> Publ
 
 @dataclass(frozen=True)
 class PublicIdentity:
-    """A character as others see it. Absent loses its face (S2b); the
-    name stays on the wire so admin lists can name them; the UI shows the label."""
+    """A character as others see it. Absent loses name, username and face (S2b);
+    the UI shows the label. Admin surfaces fall back to the id."""
 
     display_name: str
     username: str
@@ -116,7 +116,8 @@ def public_identity(character: Character) -> PublicIdentity:
     # vars(), never getattr: an unloaded or expired name_state would lazy-load from
     # sync code (MissingGreenlet). A just-created character reads as ok.
     state = NameState(vars(character).get("name_state", NameState.ok.value))
-    avatar_url = "" if state == NameState.absent else character.avatar_url
+    if state == NameState.absent:
+        return PublicIdentity("", "", "", state)
     return PublicIdentity(
-        character.display_name, character.username, avatar_url, state
+        character.display_name, character.username, character.avatar_url, state
     )

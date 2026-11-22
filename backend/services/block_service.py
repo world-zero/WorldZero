@@ -8,6 +8,7 @@ from errors import ErrorCode, raise_coded
 from models.character import Character
 from models.character_block import CharacterBlock
 from schemas.block import BlockListItem
+from services.standing import public_identity
 
 
 def blocked_counterpart_ids(character_id: int) -> Select[tuple[int]]:
@@ -68,10 +69,12 @@ async def refuse_if_blocked(
 
 
 def _to_item(character: Character, block: CharacterBlock) -> BlockListItem:
+    identity = public_identity(character)
     return BlockListItem(
         character_id=character.id,
-        display_name=character.display_name,
-        avatar_url=character.avatar_url,
+        display_name=identity.display_name,
+        avatar_url=identity.avatar_url,
+        name_state=identity.name_state,
         faction_slug=character.faction_slug,
         created_at=block.created_at,
     )
