@@ -22,7 +22,7 @@ from models.comment import (
 )
 from models.flag import Flag, FlagReason
 from models.praxis import ModerationStatus, Praxis
-from models.task import Task, TaskStatus
+from models.task import TaskStatus
 from schemas.comment import CommentAuthor, CommentMentionOut, CommentOut
 from services.block_service import blocked_by
 from services.era import get_current_era_row, get_or_create_stats
