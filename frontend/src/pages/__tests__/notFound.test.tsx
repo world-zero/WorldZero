@@ -11,10 +11,14 @@ vi.mock('../../api/tasks', () => ({ getTask: api.fail, listTasks: api.fail }))
 vi.mock('../../api/praxis', () => ({ getPraxis: api.fail, getVoters: api.fail, listPraxes: api.fail }))
 vi.mock('../../api/characters', () => ({ getCharacter: api.fail }))
 vi.mock('../../api/comments', () => ({ listComments: () => Promise.resolve(null) }))
-vi.mock('../../auth/AuthContext', () => ({ useAuth: () => ({ user: null }) }))
+vi.mock('../../auth/AuthContext', () => ({
+  useAuth: () => ({ user: null, loading: false }),
+  hadSessionLastVisit: () => false,
+}))
+vi.mock('../../components/Layout', () => ({ default: ({ children }: { children: React.ReactNode }) => children }))
 
 import '../../i18n'
-import NotFound from '../NotFound'
+import App from '../../App'
 import TaskDetail from '../TaskDetail'
 import PraxisDetail from '../PraxisDetail'
 import CharacterProfile from '../CharacterProfile'
@@ -38,9 +42,13 @@ function open(path: string, route: string, element: React.ReactElement) {
 }
 
 describe('not found', () => {
-  it('an unmatched path shows the page-not-found line and a link home', () => {
-    open('/zzz-typo', '*', <NotFound />)
-    expect(screen.getByText(/Page not found\./)).toBeTruthy()
+  it('an unmatched path shows the page-not-found line and a link home', async () => {
+    render(
+      <MemoryRouter initialEntries={['/zzz-typo']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText(/Page not found\./)).toBeTruthy()
     expect(screen.getByRole('link').getAttribute('href')).toBe('/')
   })
 
