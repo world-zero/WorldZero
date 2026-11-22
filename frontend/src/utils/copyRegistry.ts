@@ -26,6 +26,8 @@ const byBareValue = new Map<string, CopyTarget[]>()
 
 const EDGE_GLYPHS = /^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu
 const bare = (text: string) => text.replace(EDGE_GLYPHS, '')
+/** `<1>`, `</1>`, `<b>`, `<br/>`. */
+const TRANS_TAG = /<\/?\w+\s*\/?>/g
 const HAS_WORDS = /[\p{L}\p{N}]/u
 
 /** Disarming drops the index; it is only a cache. */
@@ -50,7 +52,9 @@ export function recordRenderedCopy(value: string, target: CopyTarget): void {
   if (target.ns === EDITOR_NS && target.key.startsWith(EDITOR_KEY_PREFIX)) return
   const text = value.trim()
   if (!text) return
-  for (const entry of new Set([text, ...paragraphsOf(text)])) {
+  // <Trans> values keep their component tags; the DOM text never has them.
+  const plain = text.replace(TRANS_TAG, '')
+  for (const entry of new Set([text, plain, ...paragraphsOf(text), ...paragraphsOf(plain)])) {
     add(byRenderedValue, entry, target)
     const stripped = bare(entry)
     if (stripped) add(byBareValue, stripped, target)
@@ -113,10 +117,11 @@ export function copyMatchForElement(
 }
 
 /**
- * The one hard guard on a save: a dropped `{{…}}` renders a silent hole.
- * Whole-token compare, so a renamed placeholder counts as dropped.
+ * The one hard guard on a save: a dropped `{{…}}` renders a silent hole, and a
+ * dropped `<Trans>` tag loses its component. Whole-token compare, so a renamed
+ * placeholder or tag counts as dropped.
  */
 export function missingPlaceholders(template: string, next: string): string[] {
-  const tokens = template.match(/\{\{[^}]*\}\}/g) ?? []
+  const tokens = template.match(/\{\{[^}]*\}\}|<\/?\w+\s*\/?>/g) ?? []
   return [...new Set(tokens)].filter((token) => !next.includes(token))
 }

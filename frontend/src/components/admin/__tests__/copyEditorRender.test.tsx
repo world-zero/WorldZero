@@ -2,7 +2,7 @@
 /** `CopyEditor` mounted with effects: arming must not loop, Revert must revert (#3081). */
 import { Profiler } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { deleteCopyOverride, putCopyOverride } from '../../../api/copy'
@@ -169,6 +169,25 @@ describe('CopyEditor, one wording from several keys', () => {
     fireEvent.click(container.querySelector('i')!)
     expect(screen.getByText(/form for each count/)).toBeTruthy()
     expect(container.textContent).not.toContain(MARK)
+  })
+})
+
+describe('CopyEditor, <Trans> copy', () => {
+  it('opens the key when the bold child is clicked', async () => {
+    i18n.addResource('en', NS, 'transProbe', 'Standing · <1>card-carrying</1>')
+    render(
+      <>
+        <p>
+          <Trans i18nKey={'transProbe' as 'brand'} ns={NS} components={{ 1: <b /> }} />
+        </p>
+        <CopyEditor />
+      </>,
+    )
+    fireEvent.click(screen.getByText('edit copy'))
+    await screen.findByText('stop editing copy')
+    fireEvent.click(screen.getByText('card-carrying'))
+    expect(await screen.findByText(`${NS}:transProbe`)).toBeTruthy()
+    expect((screen.getByLabelText('Replacement wording') as HTMLTextAreaElement).value).toContain('<1>')
   })
 })
 
