@@ -724,7 +724,12 @@ async def update_task_status(
     for Delete (#3305); entering it runs Delete's eligibility check. Entering
     ``backdoor`` stamps its window (#3848); leaving it clears the window.
     """
-    task = await session.get(Task, task_id)
+    task = await session.scalar(
+        select(Task)
+        .where(Task.id == task_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
 
