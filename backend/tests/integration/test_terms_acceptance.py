@@ -5,10 +5,13 @@ The contract a naive implementation breaks is append-only.
 
 from datetime import datetime
 
+import pytest
 from sqlalchemy import select
 
 from models.account import Account
 from models.terms_acceptance import CURRENT_TERMS_VERSION, TermsAcceptance
+
+pytestmark = pytest.mark.needs_terms
 
 _URL = "/terms/acceptance"
 

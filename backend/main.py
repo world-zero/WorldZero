@@ -2,7 +2,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +11,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from config import settings
 from db import AsyncSessionLocal, engine
+from dependencies import require_terms
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
 from routers import comments, contact, copy, email, google_photos, me, push, terms
 from schemas.system import HealthOut
@@ -66,7 +67,12 @@ async def lifespan(app: FastAPI):
         await single_instance_lock.close()
 
 
-app = FastAPI(title="World Zero", version="1.0.0", lifespan=lifespan)
+app = FastAPI(
+    title="World Zero",
+    version="1.0.0",
+    lifespan=lifespan,
+    dependencies=[Depends(require_terms)],
+)
 
 
 @app.exception_handler(IntegrityError)

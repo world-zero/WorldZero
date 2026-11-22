@@ -23,7 +23,9 @@ _EMPTY_TALLY = VoteTally(points_from_votes=0, voter_count=0)
 
 
 def counted_votes(query):
-    """Join voters, dropping moderated ones; deletion keeps them (ADR-0081)."""
+    """Join voters, dropping moderated ones; deletion keeps them (ADR-0081).
+
+    SQL twin of ``standing.counts_as_voter``; a test pins the two together."""
     # Deferred: services.character -> services.era -> this module is a cycle.
     from services.character import MOD_BANNED
 

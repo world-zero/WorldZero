@@ -27,6 +27,7 @@ from models.character_stats import CharacterStats
 from models.faction_defection_history import FactionDefectionHistory
 from models.invitation_letter import InvitationLetter
 from models.praxis import Praxis, PraxisMember, PraxisStatus
+from models.terms_acceptance import CURRENT_TERMS_VERSION, TermsAcceptance
 from schemas.character import BadgeOut, CharacterCreate, CharacterOut, CharacterUpdate
 from services.albescent_reveal import is_albescent_revealed
 from services.secret_faction import has_stamp, set_stamp
@@ -291,15 +292,44 @@ async def has_mod_banned_life(account_id: int, session: AsyncSession) -> bool:
     )
 
 
+async def has_current_terms(account_id: int, session: AsyncSession) -> bool:
+    return bool(
+        await session.scalar(
+            select(
+                exists().where(
+                    TermsAcceptance.account_id == account_id,
+                    TermsAcceptance.version == CURRENT_TERMS_VERSION,
+                )
+            )
+        )
+    )
+
+
+async def load_account_standing(
+    account: Account, session: AsyncSession
+) -> standing.AccountStanding:
+    lives = [
+        standing.life_standing(life)
+        for life in await session.scalars(
+            select(Character).where(Character.account_id == account.id)
+        )
+    ]
+    return standing.account_standing(
+        account.status,
+        await has_current_terms(account.id, session),
+        lives,
+        await has_mod_banned_life(account.id, session),
+    )
+
+
 async def is_playable(character: Character, session: AsyncSession) -> bool:
-    """The life and its account are both active."""
+    """Account playing (terms, no life mod-banned, not suspended), this life active."""
     account = await session.get(Account, character.account_id)
     if account is None:
         return False
-    # Terms and sibling lives are out of this check: behaviour is unchanged (#4236).
-    life = standing.life_standing(character)
     return standing.is_playable(
-        standing.account_standing(account.status, True, [life]), life
+        await load_account_standing(account, session),
+        standing.life_standing(character),
     )
 
 

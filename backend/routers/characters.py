@@ -1,7 +1,6 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import get_db
@@ -13,7 +12,7 @@ from dependencies import (
 )
 from errors import ErrorCode, raise_coded
 from models.account import Account
-from models.character import Character, CharacterStatus
+from models.character import Character
 from schemas.character import (
     CharacterCreate,
     CharacterOut,
@@ -35,6 +34,8 @@ from services.character import (
 )
 from services.era import load_current_era_stats
 from services.media import process_and_save_avatar
+from services.praxis import cancel_pending_invites_for
+from services.standing import is_public, standing_of
 
 router = APIRouter()
 
@@ -94,14 +95,9 @@ async def get_character(
     character_id: Id,
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    result = await session.execute(
-        select(Character).where(
-            Character.id == character_id,
-            Character.status == CharacterStatus.active,
-        )
-    )
-    character = result.scalar_one_or_none()
-    if character is None:
+    character = await session.get(Character, character_id)
+    account = character and await session.get(Account, character.account_id)
+    if character is None or not is_public(*standing_of(account.status, character)):
         raise_coded(404, ErrorCode.character_not_found, "Character not found.")
 
     stats = await load_current_era_stats(character_id, session)
@@ -143,6 +139,7 @@ async def delete_character_route(
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot delete another character.")
     await soft_delete_character(character_id, session)
+    await cancel_pending_invites_for([character_id], session)
 
 
 @router.post("/{character_id}/avatar", response_model=CharacterOut)

@@ -1,7 +1,7 @@
 """Shared FastAPI dependencies used across multiple routers."""
 from typing import Optional
 
-from fastapi import Cookie, Depends, HTTPException
+from fastapi import Cookie, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import String, cast, select, union_all
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +18,11 @@ from models.roles import (
     Role,
 )
 from services.auth import decode_jwt, get_current_account
-from services.character import resolve_active_character
+from services.character import (
+    has_current_terms,
+    has_mod_banned_life,
+    resolve_active_character,
+)
 
 _OPTIONAL_BEARER = HTTPBearer(auto_error=False)
 
@@ -64,6 +68,46 @@ async def get_current_account_optional(
     if account is None or account.status != AccountStatus.active:
         return None
     return account
+
+
+_READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+# Writes an account may make before accepting terms (S5, #4204): signing in and
+# out, accepting, the public contact and unsubscribe forms, and leaving.
+_TERMS_EXEMPT_PREFIXES = ("/auth", "/terms", "/contact", "/email")
+_TERMS_EXEMPT_ROUTES = frozenset({("DELETE", "/me/account")})
+
+
+# Refused by their own coded rule (creation ban, not-your-life), so the gate stays out.
+_BAN_OWN_ROUTES = frozenset({("POST", "/characters"), ("POST", "/me/active-character")})
+
+
+async def require_terms(
+    request: Request,
+    session: AsyncSession = Depends(get_db, scope="function"),
+) -> None:
+    """App-wide: refuse a write without current terms or from a banned account.
+
+    Reads and exempt routes return before any query, so no read pays for it.
+    """
+    path = request.url.path
+    if (
+        request.method in _READ_METHODS
+        or path.startswith(_TERMS_EXEMPT_PREFIXES)
+        or (request.method, path) in _TERMS_EXEMPT_ROUTES
+    ):
+        return
+    account = await get_current_account_optional(
+        await _OPTIONAL_BEARER(request), request.cookies.get("access_token"), session
+    )
+    if account is None:
+        return
+    if not await has_current_terms(account.id, session):
+        raise_coded(403, ErrorCode.terms_required, "Accept the terms to continue.")
+    # S1: a mod ban on any life stops the account's writes, whichever life is carried.
+    if (request.method, path) not in _BAN_OWN_ROUTES and await has_mod_banned_life(
+        account.id, session
+    ):
+        raise_coded(403, ErrorCode.account_banned, "This account is banned.")
 
 
 async def get_current_character_optional(

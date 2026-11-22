@@ -161,7 +161,12 @@ async def deliver_invitations_to_all(
         return
     within_era = _era_window_condition(era_row, None)
     live = select(Character).where(Character.status == CharacterStatus.active)
+    # Deferred: services.character imports this module.
+    from services.character import is_playable
+
     for character in (await session.execute(live)).scalars().all():
+        if not await is_playable(character, session):
+            continue
         praxes = await _scored_praxes(character.id, within_era, session)
         contributions = await compute_contributions(
             praxes, character, era, session
