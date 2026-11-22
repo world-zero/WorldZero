@@ -383,11 +383,11 @@ async def test_search_flags_players_active_on_task_and_server_still_refuses(
     db_session: AsyncSession,
 ):
     """#4192: listed with a reason, not dropped; invite and challenge still 409."""
-    from errors import ErrorCode
     from sqlalchemy import select as sa_select
 
-    from models.era import Era
+    from errors import ErrorCode
     from models.character_stats import CharacterStats
+    from models.era import Era
     from services.auth import create_jwt
 
     era_row = (await db_session.execute(sa_select(Era))).scalar_one()
@@ -406,10 +406,15 @@ async def test_search_flags_players_active_on_task_and_server_still_refuses(
         await db_session.flush()
         db_session.add(
             CharacterStats(
-                character_id=owner.id, era_id=era_row.id, score=500, level=5, votes_spent_this_era=0
+                character_id=owner.id,
+                era_id=era_row.id,
+                score=500,
+                level=5,
+                votes_spent_this_era=0,
             )
         )
-        owners.append((owner, {"Authorization": f"Bearer {create_jwt(owner_account.id)}"}))
+        token = create_jwt(owner_account.id)
+        owners.append((owner, {"Authorization": f"Bearer {token}"}))
     await db_session.commit()
     (collab_owner, collab_headers), (duel_owner, duel_headers) = owners
     assert (
@@ -448,7 +453,8 @@ async def test_search_flags_players_active_on_task_and_server_still_refuses(
         headers=collab_headers,
     )
     assert invite.status_code == 409
-    assert invite.json()["detail"]["code"] == ErrorCode.invite_target_has_active_praxis.value
+    invite_code = invite.json()["detail"]["code"]
+    assert invite_code == ErrorCode.invite_target_has_active_praxis.value
     challenge = await client.post(
         "/duels/challenge",
         json={
@@ -458,7 +464,8 @@ async def test_search_flags_players_active_on_task_and_server_still_refuses(
         headers=duel_headers,
     )
     assert challenge.status_code == 409, challenge.text
-    assert challenge.json()["detail"]["code"] == ErrorCode.duel_opponent_has_active_praxis.value
+    challenge_code = challenge.json()["detail"]["code"]
+    assert challenge_code == ErrorCode.duel_opponent_has_active_praxis.value
 
 
 @pytest.mark.asyncio

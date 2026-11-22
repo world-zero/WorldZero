@@ -68,7 +68,7 @@ class CharacterOut(WireModel):
 
 
 class CharacterSearchOut(CharacterOut):
-    """``GET /characters`` rows: a player the task's invite/challenge would refuse is listed, flagged."""
+    """``GET /characters`` row; flagged when the task's invite/challenge would 409."""
 
     unavailable_reason: Optional[Literal["has_active_praxis"]] = None
 
