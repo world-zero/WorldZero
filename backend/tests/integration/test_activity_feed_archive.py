@@ -1147,7 +1147,9 @@ async def test_an_invitation_letter_names_no_actor(
     client: AsyncClient, full_feed: dict, auth_headers: dict
 ):
     feed = await _feed(client, auth_headers, REQUESTS_FILTER)
-    letters = [i for i in feed["items"] if i["type"] == FEED_ITEM_TYPE_INVITATION_LETTER]
+    letters = [
+        i for i in feed["items"] if i["type"] == FEED_ITEM_TYPE_INVITATION_LETTER
+    ]
     assert letters
     assert all(i["actor_display_name"] is None for i in letters)
     assert all(i["actor_faction_slug"] == i["payload"]["faction_slug"] for i in letters)
