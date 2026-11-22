@@ -1,13 +1,14 @@
 """An unreviewed or over-priced metatask can't mint points (#3918)."""
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import update
+from sqlalchemy import select, update
 
 from game_config import CURRENT_ERA
 from models.character_stats import CharacterStats
 from models.meta_task import PraxisMetaTask
 from models.praxis import PraxisStatus
 from models.task import TaskStatus, TaskType
+from services.character_stats import recalculate_character_stats
 from services.meta_task import get_meta_task_points_bulk
 from tests.integration.factories import make_character, make_solo_praxis, make_task
 
@@ -113,3 +114,60 @@ async def test_proposal_edit_is_capped(
 
     assert resp.status_code == 422
     assert resp.json()["detail"]["code"] == "TASK_POINTS_TOO_HIGH"
+
+
+async def _score(db_session, character_id) -> int:
+    await recalculate_character_stats(character_id, db_session, emit_taunts=False)
+    await db_session.commit()
+    return await db_session.scalar(
+        select(CharacterStats.score)
+        .where(CharacterStats.character_id == character_id)
+        .execution_options(populate_existing=True)
+    )
+
+
+async def _submitted_praxis_with_meta(db_session, character, point_value, status):
+    task = await make_task(db_session, character)
+    meta = await make_task(
+        db_session, character, title="m", point_value=point_value,
+        task_type=TaskType.metatask, status=status,
+    )
+    praxis = await make_solo_praxis(db_session, task, character)
+    db_session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=meta.id))
+    await db_session.commit()
+    return praxis, meta
+
+
+@pytest.mark.asyncio
+async def test_a_withdrawn_metatask_scores_without_its_bonus_and_votes_still_land(
+    client, db_session, character, character2, era, some_faction, auth_headers2
+):
+    praxis, meta = await _submitted_praxis_with_meta(
+        db_session, character, 100, TaskStatus.active
+    )
+    paid = await _score(db_session, character.id)
+    assert paid >= 100
+
+    meta.status = TaskStatus.deleted
+    await db_session.commit()
+
+    assert await _score(db_session, character.id) == paid - 100
+    resp = await client.post(
+        f"/praxes/{praxis.id}/vote", json={"value": 4}, headers=auth_headers2
+    )
+    assert resp.status_code == 200, resp.text
+
+
+@pytest.mark.asyncio
+async def test_a_self_applied_huge_probe_never_raises_the_score(
+    client, db_session, character, character2, era, some_faction, auth_headers2
+):
+    praxis, _ = await _submitted_praxis_with_meta(
+        db_session, character, 2_000_000_000, TaskStatus.pending
+    )
+    assert await _score(db_session, character.id) < 2_000_000_000
+    resp = await client.post(
+        f"/praxes/{praxis.id}/vote", json={"value": 4}, headers=auth_headers2
+    )
+    assert resp.status_code == 200, resp.text
+    assert await _score(db_session, character.id) < 2_000_000_000

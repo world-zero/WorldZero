@@ -22,7 +22,11 @@ from models.task import Task, TaskStatus
 from services import collab_consensus
 from services import praxis as praxis_service
 from services.auth import create_jwt
-from services.duel import get_duel_detail, settle_lapsed_duels
+from services.duel import (
+    get_duel_detail,
+    respond_to_duel_challenge,
+    settle_lapsed_duels,
+)
 from services.praxis_visibility import duel_side_hidden_condition
 from tests.integration.factories import make_duel
 
@@ -137,9 +141,11 @@ async def test_a_cast_opponent_is_not_forfeited(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("window", [CURRENT_ERA.duel_challenge_lapse_days, None])
 async def test_challenge_the_opponent_cannot_accept_declines_at_once(
-    db_session: AsyncSession, era: Era, some_faction: Faction
+    db_session: AsyncSession, era: Era, some_faction: Faction, window
 ):
+    era_config = replace(CURRENT_ERA, duel_challenge_lapse_days=window)
     retired, *_ = await _duel(
         db_session, era, "lp4", status=DuelStatus.pending, age_days=0
     )
@@ -157,7 +163,7 @@ async def test_challenge_the_opponent_cannot_accept_declines_at_once(
     )
     await db_session.commit()
 
-    await settle_lapsed_duels(db_session, CURRENT_ERA)
+    await settle_lapsed_duels(db_session, era_config)
 
     for duel in (retired, low, fine):
         await db_session.refresh(duel)
@@ -187,6 +193,22 @@ async def test_a_lapsed_challenge_cannot_be_accepted(
         detail_code(resp.json()["detail"])
         == ErrorCode.duel_challenge_already_resolved.value
     )
+
+
+@pytest.mark.asyncio
+async def test_with_no_challenge_window_an_old_challenge_still_accepts(
+    db_session: AsyncSession, era: Era, some_faction: Faction
+):
+    duel, _, opponent = await _duel(
+        db_session, era, "lp7n", status=DuelStatus.pending, age_days=400
+    )
+    never = replace(CURRENT_ERA, duel_challenge_lapse_days=None)
+
+    _, accepted = await respond_to_duel_challenge(
+        duel.id, opponent.id, True, db_session, never
+    )
+
+    assert accepted.status == DuelStatus.active
 
 
 @pytest.mark.asyncio

@@ -1,8 +1,5 @@
-/**
- * #3937: the image-adjust modal scrolls from the card's top on a short (landscape) screen.
- * `align-items: center` clips the overflow off the top where nothing can reach it; the
- * overlay scrolls and the card centres with auto margins (the #3850 duel-seal pattern).
- */
+// `align-items: center` clips a tall modal's top off-screen on a short (landscape) screen;
+// the overlay must scroll and the card centre with auto margins (the duel-seal pattern).
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, it, expect } from 'vitest'
 import '../../i18n'

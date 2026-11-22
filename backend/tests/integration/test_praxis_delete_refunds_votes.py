@@ -10,6 +10,7 @@ from models.praxis import PraxisStatus
 from models.vote import Vote
 from services.character_stats import recompute_votes_spent_this_era
 from services.praxis import delete_praxis
+from services.scoring import compute_votes_available
 from tests.integration.factories import cast_vote, make_solo_praxis, make_task
 from tests.integration.test_vote_era_followups import _live_era_after
 
@@ -25,6 +26,17 @@ async def _spent(db_session, character_id, era_id) -> int:
         .execution_options(populate_existing=True)
     )
     return row.scalar_one()
+
+
+async def _available(db_session, character_id, era_id) -> int:
+    row = await db_session.execute(
+        select(CharacterStats)
+        .where(
+            CharacterStats.character_id == character_id, CharacterStats.era_id == era_id
+        )
+        .execution_options(populate_existing=True)
+    )
+    return compute_votes_available(row.scalar_one())
 
 
 async def _unsubmit_delete(client, praxis_id, author_headers):
@@ -44,12 +56,15 @@ async def _vote(client, praxis_id, headers):
 async def test_delete_refunds_the_voter_and_the_recompute_finds_no_drift(
     client, db_session, character2, praxis_solo, era, auth_headers, auth_headers2
 ):
+    before = await _available(db_session, character2.id, era.id)
     await _vote(client, praxis_solo.id, auth_headers2)
     assert await _spent(db_session, character2.id, era.id) == 1
+    assert await _available(db_session, character2.id, era.id) == before - 1
 
     await _unsubmit_delete(client, praxis_solo.id, auth_headers)
 
     assert await _spent(db_session, character2.id, era.id) == 0
+    assert await _available(db_session, character2.id, era.id) == before
     repairs = await recompute_votes_spent_this_era(
         db_session, era_row=era, dry_run=True
     )
