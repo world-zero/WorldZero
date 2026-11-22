@@ -386,10 +386,15 @@ async def test_an_unknown_type_is_ignored_and_an_empty_list_filters_nothing(
 async def test_a_malformed_before_cursor_is_a_422_not_a_500(
     client: AsyncClient, character: Character, auth_headers: dict
 ):
-    response = await client.get(
-        "/activity-feed", params={"before": "not-a-date"}, headers=auth_headers
-    )
-    assert response.status_code == 422, response.text
+    for bad in (
+        "not-a-date",
+        "2999-01-01T00:00:00+00:00|global_task|99999999999",
+        f"2999-01-01T00:00:00+00:00|global_task|{2**31}",
+    ):
+        response = await client.get(
+            "/activity-feed", params={"before": bad}, headers=auth_headers
+        )
+        assert response.status_code == 422, response.text
 
     good = await client.get(
         "/activity-feed",
