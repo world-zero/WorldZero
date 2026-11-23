@@ -55,6 +55,12 @@
       "title": "A new task is out",
       "body": "{{task}}"
     },
+    "copy_proposal": {
+      "title": "PR {{task}} wants to change your copy",
+      "body": "One line of your wording. Review it and tap Approve or Reject.",
+      "titleMany": "PR {{task}} wants to change your copy",
+      "bodyMany": "{{count}} lines of your wording. Review them and tap Approve or Reject."
+    },
     "default": {
       "title": "Something happened",
       "body": "Open World Zero to see."

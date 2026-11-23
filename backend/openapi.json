@@ -1905,6 +1905,182 @@
         "title": "CopyOverrideOut",
         "type": "object"
       },
+      "CopyProposalIn": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CopyProposalLineIn"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Lines",
+            "type": "array"
+          },
+          "pr_number": {
+            "minimum": 1.0,
+            "title": "Pr Number",
+            "type": "integer"
+          },
+          "pr_url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Pr Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pr_number",
+          "pr_url",
+          "lines"
+        ],
+        "title": "CopyProposalIn",
+        "type": "object"
+      },
+      "CopyProposalLineIn": {
+        "properties": {
+          "key": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^[\\w.-]+$",
+            "title": "Key",
+            "type": "string"
+          },
+          "ns": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[\\w-]+$",
+            "title": "Ns",
+            "type": "string"
+          },
+          "owner_value": {
+            "maxLength": 5000,
+            "title": "Owner Value",
+            "type": "string"
+          },
+          "proposed_value": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Value"
+          }
+        },
+        "required": [
+          "ns",
+          "key",
+          "owner_value",
+          "proposed_value"
+        ],
+        "title": "CopyProposalLineIn",
+        "type": "object"
+      },
+      "CopyProposalLineOut": {
+        "properties": {
+          "key": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^[\\w.-]+$",
+            "title": "Key",
+            "type": "string"
+          },
+          "ns": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[\\w-]+$",
+            "title": "Ns",
+            "type": "string"
+          },
+          "owner_value": {
+            "maxLength": 5000,
+            "title": "Owner Value",
+            "type": "string"
+          },
+          "proposed_value": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Value"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LineStatus"
+          }
+        },
+        "required": [
+          "ns",
+          "key",
+          "owner_value",
+          "proposed_value",
+          "status"
+        ],
+        "title": "CopyProposalLineOut",
+        "type": "object"
+      },
+      "CopyProposalLineRef": {
+        "description": "The line to settle: ns + key, not an index, so a replace cannot shift it.",
+        "properties": {
+          "key": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "ns": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Ns",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ns",
+          "key"
+        ],
+        "title": "CopyProposalLineRef",
+        "type": "object"
+      },
+      "CopyProposalOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CopyProposalLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "pr_number": {
+            "title": "Pr Number",
+            "type": "integer"
+          },
+          "pr_url": {
+            "title": "Pr Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "pr_number",
+          "pr_url",
+          "lines"
+        ],
+        "title": "CopyProposalOut",
+        "type": "object"
+      },
       "CurrentUser": {
         "properties": {
           "account_id": {
@@ -4932,6 +5108,15 @@
         ],
         "title": "LevelUnlockOut",
         "type": "object"
+      },
+      "LineStatus": {
+        "enum": [
+          "open",
+          "approved",
+          "rejected"
+        ],
+        "title": "LineStatus",
+        "type": "string"
       },
       "LogoutOut": {
         "description": "``POST /auth/logout`` ack; the work is the ``Set-Cookie`` header.",
@@ -12754,6 +12939,263 @@
           }
         ],
         "summary": "Put Copy Override",
+        "tags": [
+          "copy"
+        ]
+      }
+    },
+    "/copy-proposals": {
+      "get": {
+        "description": "Proposals with at least one open line, newest first.",
+        "operationId": "list_copy_proposals_copy_proposals_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CopyProposalOut"
+                  },
+                  "title": "Response List Copy Proposals Copy Proposals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Copy Proposals",
+        "tags": [
+          "copy"
+        ]
+      },
+      "post": {
+        "operationId": "file_copy_proposal_copy_proposals_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-copy-proposal-token",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 256,
+              "title": "X-Copy-Proposal-Token",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyProposalIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopyProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "File Copy Proposal",
+        "tags": [
+          "copy"
+        ]
+      }
+    },
+    "/copy-proposals/{proposal_id}/approve": {
+      "post": {
+        "operationId": "approve_copy_proposal_line_copy_proposals__proposal_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyProposalLineRef"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopyProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Approve Copy Proposal Line",
+        "tags": [
+          "copy"
+        ]
+      }
+    },
+    "/copy-proposals/{proposal_id}/reject": {
+      "post": {
+        "operationId": "reject_copy_proposal_line_copy_proposals__proposal_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyProposalLineRef"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CopyProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reject Copy Proposal Line",
         "tags": [
           "copy"
         ]

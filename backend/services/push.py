@@ -29,10 +29,18 @@ from game_config import CURRENT_ERA, EraConfig
 from models.account import Account, AccountStatus
 from models.character import Character, CharacterStatus
 from models.comment import Comment, CommentMention
+from models.copy_proposal import CopyProposal
 from models.duel import Duel
 from models.praxis import ModerationStatus, Praxis, PraxisInvite, PraxisMember
 from models.push_subscription import PushSubscription
 from models.relationship import Relationship
+from models.roles import (
+    OWNER_ROLE_NAME,
+    AccountPermission,
+    AccountRole,
+    Permission,
+    Role,
+)
 from models.task import Task
 from models.vote import Vote
 from services.activity_feed import (
@@ -272,7 +280,7 @@ async def notify(
     if push_on and pref.by_push:
         await _queue_push(
             session,
-            recipient,
+            recipient.account_id,
             {
                 "kind": kind,
                 "tag": tag,
@@ -286,13 +294,11 @@ async def notify(
         )
 
 
-async def _queue_push(
-    session: AsyncSession, recipient: Character, payload: dict
-) -> None:
+async def _queue_push(session: AsyncSession, account_id: int, payload: dict) -> None:
     subscriptions = (
         await session.scalars(
             select(PushSubscription).where(
-                PushSubscription.account_id == recipient.account_id
+                PushSubscription.account_id == account_id
             )
         )
     ).all()
@@ -501,6 +507,41 @@ async def notify_broadcast(
     )
     for recipient_id in owners.all():
         await notify(session, kind=kind, recipient_id=recipient_id, tag=tag, url=url)
+
+
+#: Not a preference row: an owner chore, sent to any device the holder subscribed.
+COPY_PROPOSAL_KIND = "copy_proposal"
+#: Where the approval page lives; the frontend half routes it.
+COPY_PROPOSALS_URL = "/admin/copy-proposals"
+
+
+async def notify_copy_proposal(session: AsyncSession, proposal: CopyProposal) -> None:
+    """Tell every account holding ``edit_copy`` that a PR wants to change owner copy."""
+    if not push_available():
+        return
+    payload = {
+        "kind": COPY_PROPOSAL_KIND,
+        "tag": f"{COPY_PROPOSAL_KIND}:{proposal.pr_number}",
+        "url": COPY_PROPOSALS_URL,
+        "task": f"#{proposal.pr_number}",
+        "count": len(proposal.lines),
+    }
+    # Mirrors ``dependencies.account_grants`` (the owner holds every permission); not
+    # imported from there because ``dependencies`` reaches back into this module.
+    holders = select(AccountPermission.account_id).where(
+        AccountPermission.permission == Permission.edit_copy
+    ).union(
+        select(AccountRole.account_id)
+        .join(Role, Role.id == AccountRole.role_id)
+        .where(Role.name == OWNER_ROLE_NAME)
+    )
+    active = await session.scalars(
+        select(Account.id).where(
+            Account.id.in_(holders), Account.status == AccountStatus.active
+        )
+    )
+    for account_id in active.all():
+        await _queue_push(session, account_id, payload)
 
 
 #: Every preference row's sender; a test pins this to ``NOTIFICATION_EVENTS``.

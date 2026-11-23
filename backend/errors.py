@@ -225,6 +225,9 @@ class ErrorCode(str, enum.Enum):
     copy_override_not_found = "COPY_OVERRIDE_NOT_FOUND"
     copy_override_changed = "COPY_OVERRIDE_CHANGED"
 
+    #: 404: no such proposal, or the line is already approved or rejected.
+    copy_proposal_not_found = "COPY_PROPOSAL_NOT_FOUND"
+
     # -- Population dial (#3656) --------------------------------------------
     #: 422: a PUT named a dial the live era does not declare.
     population_dial_unknown = "POPULATION_DIAL_UNKNOWN"

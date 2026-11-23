@@ -230,6 +230,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `comment.py` | `comment_mention` | `id` | `comment_id`, `mentioned_character_id` |
 | `contact.py` | `contact_message` | `id` | — |
 | `copy_override.py` | `copy_override` | `(ns, key)` — **composite VARCHAR, no `Identity()`** | `updated_by_id` |
+| `copy_proposal.py` | `copy_proposal` | `id` | — |
 | `duel.py` | `duel` | `id` | `task_id`, `challenger_praxis_id`, `opponent_praxis_id`, `opponent_character_id`, `forfeited_by_character_id`, `winner_character_id`, `resolved_era_id` |
 | `era.py` | `era` | `id` | `started_by_id` |
 | `faction.py` | `faction` | `slug` (**VARCHAR — the exception**) | — |
@@ -256,7 +257,7 @@ copy key, which is likewise written by a human and has no surrogate id.
 | `terms_acceptance.py` | `terms_acceptance` | `id` | `account_id` |
 | `vote.py` | `vote` | `id` | `praxis_id`, `voter_character_id`, `voter_account_id`, `era_id` |
 
-36 tables, 65 integer foreign keys, 5 string ones.
+37 tables, 65 integer foreign keys, 5 string ones.
 
 `backend/tests/unit/test_model_conventions.py` parses this table and asserts both
 halves against `Base.metadata`, so a new model that skips this list fails there.

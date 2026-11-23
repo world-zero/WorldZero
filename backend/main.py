@@ -13,7 +13,17 @@ from config import settings
 from db import AsyncSessionLocal, engine
 from dependencies import require_terms
 from routers import activity_feed, admin, auth, characters, duel, factions, game_config, leaderboard, praxes, relationships, tasks, votes
-from routers import comments, contact, copy, email, google_photos, me, push, terms
+from routers import (
+    comments,
+    contact,
+    copy,
+    copy_proposals,
+    email,
+    google_photos,
+    me,
+    push,
+    terms,
+)
 from schemas.system import HealthOut
 from services.character_stats import deliver_invitations_to_all
 from services.era import rebind_live_era
@@ -175,6 +185,7 @@ app.include_router(terms.router, prefix="/terms", tags=["terms"])
 app.include_router(push.router, prefix="/push", tags=["push"])
 app.include_router(email.router, prefix="/email", tags=["email"])
 app.include_router(copy.router, tags=["copy"])  # prefix embedded (/copy-overrides)
+app.include_router(copy_proposals.router, tags=["copy"])
 
 
 @app.get("/health", response_model=HealthOut)
