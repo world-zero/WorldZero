@@ -26,7 +26,8 @@ puts them on different hostnames and holds the certificates.
 | `backup.sh` | `/srv/worldzero/backup.sh` | `bootstrap.sh` installs the cron |
 
 Application secrets live only in those `.env` files on the server. GitHub holds
-three secrets — an SSH host, key and pinned host key — and nothing else. Images
+four secrets: an SSH host, key and pinned host key, and the copy proposal token
+(#4280), which is also in the dev `.env`. Nothing else. Images
 are public on GHCR, so the box needs no registry login.
 
 **Local development is not this.** `docker-compose.yml` at the repo root builds
@@ -99,13 +100,14 @@ ssh-keyscan -t ed25519 <server-ip>
 
 ## 3. GitHub
 
-**Settings → Secrets and variables → Actions → Repository secrets.** Three:
+**Settings → Secrets and variables → Actions → Repository secrets.** Four:
 
 | Secret | Value |
 |---|---|
 | `SSH_HOST` | the server's IPv4 |
 | `SSH_PRIVATE_KEY` | all of `~/.ssh/wz_deploy`, `BEGIN`/`END` lines included |
 | `SSH_KNOWN_HOSTS` | the `ssh-keyscan` output line from step 2 |
+| `COPY_PROPOSAL_TOKEN` | a random token (`openssl rand -hex 32`); the same value goes in the dev `.env`. Lets the copy guard file proposals (#4280) |
 
 **Settings → Environments → New environment → `production`.** Add yourself under
 *Required reviewers*, and set the deployment branch/tag rule to `v*`. This is the
