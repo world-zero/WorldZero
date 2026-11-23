@@ -19,6 +19,8 @@ export interface ConfirmRequest {
   /** Not rendered: keys the focus effect and names the case for tests. */
   kind: string
   title: string
+  /** Title names the dialog for screen readers only. */
+  hideTitle?: boolean
   /** The consequence, never "are you sure". */
   body: string
   /** A consequence that applies to some instances of this case only. */
@@ -95,7 +97,7 @@ export default function ConfirmDialog({
       >
         <h2
           id={titleId}
-          className="font-display"
+          className={request.hideTitle ? 'sr-only' : 'font-display'}
           style={{
             fontSize: 'var(--text-content)',
             color: 'var(--color-text-primary)',

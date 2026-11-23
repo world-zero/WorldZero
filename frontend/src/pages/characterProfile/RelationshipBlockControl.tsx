@@ -29,6 +29,7 @@ const tString = i18n.t as unknown as (
 export function blockConfirm(displayName: string): ConfirmRequest {
   return {
     kind: 'blockRelationship',
+    hideTitle: true,
     title: tString('common:relationships.blockConfirm.title', {
       name: displayName,
     }),

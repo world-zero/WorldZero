@@ -36,7 +36,7 @@
     "notFound": "Character not found.",
     "notOwner": "You can only edit your own character.",
     "heading": "Edit character",
-    "intro": "Your character is yours before any faction is. Set your portrait, name and story — it follows you onto every task and praxis you submit.",
+    "intro": "You are never above changing for the better.",
     "avatarHint": "Unlike Dorian Gray, you will age before your portrait does. With no portrait, you will show up as “{{initial}}”. You and this text will age at the same rate.",
     "displayNameCount": "{{count}}/50",
     "handleHint": "Auto-derived · permanent",
@@ -322,7 +322,7 @@
     },
     "successMeta": {
       "heading": "Metatask proposed!",
-      "body": "An admin will review it, and only admins can see it for its first {{hours}} hours; other players see it after that. Once activated it is listed under {{faction}}, which records who issued it rather than who may use it: players of any faction can apply it to their praxis for a points bonus."
+      "body": "The grand council of moderators will review your task idea and determine its fate."
     },
     "factionLabel": "Faction",
     "fields": {
