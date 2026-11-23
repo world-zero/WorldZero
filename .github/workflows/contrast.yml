@@ -23,6 +23,7 @@ jobs:
   # Same gate as test.yml's scope job; a failure here runs the sweep.
   scope:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       scope: ${{ steps.s.outputs.scope }}
     steps:
@@ -40,6 +41,7 @@ jobs:
     needs: scope
     if: ${{ !cancelled() && needs.scope.outputs.scope != 'ci' && needs.scope.outputs.scope != 'copy' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     services:
       postgres:
