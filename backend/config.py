@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     COOKIE_DOMAIN: str | None = None
     ADMIN_CLI_SECRET: str = ""
+    # Blank = POST /copy-proposals refuses everyone.
+    COPY_PROPOSAL_TOKEN: str = ""
     # Comma-separated. Read by CORSMiddleware AND the praxis room's own Origin
     # check (CORS doesn't cover WebSockets) — keep it one list (ADR-0073).
     # A ``str``: pydantic-settings would parse ``list[str]`` as JSON.

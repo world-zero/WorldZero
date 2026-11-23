@@ -114,6 +114,7 @@ describe('the owner', () => {
       'Faction copy',
       'Level-up copy',
       'Taunt copy',
+      'Copy proposals',
       'Roll into a new era…',
     ])
     cleanup()

@@ -1125,6 +1125,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/copy-proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Copy Proposals
+         * @description Proposals with at least one open line, newest first.
+         */
+        get: operations["list_copy_proposals_copy_proposals_get"];
+        put?: never;
+        /** File Copy Proposal */
+        post: operations["file_copy_proposal_copy_proposals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/copy-proposals/{proposal_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Copy Proposal Line */
+        post: operations["approve_copy_proposal_line_copy_proposals__proposal_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/copy-proposals/{proposal_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject Copy Proposal Line */
+        post: operations["reject_copy_proposal_line_copy_proposals__proposal_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/duels/challenge": {
         parameters: {
             query?: never;
@@ -2977,6 +3032,62 @@ export interface components {
             /** Value */
             value: string;
         };
+        /** CopyProposalIn */
+        CopyProposalIn: {
+            /** Lines */
+            lines: components["schemas"]["CopyProposalLineIn"][];
+            /** Pr Number */
+            pr_number: number;
+            /**
+             * Pr Url
+             * Format: uri
+             */
+            pr_url: string;
+        };
+        /** CopyProposalLineIn */
+        CopyProposalLineIn: {
+            /** Key */
+            key: string;
+            /** Ns */
+            ns: string;
+            /** Owner Value */
+            owner_value: string;
+            /** Proposed Value */
+            proposed_value: string | null;
+        };
+        /** CopyProposalLineOut */
+        CopyProposalLineOut: {
+            /** Key */
+            key: string;
+            /** Ns */
+            ns: string;
+            /** Owner Value */
+            owner_value: string;
+            /** Proposed Value */
+            proposed_value: string | null;
+            status: components["schemas"]["LineStatus"];
+        };
+        /**
+         * CopyProposalLineRef
+         * @description The line to settle: ns + key, not an index, so a replace cannot shift it.
+         */
+        CopyProposalLineRef: {
+            /** Key */
+            key: string;
+            /** Ns */
+            ns: string;
+        };
+        /** CopyProposalOut */
+        CopyProposalOut: {
+            /** Id */
+            id: number;
+            /** Lines */
+            lines: components["schemas"]["CopyProposalLineOut"][];
+            /** Pr Number */
+            pr_number: number;
+            /** Pr Url */
+            pr_url: string;
+        };
         /** CurrentUser */
         CurrentUser: {
             /** Account Id */
@@ -4278,6 +4389,11 @@ export interface components {
             /** Kind */
             kind: string;
         };
+        /**
+         * LineStatus
+         * @enum {string}
+         */
+        LineStatus: "open" | "approved" | "rejected";
         /**
          * LogoutOut
          * @description ``POST /auth/logout`` ack; the work is the ``Set-Cookie`` header.
@@ -7825,6 +7941,146 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_copy_proposals_copy_proposals_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyProposalOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    file_copy_proposal_copy_proposals_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-copy-proposal-token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyProposalIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyProposalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_copy_proposal_line_copy_proposals__proposal_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyProposalLineRef"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyProposalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_copy_proposal_line_copy_proposals__proposal_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposal_id: number;
+            };
+            cookie?: {
+                access_token?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyProposalLineRef"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CopyProposalOut"];
+                };
             };
             /** @description Validation Error */
             422: {

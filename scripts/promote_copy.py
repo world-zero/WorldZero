@@ -17,6 +17,8 @@ Revert a row in the copy-edit page to release its key. Stdlib only.
 
 import difflib
 import json
+import os
+
 import re
 import subprocess
 import sys
@@ -119,8 +121,9 @@ def promote(overrides: list[dict], catalogs: Path) -> list[str]:
     return changed + markers
 
 
-def guard(overrides: list[dict], read_base, read_head) -> list[str]:
-    """Owner-written keys this diff changes or removes. ``read_*(ns)`` -> catalog or None.
+def guard_lines(overrides: list[dict], read_base, read_head) -> list[dict]:
+    """Owner-written keys this diff changes or removes, as copy-proposal lines.
+    ``read_*(ns)`` -> catalog or None.
 
     A key absent at the base is not this diff's; a head value equal to the override
     is the bake itself, and one only a typo fix away from it is the owner's wording.
@@ -141,9 +144,39 @@ def guard(overrides: list[dict], read_base, read_head) -> list[str]:
         was, now = b[0][b[1]], (h[0][h[1]] if h else None)
         if now == was or now == o["value"] or (now is not None and is_typo_fix(o["value"], now)):
             continue
-        what = "removes" if now is None else "rewrites"
-        out.append(f"{ns}:{key} — this PR {what} copy the owner wrote. Keep it as: {o['value']!r}")
+        out.append({"ns": ns, "key": key, "owner_value": o["value"], "proposed_value": now})
     return out
+
+
+def guard(overrides: list[dict], read_base, read_head) -> list[str]:
+    return [
+        f"{h['ns']}:{h['key']} — this PR {'removes' if h['proposed_value'] is None else 'rewrites'}"
+        f" copy the owner wrote. Keep it as: {h['owner_value']!r}"
+        for h in guard_lines(overrides, read_base, read_head)
+    ]
+
+
+def proposal_payload(lines: list[dict], pr_number: str, pr_url: str) -> dict:
+    return {"pr_number": int(pr_number), "pr_url": pr_url, "lines": lines}
+
+
+def _file_proposal(lines: list[dict]) -> None:
+    """Best effort: the guard fails either way, so nothing here may raise or exit."""
+    token = os.environ.get("COPY_PROPOSAL_TOKEN")
+    number, url = os.environ.get("PR_NUMBER"), os.environ.get("PR_URL")
+    if not (token and number and url):
+        print("No copy proposal filed: COPY_PROPOSAL_TOKEN, PR_NUMBER and PR_URL must all be set (fork PRs get no secrets).", file=sys.stderr)
+        return
+    try:
+        request = urllib.request.Request(
+            f"{API['dev']}/copy-proposals",
+            data=json.dumps(proposal_payload(lines, number, url)).encode(),
+            headers={"Content-Type": "application/json", "X-Copy-Proposal-Token": token},
+        )
+        urllib.request.urlopen(request, timeout=20).close()
+        print("Filed a copy proposal; the owner has been pushed.")
+    except (OSError, ValueError) as e:
+        print(f"No copy proposal filed: POST failed ({e}).", file=sys.stderr)
 
 
 def _fetch(env: str) -> list[dict]:
@@ -256,6 +289,12 @@ def _check() -> None:
         assert "removes" in hits[1] and "rewrites" in hits[0], hits
         assert guard(ov, lambda ns: None, lambda ns: head) == []
 
+        # Proposal payload: one line per hit; a removal proposes null.
+        lines = guard_lines(ov, lambda ns: base, lambda ns: head)
+        assert lines[1] == {"ns": "x", "key": "removed", "owner_value": "mine", "proposed_value": None}, lines
+        assert proposal_payload(lines, "7", "https://github.com/o/r/pull/7") == {
+            "pr_number": 7, "pr_url": "https://github.com/o/r/pull/7", "lines": lines}
+
         # Typo-class rule; the cases file is shared with the frontend's vitest.
         for old, new, expected in json.loads((Path(__file__).parent / "copy_typo_cases.json").read_text()):
             assert is_typo_fix(old, new) is expected, (old, new, expected)
@@ -299,7 +338,10 @@ if __name__ == "__main__":
         # An unresolved ref would read as "no key at base" and pass everything.
         if subprocess.run(["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"], capture_output=True).returncode:
             sys.exit(f"--guard: {ref!r} is not a commit here; fetch it (fetch-depth: 0) and rerun.")
-        hits = guard(_fetch("dev"), _git_catalog(ref), _disk_catalog)
+        overrides = _fetch("dev")
+        hits = guard(overrides, _git_catalog(ref), _disk_catalog)
+        if hits:
+            _file_proposal(guard_lines(overrides, _git_catalog(ref), _disk_catalog))
         for line in hits:
             print(f"::error::{line}")
         if hits:

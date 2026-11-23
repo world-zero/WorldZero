@@ -38,13 +38,8 @@ const letters = (parts: string[]) => [...parts.join(' ').toLowerCase()].filter((
 const count = (re: RegExp, text: string) => (text.match(re) ?? []).length
 const sameSorted = (x: string[], y: string[]) => x.slice().sort().join('\u0000') === y.slice().sort().join('\u0000')
 
-/**
- * Null when `next` is not a typo-class fix of `old`. Otherwise `next`'s words with
- * `changed` flagging those that differ (a pure punctuation delete flags none).
- */
-export function typoDiff(old: string, next: string): { words: string[]; changed: boolean[] } | null {
-  if (!sameSorted(old.match(TAGS) ?? [], next.match(TAGS) ?? [])) return null
-  if (!sameSorted(old.match(/[0-9]+/g) ?? [], next.match(/[0-9]+/g) ?? [])) return null
+/** `next`'s words with `changed` flagging those not carried over from `old`; no typo gating. */
+export function wordDiff(old: string, next: string) {
   const a = words(old)
   const b = words(next)
   const changed = b.map(() => true)
@@ -57,6 +52,17 @@ export function typoDiff(old: string, next: string): { words: string[]; changed:
     i = ai + size
     j = bj + size
   }
+  return { a, b, words: b, changed, hunks }
+}
+
+/**
+ * Null when `next` is not a typo-class fix of `old`. Otherwise `next`'s words with
+ * `changed` flagging those that differ (a pure punctuation delete flags none).
+ */
+export function typoDiff(old: string, next: string): { words: string[]; changed: boolean[] } | null {
+  if (!sameSorted(old.match(TAGS) ?? [], next.match(TAGS) ?? [])) return null
+  if (!sameSorted(old.match(/[0-9]+/g) ?? [], next.match(/[0-9]+/g) ?? [])) return null
+  const { a, b, changed, hunks } = wordDiff(old, next)
   for (const [i1, i2, j1, j2] of hunks) {
     const x = letters(a.slice(i1, i2))
     const y = letters(b.slice(j1, j2))
