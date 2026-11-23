@@ -25,7 +25,9 @@
   ["Take the quest", "", false],
   ["Take the quest", "Take quest", false],
   ["he left", "she left", false],
-  ["teh quest", "the quest", true],
-  ["adn then", "and then", true],
-  ["Take it", "Take its", false]
+  ["teh quest", "the quest", false],
+  ["adn then", "and then", false],
+  ["Take it", "Take its", false],
+  ["I was there", "I saw there", false],
+  ["We won", "We now", false]
 ]

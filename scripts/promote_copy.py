@@ -54,10 +54,9 @@ def is_typo_fix(old: str, new: str) -> bool:
             continue  # punctuation only
         if tag != "replace" or abs(len(x) - len(y)) > 2:
             return False
-        if len(x) <= 3 and len(y) <= 3:  # a ratio can't tell he/she from teh/the
-            if sorted(x) != sorted(y):
-                return False
-        elif difflib.SequenceMatcher(None, x, y, autojunk=False).ratio() < 0.75:
+        if difflib.SequenceMatcher(None, x, y, autojunk=False).ratio() < 0.75:
+            return False
+        if len(x) <= 3 and len(y) <= 3 and sorted(x) != sorted(y):  # ratio alone can't tell he/she apart
             return False
         if len(_NEGATION.findall(" ".join(a[i1:i2]).lower())) != len(_NEGATION.findall(" ".join(b[j1:j2]).lower())):
             return False
@@ -108,9 +107,13 @@ def promote(overrides: list[dict], catalogs: Path) -> list[str]:
             changed.append(f"REFUSE {o['ns']}:{o['key']} — not a string in the catalog; nothing written")
             continue
         node, leaf = slot
-        if node[leaf] != o["value"] and not is_typo_fix(o["value"], node[leaf]):
-            node[leaf] = o["value"]
-            changed.append(f"{o['ns']}:{o['key']} = {o['value']!r}")
+        if node[leaf] == o["value"]:
+            continue
+        if is_typo_fix(o["value"], node[leaf]):
+            changed.append(f"KEEP {o['ns']}:{o['key']} — catalog is a typo-class variant of the override; check which spelling is right")
+            continue
+        node[leaf] = o["value"]
+        changed.append(f"{o['ns']}:{o['key']} = {o['value']!r}")
     for path, data in files.items():
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
     return changed + markers
@@ -186,6 +189,12 @@ def _check() -> None:
         )
         assert json.loads(p.read_text()) == {"a": {"b": "new", "c": "same"}}
         assert len(out) == 2 and out[1].startswith("SKIP"), out
+
+        p.write_text('{"a": {"b": "Ask Magestra"}}')
+        out = promote([{"ns": "x", "key": "a.b", "value": "Ask Magistra"}], Path(d))
+        assert json.loads(p.read_text()) == {"a": {"b": "Ask Magestra"}}
+        assert out[0].startswith("KEEP x:a.b "), out
+        p.write_text('{"a": {"b": "old", "c": "same"}}')
 
         # Markers (#3114).
         p.write_text('{"a": {"b": "keep"}}')

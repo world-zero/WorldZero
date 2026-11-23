@@ -62,8 +62,8 @@ export function typoDiff(old: string, next: string): { words: string[]; changed:
     const y = letters(b.slice(j1, j2))
     if (x.length === 0 && y.length === 0) continue
     if (i1 === i2 || j1 === j2 || Math.abs(x.length - y.length) > 2) return null
-    // A ratio can't tell he/she from teh/the: short hunks must be anagrams.
-    if (x.length <= 3 && y.length <= 3 ? x.slice().sort().join('') !== y.slice().sort().join('') : ratio(x, y) < 0.75)
+    // A ratio can't tell he/she apart, so short hunks must also be anagrams.
+    if (ratio(x, y) < 0.75 || (x.length <= 3 && y.length <= 3 && x.slice().sort().join('') !== y.slice().sort().join('')))
       return null
     if (count(NEGATION, a.slice(i1, i2).join(' ').toLowerCase()) !== count(NEGATION, b.slice(j1, j2).join(' ').toLowerCase()))
       return null
