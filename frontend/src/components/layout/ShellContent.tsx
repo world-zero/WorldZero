@@ -18,7 +18,7 @@ interface ShellContentProps {
   /** Held by `Layout`: tests call `ShellContent` as a plain function (no hooks). */
   readonly sidebarCollapsed: boolean
   readonly onToggleSidebar: () => void
-  /** The phone flow (#3835): no side/bottom padding, so the flow's own edge is the screen's. */
+  /** The onboarding flow (#3835): no padding and no sidebar, so the flow's own edge is the region's. */
   readonly bleed?: boolean
   readonly children: ReactNode
 }
@@ -55,8 +55,8 @@ export default function ShellContent({
   children,
 }: ShellContentProps) {
   const { user } = useAuth()
-  // Desktop + signed in only; the handle inherits this and the `lg:` gate.
-  const showSidebar = !isMobile && Boolean(user)
+  // Desktop + signed in only, never beside the flow; the handle inherits this and the `lg:` gate.
+  const showSidebar = !isMobile && Boolean(user) && !bleed
 
   return (
     <div

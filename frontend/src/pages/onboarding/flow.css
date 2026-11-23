@@ -3,6 +3,8 @@
 .ob-root{container:ob-flow/inline-size;--ob-m:80px;position:relative;min-height:100vh;min-height:100svh;box-sizing:border-box;display:flex;flex-direction:column;background:var(--color-bg-page);color:var(--faction-default-card-text);font-family:var(--font-body)}
 /* Stops sideways scroll from the aurora and beat 1's world without clipping at the root, which gave the world's soft mask hard edges. */
 html:has(.ob-root){overflow-x:hidden}
+/* Desktop keeps its top nav above the full-bleed flow; the flow's bottom edge lands on the fold. */
+@media not ((max-width:767px) and (pointer:coarse)){.ob-bleed .ob-root{min-height:calc(100svh - var(--navbar-h,0px) - var(--modstrip-h,0px))}}
 .ob-cap{font-family:var(--font-body);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--faction-default-card-muted)}
 .ob-lora{font-family:var(--font-display);font-weight:600;font-style:italic}
 .ob-hair{height:1px;background:var(--faction-default-border)}

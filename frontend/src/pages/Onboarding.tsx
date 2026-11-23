@@ -4,8 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { clearOnboardingHandoff, clearTermsAcceptance, onboardingHandoffPending } from '../utils/onboardingResume'
 import { resolveHandoffDestination } from '../utils/onboardingHandoff'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { useAuth } from '../auth/AuthContext'
-import { useHidePhoneChrome } from '../components/layout/FlowChrome'
+import { useFlowChrome } from '../components/layout/FlowChrome'
 import OnboardingFlow from './onboarding/OnboardingFlow'
 
 /** `/start`: the QR code's arc (`docs/spec/SPEC-onboarding.md`), unguarded. The flow is `OnboardingFlow`; this page owns the hand-off and the one resume, the OAuth round trip (`utils/onboardingResume`), consumed on mount. */
@@ -13,8 +12,7 @@ export default function Onboarding() {
   const navigate = useNavigate()
   const { t } = useTranslation('onboarding')
   useDocumentTitle(t('flow.welcome'))
-  // Signed in, the tab bar is the way to /settings and sign-out; only the signed-out visitor gets the full-bleed flow.
-  useHidePhoneChrome(!useAuth().user)
+  useFlowChrome()
 
   // Read once (not in render, which StrictMode double-invokes); cleared in the effect.
   const [resumed] = useState(onboardingHandoffPending)

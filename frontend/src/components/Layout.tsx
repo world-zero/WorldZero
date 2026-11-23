@@ -29,9 +29,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isMobile = useFormFactor() === 'mobile'
-  // Phones only, signed out: the flow is full-bleed there (no bar to clear); desktop keeps its top nav.
+  // The flow fills the region under the top nav on desktop, every step. On a phone it also drops the tab bar,
+  // but only signed out: signed in, the tab bar is the way to /settings and sign-out.
   const [inFlow, setInFlow] = useState(false)
-  const flowOnPhone = isMobile && inFlow
+  const flowOnPhone = isMobile && inFlow && !user
+  const bleed = inFlow && (!isMobile || !user)
   // Held here: `ShellContent` is called as a plain function by tests, so owns no hook (#1191).
   const { collapsed: sidebarCollapsed, toggle: toggleSidebar } = useSidebarCollapsed()
 
@@ -95,7 +97,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         isMobile={isMobile}
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={toggleSidebar}
-        bleed={flowOnPhone}
+        bleed={bleed}
       >
         {children}
       </ShellContent>
