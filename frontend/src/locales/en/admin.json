@@ -203,7 +203,13 @@
     "revertError": "Could not put the default wording back.",
     "missingPlaceholder": "{{placeholders}} isn't filled in here — keep the original's tags and use only the placeholders it has.",
     "scopeFaction": "Belongs to one faction — only that faction's screens change.",
-    "scopeShared": "Shared wording — changing it changes every faction."
+    "scopeShared": "Shared wording — changing it changes every faction.",
+    "typoFixes": {
+      "heading": "Typo fixes waiting",
+      "hint": "The shipped wording fixes a typo in your copy. Accepting keeps your edit locked and takes the fixed spelling.",
+      "acceptAll": "accept all",
+      "error": "Could not accept every fix. The ones left are still listed."
+    }
   },
   "nav": {
     "mod": {
