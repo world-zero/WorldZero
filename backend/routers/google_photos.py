@@ -2,6 +2,7 @@
 
 import hmac
 import json
+import logging
 import secrets
 from urllib.parse import urlsplit
 
@@ -17,6 +18,7 @@ from services import google_photos
 from services.auth import get_current_account
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 _STATE_KEY = "google_photos_state"
 #: The `postMessage` payload `source`, so the page can ignore other messages.
@@ -77,7 +79,10 @@ async def callback(
     google_user_id = await google_photos.require_google_account(account.id, session)
     try:
         await google_photos.complete_authorization(account.id, google_user_id, code)
-    except Exception:  # noqa: BLE001 - a navigation can't show JSON; any refusal fails the popup
+    except Exception as error:  # noqa: BLE001 - a navigation can't show JSON; any refusal fails the popup
+        logger.warning(
+            "Google Photos authorization failed for account %s: %r", account.id, error
+        )
         return _handback_page(False)
     return _handback_page(True)
 

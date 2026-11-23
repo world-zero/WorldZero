@@ -102,12 +102,8 @@ async def bootstrap_admin(session, era, pixie_acc) -> Character:
     pixie_acc = Account(email="pixieofhugs@gmail.com")
     session.add(pixie_acc)
     await session.flush()
-
-    session.add(OAuthProvider(
-        account_id=pixie_acc.id,
-        provider=AuthProvider.GOOGLE,
-        provider_user_id="google_pixie",
-    ))
+    # No Google row: the first real sign-in links by email. A placeholder sub
+    # beside the real one broke Google Photos on prod.
 
     pixie_char = Character(
         account_id=pixie_acc.id,
