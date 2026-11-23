@@ -19,6 +19,7 @@ import { useFormFactor } from '../../hooks/useFormFactor'
 import i18n, { lazyShipped, overriddenKeys, resources } from '../../i18n'
 import { candidatesShownIn } from './copyProbe'
 import { isFactionScopedKey } from '../../utils/copyScope'
+import { typoDiff } from '../../utils/typoFix'
 import {
   copyMatchForElement,
   missingPlaceholders,
@@ -86,6 +87,26 @@ export async function saveCopy(target: CopyTarget, value: string, base?: string 
   // The server trims; show what it stored, not the draft.
   i18n.addResource('en', target.ns, target.key, saved.value)
   overriddenKeys.add(`${target.ns}:${target.key}`)
+}
+
+interface TypoRow extends CopyTarget {
+  shipped: string
+  words: string[]
+  changed: boolean[]
+}
+
+/** Overrides whose shipped catalog wording is only a typo-class fix away. */
+function typoRows(): TypoRow[] {
+  const rows: TypoRow[] = []
+  for (const id of overriddenKeys) {
+    const at = id.indexOf(':')
+    const target = { ns: id.slice(0, at), key: id.slice(at + 1) }
+    const mine = currentTemplate(target)
+    const shipped = shippedValue(target.ns, target.key)
+    const diff = mine !== null && shipped !== mine ? typoDiff(mine, shipped) : null
+    if (diff) rows.push({ ...target, shipped, ...diff })
+  }
+  return rows
 }
 
 /** What Revert does: drop the override, then show the shipped wording again. */
@@ -184,6 +205,18 @@ export default function CopyEditor() {
     lastSpot.current?.focus({ preventScroll: true })
     lastSpot.current = null
   }, [target])
+  const [accepted, setAccepted] = useState(0)
+  // Recomputed after a save or revert closes the panel, and after accept all.
+  const typos = useMemo(typoRows, [target, accepted])
+  const acceptAll = async () => {
+    try {
+      for (const row of typos) await saveCopy(row, row.shipped, baseOf(row))
+      setNotice(null)
+    } catch (err) {
+      setNotice(extractError(err, t('copyEdit.typoFixes.error')))
+    }
+    setAccepted((n) => n + 1)
+  }
   const box = useRef<HTMLTextAreaElement>(null)
   const placed = spotRect !== null
   // Not `autoFocus`: the box mounts before `useSpotRect` has measured, and autoFocus only fires on mount.
@@ -342,6 +375,28 @@ export default function CopyEditor() {
 
       {armed && (
         <p className="card-meta">{t('copyEdit.armedHint')}</p>
+      )}
+
+      {typos.length > 0 && (
+        <div>
+          <p className="card-meta">{t('copyEdit.typoFixes.heading')}</p>
+          <p className="card-meta">{t('copyEdit.typoFixes.hint')}</p>
+          <ul className="card-meta">
+            {typos.map((row) => (
+              <li key={`${row.ns}:${row.key}`}>
+                {row.words.map((word, i) => (
+                  <span key={i}>
+                    {i > 0 && ' '}
+                    {row.changed[i] ? <mark>{word}</mark> : word}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
+          <button type="button" onClick={acceptAll} style={BUTTON} className="label-caption">
+            {t('copyEdit.typoFixes.acceptAll')}
+          </button>
+        </div>
       )}
 
       {notice && (
