@@ -53,6 +53,7 @@ jobs:
       && github.event_name == 'workflow_run'
       && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Never let two deploys of the same environment race onto the box. No
     # cancel-in-progress: a half-finished deploy is worse than a queued one.
     concurrency: deploy-dev
@@ -114,6 +115,7 @@ jobs:
   smoke:
     needs: dev
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       SHA: ${{ needs.dev.outputs.sha }}
     steps:
@@ -132,6 +134,12 @@ jobs:
 
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
+
+      # The backend is still starting when the stack reports Started; the
+      # smoke's own retries are back-to-back, so wait ~30s for health first, as
+      # prod does (#3343). A dead API still fails here, just 30s later.
+      - name: Wait for the dev API
+        run: curl -sf --retry 10 --retry-delay 3 --retry-all-errors https://api.dev.worldzero.org/health >/dev/null
 
       - name: Smoke dev.worldzero.org
         run: npm run smoke
@@ -163,6 +171,8 @@ jobs:
       vars.DEPLOY_ENABLED == 'true'
       && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    # Counts from approval, not from the tag: the reviewer wait is outside it.
+    timeout-minutes: 45
     concurrency: deploy-prod
     # Gate three. A protected environment with a required reviewer: this job
     # pauses here until a human approves, so a stray tag push cannot ship.
@@ -259,6 +269,7 @@ jobs:
       - uses: ./.github/actions/deploy-stack
         with:
           environment: prod
+          backup-label: pre-${{ github.event.inputs.tag || github.ref_name }}
           host: ${{ secrets.SSH_HOST }}
           ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
           known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}

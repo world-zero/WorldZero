@@ -44,6 +44,7 @@ concurrency:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     permissions:
       contents: read
       issues: write

@@ -279,8 +279,10 @@ A `.part` file means a run died mid-write. `backup.sh` writes to `.part` and
 renames on success, so a truncated file never sits where a restore would trust
 it — but nothing tells you it happened unless something is checking.
 
-Before a risky deploy, take a labelled snapshot that the rotation will not
-overwrite:
+Every prod deploy takes one of these itself, labelled `pre-<tag>`, before the
+new backend starts migrating (`deploy-stack`'s `backup-label`). They are never
+rotated, so prune old `pre-v*` files if the disk gets tight. For anything else
+risky, take a labelled snapshot that the rotation will not overwrite:
 
 ```bash
 ssh deploy@<server-ip> '/srv/worldzero/backup.sh prod pre-v1.4'
@@ -380,7 +382,9 @@ Run it after `scrub_stored_media.py --apply`. Ran on: dev ____ / prod ____ (owne
   exit rather than corrupt anything.
 - **A CI bypass for the prod gates.** There is no `--force`. The emergency path
   is the rollback above, which is faster than a bypass would be anyway.
-- **Monitoring or log shipping.** `docker compose logs -f` and Hetzner's own
-  graphs. Add something when you have users who would notice an outage first.
+- **Log shipping or metrics.** `docker compose logs -f` and Hetzner's own
+  graphs. The one alarm is `.github/workflows/uptime.yml`: every ten minutes,
+  a `prod-down` issue while worldzero.org or its API stops answering. It runs
+  on GitHub, so an outage of GitHub's scheduler silences it too.
 - **A prod-data path into dev.** Dev reseeds itself from empty. If you ever need
   prod-shaped data there, restore a nightly dump into the dev stack.
