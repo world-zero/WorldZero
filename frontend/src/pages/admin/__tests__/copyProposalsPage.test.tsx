@@ -21,7 +21,7 @@ const proposal = (): CopyProposal => ({
   id: 7,
   pr_number: 12,
   pr_url: 'https://github.com/o/r/pull/12',
-  lines: [line('brand', 'Wrold Zero', 'World Zero'), line('gone', 'Mine', null)],
+  lines: [line('brand', 'Hearth', 'Home base'), line('gone', 'Mine', null)],
 })
 const settled = (p: CopyProposal, key: string, status: 'approved' | 'rejected'): CopyProposal => ({
   ...p,
@@ -46,7 +46,8 @@ describe('Copy proposals page', () => {
   it('says plainly when a line deletes the key', async () => {
     render(<CopyProposalsPage />)
     expect(await screen.findByText(/deletes the key/)).toBeTruthy()
-    expect(screen.getByText('World').tagName).toBe('MARK')
+    expect(screen.getByText('Home').tagName).toBe('MARK')
+    expect(screen.getByText('base').tagName).toBe('MARK')
   })
 
   it('approve and reject each post their verdict for that line', async () => {
@@ -54,7 +55,7 @@ describe('Copy proposals page', () => {
     const [approve] = await screen.findAllByText('Approve')
     fireEvent.click(approve)
     await waitFor(() => expect(settleCopyProposalLine).toHaveBeenCalledWith(7, 'approve', expect.objectContaining({ key: 'brand' })))
-    expect(i18n.getResource('en', 'common', 'brand')).toBe('World Zero')
+    expect(i18n.getResource('en', 'common', 'brand')).toBe('Home base')
     fireEvent.click(await screen.findByText('Reject'))
     await waitFor(() => expect(settleCopyProposalLine).toHaveBeenCalledWith(7, 'reject', expect.objectContaining({ key: 'gone' })))
     expect(await screen.findByText('Nothing waiting.')).toBeTruthy()

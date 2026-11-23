@@ -4,7 +4,7 @@ import { listCopyProposals, settleCopyProposalLine, type CopyProposal, type Copy
 import { showApproved } from '../../components/admin/CopyEditor'
 import i18n from '../../i18n'
 import { ErrorCode, extractError, extractErrorCode, extractErrorParams } from '../../utils/errors'
-import { typoDiff } from '../../utils/typoFix'
+import { wordDiff } from '../../utils/typoFix'
 import './adminList.css'
 
 const lineId = (proposalId: number, line: CopyProposalLine) => `${proposalId}:${line.ns}:${line.key}`
@@ -12,8 +12,7 @@ const lineId = (proposalId: number, line: CopyProposalLine) => `${proposalId}:${
 function Proposed({ line }: { line: CopyProposalLine }) {
   const { t } = useTranslation('admin')
   if (line.proposed_value === null) return <em>{t('copyProposals.deleted')}</em>
-  const diff = typoDiff(line.owner_value, line.proposed_value)
-  if (!diff) return <>{line.proposed_value}</>
+  const diff = wordDiff(line.owner_value, line.proposed_value)
   return (
     <>
       {diff.words.map((word, i) => (
