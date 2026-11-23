@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** Seam: `Layout` + `useHidePhoneChrome` (#3753): the phone tab bar is absent while the flow shows to a signed-out visitor, back after it or once signed in. */
+/** Seam: `Layout` + `useFlowChrome` (#3753): the phone tab bar is absent while the flow shows to a signed-out visitor, back after it or once signed in; desktop drops the region padding and sidebar for every step. */
 import { useState, type ReactNode } from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -19,7 +19,7 @@ vi.mock('../InvitationWatcher', () => ({ default: () => null }))
 vi.mock('../NavBar', () => ({ default: () => <nav data-testid="top-nav" /> }))
 vi.mock('../layout/MobileTabBar', () => ({ default: () => <nav data-testid="tab-bar" /> }))
 vi.mock('../../pages/onboarding/OnboardingFlow', () => ({ default: () => null }))
-vi.mock('../layout/Sidebar', () => ({ default: () => null, panelStyle: {} }))
+vi.mock('../layout/SidebarColumn', () => ({ default: () => <aside data-testid="sidebar" /> }))
 
 function Page() {
   const [inFlow, setInFlow] = useState(true)
@@ -64,5 +64,14 @@ describe('phone chrome during the onboarding flow', () => {
     form.current = 'desktop'
     renderApp()
     expect(screen.getByTestId('top-nav')).toBeTruthy()
+  })
+  it('desktop flow is full bleed with no sidebar, signed in too, and both come back on arrival', () => {
+    form.current = 'desktop'
+    renderApp({ id: 1, character: null, has_accepted_terms: true })
+    expect(document.querySelector('.ob-bleed')).toBeTruthy()
+    expect(screen.queryByTestId('sidebar')).toBeNull()
+    fireEvent.click(screen.getByText('arrive'))
+    expect(document.querySelector('.ob-bleed')).toBeNull()
+    expect(screen.getByTestId('sidebar')).toBeTruthy()
   })
 })
