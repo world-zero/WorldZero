@@ -123,7 +123,7 @@ jobs:
       # catalogs (emitted keys, error codes, perk quotes); those are all it runs.
       - name: Run the backend tests that read the catalogs
         if: needs.scope.outputs.scope == 'copy' || needs.scope.outputs.scope == 'frontend'
-        run: pytest $(grep -rl --include='test_*.py' locales tests)
+        run: pytest $(grep -rlE --include='test_*.py' 'locales|svg' tests)
         working-directory: backend
 
   # The API contract gate (#1400). `backend/openapi.json` and the TypeScript

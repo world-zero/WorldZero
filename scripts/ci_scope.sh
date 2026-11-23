@@ -10,13 +10,14 @@
 # PR's change against the current base. Any doubt answers full.
 set -euo pipefail
 
-files=$(git diff --name-only HEAD^1 HEAD) || { echo full; exit 0; }
+files=$(git diff --name-only --no-renames HEAD^1 HEAD) || { echo full; exit 0; }
 [ -n "$files" ] || { echo full; exit 0; }
 
 scope=ci
 while IFS= read -r f; do
   case $f in
     .github/workflows/test.yml | .github/workflows/contrast.yml) scope=full ;;
+    frontend/src/locales/en/email.json) scope=full ;;  # backend reads it at runtime (services/email.py)
     .github/*) ;;
     frontend/src/locales/*) [ "$scope" = ci ] && scope=copy ;;
     frontend/*) scope=frontend ;;
