@@ -226,9 +226,17 @@ export default function CharacterProfile() {
       }
     : null;
 
-  // Hidden for own profile and logged-out viewers.
-  const identityActions =
-    !isOwn && user?.character ? (
+  // Friend/foe hide on your own profile; the edit door shows there instead.
+  // ponytail: active character only, /characters/:id/edit refuses any other (isOwner).
+  const identityActions = isOwn ? (
+    <Link
+      to={`/characters/${character.id}/edit`}
+      className="label-caption underline"
+      style={{ display: "block", padding: "var(--space-sm) 0" }}
+    >
+      {t("sidebar.characterCard.edit")}
+    </Link>
+  ) : user?.character ? (
       <div
         style={{
           display: "flex",
