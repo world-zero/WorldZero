@@ -264,6 +264,21 @@
       "praxis_complete": "Completed a praxis"
     }
   },
+  "copyProposals": {
+    "lede": "Pull requests that change wording you edited. Approving puts their wording in your row, still locked; a deleted line releases it.",
+    "rerun": "After settling a line, re-run Test on the PR.",
+    "empty": "Nothing waiting.",
+    "loadError": "Couldn't load copy proposals.",
+    "settleError": "Couldn't settle that line.",
+    "pr": "PR #{{number}}",
+    "yours": "Your wording",
+    "proposed": "Proposed",
+    "deleted": "This PR deletes the key. Approving releases your row.",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveAll": "Approve all",
+    "changed": "Your wording changed since. It now reads: “{{current}}”. Reject this line, or ask for the PR to be updated."
+  },
   "console": {
     "rail": {
       "label": "Admin",
@@ -289,6 +304,7 @@
         "factionCopy": "Faction copy",
         "levelCopy": "Level-up copy",
         "tauntCopy": "Taunt copy",
+        "copyProposals": "Copy proposals",
         "era": "Roll into a new era…",
         "smallWorld": "Small world",
         "modLog": "Mod log"

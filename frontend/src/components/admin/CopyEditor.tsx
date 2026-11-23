@@ -109,6 +109,14 @@ function typoRows(): TypoRow[] {
   return rows
 }
 
+/** Show an approved proposal line live: the PR's wording stays locked as her override; a deletion releases the key. */
+export function showApproved(target: CopyTarget, proposed: string | null): void {
+  i18n.addResource('en', target.ns, target.key, proposed ?? shippedValue(target.ns, target.key))
+  const id = `${target.ns}:${target.key}`
+  if (proposed === null) overriddenKeys.delete(id)
+  else overriddenKeys.add(id)
+}
+
 /** What Revert does: drop the override, then show the shipped wording again. */
 export async function revertCopy(target: CopyTarget): Promise<void> {
   await deleteCopyOverride(target.ns, target.key)

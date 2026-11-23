@@ -4,7 +4,7 @@ import type { AdminCounts } from '../../pages/admin/useAdminCounts'
 import { useCan, type Need } from '../../auth/permissions'
 
 type Badge = 'urgent' | 'quiet'
-type ItemKey = 'era' | 'reports' | 'messages' | 'proposals' | 'praxis' | 'tasks' | 'people' | 'smallWorld' | 'modLog' | 'factionCopy' | 'levelCopy' | 'tauntCopy'
+type ItemKey = 'era' | 'reports' | 'messages' | 'proposals' | 'praxis' | 'tasks' | 'people' | 'smallWorld' | 'modLog' | 'factionCopy' | 'levelCopy' | 'tauntCopy' | 'copyProposals'
 type GroupKey = 'needs' | 'run' | 'words'
 interface Item {
   key: ItemKey
@@ -40,6 +40,7 @@ const GROUPS: { key: GroupKey; items: Item[] }[] = [
       { key: 'factionCopy', to: '/admin/copy', need: 'copy' },
       { key: 'levelCopy', to: '/admin/level-ups', need: 'copy' },
       { key: 'tauntCopy', to: '/admin/taunts', need: 'copy' },
+      { key: 'copyProposals', to: '/admin/copy-proposals', need: 'copy' },
     ],
   },
 ]

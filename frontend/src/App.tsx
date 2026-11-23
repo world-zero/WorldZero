@@ -51,6 +51,7 @@ const Admin = lazy(importAdmin)
 const consolePage = (pick: (m: typeof import('./pages/admin/consolePages')) => ComponentType) =>
   lazy(() => withAppCopy(import('./pages/admin/consolePages')).then((m) => ({ default: pick(m) })))
 const ReportsPage = consolePage((m) => m.ReportsPage)
+const CopyProposalsPage = consolePage((m) => m.CopyProposalsPage)
 const MessagesPage = consolePage((m) => m.MessagesPage)
 const PraxisPage = consolePage((m) => m.PraxisPage)
 const TasksPage = consolePage((m) => m.TasksPage)
@@ -148,6 +149,7 @@ function AdminRoutes() {
             {/* Every level's Field Stamp on one page, for the same editor. */}
             <Route path="level-ups" element={<LevelUpCopySheet />} />
             <Route path="taunts" element={<TauntCopySheet />} />
+            <Route path="copy-proposals" element={<CopyProposalsPage />} />
           </Route>
         </Routes>
       </Suspense>
