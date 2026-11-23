@@ -15,8 +15,11 @@ Keep the rows after the bake: they are the list of copy the owner wrote, and
 Revert a row in the copy-edit page to release its key. Stdlib only.
 """
 
+import difflib
 import json
 import os
+
+import re
 import subprocess
 import sys
 import time
@@ -25,6 +28,41 @@ from pathlib import Path
 
 CATALOGS = Path(__file__).resolve().parent.parent / "frontend/src/locales/en"
 API = {"prod": "https://api.worldzero.org", "dev": "https://api.dev.worldzero.org"}
+
+_TAGS = re.compile(r"\{\{[^}]*\}\}|</?[^<>\s]+[^<>]*>")
+_NEGATION = re.compile(r"(?<![a-z])(?:not|no|never)(?![a-z])|n['’]t")
+
+
+def _letters(words: list[str]) -> str:
+    return "".join(c for c in " ".join(words).lower() if c.isalpha())
+
+
+def is_typo_fix(old: str, new: str) -> bool:
+    """The owner's typo-class rule (#4277); frontend/src/utils/typoFix.ts is its twin.
+
+    Same tags and digits, every changed word-hunk a similar replacement, no negation
+    added or dropped. Any added or removed word fails, grammar fixes included.
+    """
+    if sorted(_TAGS.findall(old)) != sorted(_TAGS.findall(new)):
+        return False
+    if sorted(re.findall(r"[0-9]+", old)) != sorted(re.findall(r"[0-9]+", new)):
+        return False
+    a, b = old.split(), new.split()
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            continue
+        x, y = _letters(a[i1:i2]), _letters(b[j1:j2])
+        if not x and not y:
+            continue  # punctuation only
+        if tag != "replace" or abs(len(x) - len(y)) > 2:
+            return False
+        if difflib.SequenceMatcher(None, x, y, autojunk=False).ratio() < 0.75:
+            return False
+        if len(x) <= 3 and len(y) <= 3 and sorted(x) != sorted(y):  # ratio alone can't tell he/she apart
+            return False
+        if len(_NEGATION.findall(" ".join(a[i1:i2]).lower())) != len(_NEGATION.findall(" ".join(b[j1:j2]).lower())):
+            return False
+    return True
 
 
 def _slot(data, key: str):
@@ -71,9 +109,13 @@ def promote(overrides: list[dict], catalogs: Path) -> list[str]:
             changed.append(f"REFUSE {o['ns']}:{o['key']} — not a string in the catalog; nothing written")
             continue
         node, leaf = slot
-        if node[leaf] != o["value"]:
-            node[leaf] = o["value"]
-            changed.append(f"{o['ns']}:{o['key']} = {o['value']!r}")
+        if node[leaf] == o["value"]:
+            continue
+        if is_typo_fix(o["value"], node[leaf]):
+            changed.append(f"KEEP {o['ns']}:{o['key']} — catalog is a typo-class variant of the override; check which spelling is right")
+            continue
+        node[leaf] = o["value"]
+        changed.append(f"{o['ns']}:{o['key']} = {o['value']!r}")
     for path, data in files.items():
         path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
     return changed + markers
@@ -84,7 +126,7 @@ def guard_lines(overrides: list[dict], read_base, read_head) -> list[dict]:
     ``read_*(ns)`` -> catalog or None.
 
     A key absent at the base is not this diff's; a head value equal to the override
-    is the bake itself.
+    is the bake itself, and one only a typo fix away from it is the owner's wording.
     """
     out, cache = [], {}
     for o in overrides:
@@ -100,7 +142,7 @@ def guard_lines(overrides: list[dict], read_base, read_head) -> list[dict]:
             continue
         h = _slot(head, key) if head is not None else None
         was, now = b[0][b[1]], (h[0][h[1]] if h else None)
-        if now == was or now == o["value"]:
+        if now == was or now == o["value"] or (now is not None and is_typo_fix(o["value"], now)):
             continue
         out.append({"ns": ns, "key": key, "owner_value": o["value"], "proposed_value": now})
     return out
@@ -181,6 +223,12 @@ def _check() -> None:
         assert json.loads(p.read_text()) == {"a": {"b": "new", "c": "same"}}
         assert len(out) == 2 and out[1].startswith("SKIP"), out
 
+        p.write_text('{"a": {"b": "Ask Magestra"}}')
+        out = promote([{"ns": "x", "key": "a.b", "value": "Ask Magistra"}], Path(d))
+        assert json.loads(p.read_text()) == {"a": {"b": "Ask Magestra"}}
+        assert out[0].startswith("KEEP x:a.b "), out
+        p.write_text('{"a": {"b": "old", "c": "same"}}')
+
         # Markers (#3114).
         p.write_text('{"a": {"b": "keep"}}')
         out = promote(
@@ -215,13 +263,13 @@ def _check() -> None:
         p.write_text('{"t": ["a", "b"], "perks": [{"desc": "old"}]}')
         out = promote(
             [
-                {"ns": "x", "key": "t.1", "value": "B"},
+                {"ns": "x", "key": "t.1", "value": "Bee"},
                 {"ns": "x", "key": "perks.0.desc", "value": "new"},
                 {"ns": "x", "key": "t.5", "value": "no"},
             ],
             Path(d),
         )
-        assert json.loads(p.read_text()) == {"t": ["a", "B"], "perks": [{"desc": "new"}]}, out
+        assert json.loads(p.read_text()) == {"t": ["a", "Bee"], "perks": [{"desc": "new"}]}, out
         assert out[2].startswith("REFUSE x:t.5 "), out
 
         # Guard: rewrite and removal of owner copy fail; untouched, bake, new key and marker pass.
@@ -246,6 +294,21 @@ def _check() -> None:
         assert lines[1] == {"ns": "x", "key": "removed", "owner_value": "mine", "proposed_value": None}, lines
         assert proposal_payload(lines, "7", "https://github.com/o/r/pull/7") == {
             "pr_number": 7, "pr_url": "https://github.com/o/r/pull/7", "lines": lines}
+
+        # Typo-class rule; the cases file is shared with the frontend's vitest.
+        for old, new, expected in json.loads((Path(__file__).parent / "copy_typo_cases.json").read_text()):
+            assert is_typo_fix(old, new) is expected, (old, new, expected)
+        # The bake leaves a catalog that already fixes a typo in an override alone.
+        p.write_text('{"a": "Join the community.", "b": "Old"}')
+        out = promote(
+            [{"ns": "x", "key": "a", "value": "Join the comminty."}, {"ns": "x", "key": "b", "value": "New"}], Path(d)
+        )
+        assert json.loads(p.read_text()) == {"a": "Join the community.", "b": "New"}, out
+        # The guard lets a typo fix through, not a removal or an added word.
+        ov = [{"ns": "x", "key": k, "value": "Join the comminty."} for k in "abc"]
+        base = {"a": "x", "b": "x", "c": "x"}
+        head = {"a": "Join the community.", "b": "Join the comminty now."}
+        assert [h.split(" ")[0] for h in guard(ov, lambda ns: base, lambda ns: head)] == ["x:b", "x:c"]
 
         # Marker-only catalogs are not rewritten (#3084's feed.json rows).
         feed = Path(d) / "feed.json"

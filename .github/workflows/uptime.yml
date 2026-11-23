@@ -1,0 +1,56 @@
+name: Uptime
+
+# Is worldzero.org answering? Every 10 minutes (GitHub may run it late under
+# load). Down opens one `prod-down` issue and leaves it alone while prod stays
+# down; the next good check closes it. Like backup-pull.yml, an outage reaches
+# the owner as one notification, not one every ten minutes.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency: uptime
+
+jobs:
+  check:
+    # Same switch as deploy.yml: no box, no alarm.
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: File, comment on or close prod-down
+        run: |
+          set -uo pipefail
+          # ~1 minute of retries: a deploy's restart is a second or two and
+          # must not page anyone.
+          problems=""
+          for url in https://api.worldzero.org/health https://worldzero.org; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -m 10 \
+                     --retry 6 --retry-delay 10 --retry-all-errors "$url") || true
+            [ "$code" = 200 ] || problems+="- $url answered ${code:-nothing}"$'\n'
+          done
+
+          open=$(gh issue list --label prod-down --state open --limit 1 \
+                   --json number --jq '.[0].number // empty')
+          if [ -n "$problems" ]; then
+            printf '%s\n**Check:** %s\n\nRollback and restore: [`deploy/README.md` §9](https://github.com/%s/blob/main/deploy/README.md#9-rollback). The next good check closes this.\n' \
+              "$problems" "$RUN" "$GH_REPO" > body.md
+            if [ -z "$open" ]; then
+              gh label create prod-down --color B60205 \
+                --description "worldzero.org is not answering (uptime.yml)" 2>/dev/null || true
+              gh issue create --label prod-down --label needs-triage \
+                --title "worldzero.org is down" --body-file body.md
+            fi
+            # Not exit 1: a red scheduled run emails whoever last edited the
+            # cron, every ten minutes. The issue is the alarm.
+            echo "::warning::prod is down: ${problems//$'\n'/ }"
+            exit 0
+          fi
+          [ -z "$open" ] || gh issue close "$open" --comment "Answering again as of $RUN."

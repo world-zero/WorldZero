@@ -13,6 +13,7 @@ import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
 import { describe, it, expect } from 'vitest'
 import '../../../i18n'
+import i18n from 'i18next'
 import DefaultFieldDesk from '../mobileArchetypes/DefaultFieldDesk'
 import WowFieldDesk from '../mobileArchetypes/WowFieldDesk'
 import FactionSigil from '../../../components/sigil/FactionSigil'
@@ -198,7 +199,7 @@ describe('mobile FieldDesk-home content-slot invariant', () => {
 
     it(`${slug} renders the empty state when no active tasks`, () => {
       const { text } = render(<Skin state={baseState({ activeTasks: [] })} />)
-      expect(text.toLowerCase(), 'empty-tasks slot').toContain('nothing in progress')
+      expect(text.toLowerCase(), 'empty-tasks slot').toContain(i18n.t('fieldDesk.home.questsEmpty', { ns: 'common' }).toLowerCase())
     })
 
     /** #1554: hrefs, not just labels; see `homeDestinations.test.ts`. */

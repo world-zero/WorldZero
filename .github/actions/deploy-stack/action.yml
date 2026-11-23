@@ -17,6 +17,14 @@ inputs:
   known-hosts:
     description: Pinned host key (ssh-keyscan output)
     required: true
+  backup-label:
+    description: >-
+      If set, `backup.sh <environment> <label>` runs before the pull, while the
+      old backend still owns the database: start.sh migrates on boot and no
+      migration has a downgrade. A label that already has a dump is kept, so a
+      re-run never overwrites the pre-migration copy with a migrated one.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -24,6 +32,7 @@ runs:
     - name: Deploy
       shell: bash
       env:
+        BACKUP_LABEL: ${{ inputs.backup-label }}
         ENVIRONMENT: ${{ inputs.environment }}
         SSH_HOST: ${{ inputs.host }}
         SSH_KEY: ${{ inputs.ssh-key }}
@@ -38,6 +47,21 @@ runs:
         # Docker as root.
         printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
+        # The label lands in a remote shell line, so it may only be a tag name.
+        [[ $BACKUP_LABEL =~ ^[A-Za-z0-9._-]*$ ]] || { echo "::error::bad backup label '$BACKUP_LABEL'"; exit 1; }
+        backup=:
+        if [ -n "$BACKUP_LABEL" ]; then
+          db="/srv/backups/$ENVIRONMENT-db-$BACKUP_LABEL.dump"
+          media="/srv/backups/$ENVIRONMENT-media-$BACKUP_LABEL.tgz"
+          # Exit non-zero with both files written means only the off-box push
+          # failed (backup-red reports it); the local pair is enough to deploy.
+          # Never rotated: README §8 says to prune old pre-v* by hand.
+          # The explicit exit: set -e ignores a failure inside an && group.
+          # A stopped stack (prod-reset's down -v, a recovery deploy) has no
+          # database to dump, so it deploys without one and says so.
+          backup="if docker compose ps --status running -q db | grep -q .; then [ -s $db ] || /srv/worldzero/backup.sh $ENVIRONMENT $BACKUP_LABEL || { [ -s $db ] && [ -s $media ]; } || { echo 'pre-deploy backup failed; not deploying' >&2; exit 1; }; else echo 'db not running; no pre-deploy backup' >&2; fi"
+        fi
+
         scp deploy/docker-compose.yml \
             "deploy@$SSH_HOST:/srv/worldzero/$ENVIRONMENT/docker-compose.yml"
 
@@ -50,6 +74,7 @@ runs:
         ssh "deploy@$SSH_HOST" "
           set -e
           cd /srv/worldzero/$ENVIRONMENT
+          $backup
           # Prune first: a full disk fails the pull, and a prune after it
           # never runs. Rollback pulls its tag from the registry (README §9).
           docker image prune -af
