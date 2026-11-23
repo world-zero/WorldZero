@@ -1,4 +1,4 @@
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import PageTitle from '../components/ui/PageTitle'
 
@@ -15,26 +15,6 @@ export default function About() {
         </p>
         <p className="font-body text-base leading-relaxed">
           {t('about.intro2')}
-        </p>
-      </div>
-
-      <div className="card p-6">
-        <h2 className="font-display text-2xl font-bold mb-3">{t('about.inspiredHeading')}</h2>
-        <p className="font-body text-base leading-relaxed">
-          <Trans
-            t={t}
-            i18nKey="about.inspiredBody"
-            components={[
-              <span key="0" />,
-              <a
-                key="1"
-                href="https://sf0.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-muted"
-              />,
-            ]}
-          />
         </p>
       </div>
     </div>
