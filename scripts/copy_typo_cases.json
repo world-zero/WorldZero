@@ -23,5 +23,9 @@
   ["Read <0>the rules</0> now", "Read <1>the rules</1> now", false],
   ["Take the quest", "Take the task", false],
   ["Take the quest", "", false],
-  ["Take the quest", "Take quest", false]
+  ["Take the quest", "Take quest", false],
+  ["he left", "she left", false],
+  ["teh quest", "the quest", true],
+  ["adn then", "and then", true],
+  ["Take it", "Take its", false]
 ]

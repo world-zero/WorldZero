@@ -54,7 +54,10 @@ def is_typo_fix(old: str, new: str) -> bool:
             continue  # punctuation only
         if tag != "replace" or abs(len(x) - len(y)) > 2:
             return False
-        if difflib.SequenceMatcher(None, x, y, autojunk=False).ratio() < 0.75:
+        if len(x) <= 3 and len(y) <= 3:  # a ratio can't tell he/she from teh/the
+            if sorted(x) != sorted(y):
+                return False
+        elif difflib.SequenceMatcher(None, x, y, autojunk=False).ratio() < 0.75:
             return False
         if len(_NEGATION.findall(" ".join(a[i1:i2]).lower())) != len(_NEGATION.findall(" ".join(b[j1:j2]).lower())):
             return False
