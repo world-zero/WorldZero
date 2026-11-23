@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Which checks a PR needs, from the files it changes. Prints the widest of:
+#   ci       — only .github/ plumbing that Test and Contrast don't run
+#              (dependabot, CODEOWNERS, other workflows): every job may skip.
+#   copy     — only frontend/src/locales/: frontend job, copy guard and the
+#              backend tests that read the catalogs.
+#   frontend — only frontend/: as copy, plus api-schema and contrast.
+#   full     — anything else, including this script and the workflows that call it.
+# On a pull_request checkout HEAD is the merge commit, so HEAD^1..HEAD is the
+# PR's change against the current base. Any doubt answers full.
+set -euo pipefail
+
+files=$(git diff --name-only --no-renames HEAD^1 HEAD) || { echo full; exit 0; }
+[ -n "$files" ] || { echo full; exit 0; }
+
+scope=ci
+while IFS= read -r f; do
+  case $f in
+    .github/workflows/test.yml | .github/workflows/contrast.yml) scope=full ;;
+    frontend/src/locales/en/email.json) scope=full ;;  # backend reads it at runtime (services/email.py)
+    .github/*) ;;
+    frontend/src/locales/*) [ "$scope" = ci ] && scope=copy ;;
+    frontend/*) scope=frontend ;;
+    *) scope=full ;;
+  esac
+  [ "$scope" = full ] && break
+done <<<"$files"
+echo "$scope"
