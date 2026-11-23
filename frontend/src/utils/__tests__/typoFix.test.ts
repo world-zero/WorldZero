@@ -1,11 +1,9 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
+import shared from '../../../../scripts/copy_typo_cases.json'
 import { isTypoFix, typoDiff } from '../typoFix'
 
-const cases: [string, string, boolean][] = JSON.parse(
-  readFileSync(new URL('../../../../scripts/copy_typo_cases.json', import.meta.url), 'utf8'),
-)
+const cases = shared as [string, string, boolean][]
 
 describe('isTypoFix', () => {
   it.each(cases)('%j -> %j is %s', (old, next, expected) => {
