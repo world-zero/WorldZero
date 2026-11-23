@@ -2,12 +2,13 @@
 
 import hmac
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db import get_db
 from dependencies import require_permission
+from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.roles import Permission
 from schemas.copy_proposal import CopyProposalIn, CopyProposalLineRef, CopyProposalOut
@@ -23,9 +24,13 @@ def _require_token(
     """Refuses everyone while the setting is blank: an empty header must never match."""
     expected = settings.COPY_PROPOSAL_TOKEN
     if not expected:
-        raise HTTPException(503, "Copy proposals are not enabled on this server.")
+        raise_coded(
+            503,
+            ErrorCode.copy_proposals_disabled,
+            "Copy proposals are not enabled on this server.",
+        )
     if not hmac.compare_digest(x_copy_proposal_token.encode(), expected.encode()):
-        raise HTTPException(401, "Bad proposal token.")
+        raise_coded(401, ErrorCode.copy_proposal_token_invalid, "Bad proposal token.")
 
 
 @router.post("", response_model=CopyProposalOut, status_code=201)

@@ -21,6 +21,8 @@ PUBLIC_NON_GET = {
     ("POST", "/email/unsubscribe-all"),
     # Gated by the X-Admin-Cli-Secret header, not a bearer token.
     ("POST", "/admin/cli-token"),
+    # Gated by the X-Copy-Proposal-Token header (CI is the caller).
+    ("POST", "/copy-proposals"),
 }
 
 # GET is outside the no-token walk; listed so a rename fails the staleness check.

@@ -143,6 +143,8 @@
     "ERA_ALREADY_LIVE": "That era is already the live one. Nothing was changed — pick a different era to roll into.",
     "COPY_OVERRIDE_NOT_FOUND": "That wording is already back to the version the site shipped with.",
     "COPY_OVERRIDE_CHANGED": "Someone else changed this wording while you were editing.",
+    "COPY_PROPOSALS_DISABLED": "Copy proposals are not switched on for this server.",
+    "COPY_PROPOSAL_TOKEN_INVALID": "That proposal token is not accepted.",
     "COPY_PROPOSAL_NOT_FOUND": "That proposal line was already settled, or is gone.",
     "ADMIN_OWNER_REQUIRED": "Only the owner can change who is an admin.",
     "ADMIN_UNKNOWN_USERNAME": "No character has that username. Check the spelling — nothing was changed.",

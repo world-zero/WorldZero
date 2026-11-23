@@ -227,6 +227,10 @@ class ErrorCode(str, enum.Enum):
 
     #: 404: no such proposal, or the line is already approved or rejected.
     copy_proposal_not_found = "COPY_PROPOSAL_NOT_FOUND"
+    #: 503: no COPY_PROPOSAL_TOKEN configured, so nobody may file.
+    copy_proposals_disabled = "COPY_PROPOSALS_DISABLED"
+    #: 401: the filing token is missing or wrong.
+    copy_proposal_token_invalid = "COPY_PROPOSAL_TOKEN_INVALID"
 
     # -- Population dial (#3656) --------------------------------------------
     #: 422: a PUT named a dial the live era does not declare.
