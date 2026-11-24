@@ -215,7 +215,7 @@ def b1wide():
         'clouds':[{'x':x,'top':t,'w':w,'dur':d} for x,t,w,d in ((9,104,72,19),(24,48,50,14),(79,62,78,22),(91,124,52,17))],
         'tree':pl(11,22,.7), 'kite':pl(76,26,1.1), 'windmill':pl(90,34,1.5),
         'wow':pl(25,-16,1.9), 'everymen':pl(84,-4,2.2), 'ua':pl(37,-14,2.0), 'snide':pl(63,-24,2.5), 'ephemerists':pl(64,33,2.9),
-        'pines':[{**pl(x,y,d),'scale':sc} for x,y,d,sc in ((30,44,.9,1),(33.5,40,1.05,.74),(70,46,1.2,.9),(4,30,1.7,1.15),(97,30,1.9,1))],
+        'pines':[{**pl(x,y,d),'scale':sc} for x,y,d,sc in ((30,44,.9,1),(33.5,40,1.05,.74),(70,30,1.2,.9),(4,30,1.7,1.15),(97,30,1.9,1))],
         'buddies':{'coven':buddy(0),'singularity':buddy(1),'wow':buddy(2),'everymen':buddy(3),'ua':buddy(4),'snide':buddy(5),'ephemerists':buddy(6)},
         # the meadow blooms outwards from where the wisp came through: the further out, the later
         'flowers':[{**pl(x,y,round(.5+abs(x-50)/50*1.6,2)),'stop':(1,6,7,2,5,3)[i%6]} for i,(x,y) in enumerate(((6,-24),(10,6),(16,-14),(22,10),(27,-20),(31,2),(69,4),(73,-18),(79,8),(86,-22),(91,2),(95,-12)))],
