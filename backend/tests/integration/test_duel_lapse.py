@@ -21,6 +21,7 @@ from models.praxis import Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus
 from services import collab_consensus
 from services import praxis as praxis_service
+from services.activity_feed import get_activity_feed, pending_requests_counts
 from services.auth import create_jwt
 from services.duel import (
     get_duel_detail,
@@ -101,6 +102,22 @@ async def test_nothing_lapses_before_the_deadline(
     await db_session.refresh(duel)
     assert duel.status == status
     assert duel.forfeited_by_character_id is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("age_days,listed", [(DAYS + 1, False), (DAYS - 1, True)])
+async def test_a_lapsed_unswept_challenge_leaves_requests_and_the_badge(
+    db_session: AsyncSession, era: Era, some_faction: Faction, age_days, listed
+):
+    duel, _, opponent = await _duel(
+        db_session, era, "lq", status=DuelStatus.pending, age_days=age_days
+    )
+
+    feed = await get_activity_feed(opponent.id, db_session, feed_filter="requests")
+    badge = await pending_requests_counts([opponent.id], db_session)
+
+    assert (duel.id in [i.payload.duel_id for i in feed.items]) is listed
+    assert badge[opponent.id] == int(listed)
 
 
 @pytest.mark.asyncio

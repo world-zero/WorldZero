@@ -6,7 +6,7 @@ ADR-0036: each type is one ``FeedSource`` in ``FEED_SOURCES``. Badge counts are
 """
 import logging
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import Any, Callable, NamedTuple, Optional, Sequence
 
@@ -230,6 +230,7 @@ class FeedContext:
     sees_metatasks: bool
     meets_vote_level: bool
     answered_requests_only: bool = False
+    duel_challenge_lapse_days: Optional[int] = None
 
     def older_than(
         self, item_type: str, timestamp: Any, source_id: Any
@@ -794,10 +795,17 @@ def _duel_challenges_query(ctx: FeedContext) -> Select:
             ~has_blocked(ctx.character_id, Character.id),
         )
     )
+    # SQL twin of challenge_lapsed: a lapsed, not-yet-swept challenge is answered.
+    unanswered = Duel.status == DuelStatus.pending
+    if ctx.duel_challenge_lapse_days is not None:
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            days=ctx.duel_challenge_lapse_days
+        )
+        unanswered = and_(unanswered, Duel.created_at > cutoff)
     if ctx.unanswered_requests_only:
-        query = query.where(Duel.status == DuelStatus.pending)
+        query = query.where(unanswered)
     elif ctx.answered_requests_only:
-        query = query.where(Duel.status != DuelStatus.pending)
+        query = query.where(~unanswered)
     query = query.where(
         ctx.older_than(FEED_ITEM_TYPE_DUEL_CHALLENGE, Duel.created_at, Duel.id)
     )
@@ -2072,6 +2080,7 @@ async def _build_fetch_context(
                 viewer_level or 0, viewer_faction, era
             ),
             meets_vote_level=meets_vote_level(viewer_peak_level, era),
+            duel_challenge_lapse_days=era.duel_challenge_lapse_days,
         ),
         archive_view,
     )
