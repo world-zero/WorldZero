@@ -35,7 +35,7 @@ export interface ProfileBodyProps {
   proposedTasks: TaskOut[]
   /** Null until game config loads — skins then hide the progression bar. */
   progression: ProfileProgression | null
-  /** Friend/foe controls. Null for own profile / logged out — hide, don't disable. */
+  /** Friend/foe on others' profiles; Edit link on your own; null when logged out — hide, don't disable. */
   identityActions: ReactNode
   /**
    * Signed-in viewers only (#2188); the card picks claim-vs-reason from

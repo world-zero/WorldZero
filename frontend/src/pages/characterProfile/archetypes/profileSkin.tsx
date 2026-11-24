@@ -673,7 +673,7 @@ export function ProfileSkin({
                 </div>
               )}
 
-              {/* friend/foe */}
+              {/* friend/foe on others' profiles; Edit link on your own; null when logged out */}
               {identityActions && (
                 <div style={{ marginTop: 'var(--space-lg)', maxWidth: 220 }}>{identityActions}</div>
               )}

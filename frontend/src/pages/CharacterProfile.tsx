@@ -232,7 +232,7 @@ export default function CharacterProfile() {
     <Link
       to={`/characters/${character.id}/edit`}
       className="label-caption underline"
-      style={{ display: "block", padding: "var(--space-sm) 0" }}
+      style={{ display: "flex", alignItems: "center", minHeight: 44 }}
     >
       {t("sidebar.characterCard.edit")}
     </Link>
