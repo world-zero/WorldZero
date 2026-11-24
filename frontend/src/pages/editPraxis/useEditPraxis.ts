@@ -539,7 +539,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
     try {
       // `cancel_duel_challenge` takes pending or active, penalty-free. Not via
       // `changeMode`, which refuses an accepted duel.
-      if (praxis.duel_id != null) {
+      if (praxis.duel_id != null && duel?.state !== "dissolved") {
         await cancelChallenge(praxis.duel_id);
       }
       await deletePraxis(praxis.id);
@@ -548,7 +548,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       return;
     }
     navigate("/tasks");
-  }, [praxis, navigate, askConfirm]);
+  }, [praxis, duel, navigate, askConfirm]);
 
   const changeMode = useCallback(
     async (next: PraxisType) => {
