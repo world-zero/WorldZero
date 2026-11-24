@@ -462,7 +462,7 @@ async def list_completed_task_ids(
     _: Account = Depends(require_permission(Permission.manage_tasks)),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
-    """Admin-only: ids of tasks a submitted praxis did; points and faction lock on active ones (#4298)."""
+    """Admin-only: ids of tasks a submitted praxis did (#4298)."""
     return await completed_task_ids(session)
 
 

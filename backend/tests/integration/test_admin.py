@@ -594,7 +594,7 @@ async def test_admin_edits_an_active_tasks_words_and_unchanged_points(
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """#4298: words edit on a live task, even a completed one; the panel resends unchanged points."""
+    """#4298: words edit on a live task, even a completed one."""
     await make_admin(db_session, account)
     await make_solo_praxis(db_session, active_task, character)
     await db_session.commit()
@@ -624,7 +624,7 @@ async def test_admin_edit_active_task_scoring_locks_once_completed(
     db_session: AsyncSession,
     field: str,
 ):
-    """#4298: points and faction rescore past praxes, so a completed live task locks them."""
+    """#4298: points and faction rescore past praxes, so completion locks them."""
     await make_admin(db_session, account)
     original = getattr(active_task, field)
     change = {

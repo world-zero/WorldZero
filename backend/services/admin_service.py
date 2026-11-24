@@ -782,7 +782,7 @@ async def admin_edit_task(
     actor_id: int,
     era: EraConfig = CURRENT_ERA,
 ) -> Task:
-    """Edit a task. On an active one, points and faction lock once it is completed (#4298)."""
+    """Edit a task; an active one locks points and faction once completed (#4298)."""
     task = await session.scalar(
         select(Task)
         .where(Task.id == task_id)
@@ -804,7 +804,8 @@ async def admin_edit_task(
     ):
         raise HTTPException(
             status_code=400,
-            detail="Someone has completed this task, so its points and faction are locked. "
+            detail="Someone has completed this task, "
+            "so its points and faction are locked. "
             "Retire the task first.",
         )
     before = (task.point_value, task.primary_faction_slug)
@@ -899,7 +900,7 @@ def _completed(task_id):
 
 
 async def completed_task_ids(session: AsyncSession) -> list[int]:
-    """Ids of tasks some submitted praxis did: the panel locks their points and faction."""
+    """Ids of tasks some submitted praxis did: their points and faction lock."""
     return list(await session.scalars(select(Task.id).where(_completed(Task.id))))
 
 
