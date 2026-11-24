@@ -18,6 +18,7 @@ from models.praxis import (
 from models.vote import Vote
 from services import admin_service, character_stats
 from services import praxis as praxis_service
+from services.account_deletion import delete_character
 from services.character import has_current_terms, is_playable
 from services.praxis import invite_to_praxis
 from services.standing import counts_as_voter, standing_of
@@ -259,6 +260,50 @@ async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
     first = list(dict.fromkeys(taken))
     assert {character.id, stay.id, leave.id} <= set(first)
     assert first == sorted(first)
+    before = {
+        pid for kind, pid in events[: events.index(("stats", 0))] if kind == "praxis"
+    }
+    assert collab.id in before
+    assert {pid for kind, pid in events if kind == "praxis"} == before
+
+
+async def test_a_delete_locks_praxis_rows_before_any_stats_row(
+    db_session, era, active_task, some_faction, monkeypatch
+):
+    duel, _, leaver = await make_duel(
+        db_session, era, label="del", status=DuelStatus.active
+    )
+    stay = await make_character(db_session, era, username="delstay")
+    collab = Praxis(
+        task_id=active_task.id, created_by_id=stay.id, type=PraxisType.collab,
+        title="c", body_text="proof",
+    )
+    db_session.add(collab)
+    await db_session.flush()
+    db_session.add_all(
+        PraxisMember(praxis_id=collab.id, character_id=m.id) for m in (stay, leaver)
+    )
+    await db_session.commit()
+
+    events: list[tuple[str, int]] = []
+    real = character_stats.lock_character_stats
+    real_praxis = praxis_service._lock_praxis
+
+    async def praxis_spy(praxis_id, session):
+        events.append(("praxis", praxis_id))
+        return await real_praxis(praxis_id, session)
+
+    async def spy(ids, session):
+        events.append(("stats", 0))
+        return await real(ids, session)
+
+    monkeypatch.setattr(character_stats, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
+
+    await delete_character(leaver.id, db_session)
+
+    assert ("stats", 0) in events
     before = {
         pid for kind, pid in events[: events.index(("stats", 0))] if kind == "praxis"
     }
