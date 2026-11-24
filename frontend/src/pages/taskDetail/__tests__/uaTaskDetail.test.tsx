@@ -142,7 +142,7 @@ describe("UA task detail — the shared contract in UA's dress", () => {
       <UaTaskDetail state={baseState({ task: { ...TASK, description: long } })} />,
     );
     expect(text).toContain("Ines Aurel");
-    expect(text).toContain("author · lvl 5");
+    expect(text).toContain("author · Level 5");
     expect(html).toContain('href="/characters/31"');
     expect(text).toContain(long);
   });

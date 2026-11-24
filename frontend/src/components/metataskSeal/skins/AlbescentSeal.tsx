@@ -84,13 +84,14 @@ export default function AlbescentSeal({ metatask, removable, onRemove }: SealSki
           className="block"
           style={{
             fontSize: 'var(--text-title)',
+            textTransform: 'uppercase',
             fontWeight: 600,
             letterSpacing: '0.02em',
             color: 'var(--faction-default-card-accent)',
             marginTop: 'var(--space-xs)',
           }}
         >
-          {t('detail.seal.bonus', { points: metatask.point_value })}
+          {t('detail.seal.bonus', { points: metatask.point_value, count: metatask.point_value })}
         </span>
       </div>
     </div>

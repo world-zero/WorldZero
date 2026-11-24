@@ -647,7 +647,7 @@ export default function SingularityProposeTask({ state }: { state: ProposeTaskSt
                   {isMetatask ? (
                     // Phosphor, not the neutral success ink (see header).
                     <span style={{ color: BRIGHT }}>
-                      {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })}
+                      {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?', count: Number(metaBonusValue) })}
                     </span>
                   ) : (
                     <span>

@@ -40,6 +40,7 @@ const TASK = {
 const PRAXIS = {
   id: 55,
   task_id: 7,
+  task_point_value: 20,
   task_title: "Ferry the recycling to the depot",
   type: "solo",
   status: "in_progress",

@@ -110,7 +110,7 @@
       "podiumOnly": "Everyone's on the podium so far."
     },
     "mobile": {
-      "factionLevel": "{{faction}} · Lv {{level}}"
+      "factionLevel": "{{faction}} · Level {{level}}"
     }
   },
   "collaborationCard": {
@@ -144,13 +144,15 @@
         "tapToUse": "Tap to use",
         "waiting_one": "{{count}} request waiting",
         "waiting_other": "{{count}} requests waiting",
-        "meta": "{{faction}} · Level {{level}} · {{points}} pts",
+        "meta_one": "{{faction}} · Level {{level}} · {{points}} point",
+        "meta_other": "{{faction}} · Level {{level}} · {{points}} points",
         "createNew": "Create new character"
       },
       "questsHeading": "In progress",
       "questsEmpty": "You have no tasks in progress. I, the small in-progress box, wish you would feed me delicious delicious task drafts.",
       "viewAll": "All tasks",
-      "taskMeta": "{{faction}} · {{points}} pts",
+      "taskMeta_one": "{{faction}} · {{points}} point",
+      "taskMeta_other": "{{faction}} · {{points}} points",
       "pending_one": "{{count}} pending request",
       "pending_other": "{{count}} pending requests",
       "activity": "New activity",

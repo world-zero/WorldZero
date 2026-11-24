@@ -21,7 +21,6 @@ const POINT_BEARING = [
   // Formerly "pts" (#2598); the long form needs `_one`.
   'feed:row.points',
   'forms:proposeTask.preview.points',
-  'forms:taskMeta.points',
   'praxis:card.points',
   'praxis:detail.taskRef.points',
 ] as const

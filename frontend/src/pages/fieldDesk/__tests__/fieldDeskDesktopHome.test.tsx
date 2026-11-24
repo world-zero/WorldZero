@@ -120,8 +120,8 @@ describe('the desktop FieldDesk keeps the roster and gains the new sections (#15
       praxis({ id: 2, status: 'submitted', score: 42, voter_count: 8, task_title: 'Repaint a bench' }),
     ]
     const html = text(render())
-    expect(html).toContain('Draft · +30 pts')
-    expect(html).toContain('Submitted · 42 pts · 8 votes')
+    expect(html).toContain('Draft · +30 points')
+    expect(html).toContain('Submitted · 42 points · 8 votes')
   })
 
   it('links a draft to its composer and a filed praxis to its page', () => {

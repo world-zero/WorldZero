@@ -37,7 +37,7 @@
     "mediaAudio": "audio"
   },
   "card": {
-    "level": "L{{level}}",
+    "level": "Level {{level}}",
     "points_one": "{{points}} point",
     "points_other": "{{points}} points",
     "solo": "solo",
@@ -157,7 +157,8 @@
     },
     "seal": {
       "kind": "Metatask",
-      "bonus": "+{{points}} PTS",
+      "bonus_one": "+{{points}} Point",
+      "bonus_other": "+{{points}} Points",
       "remove": "Remove metatask",
       "add": "+ Add a metatask"
     }

@@ -101,11 +101,12 @@ export default function EverymenSeal({ metatask, removable, onRemove }: SealSkin
             mixBlendMode: 'multiply',
             fontFamily: 'var(--ev-seal-face)',
             fontSize: 'var(--text-lg)',
+            textTransform: 'uppercase',
             lineHeight: 1.05,
             padding: 'var(--space-xs)',
           }}
         >
-          {t('detail.seal.bonus', { points: metatask.point_value })}
+          {t('detail.seal.bonus', { points: metatask.point_value, count: metatask.point_value })}
         </div>
       </div>
     </div>

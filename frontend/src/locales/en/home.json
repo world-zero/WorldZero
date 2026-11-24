@@ -8,9 +8,10 @@
     "continue": {
       "heading": "Continue where you left off",
       "meta": {
-        "draft": "Draft · +{{points}} pts",
-        "submitted_one": "Submitted · {{points}} pts · {{count}} vote",
-        "submitted_other": "Submitted · {{points}} pts · {{count}} votes"
+        "draft_one": "Draft · +{{points}} point",
+        "draft_other": "Draft · +{{points}} points",
+        "submitted_one": "Submitted · {{points}} points · {{count}} vote",
+        "submitted_other": "Submitted · {{points}} points · {{count}} votes"
       }
     },
     "browse": {

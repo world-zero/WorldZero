@@ -529,7 +529,7 @@ export default function WowProposeTask({ state }: { state: ProposeTaskState }) {
                 >
                   <span>
                     {isMetatask
-                      ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })
+                      ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?', count: Number(metaBonusValue) })
                       : t('proposeTask.preview.points', {
                           points: pointValue || '?',
                           // "?" takes the plural (#2598).

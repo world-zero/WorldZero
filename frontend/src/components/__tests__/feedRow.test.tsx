@@ -182,7 +182,7 @@ describe('normalizeFeedItem', () => {
     expect(changed.action).toBe('changed their vote on your praxis')
     expect(changed.action).not.toBe(cast.action)
     expect({ ...changed, action: null }).toEqual({ ...cast, action: null })
-    expect(changed.points).toBe('+5 pts')
+    expect(changed.points).toBe('+5 points')
     expect(changed.headlineHref).toBe('/praxis/9')
   })
 
@@ -199,7 +199,7 @@ describe('normalizeFeedItem', () => {
         task_point_value: 5,
       }),
     )!
-    expect(row.points).toBe('+3 pts')
+    expect(row.points).toBe('+3 points')
   })
 
   it('renders the changed row rather than dropping it', () => {
