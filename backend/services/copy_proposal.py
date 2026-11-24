@@ -2,18 +2,19 @@
 
 from typing import Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from errors import ErrorCode, raise_coded
 from models.account import Account
+from models.copy_override import CopyOverride
 from models.copy_proposal import CopyProposal, LineStatus
 from schemas.copy_proposal import CopyProposalIn
-from services.copy_override import (
-    current_value,
-    delete_override,
-    replace_override_if_unchanged,
-)
+from services.copy_override import current_value, replace_override_if_unchanged
+
+
+def _line_id(line: dict) -> tuple:
+    return tuple(line[k] for k in ("ns", "key", "owner_value", "proposed_value"))
 
 
 def _is_open(proposal: CopyProposal) -> bool:
@@ -24,21 +25,31 @@ async def file_proposal(
     data: CopyProposalIn, session: AsyncSession
 ) -> tuple[CopyProposal, bool]:
     """Create the PR's proposal, or replace its lines. True when it newly needs the
-    owner's eyes (new, or nothing open before), so a Test re-run does not re-push."""
-    lines = [
-        {**line.model_dump(), "status": LineStatus.open.value} for line in data.lines
-    ]
+    owner's eyes (new, or nothing open before), so a Test re-run does not re-push.
+    A line rejected before and unchanged stays rejected; empty ``lines`` withdraws."""
     proposal = await session.scalar(
         select(CopyProposal)
         .where(CopyProposal.pr_number == data.pr_number)
         .with_for_update()
     )
+    rejected = {
+        _line_id(line)
+        for line in (proposal.lines if proposal else [])
+        if line["status"] == LineStatus.rejected
+    }
+    lines = []
+    for line in data.lines:
+        fields = line.model_dump()
+        kept = _line_id(fields) in rejected
+        status = LineStatus.rejected if kept else LineStatus.open
+        lines.append({**fields, "status": status.value})
     if proposal is None:
         proposal = CopyProposal(pr_number=data.pr_number)
         session.add(proposal)
         fresh = True
     else:
         fresh = not _is_open(proposal)
+    fresh = fresh and any(line["status"] == LineStatus.open.value for line in lines)
     proposal.pr_url = str(data.pr_url)
     proposal.lines = lines
     await session.flush()
@@ -90,11 +101,14 @@ async def approve_line(
     proposal, line = await _open_line(proposal_id, ns, key, session)
     base, proposed = line["owner_value"], line["proposed_value"]
     if proposed is None:
-        # ponytail: check-then-delete is two statements; two approvers racing the same
-        # line is already serialised by the proposal row lock, an editor racing is not.
-        applied = await current_value(ns, key, session) == base and (
-            await delete_override(ns, key, session)
+        result = await session.execute(
+            delete(CopyOverride).where(
+                CopyOverride.ns == ns,
+                CopyOverride.key == key,
+                CopyOverride.value == base,
+            )
         )
+        applied = bool(result.rowcount)
     else:
         applied = (
             await replace_override_if_unchanged(
