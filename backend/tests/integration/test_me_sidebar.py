@@ -304,7 +304,7 @@ async def four_request_types(
 
     ``collab_invite``      ``pending`` AND room still joinable
     ``duel_challenge``     ``pending``
-    ``awaiting_submission``  ``has_approved`` false
+    ``awaiting_submission``  ``has_approved`` false, another member's true
     ``invitation_letter``  faction is not the one you stand in
 
     ``collab_invite`` has a second twin (#2279): pending but its praxis is
@@ -375,14 +375,15 @@ async def four_request_types(
             praxis_id=my_turn.id, character_id=character.id, has_approved=False
         ),
         PraxisMember(
-            praxis_id=my_turn.id, character_id=character2.id, has_approved=False
+            # Submitted: until another member has, nobody is waiting (#4296).
+            praxis_id=my_turn.id, character_id=character2.id, has_approved=True
         ),
         PraxisMember(
             praxis_id=already_filed.id, character_id=character.id, has_approved=True
         ),
         # Must differ from ``my_turn`` only in ``has_approved``.
         PraxisMember(
-            praxis_id=already_filed.id, character_id=character2.id, has_approved=False
+            praxis_id=already_filed.id, character_id=character2.id, has_approved=True
         ),
         InvitationLetter(
             character_id=character.id, faction_slug=OTHER_FACTION_SLUG, era_id=era.id
