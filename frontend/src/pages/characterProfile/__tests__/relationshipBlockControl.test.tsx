@@ -77,6 +77,10 @@ describe('the confirm names the consequence, not "are you sure"', () => {
     expect(request.body.toLowerCase()).toContain('not be notified')
   })
 
+  it('hides the visible title; the dialog is still named by it', () => {
+    expect(request.hideTitle).toBe(true)
+  })
+
   it('carries no raw catalog keys', () => {
     expect(JSON.stringify(request)).not.toContain('relationships.block')
   })

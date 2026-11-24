@@ -84,3 +84,20 @@ describe('a tall sheet scrolls to its title (#3993)', () => {
     expect(html).toContain('margin:var(--sheet-margin, auto)')
   })
 })
+
+describe('hideTitle', () => {
+  it('keeps the h2 as the dialog name but screen-reader only', () => {
+    const html = renderToStaticMarkup(
+      <ConfirmDialog
+        request={{ ...REQUEST, hideTitle: true }}
+        factionSlug={null}
+        onConfirm={() => {}}
+        onDismiss={() => {}}
+      />,
+    )
+    const h2 = /<h2 id="([^"]+)" class="([^"]*)"[^>]*>([^<]*)<\/h2>/.exec(html)
+    expect(h2?.[2]).toContain('sr-only')
+    expect(h2?.[3]).toBe(REQUEST.title)
+    expect(html).toContain(`aria-labelledby="${h2?.[1]}"`)
+  })
+})
