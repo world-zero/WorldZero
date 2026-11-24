@@ -39,7 +39,9 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
   const can = useCan()
   const canStatus = can(taskStatusNeed(task.status))
   const canEdit = can('editTask')
-  const frozen = task.status === 'active' || !canEdit
+  const frozen = !canEdit
+  // Scoring reads points and faction live: once a live task is done, changing them rewrites scores (#4298).
+  const scoreLocked = frozen || (task.status === 'active' && task.completed === true)
   const [form, setForm] = useState({
     title: task.title,
     description: task.description,
@@ -100,7 +102,6 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
   }
 
   const pending = task.status === 'pending'
-  const locked = task.status === 'active'
   const tone = pending || backdoor ? 'wait' : task.status === 'active' ? 'ok' : 'bad'
 
   return (
@@ -137,16 +138,16 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
       <div className="adm-fields3">
         <label className="adm-field">
           {t('tasks.pointsLabel')}
-          <input className="adm-input" type="number" min={1} value={form.points} readOnly={frozen} onChange={set('points')} />
+          <input className="adm-input" type="number" inputMode="numeric" min={1} value={form.points} readOnly={scoreLocked} onChange={set('points')} />
         </label>
         <label className="adm-field">
           {t('console.tasks.panel.level')}
-          <input className="adm-input" type="number" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} readOnly={frozen} onChange={set('level')} />
+          <input className="adm-input" type="number" inputMode="numeric" min={0} max={config ? config.level_thresholds.length - 1 : undefined} value={form.level} readOnly={frozen} onChange={set('level')} />
         </label>
         {factions.length > 0 && (
           <label className="adm-field">
             {t('tasks.factionLabel')}
-            <select className="adm-input" value={form.faction} disabled={frozen} onChange={set('faction')}>
+            <select className="adm-input" value={form.faction} disabled={scoreLocked} onChange={set('faction')}>
               {factions.map((f) => (
                 <option key={f.slug} value={f.slug}>
                   {f.label}
@@ -156,6 +157,7 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
           </label>
         )}
       </div>
+      {scoreLocked && !frozen && <p className="adm-muted">{t('console.tasks.panel.scoreLocked')}</p>}
       {backdoor && (
         <>
           <label className="adm-field">
@@ -201,13 +203,13 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
                 onChange={(next, window) => save(next, window)}
               />
             )}
-            {dirty && !locked && task.status !== 'deleted' && can('editTask') && (
+            {dirty && task.status !== 'deleted' && can('editTask') && (
               <button type="button" className="adm-btn" disabled={busy} onClick={() => void save()}>
                 {busy ? t('tasks.actions.saving') : t('tasks.actions.save')}
               </button>
             )}
           </div>
-          <p className="adm-muted">{t(locked ? 'console.tasks.panel.hintActive' : canEdit ? 'console.tasks.panel.hint' : 'console.tasks.panel.hintReadOnly')}</p>
+          <p className="adm-muted">{t(canEdit ? 'console.tasks.panel.hint' : 'console.tasks.panel.hintReadOnly')}</p>
           {task.status !== 'deleted' && !task.has_history && can('deleteTask') && (
             <button type="button" className="adm-btn adm-btn-dng" onClick={() => setConfirmDelete(true)}>
               {t('tasks.actions.delete')}

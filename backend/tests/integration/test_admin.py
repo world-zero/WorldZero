@@ -586,20 +586,67 @@ async def test_admin_edit_task_unknown_faction_rejected(
 
 
 @pytest.mark.asyncio
-async def test_admin_edit_active_task_rejected(
+async def test_admin_edits_an_active_tasks_words_and_unchanged_points(
     client: AsyncClient,
     account: Account,
+    character: Character,
     active_task: Task,
     auth_headers: dict,
     db_session: AsyncSession,
 ):
-    """Admin cannot edit an active task (must retire first)."""
+    """#4298: words edit on a live task, even a completed one; the panel resends unchanged points."""
     await make_admin(db_session, account)
+    await make_solo_praxis(db_session, active_task, character)
+    await db_session.commit()
 
     resp = await client.patch(
         f"/admin/tasks/{active_task.id}",
-        json={"title": "Should Fail"},
+        json={
+            "title": "Clearer title",
+            "level_required": 1,
+            "point_value": active_task.point_value,
+            "primary_faction_slug": active_task.primary_faction_slug,
+        },
         headers=auth_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["title"] == "Clearer title"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("field", ["point_value", "primary_faction_slug"])
+async def test_admin_edit_active_task_scoring_locks_once_completed(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+    field: str,
+):
+    """#4298: points and faction rescore past praxes, so a completed live task locks them."""
+    await make_admin(db_session, account)
+    original = getattr(active_task, field)
+    change = {
+        "point_value": active_task.point_value + 5,
+        "primary_faction_slug": real_faction_slugs(CURRENT_ERA)[1]
+        if active_task.primary_faction_slug != real_faction_slugs(CURRENT_ERA)[1]
+        else real_faction_slugs(CURRENT_ERA)[0],
+    }[field]
+
+    before = await client.get("/admin/tasks/completed", headers=auth_headers)
+    assert active_task.id not in before.json()
+    untouched = await client.patch(
+        f"/admin/tasks/{active_task.id}", json={field: change}, headers=auth_headers
+    )
+    assert untouched.status_code == 200, "nobody has completed it yet"
+
+    await make_solo_praxis(db_session, active_task, character)
+    await db_session.commit()
+    after = await client.get("/admin/tasks/completed", headers=auth_headers)
+    assert active_task.id in after.json()
+    resp = await client.patch(
+        f"/admin/tasks/{active_task.id}", json={field: original}, headers=auth_headers
     )
     assert resp.status_code == 400
 

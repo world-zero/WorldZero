@@ -11085,6 +11085,65 @@
         ]
       }
     },
+    "/admin/tasks/completed": {
+      "get": {
+        "description": "Admin-only: ids of tasks a submitted praxis did; points and faction lock on active ones (#4298).",
+        "operationId": "list_completed_task_ids_admin_tasks_completed_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "title": "Response List Completed Task Ids Admin Tasks Completed Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Completed Task Ids",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/admin/tasks/import-csv": {
       "post": {
         "description": "Admin-only: bulk-create tasks from an uploaded CSV (#1376).\n\nAtomic — either every row becomes a task or none does. Rejections come back\nas a 422 whose ``detail`` is one ``{row, msg}`` object per failing row, so the\nadmin can fix the whole file in one pass. Nothing is added to the session\nbefore validation succeeds, and ``get_db`` rolls back on the raise besides.",

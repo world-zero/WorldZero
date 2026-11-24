@@ -11,6 +11,7 @@ const api = vi.hoisted(() => ({
   getAllTasks: vi.fn(),
   getPendingTasks: vi.fn(),
   getTaskIdsWithHistory: vi.fn(),
+  getCompletedTaskIds: vi.fn(),
   adminPatchTask: vi.fn(async () => ({})),
   updateTaskStatus: vi.fn(async () => ({})),
   deleteTask: vi.fn(async () => undefined),
@@ -47,6 +48,7 @@ beforeEach(() => {
   vi.spyOn(Date, 'now').mockReturnValue(NOW)
   api.getAllTasks.mockResolvedValue([active, retired, proposal])
   api.getTaskIdsWithHistory.mockResolvedValue([])
+  api.getCompletedTaskIds.mockResolvedValue([])
   api.getPendingTasks.mockResolvedValue([{ ...proposal, created_by_name: 'Ada Quill', notes: 'Birds are everywhere.' }])
 })
 afterEach(() => {
@@ -116,15 +118,18 @@ describe('the task panel', () => {
     expect(api.adminPatchTask.mock.invocationCallOrder[0]).toBeLessThan(api.updateTaskStatus.mock.invocationCallOrder[0])
   })
 
-  it('shows an active task read-only with no save, and retire sends only the status', async () => {
+  it('a completed active task locks only points and faction; retire sends only the status', async () => {
+    api.getCompletedTaskIds.mockResolvedValue([1])
     at('/admin/tasks?task=1')
     const panel = await screen.findByRole('complementary', { name: 'Task' })
-    for (const label of ['Title', 'Description', 'Points', 'Level', 'Faction']) {
+    for (const label of ['Title', 'Description', 'Level']) {
+      expect((within(panel).getByLabelText(label) as HTMLInputElement).readOnly).toBe(false)
+    }
+    for (const label of ['Points', 'Faction']) {
       const el = within(panel).getByLabelText(label) as HTMLInputElement
       expect(el.disabled || el.readOnly).toBe(true)
     }
-    expect(within(panel).queryByRole('button', { name: /^save$/i })).toBeNull()
-    expect(within(panel).getByText(/Retire it to edit/)).toBeTruthy()
+    expect(within(panel).getByText(/points and faction are locked/)).toBeTruthy()
     fireEvent.click(within(panel).getByRole('button', { name: 'retire' }))
     fireEvent.click(within(panel).getByRole('button', { name: 'retire it' }))
     await waitFor(() => expect(api.updateTaskStatus).toHaveBeenCalledWith(1, 'retired', undefined))

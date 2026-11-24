@@ -34,7 +34,7 @@ from models.duel import Duel, DuelStatus
 from models.faction import Faction
 from models.flag import Flag
 from models.meta_task import PraxisMetaTask
-from models.praxis import ModerationStatus, Praxis, PraxisMember
+from models.praxis import ModerationStatus, Praxis, PraxisMember, PraxisStatus
 from models.task import Task, TaskStatus
 from models.vote import Vote
 from schemas.admin import (
@@ -782,7 +782,7 @@ async def admin_edit_task(
     actor_id: int,
     era: EraConfig = CURRENT_ERA,
 ) -> Task:
-    """Edit editable fields on a pending or retired task. Active tasks are locked."""
+    """Edit a task. On an active one, points and faction lock once it is completed (#4298)."""
     task = await session.scalar(
         select(Task)
         .where(Task.id == task_id)
@@ -791,10 +791,21 @@ async def admin_edit_task(
     )
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
-    if task.status == TaskStatus.active:
+    rescoring = (
+        data.point_value is not None and data.point_value != task.point_value
+    ) or (
+        data.primary_faction_slug is not None
+        and data.primary_faction_slug != task.primary_faction_slug
+    )
+    if (
+        task.status == TaskStatus.active
+        and rescoring
+        and await session.scalar(select(_completed(task.id)))
+    ):
         raise HTTPException(
             status_code=400,
-            detail="Active tasks cannot be edited. Retire the task first.",
+            detail="Someone has completed this task, so its points and faction are locked. "
+            "Retire the task first.",
         )
     before = (task.point_value, task.primary_faction_slug)
     if (
@@ -867,6 +878,29 @@ def _has_history(task_id):
     return or_(
         *(select(c).where(c == task_id).exists() for c in _TASK_REFERENCES)
     )
+
+
+def _completed(task_id):
+    """SQL predicate: a submitted praxis did ``task_id``, as its task or a metatask.
+
+    Its score reads the task's points and faction live, so changing them on a live
+    task would rewrite it (#4298).
+    """
+    submitted = select(Praxis.id).where(Praxis.status == PraxisStatus.submitted)
+    return or_(
+        submitted.where(Praxis.task_id == task_id).exists(),
+        select(PraxisMetaTask.praxis_id)
+        .where(
+            PraxisMetaTask.task_id == task_id,
+            PraxisMetaTask.praxis_id.in_(submitted),
+        )
+        .exists(),
+    )
+
+
+async def completed_task_ids(session: AsyncSession) -> list[int]:
+    """Ids of tasks some submitted praxis did: the panel locks their points and faction."""
+    return list(await session.scalars(select(Task.id).where(_completed(Task.id))))
 
 
 async def task_ids_with_history(session: AsyncSession) -> list[int]:

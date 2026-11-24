@@ -103,6 +103,12 @@ export async function getTaskIdsWithHistory(): Promise<number[]> {
   return data
 }
 
+/** Ids of tasks a submitted praxis did; an active one locks points and faction (#4298). */
+export async function getCompletedTaskIds(): Promise<number[]> {
+  const { data } = await apiGet('/admin/tasks/completed')
+  return data
+}
+
 /** Leaving `deleted` is the undo. */
 export type AdminTaskStatus = components['schemas']['TaskStatusAction']['status']
 
