@@ -115,8 +115,11 @@ async def test_a_lapsed_unswept_challenge_leaves_requests_and_the_badge(
 
     feed = await get_activity_feed(opponent.id, db_session, feed_filter="requests")
     badge = await pending_requests_counts([opponent.id], db_session)
+    stream = await get_activity_feed(opponent.id, db_session, feed_filter="all")
 
     assert (duel.id in [i.payload.duel_id for i in feed.items]) is listed
+    streamed = [getattr(i.payload, "duel_id", None) for i in stream.items]
+    assert (duel.id in streamed) is (not listed)
     assert badge[opponent.id] == int(listed)
 
 

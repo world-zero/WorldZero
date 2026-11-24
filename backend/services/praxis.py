@@ -49,6 +49,7 @@ from services.block_service import refuse_if_blocked
 from services.character import is_playable
 from services.character_stats import (
     lock_character_stats,
+    lock_settlement_stats,
     recalculate_character_stats,
     recalculate_members_stats,
 )
@@ -1341,11 +1342,17 @@ async def respond_to_invite(
 
 
 async def cancel_pending_invites_for(
-    character_ids: list[int], session: AsyncSession, era: EraConfig = CURRENT_ERA
+    character_ids: list[int],
+    session: AsyncSession,
+    era: EraConfig = CURRENT_ERA,
+    lock_ids: frozenset[int] | set[int] = frozenset(),
 ) -> None:
     """Delete every pending invite to or from these characters (S3, #4204), then
     settle each unsealed collab they touch: seal if the playable rest approved
-    (their absence was the last wait), else convert to solo when no one is left."""
+    (their absence was the last wait), else convert to solo when no one is left.
+
+    Stats locks for the seal recalcs and the caller's later vote rescore
+    (``lock_ids`` = its extra rescore ids) are taken here in one ascending pass."""
     invites = (
         await session.scalars(
             select(PraxisInvite).where(
@@ -1363,11 +1370,19 @@ async def cancel_pending_invites_for(
     await session.flush()
     praxis_ids.update(
         await session.scalars(
-            select(PraxisMember.praxis_id).where(
-                PraxisMember.character_id.in_(character_ids)
+            select(PraxisMember.praxis_id)
+            .join(Praxis, Praxis.id == PraxisMember.praxis_id)
+            .where(
+                PraxisMember.character_id.in_(character_ids),
+                Praxis.type == PraxisType.collab,
+                Praxis.status != PraxisStatus.submitted,
             )
         )
     )
+    accounts = set(await session.scalars(
+        select(Character.account_id).where(Character.id.in_(character_ids))
+    ))
+    await lock_settlement_stats(accounts, praxis_ids, lock_ids, session)
     for praxis_id in sorted(praxis_ids):
         praxis = await get_praxis(praxis_id, session, lock=True, refresh=True)
         if praxis.type == PraxisType.collab and praxis.status != PraxisStatus.submitted:

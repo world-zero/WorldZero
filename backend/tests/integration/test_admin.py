@@ -655,6 +655,32 @@ async def test_admin_edit_active_task_scoring_locks_once_completed(
 
 
 @pytest.mark.asyncio
+async def test_a_metatask_on_a_submitted_praxis_locks_its_scoring(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    meta = await make_task(db_session, character, task_type=TaskType.metatask)
+    praxis = await make_solo_praxis(db_session, active_task, character)
+    db_session.add(PraxisMetaTask(praxis_id=praxis.id, task_id=meta.id))
+    await db_session.commit()
+
+    done = await client.get("/admin/tasks/completed", headers=auth_headers)
+    assert meta.id in done.json()
+    resp = await client.patch(
+        f"/admin/tasks/{meta.id}",
+        json={"point_value": meta.point_value + 5},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == ErrorCode.task_scoring_locked.value
+
+
+@pytest.mark.asyncio
 async def test_admin_edit_active_task_unsubmitted_praxis_does_not_lock(
     client: AsyncClient,
     account: Account,

@@ -393,6 +393,23 @@ async def lock_members_stats(
     await lock_character_stats(ids | set(extra_character_ids), session)
 
 
+async def lock_settlement_stats(
+    account_ids: set[int],
+    praxis_ids: set[int],
+    extra_character_ids: Iterable[int],
+    session: AsyncSession,
+) -> None:
+    """One ascending lock pass over ``praxis_ids``' members and duel opponents,
+    everything ``account_ids`` voted on, and ``extra_character_ids`` (#4314)."""
+    voted = await session.scalars(
+        select(Vote.praxis_id).where(Vote.voter_account_id.in_(account_ids))
+    )
+    ids = await _members_with_duel_opponents(
+        praxis_ids | set(voted), set(extra_character_ids), session
+    )
+    await lock_character_stats(ids, session)
+
+
 async def recalculate_for_account_votes(
     account_id: int,
     session: AsyncSession,
