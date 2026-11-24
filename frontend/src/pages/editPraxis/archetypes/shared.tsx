@@ -816,6 +816,7 @@ export function TaskSlip({
         <span style={{ flexShrink: 0 }}>
           {t("editPraxis.composer.recapPoints", {
             points: praxis.task_point_value,
+            count: praxis.task_point_value,
           })}
         </span>
         <span aria-hidden style={{ flexShrink: 0 }}>

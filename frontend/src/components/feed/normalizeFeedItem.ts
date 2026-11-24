@@ -322,7 +322,7 @@ function rowFor(item: ActivityFeedItem, commentGate: number | null): FeedRow | n
         headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
         headlineQuoted: false,
         points:
-          p.value != null ? i18n.t('feed:row.pointsEarned', { points: p.value }) : null,
+          p.value != null ? i18n.t('feed:row.pointsEarned', { points: p.value, count: p.value }) : null,
         level: null,
         actions: [],
       }

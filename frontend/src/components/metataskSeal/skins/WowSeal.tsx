@@ -113,12 +113,13 @@ export default function WowSeal({ metatask, removable, onRemove }: SealSkinProps
           style={{
             fontFamily: 'var(--wow-seal-face)',
             fontSize: 'var(--text-title)',
+            textTransform: 'uppercase',
             letterSpacing: '0.03em',
             color: 'var(--faction-wow-stamp-total)',
             marginTop: 'var(--space-xs)',
           }}
         >
-          {t('detail.seal.bonus', { points: metatask.point_value })}
+          {t('detail.seal.bonus', { points: metatask.point_value, count: metatask.point_value })}
         </span>
       </div>
     </div>

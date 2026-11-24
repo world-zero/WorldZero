@@ -212,7 +212,7 @@ export default function FeedCardDuelChallenge({ item }: Props) {
             </span>
           )}
           <span className="label-caption">
-            {i18n.t("feed:duelChallenge.taskMeta", { points: task_point_value })}
+            {i18n.t("feed:duelChallenge.taskMeta", { points: task_point_value, count: task_point_value })}
           </span>
           {/* Drawn, not U+2694: several faces lack the glyph and paint tofu. */}
           <svg

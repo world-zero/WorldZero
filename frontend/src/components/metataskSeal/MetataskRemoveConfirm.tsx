@@ -31,6 +31,7 @@ export default function MetataskRemoveConfirm({
         body: t("editPraxis.attach.removeBody", {
           faction: factionName(target.metatask_faction_slug),
           points: target.point_value,
+          count: target.point_value,
         }),
         confirmLabel: t("editPraxis.attach.removeConfirm"),
         danger: true,

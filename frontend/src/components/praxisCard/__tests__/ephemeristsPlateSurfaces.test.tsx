@@ -282,7 +282,7 @@ describe('the Ephemerists metatask seal is a margin note on papyrus (#1207)', ()
     // Issuer is the shared band's wordmark (#2648): the faction NAME.
     expect(body).toContain(factionName('ephemerists'))
     expect(body).toContain('Logged as a dawn field-observation')
-    expect(body).toContain(i18n.t('praxis:detail.seal.bonus', { points: 35 }))
+    expect(body).toContain(i18n.t('praxis:detail.seal.bonus', { points: 35, count: 35 }))
   })
 
   it('sits FLAT — the specimen tilt is staging, not the seal', () => {

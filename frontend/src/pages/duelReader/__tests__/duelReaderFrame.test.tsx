@@ -183,7 +183,7 @@ describe('both widths carry the same information, in the same order', () => {
 
   it('names the rival bonus only on a qualifying duel (#3858)', () => {
     const rival = duel({ challenger: side({ rival_bonus: 5 }), opponent: { ...OPPONENT, rival_bonus: 5 } })
-    expect(render({ duel: rival })).toMatch(/Rival duel: whoever wins.*takes 5 more/)
+    expect(render({ duel: rival })).toMatch(/Rival duel: whoever wins.*takes 5 points more/)
     expect(render({})).not.toMatch(/Rival duel/)
   })
 

@@ -33,6 +33,7 @@ const task = {
 const praxis = {
   id: 55,
   task_id: 7,
+  task_point_value: 20,
   task_title: "A Very Human Thing",
   task_faction_slug: "snide",
   type: "solo",

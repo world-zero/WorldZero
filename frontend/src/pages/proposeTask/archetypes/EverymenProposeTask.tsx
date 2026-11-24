@@ -627,7 +627,7 @@ export default function EverymenProposeTask({ state }: { state: ProposeTaskState
               >
                 {isMetatask ? (
                   <span>
-                    {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })}
+                    {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?', count: Number(metaBonusValue) })}
                   </span>
                 ) : (
                   <span>
