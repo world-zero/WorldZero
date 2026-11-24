@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { sideHref } from '../communitySide'
 import { useFormFactor, usePhoneWidth } from '../../hooks/useFormFactor'
 import { useTranslation } from 'react-i18next'
@@ -79,6 +79,8 @@ export default function PlayersDirectory({
 }: PlayersViewProps) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
+  // Factions are not ranked per era (#4301 owner ruling).
+  const pastEra = useSearchParams()[0].has('era')
   // Width alone picks the tree, pointer ignored: #3980 owner ruling. Don't swap back to useFormFactor.
   const mobile = usePhoneWidth()
   // The h1 is the touch phone's job (Community.tsx heading), so it stays on the pointer-gated hook.
@@ -144,6 +146,7 @@ export default function PlayersDirectory({
         </div>
       )}
 
+      {!pastEra && (
       <section style={{ marginTop: sectionGap }}>
         <SectionHeading
           title={t('leaderboard.race.heading')}
@@ -182,6 +185,7 @@ export default function PlayersDirectory({
           </div>
         )}
       </section>
+      )}
 
       <section style={{ marginTop: sectionGap }}>
         <SectionHeading

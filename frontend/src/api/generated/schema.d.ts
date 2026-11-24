@@ -1442,11 +1442,31 @@ export interface paths {
         };
         /**
          * Get Leaderboard
-         * @description Top characters by current era score, optionally filtered by faction.
+         * @description Top characters by current era score, by faction, or for a past ``era`` id.
          *
          *     Public; optional auth only feeds the reveal check (#2422).
          */
         get: operations["get_leaderboard_leaderboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/leaderboard/era/{era_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Leaderboard Era
+         * @description The era's display name, for labelling ``?era=<id>``.
+         */
+        get: operations["get_leaderboard_era_leaderboard_era__era_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4400,6 +4420,13 @@ export interface components {
             accepted: boolean;
             /** Praxis Id */
             praxis_id: number;
+        };
+        /** LeaderboardEraOut */
+        LeaderboardEraOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
         };
         /**
          * LeavingFaction
@@ -8532,6 +8559,7 @@ export interface operations {
         parameters: {
             query?: {
                 faction?: string | null;
+                era?: number | null;
                 limit?: number;
                 offset?: number;
             };
@@ -8550,6 +8578,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CharacterOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_leaderboard_era_leaderboard_era__era_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                era_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardEraOut"];
                 };
             };
             /** @description Validation Error */

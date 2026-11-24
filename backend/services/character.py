@@ -735,15 +735,17 @@ async def list_characters_for_viewer(
     limit: int = 50,
     offset: int = 0,
     era: EraConfig = CURRENT_ERA,
+    era_id: int | None = None,
 ) -> list[tuple[Character, CharacterStats | None]]:
-    """List active characters with current-era stats.
+    """List active characters with current-era stats (``era_id`` ranks a past era).
 
     ``exclude_account_id`` is the ADR-0041
     same-account rule for the duel picker (#1385). ``viewer_account`` decides
     whether ``?faction=albescent`` is answered (#2422); None is anti-oracle.
     """
-    era_row = await get_current_era_row_safe(session)
-    era_id = era_row.id if era_row else None
+    if era_id is None:
+        era_row = await get_current_era_row_safe(session)
+        era_id = era_row.id if era_row else None
 
     query = _character_stats_era_join(era_id)
     # A leading '@' is a sigil; names cannot contain it (#624).

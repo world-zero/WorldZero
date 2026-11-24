@@ -196,3 +196,42 @@ async def test_paging_tied_scores_partitions_without_overlap_or_gaps(
 
     assert len(set(paged)) == len(paged), "no character appears on two pages"
     assert set(paged) == set(seeded_ids), "every character appears on exactly one page"
+
+
+@pytest.mark.asyncio
+async def test_leaderboard_era_param_ranks_only_that_eras_stats(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account,
+    era: Era,
+    some_faction: Faction,
+):
+    from game_config import CURRENT_ERA
+
+    old = Era(name="Old", config_key=CURRENT_ERA.config_key, started_by_id=account.id)
+    db_session.add(old)
+    await db_session.commit()
+    await db_session.refresh(old)
+    hero = await make_character(db_session, old, username="oldhero", score=900)
+    rival = await make_character(db_session, era, username="newrival", score=50)
+    await db_session.commit()
+
+    past = (await client.get(f"/leaderboard?era={old.id}")).json()
+    ids = [c["id"] for c in past]
+    assert ids.index(hero.id) < ids.index(rival.id)
+    assert past[0]["id"] == hero.id and past[0]["score"] == 900
+    assert next(c for c in past if c["id"] == rival.id)["score"] == 0
+
+    live = (await client.get(f"/leaderboard?era={era.id}")).json()
+    assert live[0]["id"] == rival.id and live[0]["score"] == 50
+
+    named = (await client.get(f"/leaderboard/era/{old.id}")).json()
+    assert named["id"] == old.id and named["name"]
+
+
+@pytest.mark.asyncio
+async def test_leaderboard_unknown_era_is_coded_404(client: AsyncClient, era: Era):
+    for url in (f"/leaderboard?era={era.id + 999}", f"/leaderboard/era/{era.id + 999}"):
+        resp = await client.get(url)
+        assert resp.status_code == 404
+        assert resp.json()["detail"]["code"] == "ERA_NOT_FOUND"

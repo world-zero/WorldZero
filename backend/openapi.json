@@ -5087,6 +5087,24 @@
         "title": "InviteResponseOut",
         "type": "object"
       },
+      "LeaderboardEraOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "LeaderboardEraOut",
+        "type": "object"
+      },
       "LeavingFaction": {
         "description": "A faction the next era drops from the roster, with who is in it today.",
         "properties": {
@@ -13915,7 +13933,7 @@
     },
     "/leaderboard": {
       "get": {
-        "description": "Top characters by current era score, optionally filtered by faction.\n\nPublic; optional auth only feeds the reveal check (#2422).",
+        "description": "Top characters by current era score, by faction, or for a past ``era`` id.\n\nPublic; optional auth only feeds the reveal check (#2422).",
         "operationId": "get_leaderboard_leaderboard_get",
         "parameters": [
           {
@@ -13932,6 +13950,22 @@
                 }
               ],
               "title": "Faction"
+            }
+          },
+          {
+            "in": "query",
+            "name": "era",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Era"
             }
           },
           {
@@ -14007,6 +14041,49 @@
           }
         ],
         "summary": "Get Leaderboard",
+        "tags": [
+          "leaderboard"
+        ]
+      }
+    },
+    "/leaderboard/era/{era_id}": {
+      "get": {
+        "description": "The era's display name, for labelling ``?era=<id>``.",
+        "operationId": "get_leaderboard_era_leaderboard_era__era_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "era_id",
+            "required": true,
+            "schema": {
+              "title": "Era Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardEraOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Leaderboard Era",
         "tags": [
           "leaderboard"
         ]
