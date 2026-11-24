@@ -25,6 +25,7 @@
               "discriminator": {
                 "mapping": {
                   "awaiting_submission": "#/components/schemas/AwaitingSubmissionItem",
+                  "collab_accepted": "#/components/schemas/CollabAcceptedItem",
                   "collab_invite": "#/components/schemas/CollabInviteItem",
                   "collaborator_submitted": "#/components/schemas/CollaboratorSubmittedItem",
                   "comment_mention": "#/components/schemas/CommentMentionItem",
@@ -37,7 +38,6 @@
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
                   "friend_completion": "#/components/schemas/FriendCompletionItem",
                   "friend_defection": "#/components/schemas/FriendDefectionItem",
-                  "friend_signup": "#/components/schemas/FriendSignupItem",
                   "global_task": "#/components/schemas/GlobalTaskItem",
                   "invitation_letter": "#/components/schemas/InvitationLetterItem",
                   "nudge": "#/components/schemas/NudgeItem",
@@ -85,7 +85,7 @@
                   "$ref": "#/components/schemas/DuelLiveItem"
                 },
                 {
-                  "$ref": "#/components/schemas/FriendSignupItem"
+                  "$ref": "#/components/schemas/CollabAcceptedItem"
                 },
                 {
                   "$ref": "#/components/schemas/InvitationLetterItem"
@@ -1048,6 +1048,130 @@
           "access_token"
         ],
         "title": "CliTokenResponse",
+        "type": "object"
+      },
+      "CollabAcceptedItem": {
+        "properties": {
+          "actor_avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Avatar Url"
+          },
+          "actor_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Display Name"
+          },
+          "actor_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Faction Slug"
+          },
+          "actor_name_state": {
+            "$ref": "#/components/schemas/NameState",
+            "default": "ok"
+          },
+          "context_faction_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
+            "readOnly": true,
+            "title": "Context Faction Slug"
+          },
+          "item_key": {
+            "title": "Item Key",
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/CollabAcceptedPayload"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "type": {
+            "const": "collab_accepted",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "item_key",
+          "timestamp",
+          "actor_display_name",
+          "actor_faction_slug",
+          "actor_avatar_url",
+          "actor_name_state",
+          "payload",
+          "context_faction_slug"
+        ],
+        "title": "CollabAcceptedItem",
+        "type": "object"
+      },
+      "CollabAcceptedPayload": {
+        "additionalProperties": false,
+        "description": "A player accepted the viewer's collab invite (#4323).",
+        "properties": {
+          "character_id": {
+            "title": "Character Id",
+            "type": "integer"
+          },
+          "invite_id": {
+            "title": "Invite Id",
+            "type": "integer"
+          },
+          "praxis_id": {
+            "title": "Praxis Id",
+            "type": "integer"
+          },
+          "task_faction_slug": {
+            "title": "Task Faction Slug",
+            "type": "string"
+          },
+          "task_point_value": {
+            "title": "Task Point Value",
+            "type": "integer"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invite_id",
+          "character_id",
+          "praxis_id",
+          "task_title",
+          "task_point_value",
+          "task_faction_slug"
+        ],
+        "title": "CollabAcceptedPayload",
         "type": "object"
       },
       "CollabInviteItem": {
@@ -4534,135 +4658,6 @@
         "title": "FriendDefectionPayload",
         "type": "object"
       },
-      "FriendSignupItem": {
-        "properties": {
-          "actor_avatar_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actor Avatar Url"
-          },
-          "actor_display_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actor Display Name"
-          },
-          "actor_faction_slug": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actor Faction Slug"
-          },
-          "actor_name_state": {
-            "$ref": "#/components/schemas/NameState",
-            "default": "ok"
-          },
-          "context_faction_slug": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Card frame faction: actor's, else task's, else None (faction UI spec §2).\n\n``getattr`` because only some payloads carry a task.",
-            "readOnly": true,
-            "title": "Context Faction Slug"
-          },
-          "item_key": {
-            "title": "Item Key",
-            "type": "string"
-          },
-          "payload": {
-            "$ref": "#/components/schemas/FriendSignupPayload"
-          },
-          "timestamp": {
-            "format": "date-time",
-            "title": "Timestamp",
-            "type": "string"
-          },
-          "type": {
-            "const": "friend_signup",
-            "title": "Type",
-            "type": "string"
-          }
-        },
-        "required": [
-          "type",
-          "item_key",
-          "timestamp",
-          "actor_display_name",
-          "actor_faction_slug",
-          "actor_avatar_url",
-          "actor_name_state",
-          "payload",
-          "context_faction_slug"
-        ],
-        "title": "FriendSignupItem",
-        "type": "object"
-      },
-      "FriendSignupPayload": {
-        "additionalProperties": false,
-        "description": "A friend joined a task the viewer is also doing.",
-        "properties": {
-          "character_id": {
-            "title": "Character Id",
-            "type": "integer"
-          },
-          "praxis_member_id": {
-            "title": "Praxis Member Id",
-            "type": "integer"
-          },
-          "task_faction_slug": {
-            "title": "Task Faction Slug",
-            "type": "string"
-          },
-          "task_id": {
-            "title": "Task Id",
-            "type": "integer"
-          },
-          "task_level_required": {
-            "title": "Task Level Required",
-            "type": "integer"
-          },
-          "task_point_value": {
-            "title": "Task Point Value",
-            "type": "integer"
-          },
-          "task_title": {
-            "title": "Task Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "praxis_member_id",
-          "character_id",
-          "task_id",
-          "task_title",
-          "task_point_value",
-          "task_faction_slug",
-          "task_level_required"
-        ],
-        "title": "FriendSignupPayload",
-        "type": "object"
-      },
       "GameConfigOut": {
         "properties": {
           "backdoor_hint_stage_days": {
@@ -7745,6 +7740,7 @@
               "discriminator": {
                 "mapping": {
                   "awaiting_submission": "#/components/schemas/AwaitingSubmissionItem",
+                  "collab_accepted": "#/components/schemas/CollabAcceptedItem",
                   "collab_invite": "#/components/schemas/CollabInviteItem",
                   "collaborator_submitted": "#/components/schemas/CollaboratorSubmittedItem",
                   "comment_mention": "#/components/schemas/CommentMentionItem",
@@ -7757,7 +7753,6 @@
                   "foe_taunt": "#/components/schemas/FoeTauntItem",
                   "friend_completion": "#/components/schemas/FriendCompletionItem",
                   "friend_defection": "#/components/schemas/FriendDefectionItem",
-                  "friend_signup": "#/components/schemas/FriendSignupItem",
                   "global_task": "#/components/schemas/GlobalTaskItem",
                   "invitation_letter": "#/components/schemas/InvitationLetterItem",
                   "nudge": "#/components/schemas/NudgeItem",
@@ -7805,7 +7800,7 @@
                   "$ref": "#/components/schemas/DuelLiveItem"
                 },
                 {
-                  "$ref": "#/components/schemas/FriendSignupItem"
+                  "$ref": "#/components/schemas/CollabAcceptedItem"
                 },
                 {
                   "$ref": "#/components/schemas/InvitationLetterItem"

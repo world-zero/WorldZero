@@ -37,11 +37,11 @@ export function GlobalTaskRow() {
   )
 }
 
-/** A friend signing up for a task — Everymen frame. */
+/** A player accepting your collab invite — Everymen frame. */
 export function FriendSignupRow() {
   return (
     <div style={wrap}>
-      <FeedCardRouter item={mockFeedItems.friend_signup} />
+      <FeedCardRouter item={mockFeedItems.collab_accepted} />
     </div>
   )
 }

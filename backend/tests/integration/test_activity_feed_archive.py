@@ -43,7 +43,6 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_DUEL_CHALLENGE,
     FEED_ITEM_TYPE_FOE_TAUNT,
     FEED_ITEM_TYPE_FRIEND_COMPLETION,
-    FEED_ITEM_TYPE_FRIEND_SIGNUP,
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_ITEM_TYPE_INVITATION_LETTER,
     FEED_ITEM_TYPE_NUDGE,
@@ -72,9 +71,9 @@ REQUESTS_FILTER = "requests"
 # read four short of their registry membership.
 SEEDED_ITEM_COUNTS = {
     ALL_FILTER: 16,
-    FRIENDS_FILTER: 4,
+    FRIENDS_FILTER: 3,
     FOES_FILTER: 3,
-    YOUR_STUFF_FILTER: 7,
+    YOUR_STUFF_FILTER: 8,
     GLOBAL_FILTER: 3,
     REQUESTS_FILTER: 4,
 }
@@ -216,7 +215,7 @@ async def full_feed(
     )
 
     # --- collab praxis: collab_invite, awaiting_submission, and character2's member
-    # row feeding collaborator_submitted + friend_signup (why keys carry a type).
+    # row feeding collaborator_submitted; character3 accepts an invite.
     collab_praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character2.id,
@@ -242,7 +241,18 @@ async def full_feed(
         invitee_id=character.id,
         status=PraxisInviteStatus.pending,
     )
-    db_session.add_all([viewer_member, friend_member, collab_invite])
+    accepted_member = PraxisMember(
+        praxis_id=collab_praxis.id, character_id=character3.id
+    )
+    accepted_invite = PraxisInvite(
+        praxis_id=collab_praxis.id,
+        inviter_id=character.id,
+        invitee_id=character3.id,
+        status=PraxisInviteStatus.accepted,
+    )
+    db_session.add_all(
+        [viewer_member, friend_member, collab_invite, accepted_member, accepted_invite]
+    )
 
     # --- nudge ---
     db_session.add(
@@ -423,23 +433,6 @@ async def test_every_feed_type_yields_a_stable_item_key(
         assert separator, item["item_key"]
         assert item_type == item["type"]
         assert int(raw_id) > 0, item["item_key"]
-
-
-@pytest.mark.asyncio
-async def test_one_source_row_two_types_get_distinct_keys(
-    client: AsyncClient, full_feed: dict, auth_headers: dict
-):
-    """``friend_signup`` and ``collaborator_submitted`` share a ``praxis_member`` row;
-    only the type prefix keeps their keys apart.
-    """
-    feed = await _feed(client, auth_headers)
-    signup_key = _key_of(feed, FEED_ITEM_TYPE_FRIEND_SIGNUP)
-    submitted_key = _key_of(feed, FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED)
-
-    member_id = str(full_feed["friend_member_id"])
-    assert signup_key.endswith(ITEM_KEY_SEPARATOR + member_id)
-    assert submitted_key.endswith(ITEM_KEY_SEPARATOR + member_id)
-    assert signup_key != submitted_key
 
 
 # --- 2. Dismiss / restore ---
@@ -1218,7 +1211,6 @@ async def test_per_type_counts_respect_the_rail_they_sit_under(
     friends = await _feed(client, auth_headers, FRIENDS_FILTER)
     assert set(friends["counts"]["by_type"]) == {
         FEED_ITEM_TYPE_FRIEND_COMPLETION,
-        FEED_ITEM_TYPE_FRIEND_SIGNUP,
         "friend_defection",
         "duel_live",
     }

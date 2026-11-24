@@ -2590,26 +2590,6 @@ async def test_pending_collab_counts_against_bank_cap(
 
 
 @pytest.mark.asyncio
-async def test_pending_collab_appears_in_active_tasks(
-    client: AsyncClient,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-    auth_headers2: dict,
-    db_session: AsyncSession,
-):
-    from services.activity_feed import _get_my_task_ids
-
-    praxis_id = await _two_member_collab(
-        client, active_task, auth_headers2, character.id, auth_headers
-    )
-    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
-    assert active_task.id in await _get_my_task_ids(character2.id, db_session)
-    assert active_task.id in await _get_my_task_ids(character.id, db_session)
-
-
-@pytest.mark.asyncio
 async def test_unsubmit_pending_reopens_the_whole_group(
     client: AsyncClient,
     character: Character,

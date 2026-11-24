@@ -2358,7 +2358,7 @@ export interface components {
         ActivityFeedResponse: {
             counts: components["schemas"]["FeedCounts"];
             /** Items */
-            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["DuelLiveItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            items: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["DuelLiveItem"] | components["schemas"]["CollabAcceptedItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -2726,6 +2726,55 @@ export interface components {
         CliTokenResponse: {
             /** Access Token */
             access_token: string;
+        };
+        /** CollabAcceptedItem */
+        CollabAcceptedItem: {
+            /** Actor Avatar Url */
+            actor_avatar_url: string | null;
+            /** Actor Display Name */
+            actor_display_name: string | null;
+            /** Actor Faction Slug */
+            actor_faction_slug: string | null;
+            /** @default ok */
+            actor_name_state: components["schemas"]["NameState"];
+            /**
+             * Context Faction Slug
+             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
+             *
+             *     ``getattr`` because only some payloads carry a task.
+             */
+            readonly context_faction_slug: string | null;
+            /** Item Key */
+            item_key: string;
+            payload: components["schemas"]["CollabAcceptedPayload"];
+            /**
+             * Timestamp
+             * Format: date-time
+             */
+            timestamp: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "collab_accepted";
+        };
+        /**
+         * CollabAcceptedPayload
+         * @description A player accepted the viewer's collab invite (#4323).
+         */
+        CollabAcceptedPayload: {
+            /** Character Id */
+            character_id: number;
+            /** Invite Id */
+            invite_id: number;
+            /** Praxis Id */
+            praxis_id: number;
+            /** Task Faction Slug */
+            task_faction_slug: string;
+            /** Task Point Value */
+            task_point_value: number;
+            /** Task Title */
+            task_title: string;
         };
         /** CollabInviteItem */
         CollabInviteItem: {
@@ -4195,57 +4244,6 @@ export interface components {
             /** Old Faction Slug */
             old_faction_slug: string;
         };
-        /** FriendSignupItem */
-        FriendSignupItem: {
-            /** Actor Avatar Url */
-            actor_avatar_url: string | null;
-            /** Actor Display Name */
-            actor_display_name: string | null;
-            /** Actor Faction Slug */
-            actor_faction_slug: string | null;
-            /** @default ok */
-            actor_name_state: components["schemas"]["NameState"];
-            /**
-             * Context Faction Slug
-             * @description Card frame faction: actor's, else task's, else None (faction UI spec §2).
-             *
-             *     ``getattr`` because only some payloads carry a task.
-             */
-            readonly context_faction_slug: string | null;
-            /** Item Key */
-            item_key: string;
-            payload: components["schemas"]["FriendSignupPayload"];
-            /**
-             * Timestamp
-             * Format: date-time
-             */
-            timestamp: string;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            type: "friend_signup";
-        };
-        /**
-         * FriendSignupPayload
-         * @description A friend joined a task the viewer is also doing.
-         */
-        FriendSignupPayload: {
-            /** Character Id */
-            character_id: number;
-            /** Praxis Member Id */
-            praxis_member_id: number;
-            /** Task Faction Slug */
-            task_faction_slug: string;
-            /** Task Id */
-            task_id: number;
-            /** Task Level Required */
-            task_level_required: number;
-            /** Task Point Value */
-            task_point_value: number;
-            /** Task Title */
-            task_title: string;
-        };
         /** GameConfigOut */
         GameConfigOut: {
             /** Backdoor Hint Stage Days */
@@ -5531,7 +5529,7 @@ export interface components {
             /** Active Praxes */
             active_praxes: components["schemas"]["PraxisCardOut"][];
             /** Global Activity */
-            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["DuelLiveItem"] | components["schemas"]["FriendSignupItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
+            global_activity: (components["schemas"]["VoteOnMineItem"] | components["schemas"]["VoteChangedOnMineItem"] | components["schemas"]["FriendCompletionItem"] | components["schemas"]["FoeCompletionItem"] | components["schemas"]["FoeTauntItem"] | components["schemas"]["GlobalTaskItem"] | components["schemas"]["EraAnnouncementItem"] | components["schemas"]["RulesChangeItem"] | components["schemas"]["CollabInviteItem"] | components["schemas"]["DuelChallengeItem"] | components["schemas"]["DuelForfeitedItem"] | components["schemas"]["DuelLiveItem"] | components["schemas"]["CollabAcceptedItem"] | components["schemas"]["InvitationLetterItem"] | components["schemas"]["FriendDefectionItem"] | components["schemas"]["CommentMentionItem"] | components["schemas"]["CommentOnMineItem"] | components["schemas"]["CollaboratorSubmittedItem"] | components["schemas"]["AwaitingSubmissionItem"] | components["schemas"]["NudgeItem"])[];
             /** Global Activity Count */
             global_activity_count: number;
             /**

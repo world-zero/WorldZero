@@ -22,7 +22,7 @@ export const FACTION_ROW_TYPES = new Set([
   'vote_on_mine',
   'vote_changed_on_mine',
   'foe_taunt',
-  'friend_signup',
+  'collab_accepted',
   'friend_defection',
   'global_task',
   'collaborator_submitted',
@@ -166,21 +166,22 @@ function rowFor(item: ActivityFeedItem, commentGate: number | null): FeedRow | n
         actions: [],
       }
     }
-    case 'friend_signup':
+    case 'collab_accepted':
+      // The actor slot carries the name: "<actor> accepted your collaboration request".
       return {
         slug,
         actor,
         actorHref: p.character_id != null ? `/characters/${p.character_id}` : null,
-        action: i18n.t('feed:row.action.signedUpSharedTask'),
-        badge: { type: 'friend', label: i18n.t('feed:badge.friend') },
+        action: i18n.t('feed:row.action.collabAccepted'),
+        badge: { type: 'your_stuff', label: i18n.t('feed:badge.yourStuff') },
         headline: p.task_title ?? null,
-        headlineHref: p.task_id != null ? `/tasks/${p.task_id}` : null,
+        headlineHref: p.praxis_id != null ? `/praxis/${p.praxis_id}` : null,
         headlineQuoted: false,
         points:
           p.task_point_value != null
             ? i18n.t('feed:row.points', { points: p.task_point_value, count: p.task_point_value })
             : null,
-        level: p.task_level_required ?? null,
+        level: null,
         actions: [],
       }
     case 'collaborator_submitted':
