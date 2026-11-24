@@ -65,6 +65,7 @@ from services.email import (
 )
 from services.era_gates import meets_vote_level
 from services.notification_prefs import LEVEL_UP, resolve_prefs
+from services.standing import public_identity
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +261,7 @@ async def notify(
     account = await session.get(Account, recipient.account_id)
     if account is None or account.status != AccountStatus.active:
         return
+    actor_name = (public_identity(actor).display_name or None) if actor else None
     pref = resolve_prefs(account.notification_prefs)[kind]
     # ponytail: only the single-recipient rows have mail wording (email.json); the
     # broadcast rows (era announcement, rules change, global task) stay unwired for
@@ -270,7 +272,7 @@ async def notify(
             kind=kind,
             token=unsubscribe_token(account.id, kind),
             url=url,
-            actor=actor.display_name if actor else None,
+            actor=actor_name,
             task_title=task_title,
             faction=faction,
         )
@@ -286,7 +288,7 @@ async def notify(
                 "tag": tag,
                 "url": url,
                 "character": recipient.display_name,
-                "actor": actor.display_name if actor else None,
+                "actor": actor_name,
                 "task": task_title,
                 "count": count,
                 "faction": faction,

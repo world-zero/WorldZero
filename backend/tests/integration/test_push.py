@@ -189,6 +189,28 @@ async def test_a_rating_queues_a_keys_only_payload(
 
 
 @pytest.mark.asyncio
+async def test_an_absent_actor_is_not_named_in_the_push(
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    character2: Character,
+    keys_on,
+):
+    await _subscribe(db_session, account)
+    account.notification_prefs = {"vote_on_mine": {"by_push": True}}
+    task = await make_task(db_session, character, title="Feed a stranger")
+    praxis = await make_solo_praxis(db_session, task, character)
+    character2.status = CharacterStatus.banned
+    await db_session.flush()
+    await db_session.refresh(character2)
+
+    await push.notify_vote(db_session, praxis, character2)
+
+    ((payload, _),) = _queued(db_session)
+    assert payload["actor"] is None
+
+
+@pytest.mark.asyncio
 async def test_an_invitation_letter_names_its_faction_by_slug(
     db_session: AsyncSession, account: Account, character: Character, keys_on
 ):
