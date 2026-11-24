@@ -58,7 +58,7 @@ export interface FeedRow {
   headlineHref: string | null
   /** Render the headline as a quoted line (taunts) rather than a title link. */
   headlineQuoted: boolean
-  /** Pre-formatted points string, e.g. "40 pts" / "+12 pts", or null. */
+  /** Pre-formatted points string, e.g. "40 points" / "+12 points", or null. */
   points: string | null
   level: number | null
   /** CTAs for the row's action slot. Empty for most types. */

@@ -76,7 +76,7 @@ describe('the task line and the excerpt are told apart (#2114)', () => {
 
 describe('the meta line does not restate the stamp (#2114 supersedes #1833)', () => {
   it('drops the points term whenever a stamp is mounted', () => {
-    // The stamp prints BASE 12, so `12 pts` would repeat it.
+    // The stamp prints BASE 12, so "12 points" would repeat it.
     const html = text(body({ score: 16, points_from_votes: 4 }))
     expect(html, 'the stamp still carries both figures').toContain('12')
     expect(html, 'the meta line does not').not.toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
