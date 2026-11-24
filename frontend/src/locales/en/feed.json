@@ -123,7 +123,8 @@
     },
     "points_one": "{{points}} point",
     "points_other": "{{points}} points",
-    "pointsEarned": "+{{points}} pts",
+    "pointsEarned_one": "+{{points}} point",
+    "pointsEarned_other": "+{{points}} points",
     "level": "Level {{level}}",
     "quotedHeadline": "“{{headline}}”"
   },
@@ -133,7 +134,8 @@
   },
   "collabInvite": {
     "sentence": "<1>{{name}}</1> invited you to collaborate",
-    "taskMeta": "{{points}} pts · lvl {{level}}",
+    "taskMeta_one": "{{points}} point · Level {{level}}",
+    "taskMeta_other": "{{points}} points · Level {{level}}",
     "accepted": "Accepted — view collaboration",
     "declined": "Declined",
     "closed": "Submitted without you — view praxis",
@@ -147,7 +149,8 @@
   },
   "duelChallenge": {
     "sentence": "<1>{{name}}</1> has challenged you to a duel",
-    "taskMeta": "{{points}} pts · winner takes the points",
+    "taskMeta_one": "{{points}} point · winner takes the points",
+    "taskMeta_other": "{{points}} points · winner takes the points",
     "accept": "Accept Duel",
     "accepted": "Duel Accepted — view duel",
     "declined": "Declined",

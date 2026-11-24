@@ -51,7 +51,7 @@ const SKIN_SLUGS = ["snide", "singularity", "everymen", "ephemerists"];
 describe("seal skins A content-slot invariant", () => {
   for (const slug of SKIN_SLUGS) {
     const task = metatask(slug);
-    const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value });
+    const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value, count: task.point_value });
 
     it(`${slug} renders the condition (title)`, () => {
       const html = markup(<MetataskSeal metatasks={[task]} />);

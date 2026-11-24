@@ -243,6 +243,7 @@ export default function MetataskPicker({
               {t("editPraxis.attach.pending", {
                 faction: factionName(pending.metatask_faction_slug),
                 points: pending.point_value,
+                count: pending.point_value,
               })}
             </span>
           )}

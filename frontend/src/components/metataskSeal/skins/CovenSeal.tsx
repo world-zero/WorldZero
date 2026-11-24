@@ -98,6 +98,7 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
             color: HOLD_INK,
             fontFamily: 'var(--font-faction-script)',
             fontSize: 'var(--text-lg)',
+            textTransform: 'uppercase',
             fontWeight: 700,
             letterSpacing: '0.04em',
             padding: 'var(--space-xs) var(--space-sm)',
@@ -106,7 +107,7 @@ export default function CovenSeal({ metatask, removable, onRemove }: SealSkinPro
             transform: 'rotate(-1.5deg)',
           }}
         >
-          {t('detail.seal.bonus', { points: metatask.point_value })}
+          {t('detail.seal.bonus', { points: metatask.point_value, count: metatask.point_value })}
         </span>
       </div>
     </div>

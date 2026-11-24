@@ -162,7 +162,7 @@ describe("SNIDE task detail — the ransom dossier", () => {
   it("bylines the author and links the character, not the account", () => {
     const { html, text } = render(<SnideTaskDetail state={baseState()} />);
     expect(text).toContain("Wren Abalone");
-    expect(text).toContain("author · lvl 4");
+    expect(text).toContain("author · Level 4");
     expect(html).toContain('href="/characters/31"');
   });
 });

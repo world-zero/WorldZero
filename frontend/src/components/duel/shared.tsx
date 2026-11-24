@@ -92,7 +92,7 @@ export function duelStakes(
 export function RivalBonusSentence({ points }: { points: number }) {
   const { t } = useTranslation('praxis')
   if (!(points > 0)) return null
-  return <> {t('duelStakes.rivalBonus', { points: formatPoints(points) })}</>
+  return <> {t('duelStakes.rivalBonus', { count: points, points: formatPoints(points) })}</>
 }
 
 
@@ -161,6 +161,7 @@ export function StakesTiles({
       >
         {t('duelStakes.soloFallback', {
           name: opponentName,
+          count: stakes.solo,
           points: formatPoints(stakes.solo),
         })}
       </p>
@@ -187,7 +188,7 @@ export function StakesTiles({
         className="mt-2 content-text"
         style={{ fontFamily: font, color: muted }}
       >
-        {t('duelStakes.tieLine', { points: formatPoints(stakes.tie) })}{' '}
+        {t('duelStakes.tieLine', { count: stakes.tie, points: formatPoints(stakes.tie) })}{' '}
         {t('duelStakes.beforeVotes')}
         <RivalBonusSentence points={stakes.rival} />
       </p>
@@ -306,6 +307,7 @@ export function useDuelSealCopy(
     const cost = stakes
       ? t('duelForfeit.cost', {
           name: sideName(foe),
+          count: stakes.lose,
           points: formatPoints(stakes.lose),
           win: formatPoints(stakes.win),
         })

@@ -23,5 +23,9 @@ describe('sticker anchor wrapper', () => {
     expect(rule).toMatch(/width:\s*fit-content/)
     expect(rule).toMatch(/max-width:\s*100%/)
     expect(rule).toMatch(/position:\s*relative/)
+    // An unlayered display beats the layered `.task-card-row > *` flex and breaks equal-height rows.
+    const bodies = [...css.matchAll(/\.task-fit-card\s*\{([^}]*)\}/g)].map((m) => m[1])
+    expect(bodies.length).toBeGreaterThan(1)
+    for (const body of bodies) expect(body).not.toMatch(/display\s*:/)
   })
 })

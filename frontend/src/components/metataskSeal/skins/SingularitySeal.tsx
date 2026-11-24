@@ -87,11 +87,12 @@ export default function SingularitySeal({ metatask, removable, onRemove }: SealS
           className="font-body block"
           style={{
             fontSize: 'var(--text-title)',
+            textTransform: 'uppercase',
             color: 'var(--sg-seal-accent)',
             marginTop: 'var(--space-xs)',
           }}
         >
-          [{t('detail.seal.bonus', { points: metatask.point_value })}]
+          [{t('detail.seal.bonus', { points: metatask.point_value, count: metatask.point_value })}]
         </span>
       </div>
     </div>

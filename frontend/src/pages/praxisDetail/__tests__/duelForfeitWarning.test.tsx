@@ -73,7 +73,7 @@ describe('forfeit escalation (#718)', () => {
     expect(t).toMatch(/FORFEITS the duel/i)
     expect(t).toMatch(/Rax wins by default/i)
     // Snide's loss modifier is 0.0.
-    expect(t).toMatch(/you keep 0 instead of 60/i)
+    expect(t).toMatch(/you keep 0 points instead of 60 points/i)
   })
 
   it('settled duel: the quiet unsubmit control takes the forfeit verb', () => {

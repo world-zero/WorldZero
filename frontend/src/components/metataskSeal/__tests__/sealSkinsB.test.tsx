@@ -55,7 +55,7 @@ const SKIN_SLUGS = ["coven", "ua", "albescent", "wow"];
 describe("seal skins B content-slot invariant", () => {
   for (const slug of SKIN_SLUGS) {
     const task = metatask(slug);
-    const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value });
+    const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value, count: task.point_value });
     it(`${slug} renders the condition (title)`, () => {
       const html = markup(<MetataskSeal metatasks={[task]} />);
       expect(html).toContain(task.title);
@@ -109,7 +109,7 @@ describe("seal skins B — na renders via the tuned DefaultSeal", () => {
     const html = markup(<MetataskSeal metatasks={[task]} />);
     expect(html).toContain(task.title);
     expect(html).toContain(
-      i18n.t("praxis:detail.seal.bonus", { points: task.point_value }),
+      i18n.t("praxis:detail.seal.bonus", { points: task.point_value, count: task.point_value }),
     );
     expect(html).toContain(factionName("na"));
     expect(html).toContain('data-card-masthead="na"');

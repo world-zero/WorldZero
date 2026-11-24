@@ -129,10 +129,11 @@ export default function SnideSeal({ metatask, removable, onRemove }: SealSkinPro
             fontFamily: 'var(--faction-snide-font-black)',
             letterSpacing: '0.04em',
             fontSize: 'var(--text-title)',
+            textTransform: 'uppercase',
             color: 'var(--faction-snide-acid)',
           }}
         >
-          {t('detail.seal.bonus', { points: metatask.point_value })}
+          {t('detail.seal.bonus', { points: metatask.point_value, count: metatask.point_value })}
         </span>
       </div>
     </div>

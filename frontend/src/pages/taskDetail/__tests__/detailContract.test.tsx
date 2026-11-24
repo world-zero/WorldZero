@@ -267,7 +267,7 @@ describe("task-detail author byline", () => {
     it(`${slug} renders the author byline from the task's denormalised fields`, () => {
       const { html, text } = render(<Archetype state={baseState()} />);
       expect(text).toContain("Wren Abalone");
-      expect(text).toContain("author · lvl 4");
+      expect(text).toContain("author · Level 4");
       expect(html).toContain('href="/characters/31"');
     });
   }

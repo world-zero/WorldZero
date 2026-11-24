@@ -80,7 +80,7 @@ describe('the meta line does not restate the stamp (#2114 supersedes #1833)', ()
     const html = text(body({ score: 16, points_from_votes: 4 }))
     expect(html, 'the stamp still carries both figures').toContain('12')
     expect(html, 'the meta line does not').not.toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
-    expect(html, 'level, mode and date stay').toContain('L2')
+    expect(html, 'level, mode and date stay').toContain('Level 2')
     expect(html).toContain('solo')
   })
 

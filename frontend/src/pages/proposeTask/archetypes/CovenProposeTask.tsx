@@ -588,7 +588,7 @@ export default function CovenProposeTask({ state }: { state: ProposeTaskState })
                 {/* No `--color-success` (see header): worth takes INK. */}
                 <span style={{ color: INK }}>
                   {isMetatask
-                    ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })
+                    ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?', count: Number(metaBonusValue) })
                     : t('proposeTask.preview.points', {
                         points: pointValue || '?',
                         // Empty/unparseable draws "?" with the plural (#2598).

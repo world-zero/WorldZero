@@ -33,13 +33,14 @@ export default function LevelTrackMeta({ track, allTimeScore, style }: LevelTrac
           {track.nextLevel === null
             ? t('sidebar.characterCard.topLevel')
             : t('sidebar.characterCard.toNextLevel', {
+                count: track.pointsToNext,
                 points: track.pointsToNext.toLocaleString(),
                 level: track.nextLevel,
               })}
         </span>
       )}
       <span style={{ ...style, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
-        {t('sidebar.characterCard.allTime', { points: allTimeScore.toLocaleString() })}
+        {t('sidebar.characterCard.allTime', { count: allTimeScore, points: allTimeScore.toLocaleString() })}
       </span>
     </div>
   )

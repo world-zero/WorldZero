@@ -584,7 +584,7 @@ export default function SnideProposeTask({ state }: { state: ProposeTaskState })
                 >
                   {isMetatask ? (
                     <span style={{ color: ACID_INK }}>
-                      {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })}
+                      {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?', count: Number(metaBonusValue) })}
                     </span>
                   ) : (
                     <span style={{ color: FAINT }}>
