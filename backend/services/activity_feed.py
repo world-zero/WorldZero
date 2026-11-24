@@ -60,6 +60,7 @@ from models.vote import Vote
 from schemas.activity_feed import (
     AwaitingSubmissionPayload,
     CollabInvitePayload,
+    CollabAcceptedPayload,
     CollaboratorSubmittedPayload,
     CommentPayload,
     CompletionPayload,
@@ -72,13 +73,12 @@ from schemas.activity_feed import (
     FeedPayload,
     FoeTauntPayload,
     FriendDefectionPayload,
-    FriendSignupPayload,
     GlobalTaskPayload,
     InvitationLetterPayload,
     NudgePayload,
     VoteOnMinePayload,
 )
-from services.era import get_current_era_row
+from services.era import era_row_name, get_current_era_row
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,7 @@ FEED_ITEM_TYPE_COLLAB_INVITE = "collab_invite"
 FEED_ITEM_TYPE_DUEL_CHALLENGE = "duel_challenge"
 FEED_ITEM_TYPE_DUEL_FORFEITED = "duel_forfeited"
 FEED_ITEM_TYPE_DUEL_LIVE = "duel_live"
-FEED_ITEM_TYPE_FRIEND_SIGNUP = "friend_signup"
+FEED_ITEM_TYPE_COLLAB_ACCEPTED = "collab_accepted"
 FEED_ITEM_TYPE_INVITATION_LETTER = "invitation_letter"
 FEED_ITEM_TYPE_FRIEND_DEFECTION = "friend_defection"
 FEED_ITEM_TYPE_FOE_COMPLETION = "foe_completion"
@@ -172,7 +172,6 @@ FILTER_REQUESTS = "requests"
 # Pre-fetch needs: a source whose needed list is empty contributes nothing.
 NEEDS_FRIEND_IDS = "friend_ids"
 NEEDS_FOE_IDS = "foe_ids"
-NEEDS_MY_TASK_IDS = "my_task_ids"
 NEEDS_FRIEND_OR_FOE_IDS = "friend_or_foe_ids"
 NEEDS_VOTE_LEVEL = "meets_vote_level"
 
@@ -223,7 +222,6 @@ class FeedContext:
     character_id: int
     friend_ids: tuple[int, ...]
     foe_ids: tuple[int, ...]
-    my_task_ids: tuple[int, ...]
     era_id: int
     before: Optional[FeedCursor]
     unanswered_requests_only: bool
@@ -293,22 +291,6 @@ async def _get_related_ids(
     for rel_type, to_character_id in result.all():
         related[rel_type].append(to_character_id)
     return related
-
-
-async def _get_my_task_ids(
-    character_id: int,
-    session: AsyncSession,
-) -> list[int]:
-    """Get task IDs that the character is currently working on via praxis membership."""
-    result = await session.execute(
-        select(Praxis.task_id)
-        .join(PraxisMember, PraxisMember.praxis_id == Praxis.id)
-        .where(
-            PraxisMember.character_id == character_id,
-            Praxis.status.in_([PraxisStatus.in_progress, PraxisStatus.pending]),
-        )
-    )
-    return list(result.scalars().all())
 
 
 # Per-source builders return the windowed Select; counts wrap the same Select.
@@ -608,9 +590,6 @@ def _era_announcements_query(ctx: FeedContext) -> Select:
 
 def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
     era: Era = row[0]
-    # Name from the row's own config_key (#1623), not CURRENT_ERA (past eras are
-    # listed too). Stored name is the fallback for a config that no longer exists.
-    era_config = era_config_for_key(era.config_key)
     return ActivityFeedItemDC(
         type=FEED_ITEM_TYPE_ERA_ANNOUNCEMENT,
         item_key=build_item_key(FEED_ITEM_TYPE_ERA_ANNOUNCEMENT, era.id),
@@ -620,7 +599,7 @@ def _era_announcement_item(row: Any) -> ActivityFeedItemDC:
         actor_avatar_url=None,
         payload=EraAnnouncementPayload(
             era_id=era.id,
-            era_name=era_config.name if era_config is not None else era.name,
+            era_name=era_row_name(era),
             era_notes=era.notes,
             config_key=era.config_key,
         ),
@@ -982,61 +961,69 @@ def _duel_live_item(row: Any) -> ActivityFeedItemDC:
     )
 
 
-def _friend_signups_query(ctx: FeedContext) -> Select:
-    """Friends who joined praxes on tasks the current character is also doing."""
+def _collab_accepted_query(ctx: FeedContext) -> Select:
+    """The viewer's collab invites that were accepted, friends or not (#4323).
+
+    ``PraxisInvite`` has no responded-at column, so the invitee's ``joined_at``
+    on that praxis is the time.
+    """
+    invitee = aliased(Character)
     query = (
         select(
-            PraxisMember.id,
+            PraxisInvite.id,
+            PraxisInvite.praxis_id,
             PraxisMember.joined_at,
-            Praxis.task_id,
-            Character.id.label("character_id"),
-            Character.display_name,
-            Character.faction_slug,
-            Character.avatar_url,
-            Character.name_state.label("actor_name_state"),
+            invitee.id.label("character_id"),
+            invitee.display_name,
+            invitee.faction_slug,
+            invitee.avatar_url,
+            invitee.name_state.label("actor_name_state"),
             Task.title.label("task_title"),
             Task.point_value.label("task_point_value"),
             Task.primary_faction_slug.label("task_faction_slug"),
-            Task.level_required.label("task_level_required"),
         )
-        .join(Praxis, PraxisMember.praxis_id == Praxis.id)
-        .join(Character, PraxisMember.character_id == Character.id)
+        .join(
+            PraxisMember,
+            and_(
+                PraxisMember.praxis_id == PraxisInvite.praxis_id,
+                PraxisMember.character_id == PraxisInvite.invitee_id,
+            ),
+        )
+        .join(invitee, PraxisInvite.invitee_id == invitee.id)
+        .join(Praxis, PraxisInvite.praxis_id == Praxis.id)
         .join(Task, Praxis.task_id == Task.id)
         .where(
-            PraxisMember.character_id.in_(ctx.friend_ids),
-            Praxis.task_id.in_(ctx.my_task_ids),
+            PraxisInvite.inviter_id == ctx.character_id,
+            PraxisInvite.status == PraxisInviteStatus.accepted,
         )
     )
     query = query.where(
         ctx.older_than(
-            FEED_ITEM_TYPE_FRIEND_SIGNUP,
-            PraxisMember.joined_at,
-            PraxisMember.id,
+            FEED_ITEM_TYPE_COLLAB_ACCEPTED, PraxisMember.joined_at, PraxisInvite.id
         )
     )
     return (
-        query.order_by(PraxisMember.joined_at.desc(), PraxisMember.id.desc())
+        query.order_by(PraxisMember.joined_at.desc(), PraxisInvite.id.desc())
         .limit(SUB_QUERY_LIMIT)
     )
 
 
-def _friend_signup_item(row: Any) -> ActivityFeedItemDC:
+def _collab_accepted_item(row: Any) -> ActivityFeedItemDC:
     return ActivityFeedItemDC(
-        type=FEED_ITEM_TYPE_FRIEND_SIGNUP,
-        item_key=build_item_key(FEED_ITEM_TYPE_FRIEND_SIGNUP, row.id),
+        type=FEED_ITEM_TYPE_COLLAB_ACCEPTED,
+        item_key=build_item_key(FEED_ITEM_TYPE_COLLAB_ACCEPTED, row.id),
         timestamp=row.joined_at,
         actor_display_name=row.display_name,
         actor_faction_slug=row.faction_slug,
         actor_avatar_url=row.avatar_url,
         actor_name_state=row.actor_name_state,
-        payload=FriendSignupPayload(
-            praxis_member_id=row.id,
+        payload=CollabAcceptedPayload(
+            invite_id=row.id,
             character_id=row.character_id,
-            task_id=row.task_id,
+            praxis_id=row.praxis_id,
             task_title=row.task_title,
             task_point_value=row.task_point_value,
             task_faction_slug=row.task_faction_slug,
-            task_level_required=row.task_level_required,
         ),
     )
 
@@ -1586,12 +1573,12 @@ FEED_SOURCES: tuple[FeedSource, ...] = (
         source_id_column=Duel.id,
     ),
     FeedSource(
-        item_type=FEED_ITEM_TYPE_FRIEND_SIGNUP,
-        filters=frozenset({FILTER_ALL, FILTER_FRIENDS}),
-        needs=frozenset({NEEDS_FRIEND_IDS, NEEDS_MY_TASK_IDS}),
-        query=_friend_signups_query,
-        to_item=_friend_signup_item,
-        source_id_column=PraxisMember.id,
+        item_type=FEED_ITEM_TYPE_COLLAB_ACCEPTED,
+        filters=frozenset({FILTER_ALL, FILTER_YOUR_STUFF}),
+        needs=frozenset(),
+        query=_collab_accepted_query,
+        to_item=_collab_accepted_item,
+        source_id_column=PraxisInvite.id,
     ),
     FeedSource(
         item_type=FEED_ITEM_TYPE_COLLABORATOR_SUBMITTED,
@@ -1761,8 +1748,6 @@ def _needs_satisfied(source: FeedSource, ctx: FeedContext) -> bool:
     if NEEDS_FRIEND_IDS in source.needs and not ctx.friend_ids:
         return False
     if NEEDS_FOE_IDS in source.needs and not ctx.foe_ids:
-        return False
-    if NEEDS_MY_TASK_IDS in source.needs and not ctx.my_task_ids:
         return False
     if NEEDS_FRIEND_OR_FOE_IDS in source.needs and not (ctx.friend_ids or ctx.foe_ids):
         return False
@@ -2049,7 +2034,6 @@ async def _build_fetch_context(
     related = await _get_related_ids(character_id, session)
     friend_ids = tuple(related[RelationshipType.friend])
     foe_ids = tuple(related[RelationshipType.foe])
-    my_task_ids = tuple(await _get_my_task_ids(character_id, session))
     era_row = await get_current_era_row(session)
     era = era_config_for_key(era_row.config_key)
     # No stats row this era = level 0.
@@ -2072,7 +2056,6 @@ async def _build_fetch_context(
             character_id=character_id,
             friend_ids=friend_ids,
             foe_ids=foe_ids,
-            my_task_ids=my_task_ids,
             era_id=era_row.id,
             before=before_cursor,
             unanswered_requests_only=not archived,

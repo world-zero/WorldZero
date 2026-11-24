@@ -136,16 +136,15 @@ class DuelLivePayload(FeedPayloadBase):
     task_faction_slug: str
 
 
-class FriendSignupPayload(FeedPayloadBase):
-    """A friend joined a task the viewer is also doing."""
+class CollabAcceptedPayload(FeedPayloadBase):
+    """A player accepted the viewer's collab invite (#4323)."""
 
-    praxis_member_id: int
+    invite_id: int
     character_id: int
-    task_id: int
+    praxis_id: int
     task_title: str
     task_point_value: int
     task_faction_slug: str
-    task_level_required: int
 
 
 class InvitationLetterPayload(FeedPayloadBase):
@@ -231,7 +230,7 @@ FeedPayload = Union[
     DuelChallengePayload,
     DuelForfeitedPayload,
     DuelLivePayload,
-    FriendSignupPayload,
+    CollabAcceptedPayload,
     InvitationLetterPayload,
     FriendDefectionPayload,
     CommentPayload,
@@ -337,9 +336,9 @@ class DuelLiveItem(FeedItemBase):
     payload: DuelLivePayload
 
 
-class FriendSignupItem(FeedItemBase):
-    type: Literal["friend_signup"]
-    payload: FriendSignupPayload
+class CollabAcceptedItem(FeedItemBase):
+    type: Literal["collab_accepted"]
+    payload: CollabAcceptedPayload
 
 
 class InvitationLetterItem(FeedItemBase):
@@ -399,7 +398,7 @@ ActivityFeedItem = Annotated[
         DuelChallengeItem,
         DuelForfeitedItem,
         DuelLiveItem,
-        FriendSignupItem,
+        CollabAcceptedItem,
         InvitationLetterItem,
         FriendDefectionItem,
         CommentMentionItem,

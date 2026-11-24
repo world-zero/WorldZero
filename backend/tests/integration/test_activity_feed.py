@@ -272,7 +272,7 @@ async def test_types_intersects_with_the_filter_rather_than_replacing_it(
     active_task: Task,
     auth_headers: dict,
 ):
-    """``filter=friends&types=friend_signup`` is friend signups only."""
+    """``filter=friends&types=...`` narrows; a friend signing up adds no row (#4323)."""
     from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
     from models.relationship import Relationship, RelationshipType
 
@@ -294,7 +294,7 @@ async def test_types_intersects_with_the_filter_rather_than_replacing_it(
             body_text="proof",
         )
     )
-    # friend_signup: both in progress on one task.
+    # Both in progress on one task: used to be a friend_signup row, now nothing.
     mine = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
@@ -326,18 +326,15 @@ async def test_types_intersects_with_the_filter_rather_than_replacing_it(
         params={"filter": "friends", "limit": 100},
         headers=auth_headers,
     )
-    assert {i["type"] for i in unfiltered.json()["items"]} == {
-        "friend_completion",
-        "friend_signup",
-    }
+    assert {i["type"] for i in unfiltered.json()["items"]} == {"friend_completion"}
 
     narrowed = await client.get(
         "/activity-feed",
-        params={"filter": "friends", "limit": 100, "types": ["friend_signup"]},
+        params={"filter": "friends", "limit": 100, "types": ["friend_completion"]},
         headers=auth_headers,
     )
     assert narrowed.status_code == 200, narrowed.text
-    assert [i["type"] for i in narrowed.json()["items"]] == ["friend_signup"]
+    assert [i["type"] for i in narrowed.json()["items"]] == ["friend_completion"]
 
     # Outside the rail: intersection, so empty.
     outside = await client.get(
@@ -522,7 +519,7 @@ def test_every_registry_type_has_a_schema_variant():
 
 
 @pytest.mark.asyncio
-async def test_friend_signup_carries_the_task_level(
+async def test_accepted_invite_from_a_non_friend_is_one_row(
     client: AsyncClient,
     db_session: AsyncSession,
     character: Character,
@@ -530,56 +527,53 @@ async def test_friend_signup_carries_the_task_level(
     active_task: Task,
     auth_headers: dict,
 ):
-    """#1518: level 3, not the fixture's 0, proves it comes from the task row.
-
-    Presence matters too: an undeclared key drops the whole item (#1402).
-    """
-    from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
-    from models.relationship import Relationship, RelationshipType
-
-    active_task.level_required = 3
-    db_session.add(
-        Relationship(
-            from_character_id=character.id,
-            to_character_id=character2.id,
-            type=RelationshipType.friend,
-        )
+    """#4323: no friendship needed; the invitee's joined_at is the time."""
+    from models.praxis import (
+        Praxis,
+        PraxisInvite,
+        PraxisInviteStatus,
+        PraxisMember,
+        PraxisStatus,
+        PraxisType,
     )
-    mine = Praxis(
+
+    collab = Praxis(
         task_id=active_task.id,
         created_by_id=character.id,
-        type=PraxisType.solo,
+        type=PraxisType.collab,
         status=PraxisStatus.in_progress,
-        title="Mine",
+        title="Together",
         body_text="proof",
     )
-    theirs = Praxis(
-        task_id=active_task.id,
-        created_by_id=character2.id,
-        type=PraxisType.solo,
-        status=PraxisStatus.in_progress,
-        title="Theirs",
-        body_text="proof",
-    )
-    db_session.add_all([mine, theirs])
+    db_session.add(collab)
     await db_session.flush()
+    member = PraxisMember(praxis_id=collab.id, character_id=character2.id)
     db_session.add_all(
         [
-            PraxisMember(praxis_id=mine.id, character_id=character.id),
-            PraxisMember(praxis_id=theirs.id, character_id=character2.id),
+            PraxisMember(praxis_id=collab.id, character_id=character.id),
+            member,
+            PraxisInvite(
+                praxis_id=collab.id,
+                inviter_id=character.id,
+                invitee_id=character2.id,
+                status=PraxisInviteStatus.accepted,
+            ),
         ]
     )
     await db_session.commit()
+    await db_session.refresh(member)
 
     response = await client.get(
         "/activity-feed",
-        params={"filter": "friends", "limit": 100, "types": ["friend_signup"]},
+        params={"filter": "your_stuff", "limit": 100, "types": ["collab_accepted"]},
         headers=auth_headers,
     )
     assert response.status_code == 200, response.text
-    items = [i for i in response.json()["items"] if i["type"] == "friend_signup"]
-    assert len(items) == 1, f"the friend_signup item was dropped: {response.json()}"
-    assert items[0]["payload"]["task_level_required"] == 3
+    items = response.json()["items"]
+    assert len(items) == 1, items
+    assert items[0]["actor_display_name"] == character2.display_name
+    assert items[0]["payload"]["praxis_id"] == collab.id
+    assert items[0]["timestamp"].startswith(member.joined_at.isoformat()[:19])
 
 
 async def _walk(client: AsyncClient, headers: dict, limit: int) -> list[str]:
