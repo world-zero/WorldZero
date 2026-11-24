@@ -149,7 +149,8 @@ function spotLook(el: Element): CSSProperties {
     letterSpacing: cs.letterSpacing,
     color: cs.color,
     textAlign: cs.textAlign as CSSProperties['textAlign'],
-    whiteSpace: cs.whiteSpace === 'nowrap' ? 'pre-wrap' : cs.whiteSpace,
+    // Always pre-wrap: a box copying the spot's `normal` hides the newlines it is editing (#4293).
+    whiteSpace: 'pre-wrap',
     padding: cs.padding,
   }
 }

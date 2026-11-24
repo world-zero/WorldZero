@@ -10,10 +10,10 @@ export default function About() {
       <PageTitle title={t('about.title')} />
 
       <div className="card p-6 mb-6">
-        <p className="font-body text-base leading-relaxed mb-4">
+        <p className="font-body text-base leading-relaxed mb-4 whitespace-pre-line">
           {t('about.intro1')}
         </p>
-        <p className="font-body text-base leading-relaxed">
+        <p className="font-body text-base leading-relaxed whitespace-pre-line">
           {t('about.intro2')}
         </p>
       </div>
