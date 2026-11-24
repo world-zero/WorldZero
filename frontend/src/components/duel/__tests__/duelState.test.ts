@@ -20,6 +20,7 @@ describe('duelState rules', () => {
       expect(duelCanDrop(aDuel({ state }))).toBe(false)
     }
     expect(duelCanDrop(aDuel({ state: 'dissolved' }))).toBe(true)
+    expect(duelCanDrop(null)).toBe(false)
   })
 
   it('reads a reopened live side as accepted, not challenged', () => {

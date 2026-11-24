@@ -5,6 +5,7 @@
  */
 import type { TFunction } from 'i18next'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
+import { sideName } from '../../api/duel'
 import { formatPoints } from '../../utils/points'
 
 export const NO_SCORE = '—'
@@ -62,8 +63,8 @@ export function duelVerdict(
           : t('duelCrossLink.finalStanding.won', {
               name:
                 duel.winner_character_id === a.character_id
-                  ? a.display_name
-                  : b.display_name,
+                  ? sideName(a)
+                  : sideName(b),
             }),
     })
   }
@@ -74,7 +75,7 @@ export function duelVerdict(
       margin === 0
         ? t('duelCrossLink.standing.tied')
         : t('duelCrossLink.standing.leads', {
-            name: margin > 0 ? a.display_name : b.display_name,
+            name: margin > 0 ? sideName(a) : sideName(b),
             margin: formatPoints(Math.abs(margin)),
           }),
   })

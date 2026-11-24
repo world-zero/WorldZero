@@ -272,7 +272,7 @@ describe('the five domain words are one word each on the voiced surfaces (#1863)
     // Imagery the audit kept:
     // a wax seal (object).
     'factions.json:wow.invitation.pitch',
-    // "mid-spell": the doing, not the artefact.
+    // a dagger carving a name into the wall (object).
     'factions.json:coven.invitation.pitch',
     // Plain English "signal", the owner's own words.
     'factions.json:descriptions.everymen',
@@ -410,8 +410,7 @@ describe('only Singularity speaks in the terminal register (#1948)', () => {
   })
 
   it('renames the key the retired window titled, and keeps the panel labelled', () => {
-    // ponytail: "the circle" is provisional, assembled from this panel's own
-    // strings; the owner may rewrite it. `coven.mobile` is gone with the
+    // The heading is the owner's own wording. `coven.mobile` is gone with the
     // `{F}.mobile.eyebrow` family (#1911).
     expect(factions.coven.join).not.toHaveProperty('windowTitle')
     expect(factions.coven.join.heading).toBe('bubble, bubble, toil and trouble')
@@ -791,8 +790,8 @@ describe('no key is named for a word or a name it no longer holds (#1910)', () =
 
 /*
  * #2332: owner copy that looks like bugs and must not be "fixed":
- *   1. Literal `PLACEHOLDER` values: the owner's marker for unwritten slots,
- *      asserted exactly so filling one is deliberate.
+ *   1. Literal `PLACEHOLDER` values: the owner's marker for unwritten slots.
+ *      None remain; one appearing must be deliberate.
  *   2. S.N.I.D.E.'s masked profanity: exact characters and casing.
  *   3. `ua` is the full name; `albescent` has no leading slash.
  */
@@ -807,8 +806,8 @@ describe("the owner's copy pass keeps the rows that look like bugs (#2332)", () 
     expect(found).toEqual(PLACEHOLDERS)
   })
 
-  it("keeps S.N.I.D.E.'s punk register masked exactly as written", () => {
-    // Character-for-character: each mask and casing is distinct.
+  it("keeps S.N.I.D.E.'s punk register exactly as written", () => {
+    // Character-for-character: the headline's masks and casing are distinct.
     expect(i18n.t('feed:factionSelect.snide.status.eligible')).toBe('tighten your belt')
     expect(i18n.t('feed:factionSelect.snide.status.locked')).toBe("when you're up for it")
     expect(i18n.t('factions:snide.invitation.headline')).toBe('Wanna F%&* some S^&* up?')

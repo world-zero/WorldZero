@@ -250,7 +250,8 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     try {
       // Dissolve the duel, THEN delete (as `useEditPraxis.ts` cancel): both duel
       // FKs on `praxis` are NO ACTION. A live/resolved duel's refusal lands in the banner.
-      if (dropTarget.duel_id != null) {
+      // The backend refuses to cancel an already-dissolved duel.
+      if (dropTarget.duel_id != null && draftDuel?.state !== "dissolved") {
         await cancelChallenge(dropTarget.duel_id);
       }
       await deletePraxis(dropTarget.id);
@@ -265,7 +266,7 @@ export function useTaskDetail(idParam: string | undefined): TaskDetailState {
     } catch (err) {
       setSignupError(extractError(err, i18n.t("forms:editPraxis.errors.drop")));
     }
-  }, [task, dropTarget]);
+  }, [task, dropTarget, draftDuel]);
 
   /** What the dispatcher draws while a drop is pending. */
   const dropConfirm = useMemo<DropConfirmState | null>(

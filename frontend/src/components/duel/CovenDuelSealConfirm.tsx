@@ -36,6 +36,7 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import { factionBodyVars } from '../../utils/factionBodyFace'
+import { sideName } from '../../api/duel'
 
 /** Sheet-measured warning ink (#694, #1168). */
 const NOTICE = 'var(--faction-coven-card-notice)'
@@ -137,7 +138,7 @@ export default function CovenDuelSealConfirm({
         >
           <StakesTiles
             me={me}
-            opponentName={foe.display_name}
+            opponentName={sideName(foe)}
             taskPointValue={taskPointValue}
             status={duel.status}
             theme={theme}

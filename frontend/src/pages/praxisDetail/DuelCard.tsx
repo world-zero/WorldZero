@@ -23,6 +23,7 @@ import { mediaUrl } from '../../utils/media'
 import { factionRoleVar } from '../../utils/factionRoles'
 import { duelScoreFor, duelVerdict } from '../../components/duel/standing'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
+import { sideName } from '../../api/duel'
 import type { PraxisDetailState } from './usePraxisDetail'
 
 const AVATAR_SIZE = 30
@@ -142,7 +143,7 @@ function DuelRow({
             textOverflow: 'ellipsis',
           }}
         >
-          {side.display_name}
+          {sideName(side)}
         </div>
         {subtitle}
       </div>

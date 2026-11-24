@@ -8,6 +8,7 @@
  * Contrast (#1168): red as prose fails (4.49 / 4.16), so the forfeit body uses
  * `NOTICE`; on the inverted panel `--color-success` is 1.88:1, hence the gold credit.
  */
+import { sideName } from '../../api/duel'
 import { factionCssVar } from '../../utils/factions'
 import {
   duelSides,
@@ -156,7 +157,7 @@ export default function EverymenDuelSealConfirm({
             {foe.display_name.slice(0, 1)}
           </span>
           <span className="content-text" style={{ fontFamily: POSTER, letterSpacing: '0.05em', minWidth: 0 }}>
-            {foe.display_name}
+            {sideName(foe)}
           </span>
         </div>
 
@@ -206,7 +207,7 @@ export default function EverymenDuelSealConfirm({
         >
           <StakesTiles
             me={me}
-            opponentName={foe.display_name}
+            opponentName={sideName(foe)}
             taskPointValue={taskPointValue}
             status={duel.status}
             theme={theme}

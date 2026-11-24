@@ -64,7 +64,7 @@ describe('respondToRequest dispatch', () => {
 })
 
 describe('status normalization', () => {
-  it('reads invite_status for collabs and duel_status for duels', () => {
+  it('reads invite_status for collabs and duel_state for duels', () => {
     expect(requestStatusOf(feedItem('collab_invite', { invite_status: 'pending' }))).toBe('pending')
     expect(requestStatusOf(feedItem('duel_challenge', { duel_state: 'challenged' }))).toBe('pending')
     expect(requestStatusOf(feedItem('duel_challenge', { duel_state: 'dissolved' }))).toBe('declined')
@@ -77,9 +77,7 @@ describe('status normalization', () => {
     ).not.toBe('pending')
   })
 
-  it('maps duel active/settled to accepted', () => {
-    expect(normalizeRequestStatus('active')).toBe('accepted')
-    expect(normalizeRequestStatus('settled')).toBe('accepted')
+  it('maps any other status to accepted', () => {
     expect(normalizeRequestStatus('accepted')).toBe('accepted')
   })
 

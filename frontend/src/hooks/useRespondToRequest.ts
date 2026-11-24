@@ -12,7 +12,7 @@ import { duelCan } from '../components/duel/duelState'
 
 type RequestResponseStatus = 'pending' | 'accepted' | 'declined'
 
-/** Duels report 'active'/'settled' once accepted; both map to 'accepted'. */
+/** Anything but pending or declined reads as accepted. */
 export function normalizeRequestStatus(
   raw: string | null | undefined,
 ): RequestResponseStatus {

@@ -16,6 +16,7 @@ import { useFormFactor } from "../../../hooks/useFormFactor";
 import { useAuth } from "../../../auth/AuthContext";
 import type { PraxisOut, PraxisType } from "../../../api/praxis";
 import type { DuelSideOut } from "../../../api/duel";
+import { sideName } from "../../../api/duel";
 import MarkdownPreview from "../blocks/MarkdownPreview";
 import { applyMarkdown, minimalReplacement } from "../blocks/markdownToolbar";
 import type { MarkdownCommand } from "../blocks/markdownToolbar";
@@ -80,7 +81,7 @@ function DuelPairSide({
   return (
     <div className="flex flex-col items-center gap-1" style={{ minWidth: 0 }}>
       <RosterAvatar
-        name={side.display_name}
+        name={sideName(side)}
         avatarUrl={side.avatar_url}
         size={DUEL_PAIR_AVATAR_SIZE}
         background={factionCssVar(side.faction_slug, "light")}
@@ -96,7 +97,7 @@ function DuelPairSide({
           fontWeight: 700,
         }}
       >
-        {side.display_name}
+        {sideName(side)}
       </span>
       <span
         className="label-caption"
@@ -724,7 +725,7 @@ export function DropButton({
   // Delete is creator-only (backend `delete_praxis` enforces); others Leave (#1074).
   const isCreator = praxis?.created_by_id === currentCharacterId;
   if (isCollab && !isCreator) return null;
-  if (!duelCanDrop(duel)) return null;
+  if (praxis?.duel_id != null && !duelCanDrop(duel)) return null;
   // With others' parts inside, "drop task" undersells it; collabCopy warns.
   const crewAtStake = isCollab && praxis.members.length > 1;
   const label = crewAtStake

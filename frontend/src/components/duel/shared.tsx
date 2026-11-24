@@ -17,6 +17,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import type { DuelDetailOut, DuelSideOut, DuelStatus } from '../../api/duel'
+import { sideName } from '../../api/duel'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { formatPoints } from '../../utils/points'
 
@@ -244,11 +245,11 @@ export function RaceRoster({
   return (
     <ul className="flex flex-col gap-1 mt-2">
       <RosterRow
-        name={spectator ? me.display_name : t('duelRoster.you')}
+        name={spectator ? sideName(me) : t('duelRoster.you')}
         cast={me.is_submitted}
         theme={theme}
       />
-      <RosterRow name={foe.display_name} cast={foe.is_submitted} theme={theme} />
+      <RosterRow name={sideName(foe)} cast={foe.is_submitted} theme={theme} />
     </ul>
   )
 }
@@ -285,7 +286,7 @@ export function castClockLine(
   // Run out but not yet swept: say nothing rather than "0 days".
   if (left < 1) return null
   const key = me.is_submitted ? 'duelClock.theyHave' : 'duelClock.youHave'
-  return t(key, { name: foe.display_name, count: left })
+  return t(key, { name: sideName(foe), count: left })
 }
 
 /** The mode branch, once for every skin; a hook because the cost needs stakes. */
@@ -305,7 +306,7 @@ export function useDuelSealCopy(
   if (mode === 'forfeit') {
     const cost = stakes
       ? t('duelForfeit.cost', {
-          name: foe.display_name,
+          name: sideName(foe),
           count: stakes.lose,
           points: formatPoints(stakes.lose),
           win: formatPoints(stakes.win),
@@ -326,10 +327,10 @@ export function useDuelSealCopy(
     body:
       duel.state === 'challenged'
         ? lapseDays == null
-          ? t('duelSeal.bodyPendingNoDays', { name: foe.display_name })
-          : t('duelSeal.bodyPending', { name: foe.display_name, days: lapseDays })
+          ? t('duelSeal.bodyPendingNoDays', { name: sideName(foe) })
+          : t('duelSeal.bodyPending', { name: sideName(foe), days: lapseDays })
         : [
-            t('duelSeal.bodyActive', { name: foe.display_name }),
+            t('duelSeal.bodyActive', { name: sideName(foe) }),
             castClockLine(duel, me, foe, config?.duel_cast_lapse_days, t),
           ]
             .filter(Boolean)
@@ -337,7 +338,7 @@ export function useDuelSealCopy(
     // Until the foe casts nothing is stuck; only once live.
     note:
       (duel.state === 'drafting' || duel.state === 'one_cast') && !foe.is_submitted
-        ? t('duelSeal.reopenNote', { name: foe.display_name })
+        ? t('duelSeal.reopenNote', { name: sideName(foe) })
         : null,
     confirmLabel: t('duelSeal.confirm'),
     danger: false,

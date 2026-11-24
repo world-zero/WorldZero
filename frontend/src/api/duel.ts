@@ -44,11 +44,16 @@ export async function getDuelDetail(duelId: number): Promise<DuelDetailOut> {
   return { ...data, challenger: labelled(data.challenger), opponent: labelled(data.opponent) }
 }
 
-/** Absent or suspended sides read as their label everywhere the page shows a name (#4238). */
+/** A suspended side carries its label; an absent side stays blank so faces and initials draw nothing (#4238). */
 function labelled(side: DuelSideOut): DuelSideOut {
-  return side.name_state === 'ok'
-    ? side
-    : { ...side, display_name: playerLabel(side.display_name, side.name_state) }
+  return side.name_state === 'suspended'
+    ? { ...side, display_name: playerLabel(side.display_name, side.name_state) }
+    : side
+}
+
+/** The side's name as text: the placeholder for an absent side. */
+export function sideName(side: DuelSideOut): string {
+  return side.name_state === 'absent' ? playerLabel('', 'absent') : side.display_name
 }
 
 export async function respondToChallenge(duelId: number, data: DuelRespondIn): Promise<DuelOut> {

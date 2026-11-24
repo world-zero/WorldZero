@@ -27,6 +27,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { DuelSideOut } from "../../../api/duel";
+import { sideName } from "../../../api/duel";
 import { CollabRoster } from "../../../components/collab/CollabRoster";
 import { collabCopy } from "../../../components/collab/collabCopy";
 import { RosterAvatar } from "../../../components/collab/RosterAvatar";
@@ -187,7 +188,7 @@ export function CollabPublishClock({
 function SideAvatar({ side }: { side: DuelSideOut }) {
   return (
     <RosterAvatar
-      name={side.display_name}
+      name={sideName(side)}
       // Monogram fallback (#2128).
       avatarUrl={side.avatar_url}
       size={28}
@@ -244,7 +245,7 @@ function DuelSidePanel({
       <div className="flex items-center gap-2">
         <SideAvatar side={side} />
         <span className="content-text" style={{ flex: 1, minWidth: 0 }}>
-          {side.display_name}
+          {sideName(side)}
           {mine && (
             <span style={dress.quietStyle ?? { color: "var(--color-text-tertiary)" }}>
               {" · "}
@@ -274,7 +275,7 @@ function DuelSidePanel({
             factionSlug,
             nudged ? "nudgeSentAria" : "duelNudgeAria",
             {
-              name: side.display_name,
+              name: sideName(side),
               time: side.nudge_again_at ? formatClockTime(side.nudge_again_at) : "",
             },
           )}
@@ -537,7 +538,7 @@ export default function PraxisWaitingSurface({
                 duel?.state === "challenged" ? "duelPendingLine" : "duelElapsedLine",
                 {
                   elapsed: stamped,
-                  name: sides.foe.display_name,
+                  name: sideName(sides.foe),
                 },
               )}{" "}
               {castClockLine(

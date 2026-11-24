@@ -250,6 +250,12 @@ describe("PublishButton — duel pull-back on the moderated composer (#1077, #11
     expect(pullBack).toHaveBeenCalledTimes(1);
   });
 
+  it("pulls back a published side while the challenge is unanswered, with no waiting caption", () => {
+    const html = renderToStaticMarkup(renderButton(duelState("pending")));
+    expect(html).toContain(collabCopy(null, "duelPullBackAction"));
+    expect(html).not.toContain("composer-duel-waiting");
+  });
+
   // Why the branch looks dead but isn't: the ordinary path never mounts it.
   it("is not the ordinary cast's surface — that one derives a waiting stage", () => {
     const ordinary = duelState("active");
