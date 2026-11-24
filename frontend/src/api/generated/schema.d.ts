@@ -1422,7 +1422,7 @@ export interface paths {
         };
         /**
          * Get Leaderboard
-         * @description Top characters by current era score, optionally filtered by faction or ranked for a past ``era`` id.
+         * @description Top characters by current era score, by faction, or for a past ``era`` id.
          *
          *     Public; optional auth only feeds the reveal check (#2422).
          */

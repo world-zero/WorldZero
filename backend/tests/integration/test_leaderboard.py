@@ -217,7 +217,8 @@ async def test_leaderboard_era_param_ranks_only_that_eras_stats(
     await db_session.commit()
 
     past = (await client.get(f"/leaderboard?era={old.id}")).json()
-    assert [c["id"] for c in past if c["id"] in (hero.id, rival.id)] == [hero.id, rival.id]
+    ids = [c["id"] for c in past]
+    assert ids.index(hero.id) < ids.index(rival.id)
     assert past[0]["id"] == hero.id and past[0]["score"] == 900
     assert next(c for c in past if c["id"] == rival.id)["score"] == 0
 

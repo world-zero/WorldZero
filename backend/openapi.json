@@ -13874,7 +13874,7 @@
     },
     "/leaderboard": {
       "get": {
-        "description": "Top characters by current era score, optionally filtered by faction or ranked for a past ``era`` id.\n\nPublic; optional auth only feeds the reveal check (#2422).",
+        "description": "Top characters by current era score, by faction, or for a past ``era`` id.\n\nPublic; optional auth only feeds the reveal check (#2422).",
         "operationId": "get_leaderboard_leaderboard_get",
         "parameters": [
           {

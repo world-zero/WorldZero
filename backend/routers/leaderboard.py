@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db
 from dependencies import get_current_account_optional, get_viewer_is_admin
 from models.account import Account
+from schemas.base import WireModel
 from schemas.character import CharacterOut
 from schemas.params import WidePage
-from schemas.base import WireModel
 from services.character import build_character_outs, list_characters_for_viewer
 from services.era import era_row_name, get_era_row_or_404
 
@@ -39,7 +39,7 @@ async def get_leaderboard(
     account: Optional[Account] = Depends(get_current_account_optional),
     viewer_is_admin: bool = Depends(get_viewer_is_admin),
 ):
-    """Top characters by current era score, optionally filtered by faction or ranked for a past ``era`` id.
+    """Top characters by current era score, by faction, or for a past ``era`` id.
 
     Public; optional auth only feeds the reveal check (#2422).
     """
