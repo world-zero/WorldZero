@@ -34,7 +34,7 @@ import services.praxis_room as praxis_room
 from config import settings
 from game_config import CURRENT_ERA
 from main import app as fastapi_app
-from models.character import Character
+from models.character import Character, CharacterStatus
 from models.character_stats import CharacterStats
 from models.duel import Duel, DuelStatus
 from models.praxis import (
@@ -68,7 +68,12 @@ from services.praxis_room import (
     acquire_single_instance_lock,
     room_name_for,
 )
-from tests.integration.factories import attach_proof, cast_vote, make_solo_praxis
+from tests.integration.factories import (
+    attach_proof,
+    cast_vote,
+    make_character,
+    make_solo_praxis,
+)
 
 SEED_BODY = "The seeded body of one praxis."
 ALLOWED_ORIGIN = settings.cors_origins[0]
@@ -592,6 +597,19 @@ async def test_member_handshake_through_the_mount_is_accepted(
         # Accepted is not served: the document must arrive too.
         async with client_doc(socket) as doc:
             await _wait_for_body(doc, SEED_BODY, "a client behind the mount")
+
+
+async def test_a_sibling_life_of_a_banned_account_is_refused(
+    db_session, collab, era, account2, character2, monkeypatch
+) -> None:
+    sibling = await make_character(db_session, era, username="sib", account=account2)
+    sibling.status = CharacterStatus.banned
+    account2.active_character_id = character2.id
+    await db_session.commit()
+    async with running_rooms(db_session, monkeypatch) as rooms:
+        socket = await rooms.open(collab.id, account2.id)
+        assert socket.closed.is_set()
+        assert not socket.accepted.is_set()
 
 
 async def test_kicked_member_socket_is_closed(

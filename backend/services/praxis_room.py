@@ -802,10 +802,10 @@ class PraxisRoomServer(WebsocketServer):
             if account is None or account.status != AccountStatus.active:
                 return None
             # Deferred: services.character imports this module.
-            from services.character import resolve_active_character
+            from services.character import is_playable, resolve_active_character
 
             character = await resolve_active_character(account, session)
-            if character is None:
+            if character is None or not await is_playable(character, session):
                 return None
             praxis = await session.scalar(
                 select(Praxis).where(Praxis.id == praxis_id)
