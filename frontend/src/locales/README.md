@@ -7,7 +7,7 @@ keys** — keys are the code's handle on the copy.
 
 **Copy the owner edited live on dev is hers.** A PR that rewrites or removes one of
 those keys fails the "Owner copy guard" check, which names the key and her wording.
-Keep her value (or keep the key); she releases a key by Reverting its row on the
+Typo-class rewrites pass (#4277; see `is_typo_fix`). Otherwise keep her value (or keep the key); she releases a key by Reverting its row on the
 copy-edit page. Details: `scripts/promote_copy.py`.
 
 ```

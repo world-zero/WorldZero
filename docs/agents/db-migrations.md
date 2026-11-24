@@ -33,44 +33,33 @@ one-command, no-mystery operation.
 
 Squash the `versions/` chain when **either**:
 - it exceeds ~10 files, **or**
-- opportunistically, before a known prod wipe, while we're still pre-launch.
+- opportunistically, when the stamp procedure below is cheap.
 
-## Strategy A — current (disposable-DB)
+## Strategy A — retired
 
-World Zero is **pre-launch**: production data is disposable today.
+Wipe-and-rebuild was the pre-launch rule. It ended with the 2026-11-22 wipe of prod
+for the 1.0 launch; prod now holds real data, so never wipe.
 
-A squash = **rebuild the schema from the models** via `Base.metadata.create_all`
-(that's all the squashed root does). This requires **wiping every existing DB** —
-prod *and* every local/worktree DB — because their old stamps are now dangling.
+## Strategy B — current (stamp, never wipe)
 
-This strategy is only valid while data is disposable. The moment real user data
-exists, switch to Strategy B.
+The schema already matches the squashed revision, so move the pointer, run no DDL:
 
-## Strategy B — launch-time switch ⚠️ (warning stub, not yet built)
-
-**⚠️ Before launch, switch to this.** When squashing a DB that holds real data,
-you must NOT wipe it. The schema already matches the squashed revision, so:
-
-1. Squash the chain as usual (new `0001_*` built from models).
-2. On each live DB, `alembic stamp <new_head>` — moves the pointer, runs **no DDL**.
+1. Squash the chain as usual (a new root built from models).
+2. Start from a DB already at the **old head**. From the incoming image:
+   `docker compose run --rm backend alembic stamp --purge <new_root>`. A plain `stamp`
+   resolves the squashed-away old revision first and fails; `--purge` skips that.
 3. Verify `alembic current` == head; no `upgrade` needed.
 4. Never drop/recreate a live DB to squash.
-
-Flesh this out when actually needed — do not build or test the full stamp dance now.
 
 ## Blast radius of a squash
 
 A squash invalidates the Alembic stamp in **every existing DB**.
 - **Local / worktree:** run `backend/scripts/reset_db.sh` (does `docker-compose down -v`
   then rebuild + seed).
-- **Dev (the box):** a wipe is acceptable. From `/srv/worldzero/dev`, run
-  `docker compose down -v` (removes that stack's `postgres_data` and `media` volumes and
-  nothing else), then `docker compose up -d`. `start.sh` finds an **empty, unstamped**
-  database, `check_db_stamp.stamp_is_known` passes it, and the new image migrates and
-  seeds it.
-- **Prod:** never drop or recreate it (Strategy B above). `alembic stamp --purge` it to a revision
-  the incoming image knows (a plain `stamp` resolves the old revision first and fails the
-  same way), then `alembic upgrade head` — the path `deploy/RESTORE.md`
+- **Dev (the box):** stamp, do not wipe (`copy_override` rows are the owner's copy). Same
+  `stamp --purge` as prod, below.
+- **Prod:** never drop or recreate it (Strategy B above). `alembic stamp --purge` it to the new
+  root from a DB at the old head, then `alembic upgrade head` — the path `deploy/RESTORE.md`
   describes under "If the dump predates the migration squash". Take a backup first
   (`deploy/README.md` §8).
 
@@ -139,8 +128,8 @@ to wipe), and you've read every model in `backend/models/` to know the final sch
    rows. Do this by hand against a real Postgres — CI builds from
    `Base.metadata.create_all`, so a green `pytest` proves nothing about the migration.
 5. **Stamp, don't upgrade, live DBs** that already hold the schema:
-   `alembic stamp <new_root>` (writes the revision without running DDL — this is
-   Strategy B above). Under Strategy A you wipe instead; see "Blast radius".
+   `alembic stamp --purge <new_root>` (writes the revision without running DDL — this is
+   Strategy B above; plain `stamp` fails on a squashed-away stamp).
 6. **Delete any test coupled to a revision you removed.** A test that imports a
    migration module by path (there was one for `0011`) breaks at collection.
 

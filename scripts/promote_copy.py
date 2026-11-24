@@ -11,7 +11,8 @@ An all-asterisks override means "nothing belongs here": never written, listed as
 ``REFUSE``d (exit non-zero); plurals bake at their ``_one``/``_other`` keys.
 
 Keep the rows after the bake: they are the list of copy the owner wrote, and
-``--guard <base-ref>`` (CI, every PR) fails a PR that changes or removes one.
+``--guard <base-ref>`` (CI, every PR) fails a PR that changes or removes one;
+typo-class rewrites pass (#4277; see ``is_typo_fix``).
 To release a key, approve its proposal at /admin/copy-proposals, then re-run Test. Stdlib only.
 """
 

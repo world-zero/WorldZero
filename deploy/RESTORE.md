@@ -81,7 +81,11 @@ and the backend crashloops.
 
 The fix is to
 `alembic stamp --purge` the restored database to a revision the image knows, then let
-`alembic upgrade head` carry it forward.
+`alembic upgrade head` carry it forward. That is only correct for a dump taken at the
+old head, `0058_tombstone_carried_from`: stamping an older dump skips the revisions
+between it and the squash (the root's `create_all` does not run on a stamp). Upgrade an
+older dump to `0058` first, on an image from before the squash (any `sha-<commit>`
+before #4259), then stamp.
 
 ---
 
