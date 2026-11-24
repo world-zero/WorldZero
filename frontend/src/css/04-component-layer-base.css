@@ -10,6 +10,13 @@
       color 150ms;
   }
 
+  /* Copy keeps its line breaks everywhere (#4293): a live edit can add one to any key.
+     On body's element children (#root and drawAtRoot portals), not body: index.html's own
+     whitespace around #root would draw as blank lines. Markdown opts out with `.md-flow`. */
+  body > * {
+    white-space: pre-line;
+  }
+
   h1,
   h2,
   h3,

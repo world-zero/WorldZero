@@ -11,9 +11,9 @@ export default function AiPolicy() {
 
       <div className="card p-6 space-y-5 font-body text-base leading-relaxed">
         <h2 className="font-display text-2xl font-bold">{t('ai.builtTitle')}</h2>
-        <p className="whitespace-pre-line">{t('ai.built')}</p>
+        <p>{t('ai.built')}</p>
         <h2 className="font-display text-2xl font-bold">{t('ai.praxisTitle')}</h2>
-        <p className="whitespace-pre-line">{t('ai.praxis')}</p>
+        <p>{t('ai.praxis')}</p>
       </div>
     </div>
   )

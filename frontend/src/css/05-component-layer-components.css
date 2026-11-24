@@ -435,6 +435,15 @@
     overflow-wrap: anywhere;
   }
 
+  /* react-markdown emits "\n" text between blocks, which body's pre-line would draw as blank
+     lines: the container drops it, while inline-only blocks keep a typed line break (#4293). */
+  .md-flow {
+    white-space: normal;
+  }
+  .md-flow :where(p, h1, h2, h3, h4, h5, h6, td, th) {
+    white-space: pre-line;
+  }
+
   .markdown-preview h1 {
     @apply font-display text-2xl font-bold mt-4 mb-2;
   }
