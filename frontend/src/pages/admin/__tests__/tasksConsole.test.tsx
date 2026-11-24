@@ -142,9 +142,9 @@ describe('the task panel', () => {
     for (const label of ['Title', 'Description', 'Level']) {
       expect((within(panel).getByLabelText(label) as HTMLInputElement).readOnly).toBe(false)
     }
-    expect(within(panel).queryByRole('button', { name: 'Save' })).toBeNull()
+    expect(within(panel).queryByRole('button', { name: 'save' })).toBeNull()
     fireEvent.change(within(panel).getByLabelText('Description'), { target: { value: 'Clearer words' } })
-    expect(within(panel).getByRole('button', { name: 'Save' })).toBeTruthy()
+    expect(within(panel).getByRole('button', { name: 'save' })).toBeTruthy()
   })
 
   it('retire asks first', async () => {
