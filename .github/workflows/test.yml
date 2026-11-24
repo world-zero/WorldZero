@@ -123,8 +123,9 @@ jobs:
         run: pytest --cov=. --cov-report=term-missing --cov-fail-under=96
         working-directory: backend
 
-      # A frontend-only PR can still break a backend test that reads the
-      # catalogs (emitted keys, error codes, perk quotes); those are all it runs.
+      # A frontend-only PR can still break a backend test that mentions
+      # `locales` (emitted keys, error codes, perk quotes), or a committed SVG;
+      # the grep below plus the SVG guard are all it runs.
       - name: Run the backend tests that read the catalogs
         if: needs.scope.outputs.scope == 'copy' || needs.scope.outputs.scope == 'frontend'
         run: pytest $(grep -rl --include='test_*.py' locales tests) tests/test_shipped_svgs_are_well_formed.py

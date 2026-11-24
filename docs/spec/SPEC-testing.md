@@ -4,7 +4,7 @@
 - Game logic lives in `services/` and is pure (accepts `EraConfig`, returns a value)
 - Unit tests require no DB or running server — just import `game_config` and `services`
 - Integration tests spin up a test DB (via `pytest` fixtures + SQLAlchemy)
-- CI runs the full suite on every push and blocks merge on failure
+- CI blocks merge on failure; `scripts/ci_scope.sh` (scope table in its header) decides which jobs a PR runs, so a copy or ci PR skips some
 
 ## Test Structure
 ```
@@ -207,8 +207,8 @@ The PR-blocking suite is **four required checks** on `main`: three of
   and the initial-load byte budget
 - `api-schema` — regenerate `backend/openapi.json` and the generated TS types, then
   `git diff --exit-code`
-- `contrast` (`contrast.yml`) — `run-e2e.sh e2e/contrast.spec.ts` on every PR, no paths
-  filter so it always reports
+- `contrast` (`contrast.yml`) — `run-e2e.sh e2e/contrast.spec.ts` on every PR except ones
+  `scripts/ci_scope.sh` scopes to `copy` or `ci`
 
 `test.yml` is the authoritative config (don't mirror its YAML here) — this list names
 the jobs because agents need to know how many gates exist, not what is inside them. Read
