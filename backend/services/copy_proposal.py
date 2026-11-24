@@ -43,6 +43,12 @@ async def file_proposal(
         kept = _line_id(fields) in rejected
         status = LineStatus.rejected if kept else LineStatus.open
         lines.append({**fields, "status": status.value})
+    if proposal is None and not lines:
+        # Nothing to withdraw: answer with an unsaved stand-in, store no row.
+        stand_in = CopyProposal(
+            id=0, pr_number=data.pr_number, pr_url=str(data.pr_url), lines=[]
+        )
+        return stand_in, False
     if proposal is None:
         proposal = CopyProposal(pr_number=data.pr_number)
         session.add(proposal)

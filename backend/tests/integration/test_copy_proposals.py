@@ -243,6 +243,16 @@ async def test_rerun_keeps_an_unchanged_rejected_line_rejected(
 
 
 @pytest.mark.asyncio
+async def test_empty_lines_without_a_proposal_store_nothing(
+    client: AsyncClient, db_session: AsyncSession, token_on
+):
+    resp = await _file(client, {**BODY, "lines": []})
+    assert resp.status_code == 201
+    assert resp.json()["pushed"] is False
+    assert (await db_session.execute(CopyProposal.__table__.select())).all() == []
+
+
+@pytest.mark.asyncio
 async def test_empty_lines_withdraw_the_proposal(
     client: AsyncClient,
     db_session: AsyncSession,
