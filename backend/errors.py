@@ -121,6 +121,8 @@ class ErrorCode(str, enum.Enum):
     task_level_too_high = "TASK_LEVEL_TOO_HIGH"
     #: #3062. Delete is for import junk with no references; else retire.
     task_has_history = "TASK_HAS_HISTORY"
+    #: #4298. A completed active task's points and faction are fixed.
+    task_scoring_locked = "TASK_SCORING_LOCKED"
     #: #3062. A ``seed_key`` row would come back on the next deploy.
     task_seed_owned = "TASK_SEED_OWNED"
     #: #3848. A backdoor must close after it opens.

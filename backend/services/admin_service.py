@@ -802,11 +802,11 @@ async def admin_edit_task(
         and rescoring
         and await session.scalar(select(_completed(task.id)))
     ):
-        raise HTTPException(
-            status_code=400,
-            detail="Someone has completed this task, "
-            "so its points and faction are locked. "
-            "Retire the task first.",
+        raise_coded(
+            409,
+            ErrorCode.task_scoring_locked,
+            "Someone has completed this task, so its points and faction "
+            "are locked. Retire the task first.",
         )
     before = (task.point_value, task.primary_faction_slug)
     if (

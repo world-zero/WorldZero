@@ -136,6 +136,17 @@ describe('the task panel', () => {
     expect(api.adminPatchTask).not.toHaveBeenCalled()
   })
 
+  it('an active task shows words editable and Save once they change', async () => {
+    at('/admin/tasks?task=1')
+    const panel = await screen.findByRole('complementary', { name: 'Task' })
+    for (const label of ['Title', 'Description', 'Level']) {
+      expect((within(panel).getByLabelText(label) as HTMLInputElement).readOnly).toBe(false)
+    }
+    expect(within(panel).queryByRole('button', { name: 'Save' })).toBeNull()
+    fireEvent.change(within(panel).getByLabelText('Description'), { target: { value: 'Clearer words' } })
+    expect(within(panel).getByRole('button', { name: 'Save' })).toBeTruthy()
+  })
+
   it('retire asks first', async () => {
     at('/admin/tasks?task=1')
     const panel = await screen.findByRole('complementary', { name: 'Task' })

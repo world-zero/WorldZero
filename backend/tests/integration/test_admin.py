@@ -15,7 +15,7 @@ from models.character_stats import CharacterStats
 from models.contact import ContactMessage
 from models.era import Era
 from models.meta_task import PraxisMetaTask
-from models.praxis import Praxis
+from models.praxis import Praxis, PraxisStatus
 from models.task import Task, TaskStatus, TaskType
 from schemas.task import MAX_TASK_NOTES
 from services.character_stats import recalculate_character_stats
@@ -648,7 +648,32 @@ async def test_admin_edit_active_task_scoring_locks_once_completed(
     resp = await client.patch(
         f"/admin/tasks/{active_task.id}", json={field: original}, headers=auth_headers
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == ErrorCode.task_scoring_locked.value
+    await db_session.refresh(active_task)
+    assert getattr(active_task, field) == change
+
+
+@pytest.mark.asyncio
+async def test_admin_edit_active_task_unsubmitted_praxis_does_not_lock(
+    client: AsyncClient,
+    account: Account,
+    character: Character,
+    active_task: Task,
+    auth_headers: dict,
+    db_session: AsyncSession,
+):
+    await make_admin(db_session, account)
+    await make_solo_praxis(
+        db_session, active_task, character, status=PraxisStatus.in_progress
+    )
+    await db_session.commit()
+    resp = await client.patch(
+        f"/admin/tasks/{active_task.id}",
+        json={"point_value": active_task.point_value + 5},
+        headers=auth_headers,
+    )
+    assert resp.status_code == 200, resp.text
 
 
 # --- Vote budget recompute + era reset semantics (R.5) ---

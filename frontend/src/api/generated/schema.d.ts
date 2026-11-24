@@ -589,7 +589,7 @@ export interface paths {
         };
         /**
          * List Completed Task Ids
-         * @description Admin-only: ids of tasks a submitted praxis did; points and faction lock on active ones (#4298).
+         * @description Admin-only: ids of tasks a submitted praxis did (#4298).
          */
         get: operations["list_completed_task_ids_admin_tasks_completed_get"];
         put?: never;

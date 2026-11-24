@@ -11087,7 +11087,7 @@
     },
     "/admin/tasks/completed": {
       "get": {
-        "description": "Admin-only: ids of tasks a submitted praxis did; points and faction lock on active ones (#4298).",
+        "description": "Admin-only: ids of tasks a submitted praxis did (#4298).",
         "operationId": "list_completed_task_ids_admin_tasks_completed_get",
         "parameters": [
           {
