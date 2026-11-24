@@ -15,6 +15,7 @@ const api = vi.hoisted(() => ({
   getOverview: vi.fn(async () => ({ praxis: 38, active_tasks: 10, accounts: 21, characters: 27 })),
   getAllTasks: vi.fn(async () => [aTask({ id: 1, title: 'Walk Barefoot', status: 'active' })]),
   getTaskIdsWithHistory: vi.fn(async () => []),
+  getCompletedTaskIds: vi.fn(async () => []),
   adminPatchTask: vi.fn(async () => ({})),
   updateTaskStatus: vi.fn(async () => ({})),
 }))
@@ -120,6 +121,31 @@ describe('the owner', () => {
     cleanup()
     at('/', <ModControl />)
     expect(await screen.findByRole('button', { name: 'Mod, 12 waiting' })).toBeTruthy()
+  })
+})
+
+describe('the task panel on an active task (#4298)', () => {
+  const panel = (completed: boolean) =>
+    at('/', <TaskPanel task={{ ...aTask({ id: 7, title: 'Walk', status: 'active' }), completed }} factions={[{ slug: 'ua', label: 'UA' }]} proposal={null} onChanged={vi.fn()} onDeleted={vi.fn()} onClose={vi.fn()} />)
+
+  it('edits the words; points and faction stay open until someone completes it', () => {
+    owner()
+    panel(false)
+    expect((screen.getByLabelText('Title') as HTMLInputElement).readOnly).toBe(false)
+    const points = screen.getByLabelText('Points') as HTMLInputElement
+    expect(points.readOnly).toBe(false)
+    expect(points.inputMode).toBe('numeric')
+    expect((screen.getByLabelText('Faction') as HTMLSelectElement).disabled).toBe(false)
+  })
+
+  it('locks points and faction, and says why, once completed', () => {
+    owner()
+    panel(true)
+    expect((screen.getByLabelText('Title') as HTMLInputElement).readOnly).toBe(false)
+    expect((screen.getByLabelText('Level') as HTMLInputElement).readOnly).toBe(false)
+    expect((screen.getByLabelText('Points') as HTMLInputElement).readOnly).toBe(true)
+    expect((screen.getByLabelText('Faction') as HTMLSelectElement).disabled).toBe(true)
+    expect(screen.getByText(/points and faction are locked/)).toBeTruthy()
   })
 })
 

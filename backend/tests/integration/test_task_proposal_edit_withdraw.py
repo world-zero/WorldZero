@@ -19,7 +19,7 @@ from schemas.admin import AdminTaskPatch
 from schemas.task import TaskCreate
 from services.admin_service import admin_edit_task, update_task_status
 from services.task import edit_proposal, withdraw_proposal
-from tests.integration.factories import make_task
+from tests.integration.factories import make_solo_praxis, make_task
 from tests.integration.query_capture import capture_selects
 
 BODY = {"title": "Better title", "point_value": 12, "level_required": 1}
@@ -236,11 +236,17 @@ async def test_mod_edit_sees_an_activation_made_after_they_loaded_it(
         task.id, TaskStatus.active, db_session,
         actor_id=proposer.account_id, held=frozenset({Permission.review_proposals}),
     )
+    await make_solo_praxis(db_session, task, proposer)
     await db_session.commit()
 
+    # Completed and active now: the stale form's points change must be refused (#4298).
     with pytest.raises(HTTPException) as exc:
         await admin_edit_task(
-            task.id, AdminTaskPatch(title="Edited"), stale, proposer.account_id
+            task.id,
+            AdminTaskPatch(point_value=task.point_value + 1),
+            stale,
+            proposer.account_id,
         )
 
-    assert exc.value.status_code == 400
+    assert exc.value.status_code == 409
+    assert exc.value.detail["code"] == ErrorCode.task_scoring_locked.value

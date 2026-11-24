@@ -80,6 +80,7 @@ from services.admin_service import (
     archive_message,
     authors_for_moderation,
     delete_unreferenced_task,
+    completed_task_ids,
     task_ids_with_history,
     remove_flagged_praxes_by_author,
     find_admin_accounts,
@@ -454,6 +455,15 @@ async def admin_update_task_status(
         backdoor_closes_at=data.backdoor_closes_at,
     )
     return await build_task_out(task, session)
+
+
+@router.get("/tasks/completed", response_model=list[int])
+async def list_completed_task_ids(
+    _: Account = Depends(require_permission(Permission.manage_tasks)),
+    session: AsyncSession = Depends(get_db, scope="function"),
+):
+    """Admin-only: ids of tasks a submitted praxis did (#4298)."""
+    return await completed_task_ids(session)
 
 
 @router.get("/tasks/with-history", response_model=list[int])

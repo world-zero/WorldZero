@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getAllTasks, getPendingTasks, getTaskIdsWithHistory } from '../../api/admin'
+import { getAllTasks, getCompletedTaskIds, getPendingTasks, getTaskIdsWithHistory } from '../../api/admin'
 import { extractError } from '../../utils/errors'
 import { useGameConfig } from '../../hooks/useGameConfig'
 import { factionName, isFactionHiddenFromChoosers, UNAFFILIATED_FACTION_SLUG } from '../../utils/factions'
@@ -39,6 +39,7 @@ export default function TasksTab() {
   const can = useCan()
   const canReview = can('proposals')
   const canDelete = can('deleteTask')
+  const canEdit = can('editTask')
   const [tasks, setTasks] = useState<AdminTaskRow[]>([])
   const [segment, setSegment] = useState<Segment>(pathname.endsWith('/proposals') ? 'proposals' : 'active')
   const [search, setSearch] = useState('')
@@ -53,11 +54,16 @@ export default function TasksTab() {
   const refresh = useCallback(() => {
     setError(null)
     // A read the caller may not make would 403 and blank the whole tab.
-    Promise.all([getAllTasks(), canReview ? getPendingTasks() : [], canDelete ? getTaskIdsWithHistory() : []])
-      .then(([all, pending, history]) => setTasks(mergeAdminTaskRows(all, pending, history)))
+    Promise.all([
+      getAllTasks(),
+      canReview ? getPendingTasks() : [],
+      canDelete ? getTaskIdsWithHistory() : [],
+      canEdit ? getCompletedTaskIds() : [],
+    ])
+      .then(([all, pending, history, completed]) => setTasks(mergeAdminTaskRows(all, pending, history, completed)))
       .catch((err) => setError(extractError(err, t('tasks.loadError'))))
       .finally(() => setLoading(false))
-  }, [t, canReview, canDelete])
+  }, [t, canReview, canDelete, canEdit])
   useEffect(refresh, [refresh])
 
   // An edit or refresh can remove the picked level from the options; clear it rather than filter to nothing behind a blank select.

@@ -7,6 +7,8 @@ export type AdminTaskRow = TaskOut & {
   notes?: string;
   /** Delete is offered only without history (#3667); the server refuses regardless. */
   has_history?: boolean;
+  /** A submitted praxis did it: an active one locks points and faction (#4298). */
+  completed?: boolean;
 };
 
 /**
@@ -18,8 +20,10 @@ export function mergeAdminTaskRows(
   allTasks: TaskOut[],
   pendingTasks: PendingTaskOut[],
   historyIds: number[] = [],
+  completedIds: number[] = [],
 ): AdminTaskRow[] {
   const withHistory = new Set(historyIds);
+  const completed = new Set(completedIds);
   const pendingById = new Map<number, PendingTaskOut>(
     pendingTasks.map((task) => [task.id, task]),
   );
@@ -28,12 +32,12 @@ export function mergeAdminTaskRows(
   const merged: AdminTaskRow[] = allTasks.map((task) => {
     seen.add(task.id);
     const pending = pendingById.get(task.id);
-    return { ...task, ...pending, has_history: withHistory.has(task.id) };
+    return { ...task, ...pending, has_history: withHistory.has(task.id), completed: completed.has(task.id) };
   });
 
   const missing = pendingTasks.filter((task) => !seen.has(task.id));
   return [
-    ...missing.map((task) => ({ ...task, has_history: withHistory.has(task.id) })),
+    ...missing.map((task) => ({ ...task, has_history: withHistory.has(task.id), completed: completed.has(task.id) })),
     ...merged,
   ];
 }
