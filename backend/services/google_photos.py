@@ -90,7 +90,7 @@ def forget_grant(account_id: int) -> None:
 async def require_google_account(
     account_id: int, session: AsyncSession
 ) -> list[str]:
-    """The Account's Google ``provider_user_id``s, oldest first, or a 403 (the guard)."""
+    """The Account's Google ``provider_user_id``s, oldest first, or a 403."""
     provider_user_ids = list(
         await session.scalars(
             select(OAuthProvider.provider_user_id)
