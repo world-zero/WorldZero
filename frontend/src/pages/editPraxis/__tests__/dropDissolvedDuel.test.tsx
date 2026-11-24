@@ -19,6 +19,10 @@ vi.mock('../../../api/praxis', async (importOriginal) => ({
   takeJustCreatedPraxis: () => null,
   getPraxis: vi.fn(async () => fixed.praxis),
   deletePraxis: vi.fn(async () => void calls.push('delete')),
+  changePraxisType: vi.fn(async () => {
+    calls.push('changeType')
+    return fixed.praxis
+  }),
 }))
 vi.mock('../../../api/duel', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../api/duel')>()),
@@ -60,4 +64,20 @@ it('dropping a dissolved-duel side deletes the praxis without cancelChallenge', 
   })
 
   expect(calls).toEqual(['delete'])
+})
+
+it('switching mode out of a dissolved duel changes type without cancelChallenge', async () => {
+  const { result } = renderHook(() => useEditPraxis('1'), { wrapper })
+  await waitFor(() => expect(result.current.duel?.state).toBe('dissolved'))
+
+  let switched: Promise<void> | undefined
+  act(() => {
+    switched = result.current.changeMode('collab')
+  })
+  await act(async () => {
+    if (result.current.pendingConfirm) result.current.acceptConfirm()
+    await switched
+  })
+
+  expect(calls).toEqual(['changeType'])
 })

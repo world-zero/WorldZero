@@ -15,7 +15,10 @@ export function RosterAvatar({
   dashed = false,
   color,
   avatarUrl,
+  absent = false,
 }: {
+  /** A gone player: an empty ring, never initials or a portrait (#4238). */
+  absent?: boolean
   /** Display name; the monogram is derived, never passed in. */
   name: string
   /** 34 on the roster row, 28 on a duel side. */
@@ -28,7 +31,7 @@ export function RosterAvatar({
   /** Empty/absent falls back to the monogram. */
   avatarUrl?: string | null
 }) {
-  if (avatarUrl) {
+  if (avatarUrl && !absent) {
     return (
       <img
         aria-hidden="true"
@@ -65,7 +68,7 @@ export function RosterAvatar({
         lineHeight: 1,
       }}
     >
-      {rosterInitials(name)}
+      {absent ? null : rosterInitials(name)}
     </span>
   )
 }
