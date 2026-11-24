@@ -75,7 +75,8 @@ async def test_a_ban_that_was_the_last_wait_seals_the_collab(
     praxis_collab,
 ):
     await make_admin(db_session, account)
-    pending = await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
+    url = f"/praxes/{praxis_collab.id}/submit"
+    pending = await client.post(url, headers=auth_headers)
     assert pending.json()["status"] != "submitted"
 
     assert (await _ban(client, character2.id, auth_headers)).status_code == 200
@@ -246,7 +247,7 @@ async def test_needs_terms_exempt_routes_and_dev_login(
     assert _gated(refused, ErrorCode.terms_required)
 
     for path, kwargs in (
-        ("/contact", {"json": {"name": "n", "email": "e@x.org", "message": "m"}}),
+        ("/contact", {"json": {"name": "n", "email": "e@x", "message": "m"}}),
         ("/email/unsubscribe?token=bad", {}),
         ("/email/unsubscribe-all?token=bad", {}),
         ("/terms/acceptance", {}),
@@ -265,7 +266,8 @@ async def test_needs_terms_account_delete_is_exempt(client, character, auth_head
 async def test_needs_terms_banned_life_keeps_its_own_routes(
     client, db_session, character, auth_headers
 ):
-    assert (await client.post("/terms/acceptance", headers=auth_headers)).status_code == 201
+    accepted = await client.post("/terms/acceptance", headers=auth_headers)
+    assert accepted.status_code == 201
     character.status = CharacterStatus.banned
     await db_session.commit()
     for path, body in (
