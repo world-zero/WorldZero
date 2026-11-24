@@ -38,6 +38,7 @@ import {
   READING,
 } from '../factionMarks/ephemeristsPlate'
 import { factionBodyVars } from '../../utils/factionBodyFace'
+import { sideName } from '../../api/duel'
 
 const HAIRLINE_FAINT = `1px solid ${LINE}`
 const DOUBLE_RULE = `0 2px 0 -1px color-mix(in srgb, ${BRASS_RULE} 45%, transparent)`
@@ -202,7 +203,7 @@ export default function EphemeristsDuelSealConfirm({
           >
             <StakesTiles
               me={me}
-              opponentName={foe.display_name}
+              opponentName={sideName(foe)}
               taskPointValue={taskPointValue}
               status={duel.status}
               theme={theme}

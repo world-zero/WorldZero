@@ -13,6 +13,7 @@
  * takes `card-notice` and red is only the rule; the note takes `card-credit`.
  */
 import { useTranslation } from 'react-i18next'
+import { sideName } from '../../api/duel'
 import { factionCssVar, factionFill } from '../../utils/factions'
 import { factionRoleVars } from '../../utils/factionRoles'
 import { factionBodyVars } from '../../utils/factionBodyFace'
@@ -171,7 +172,7 @@ export default function UaDuelSealConfirm({
             className="content-text"
             style={{ fontFamily: UA_DISPLAY, fontWeight: 600, color: INK, minWidth: 0 }}
           >
-            {foe.display_name}
+            {sideName(foe)}
           </span>
         </div>
       </div>
@@ -236,7 +237,7 @@ export default function UaDuelSealConfirm({
         >
           <StakesTiles
             me={me}
-            opponentName={foe.display_name}
+            opponentName={sideName(foe)}
             taskPointValue={taskPointValue}
             status={duel.status}
             theme={theme}

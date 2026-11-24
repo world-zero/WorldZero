@@ -16,7 +16,7 @@ import {
   kickMember as kickMemberApi,
   type PraxisOut,
 } from "../../api/praxis";
-import { getDuelDetail, issueChallenge, type DuelDetailOut } from "../../api/duel";
+import { getDuelDetail, issueChallenge, sideName, type DuelDetailOut } from "../../api/duel";
 import { nudgeTheCrew, sendNudge, type NudgeResultOut } from "../../api/nudge";
 import { listCharacters, type CharacterOut, type CharacterSearchOut } from "../../api/characters";
 import { listRelationships } from "../../api/relationships";
@@ -270,7 +270,7 @@ export function useComposerRoster(options: {
           : undefined;
       const targetPraxisId = duelSide?.praxis_id ?? praxis.id;
       const name =
-        duelSide?.display_name ??
+        (duelSide ? sideName(duelSide) : undefined) ??
         praxis.members.find((member) => member.character_id === characterId)
           ?.character_display_name ??
         "";

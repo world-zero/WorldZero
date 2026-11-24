@@ -1,19 +1,13 @@
 import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Link, type LinkProps } from 'react-router-dom'
 import type { components } from '../api/generated/schema'
+import { playerLabel } from '../utils/playerLabel'
 
 export type NameState = components['schemas']['NameState']
 
 /** What every surface shows for a player's name (#4238): the name, "Name (Suspended)", or the placeholder. */
 export function usePlayerLabel(): (name: string, state: NameState) => string {
-  const { t } = useTranslation('common')
-  return (name, state) =>
-    state === 'absent'
-      ? t('absentPlayer')
-      : state === 'suspended'
-        ? t('suspendedPlayer', { name })
-        : name
+  return playerLabel
 }
 
 /** A link to a player's profile, or plain text when there is no profile to open. */

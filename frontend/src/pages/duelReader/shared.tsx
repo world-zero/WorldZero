@@ -35,6 +35,7 @@ import {
 import { RivalBonusSentence } from '../../components/duel/shared'
 import type { PraxisOut } from '../../api/praxis'
 import type { DuelDetailOut, DuelSideOut } from '../../api/duel'
+import { sideName } from '../../api/duel'
 import { taskRefMeta } from '../praxisDetail/shared'
 import { openSideFor, type DuelSideKey } from './openSide'
 import { casterVisible } from './reader'
@@ -143,7 +144,7 @@ function Standing({
       }}
     >
       <span className="label-caption" style={{ color: QUIET }}>
-        {entry.side.display_name}
+        {sideName(entry.side)}
       </span>
       <span
         className="content-title font-body"
@@ -249,7 +250,7 @@ function Byline({
           textOverflow: 'ellipsis',
         }}
       >
-        {entry.side.display_name}
+        {sideName(entry.side)}
       </span>
       <FactionSigil slug={entry.side.faction_slug} size={SIGIL} />
       <span

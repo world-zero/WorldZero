@@ -44,6 +44,7 @@ import {
   SHADOW,
 } from './wowLists'
 import { factionBodyVars } from '../../utils/factionBodyFace'
+import { sideName } from '../../api/duel'
 
 export default function WowDuelSealConfirm({
   duel,
@@ -165,7 +166,7 @@ export default function WowDuelSealConfirm({
           >
             <StakesTiles
               me={me}
-              opponentName={foe.display_name}
+              opponentName={sideName(foe)}
               taskPointValue={taskPointValue}
               status={duel.status}
               theme={theme}

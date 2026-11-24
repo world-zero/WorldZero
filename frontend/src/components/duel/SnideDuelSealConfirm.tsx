@@ -20,6 +20,7 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
+import { sideName } from '../../api/duel'
 
 const INK = 'var(--faction-snide-ink)'
 const ACID = 'var(--faction-snide-acid)'
@@ -158,7 +159,7 @@ export default function SnideDuelSealConfirm({
         >
           <StakesTiles
             me={me}
-            opponentName={foe.display_name}
+            opponentName={sideName(foe)}
             taskPointValue={taskPointValue}
             status={duel.status}
             theme={theme}

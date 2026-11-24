@@ -125,7 +125,7 @@ describe('a life before the gate is told nothing about a second one (#1560)', ()
     expect(body).not.toContain('levels to go')
     expect(body).not.toContain('Who are you today?')
     expect(body).not.toContain('life in play')
-    expect(body).not.toContain('cut a new pair from whole cloth')
+    expect(body).not.toContain('expand your cast')
     expect(body).not.toContain('Begin a new self')
   })
 

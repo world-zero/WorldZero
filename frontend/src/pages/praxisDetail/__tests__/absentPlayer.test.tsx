@@ -45,7 +45,7 @@ describe('faces for an absent player', () => {
 
   it('a comment author draws no username initial', () => {
     const c = authorToCharacter({
-      id: 1, username: '', display_name: '', avatar_url: '', faction_slug: 'na', name_state: 'absent',
+      id: 1, username: 'zork', display_name: '', avatar_url: '', faction_slug: 'na', name_state: 'absent',
     })
     expect(c.username).toBe('')
   })

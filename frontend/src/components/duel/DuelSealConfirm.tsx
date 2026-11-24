@@ -27,6 +27,7 @@ import {
   type DuelSealMode,
   type DuelSlotTheme,
 } from './shared'
+import { sideName } from '../../api/duel'
 
 export interface DuelSealConfirmProps {
   duel: DuelDetailOut
@@ -97,7 +98,7 @@ export function DefaultDuelSealConfirm({
 
         <StakesTiles
           me={me}
-          opponentName={foe.display_name}
+          opponentName={sideName(foe)}
           taskPointValue={taskPointValue}
           status={duel.status}
           theme={theme}

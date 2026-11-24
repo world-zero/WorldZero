@@ -39,5 +39,5 @@ export function duelOutcomeReadable(duel: DuelStateLike): boolean {
 }
 
 export function duelCanDrop(duel: DuelStateLike): boolean {
-  return duel == null || duelCan('dissolve', duel) || duel.state === 'dissolved'
+  return duel != null && (duelCan('dissolve', duel) || duel.state === 'dissolved')
 }

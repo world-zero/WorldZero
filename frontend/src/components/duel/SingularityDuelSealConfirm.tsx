@@ -20,6 +20,7 @@ import {
 } from './shared'
 import type { DuelSealConfirmProps } from './DuelSealConfirm'
 import DuelSealSheet from './DuelSealSheet'
+import { sideName } from '../../api/duel'
 
 /** Roles under this sheet's prefix, declared on `ground` (#2675). */
 const GROUND = 'var(--sg-duel-paper)'
@@ -164,7 +165,7 @@ export default function SingularityDuelSealConfirm({
         >
           <StakesTiles
             me={me}
-            opponentName={foe.display_name}
+            opponentName={sideName(foe)}
             taskPointValue={taskPointValue}
             status={duel.status}
             theme={theme}

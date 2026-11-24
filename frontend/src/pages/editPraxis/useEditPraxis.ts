@@ -592,7 +592,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
 
       // UI choice, not a backend limit: an accepted duel is left via the
       // "dissolve duel" control, which confirms (#956).
-      if (inDuel && duel && !duelCan("decline", duel)) {
+      if (inDuel && duel && duel.state !== "dissolved" && !duelCan("decline", duel)) {
         setError(i18n.t("forms:editPraxis.errors.duelUnderway"));
         return;
       }
@@ -608,7 +608,7 @@ export function useEditPraxis(idParam: string | undefined): EditPraxisState {
       setError("");
       setSwitchingMode(next);
       try {
-        if (inDuel && praxis.duel_id != null) {
+        if (inDuel && praxis.duel_id != null && duel?.state !== "dissolved") {
           await cancelChallenge(praxis.duel_id);
         }
         // In a duel the type is already 'solo', so solo just reloads.
