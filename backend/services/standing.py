@@ -120,7 +120,7 @@ def public_identity(character: Character) -> PublicIdentity:
     # sync code (MissingGreenlet). A just-created character reads as ok.
     raw = vars(character).get("name_state")
     if raw is None:
-        logger.warning("name_state not loaded for character %s", character.id)
+        logger.warning("name_state not loaded for %r", character)
         raw = NameState.ok.value
     state = NameState(raw)
     if state == NameState.absent:

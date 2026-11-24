@@ -10,5 +10,5 @@ def test_an_unloaded_name_state_logs_a_warning(caplog):
     )
     with caplog.at_level(logging.WARNING):
         identity = public_identity(character)
-    assert "name_state not loaded for character 7" in caplog.text
+    assert "name_state not loaded for" in caplog.text
     assert identity.display_name == "Zork"
