@@ -200,7 +200,7 @@ async def test_callback_refuses_a_forged_state(
 
 @pytest.mark.asyncio
 async def test_callback_refuses_someone_elses_google(
-    client, google_character, auth_headers, google
+    client, google_character, auth_headers, google, caplog
 ):
     google.sub = "someone-else"
     start = await client.get("/auth/google/photos/authorize", headers=auth_headers)
@@ -212,6 +212,26 @@ async def test_callback_refuses_someone_elses_google(
     )
     assert '"status": "failed"' in back.text
     assert not google_photos._GRANTS
+    assert "Google Photos authorization failed" in caplog.text
+    assert TOKEN not in caplog.text
+    assert "code=c" not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_any_of_the_accounts_google_rows_authorises(
+    client, db_session, google_character, auth_headers, google
+):
+    db_session.add(
+        OAuthProvider(
+            account_id=google_character.account_id,
+            provider=AuthProvider.GOOGLE,
+            provider_user_id="second-google",
+        )
+    )
+    await db_session.commit()
+    google.sub = "second-google"
+    await _authorise(client, auth_headers)
+    assert google_photos._GRANTS
 
 
 @pytest.mark.asyncio

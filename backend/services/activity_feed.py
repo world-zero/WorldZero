@@ -1333,9 +1333,11 @@ def _collaborator_submitted_item(row: Any) -> ActivityFeedItemDC:
 
 
 def _awaiting_submission_query(ctx: FeedContext) -> Select:
-    """Praxes waiting on the VIEWER's own submission, where somebody else is party to it.
+    """Praxes waiting on the VIEWER's own submission, once somebody else has submitted.
 
-    Viewer unsubmitted on an open praxis with at least one OTHER member.
+    Viewer unsubmitted on an open praxis where at least one OTHER member has
+    submitted (#4296): before that nobody is waiting, and the urgency pushed
+    players to file an empty praxis.
     Mirror of ``_collaborator_submitted_query``; ordered by ``joined_at``.
 
     The other-member EXISTS, not a type check (#1980): a collab nobody was
@@ -1363,6 +1365,7 @@ def _awaiting_submission_query(ctx: FeedContext) -> Select:
             .where(
                 other_member.praxis_id == PraxisMember.praxis_id,
                 other_member.character_id != ctx.character_id,
+                other_member.has_approved.is_(True),
             )
             .exists(),
         )

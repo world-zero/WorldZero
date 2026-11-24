@@ -33,6 +33,11 @@ const POINT_BEARING = [
   'forms:proposeTask.preview.bonusPoints',
   'home:signedIn.continue.meta.draft',
   'praxis:detail.seal.bonus',
+  'common:sidebar.characterCard.toNextLevel',
+  'common:sidebar.characterCard.allTime',
+  'praxis:duelStakes.tieLine',
+  'praxis:duelStakes.rivalBonus',
+  'praxis:duelStakes.soloFallback',
 ] as const
 
 const VARS = { era: 'Era One', level: 2, points: '1', score: '1' }
@@ -47,6 +52,12 @@ describe('a count meets its noun in the right number (#2239)', () => {
       expect(other).toMatch(/\bpoints\b/i)
     })
   }
+})
+
+it('duelForfeit.cost keeps "1 point" singular on the figure it counts', () => {
+  const t = (count: number) => i18n.t('praxis:duelForfeit.cost', { name: 'A', points: count, win: 9, count })
+  expect(t(1)).toMatch(/keep 1 point instead of 9 points/)
+  expect(t(2)).toMatch(/keep 2 points instead of 9 points/)
 })
 
 const ONE_POINT = {

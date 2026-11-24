@@ -26,21 +26,6 @@
   font-weight: 600;
   line-height: 1.25;
 }
-.push-ask-body,
-.push-ask-note {
-  margin: 0;
-  font-family: var(--font-body);
-}
-.push-ask-body {
-  font-size: var(--text-content);
-  line-height: 1.55;
-  color: var(--color-text-secondary);
-}
-.push-ask-note {
-  font-size: var(--text-lg);
-  line-height: 1.5;
-  color: var(--color-text-tertiary);
-}
 .push-ask-actions {
   display: flex;
   flex-wrap: wrap;

@@ -228,10 +228,13 @@
     "heading": "What's at stake",
     "winLabel": "If you win",
     "loseLabel": "If you lose",
-    "tieLine": "A tie pays {{points}}.",
+    "tieLine_one": "A tie pays {{points}} point.",
+    "tieLine_other": "A tie pays {{points}} points.",
     "beforeVotes": "Base points, before crowd votes — stars add on top.",
-    "rivalBonus": "Rival duel: whoever wins, tiebreak included, takes {{points}} more on top.",
-    "soloFallback": "Nothing is at stake yet. If {{name}} declines, this scores as an ordinary praxis worth {{points}}."
+    "rivalBonus_one": "Rival duel: whoever wins, tiebreak included, takes {{points}} point more on top.",
+    "rivalBonus_other": "Rival duel: whoever wins, tiebreak included, takes {{points}} points more on top.",
+    "soloFallback_one": "Nothing is at stake yet. If {{name}} declines, this scores as an ordinary praxis worth {{points}} point.",
+    "soloFallback_other": "Nothing is at stake yet. If {{name}} declines, this scores as an ordinary praxis worth {{points}} points."
   },
   "duelClock": {
     "theyHave_one": "{{name}} has {{count}} day to submit, or forfeits.",
@@ -255,7 +258,8 @@
   },
   "duelForfeit": {
     "confirmPrompt": "Pulling back now FORFEITS the duel.",
-    "cost": "{{name}} wins by default and you keep {{points}} instead of {{win}}.",
+    "cost_one": "{{name}} wins by default and you keep {{points}} point instead of {{win}} points.",
+    "cost_other": "{{name}} wins by default and you keep {{points}} points instead of {{win}} points.",
     "action": "Forfeit"
   },
   "googlePhotos": {
@@ -270,9 +274,7 @@
   },
   "pushAsk": {
     "title": "Want to know when someone rates this?",
-    "body": "We'll buzz your phone when people rate it, comment on it, or call you out. Ambient chatter stays off unless you go looking for it in Settings.",
-    "turnOn": "Turn on notifications",
-    "notNow": "Not now",
-    "note": "Your phone will ask too. That one is the one that counts."
+    "turnOn": "Notify Me!",
+    "notNow": "Nope!"
   }
 }

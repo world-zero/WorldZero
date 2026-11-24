@@ -1,18 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, it, expect } from 'vitest'
-import i18n from '../../i18n'
-import AiPolicy from '../AiPolicy'
-import Attributions from '../Attributions'
+import { expect, it } from 'vitest'
+import MarkdownPreview from '../editPraxis/blocks/MarkdownPreview'
+import { PraxisExcerpt } from '../../components/praxisCard/shared'
+import type { PraxisCardOut } from '../../api/praxis'
 
-const PARAGRAPH = /<p class="[^"]*whitespace-pre-line[^"]*">first\n\nsecond<\/p>/g
-
-describe('owner copy keeps its paragraph breaks', () => {
-  it.each([
-    ['AiPolicy', AiPolicy, ['ai.built', 'ai.praxis']],
-    ['Attributions', Attributions, ['attributions.intro']],
-  ] as const)('%s renders \\n inside a pre-line paragraph', (_name, Page, keys) => {
-    for (const k of keys) i18n.addResource('en', 'common', k, 'first\n\nsecond')
-    const html = renderToStaticMarkup(<Page />)
-    expect(html.match(PARAGRAPH)).toHaveLength(keys.length)
-  })
+// react-markdown emits "\n" between blocks, which body's pre-line would draw; `.md-flow` opts out.
+it('markdown renderers opt out of the app-wide pre-line with md-flow', () => {
+  expect(renderToStaticMarkup(<MarkdownPreview source={'a\n\nb'} />)).toMatch(/^<div class="md-flow">/)
+  const excerpt = renderToStaticMarkup(<PraxisExcerpt praxis={{ body_text: 'a\n\nb' } as PraxisCardOut} />)
+  expect(excerpt).toMatch(/^<p class="[^"]*\bmd-flow\b/)
 })

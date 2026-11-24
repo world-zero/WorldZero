@@ -16,16 +16,6 @@ const EXEMPT = new Set([
   "praxis:card.stamp.pointsShort",
 ]);
 
-// Bare figures in prose that name the unit elsewhere in the sentence; none abbreviates.
-const BARE = new Set([
-  "common:sidebar.characterCard.toNextLevel",
-  "common:sidebar.characterCard.allTime",
-  "praxis:duelStakes.tieLine",
-  "praxis:duelStakes.rivalBonus",
-  "praxis:duelStakes.soloFallback",
-  "praxis:duelForfeit.cost",
-]);
-
 function leaves(node: unknown, path: string): [string, string][] {
   if (typeof node === "string") return [[path, node]];
   if (node && typeof node === "object")
@@ -57,7 +47,6 @@ describe("counts of levels and points use the long form", () => {
     const bad = all.filter(
       ([k, v]) =>
         !EXEMPT.has(k) &&
-        !BARE.has(k) &&
         /\{\{points\}\}(?! (bonus )?points?\b)/i.test(v),
     );
     expect(bad).toEqual([]);
