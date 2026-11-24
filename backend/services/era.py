@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from errors import ErrorCode, raise_coded
 from game_config import (
     COMPILE_TIME_ERA_CONFIG_KEY,
     CURRENT_ERA,
@@ -196,6 +197,19 @@ async def get_current_era_row_safe(session: AsyncSession) -> Era | None:
         select(Era).order_by(Era.id.desc()).limit(1)
     )
     return result.scalar_one_or_none()
+
+
+async def get_era_row_or_404(session: AsyncSession, era_id: int) -> Era:
+    row = await session.get(Era, era_id)
+    if row is None:
+        raise_coded(404, ErrorCode.era_not_found, "Era not found.")
+    return row
+
+
+def era_row_name(row: Era) -> str:
+    """Config name, falling back to the stored one (#1623)."""
+    config = era_config_for_key(row.config_key)
+    return config.name if config is not None else row.name
 
 
 async def load_era_stats(

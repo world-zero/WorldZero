@@ -219,6 +219,8 @@ class ErrorCode(str, enum.Enum):
     era_roll_needs_character = "ERA_ROLL_NEEDS_CHARACTER"
     #: 409: a ``reactivate_tasks`` title matches no task, or several.
     era_reactivate_ambiguous = "ERA_REACTIVATE_AMBIGUOUS"
+    #: 404: ``?era=`` on the leaderboard names no ``Era`` row.
+    era_not_found = "ERA_NOT_FOUND"
 
     # -- Copy overrides (#3065) ---------------------------------------------
     #: Usually two admins reverting the same string: already shipped wording.
