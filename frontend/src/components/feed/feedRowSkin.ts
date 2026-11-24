@@ -53,7 +53,7 @@ export function resolveFeedRowInk(
 }
 
 interface FeedRowPoints {
-  /** e.g. "40 pts" / "+12 pts". */
+  /** e.g. "40 points" / "+12 points". */
   points: string | null
   level: number | null
 }

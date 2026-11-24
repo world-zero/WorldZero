@@ -8,6 +8,7 @@ import { describe, it, expect, vi } from "vitest";
 
 import MetataskSeal from "../MetataskSeal";
 import DefaultSeal from "../skins/DefaultSeal";
+import { bonusStyle } from "./bonusStyle";
 import i18n from "../../../i18n";
 import { factionName } from "../../../utils/factions";
 import type { TaskOut } from "../../../api/tasks";
@@ -64,6 +65,11 @@ describe("seal skins B content-slot invariant", () => {
     it(`${slug} renders the bonus (+point_value PTS)`, () => {
       const html = markup(<MetataskSeal metatasks={[task]} />);
       expect(html).toContain(bonus);
+    });
+
+    it(`${slug} sets the bonus in uppercase`, () => {
+      const html = markup(<MetataskSeal metatasks={[task]} />);
+      expect(bonusStyle(html, bonus)).toMatch(/text-transform:\s*uppercase/);
     });
 
     it(`${slug} names its issuing faction on the shared band`, () => {

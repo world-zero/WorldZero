@@ -191,7 +191,7 @@ describe("the meta line does not restate the stamp (#1833, widened by #2114)", (
 
   it('drops the base figure when the stamp already prints it as the total', () => {
     const html = body({ score: 12, points_from_votes: 0 })
-    // `12points`: the stamp's figure with its unit, unlike the band's `12 pts`.
+    // `12points`: the stamp's figure with its unit, as the meta line would print it.
     expect(html, 'the stamp still carries the figure').toContain('12points')
     expect(html, 'and the meta line does not repeat it').not.toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
     expect(html).toContain('Level 2')

@@ -83,10 +83,12 @@ async def test_wrong_or_missing_token_is_401(client: AsyncClient, token_on):
 
 @pytest.mark.asyncio
 async def test_right_token_files_and_a_rerun_replaces(
-    client: AsyncClient, db_session: AsyncSession, token_on
+    client: AsyncClient, db_session: AsyncSession, token_on, monkeypatch
 ):
+    monkeypatch.setattr(settings, "VAPID_PRIVATE_KEY", "")  # the env may carry keys
     first = await _file(client)
     assert first.status_code == 201
+    assert first.json()["pushed"] is False
     assert first.json()["lines"] == [{**LINE, "status": "open"}]
 
     second = await _file(
@@ -207,7 +209,8 @@ async def test_filing_pushes_every_edit_copy_holder(
     )
     await db_session.commit()
 
-    await _file(client)
+    resp = await _file(client)
+    assert resp.json()["pushed"] is True
     await _file(client)  # a re-run while open does not push again
     await asyncio.sleep(0)
     assert len(delivered) == 1

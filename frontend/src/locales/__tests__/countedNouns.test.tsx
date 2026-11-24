@@ -27,6 +27,7 @@ const POINT_BEARING = [
   'common:fieldDesk.home.taskMeta',
   'feed:row.pointsEarned',
   'feed:collabInvite.taskMeta',
+  'feed:duelChallenge.taskMeta',
   'forms:editPraxis.attach.pending',
   'forms:editPraxis.attach.removeBody',
   'forms:editPraxis.composer.recapPoints',
@@ -48,7 +49,8 @@ describe('a count meets its noun in the right number (#2239)', () => {
       const one = i18n.t(key, { ...VARS, count: 1 })
       const other = i18n.t(key, { ...VARS, count: 2 })
       expect(one, 'a singular that never differs is a missing `_one`').not.toBe(other)
-      expect(one).not.toMatch(/\bpoints\b/i)
+      // "winner takes the points" is the stake, not the count.
+      expect(one.replace(/the points/, '')).not.toMatch(/\bpoints\b/i)
       expect(other).toMatch(/\bpoints\b/i)
     })
   }
