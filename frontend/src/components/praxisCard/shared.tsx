@@ -415,7 +415,7 @@ export function PraxisExcerpt({
   if (!praxis.body_text) return null;
   return (
     <p
-      className="card-description font-body"
+      className="card-description font-body md-flow"
       style={{
         fontFamily: fonts?.body,
         marginTop: "var(--space-sm)",
