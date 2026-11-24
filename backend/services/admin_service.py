@@ -432,16 +432,14 @@ async def apply_ban(
     rescore_ids: set[int] = set()
     if banned:
         character.status = CharacterStatus.banned
-        rescore_ids = await forfeit_duels_collect([character.id], session)
-        close_character_sockets(character.id)
-        # S1: the ban stops every life, so every life's invites go.
-        await cancel_pending_invites_for(
-            list(await session.scalars(
-                select(Character.id).where(Character.account_id == character.account_id)
-            )),
-            session,
-            era,
-        )
+        # S1: the ban stops every life, so every life's duels, sockets, invites go.
+        life_ids = list(await session.scalars(
+            select(Character.id).where(Character.account_id == character.account_id)
+        ))
+        rescore_ids = await forfeit_duels_collect(life_ids, session)
+        for life_id in life_ids:
+            close_character_sockets(life_id)
+        await cancel_pending_invites_for(life_ids, session, era)
     else:
         character.status = CharacterStatus.active
 

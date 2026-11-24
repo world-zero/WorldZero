@@ -1,13 +1,15 @@
 """Player standing rules (#4237: S1/S2a/S3/S5/S7 + gap 4 of #4204), at the HTTP seam."""
+from datetime import datetime, timezone
+
 import pytest
 from sqlalchemy import select
 
 from errors import ErrorCode
 from models.account import Account, AccountStatus
 from models.character import CharacterStatus
-from models.praxis import PraxisInvite
+from models.praxis import PraxisInvite, PraxisStatus
 from models.vote import Vote
-from services.character import is_playable
+from services.character import has_current_terms, is_playable
 from services.praxis import invite_to_praxis
 from services.standing import counts_as_voter, standing_of
 from services.vote_ring import get_vote_ring
@@ -68,6 +70,20 @@ async def test_s2a_a_banned_member_does_not_block_the_seal(
     assert character2.id in [m["character_id"] for m in resp.json()["members"]]
 
 
+async def test_a_ban_that_was_the_last_wait_seals_the_collab(
+    client, db_session, account, auth_headers, auth_headers2, character2,
+    praxis_collab,
+):
+    await make_admin(db_session, account)
+    pending = await client.post(f"/praxes/{praxis_collab.id}/submit", headers=auth_headers)
+    assert pending.json()["status"] != "submitted"
+
+    assert (await _ban(client, character2.id, auth_headers)).status_code == 200
+
+    await db_session.refresh(praxis_collab)
+    assert praxis_collab.status == PraxisStatus.submitted
+
+
 @pytest.mark.parametrize("how", ["ban", "suspend"])
 async def test_s3_ban_and_suspend_cancel_invites_to_and_from(
     client, db_session, account, account2, auth_headers, era, character,
@@ -115,6 +131,17 @@ async def test_s3_self_delete_cancels_invites_and_a_stale_invite_is_refused(
     assert await _pending(db_session) == []
 
 
+async def test_s3_account_delete_cancels_invites(
+    client, db_session, character, character3, praxis_collab, auth_headers
+):
+    await invite_to_praxis(praxis_collab.id, character3.id, character.id, db_session)
+    await db_session.commit()
+    assert len(await _pending(db_session)) == 1
+
+    assert (await client.delete("/me/account", headers=auth_headers)).status_code == 204
+    assert await _pending(db_session) == []
+
+
 @pytest.mark.needs_terms
 async def test_s5_writes_need_terms_and_reads_and_exempt_routes_do_not(
     client, auth_headers, praxis_collab
@@ -150,10 +177,20 @@ async def test_gap4_voter_sql_agrees_with_the_predicate(db_session, era, some_fa
     duel, _, _ = await make_duel(db_session, era, label="g4")
     suspended = await make_character(db_session, era, username="g4s")
     banned = await make_character(db_session, era, username="g4b")
+    active = await make_character(db_session, era, username="g4a")
+    departed = await make_character(db_session, era, username="g4d")
     suspended_account = await db_session.get(Account, suspended.account_id)
     suspended_account.status = AccountStatus.suspended
     banned.status = CharacterStatus.banned
-    for voter in (suspended, banned):
+    departed.status = CharacterStatus.banned
+    departed.departed_at = datetime.now(timezone.utc)
+    voters = {
+        suspended: AccountStatus.suspended,
+        banned: AccountStatus.active,
+        active: AccountStatus.active,
+        departed: AccountStatus.active,
+    }
+    for voter in voters:
         db_session.add(
             Vote(
                 praxis_id=duel.challenger_praxis_id,
@@ -164,16 +201,21 @@ async def test_gap4_voter_sql_agrees_with_the_predicate(db_session, era, some_fa
         )
     await db_session.flush()
 
-    counted = (
-        await db_session.scalars(
-            counted_votes(select(Vote.voter_character_id)).where(
-                Vote.voter_character_id.in_([suspended.id, banned.id])
+    counted = set(
+        (
+            await db_session.scalars(
+                counted_votes(select(Vote.voter_character_id)).where(
+                    Vote.voter_character_id.in_([v.id for v in voters])
+                )
             )
-        )
-    ).all()
-    assert counted == []
-    assert not counts_as_voter(*standing_of(AccountStatus.suspended, suspended))
-    assert not counts_as_voter(*standing_of(AccountStatus.active, banned))
+        ).all()
+    )
+    assert counted == {
+        v.id
+        for v, status in voters.items()
+        if counts_as_voter(*standing_of(status, v))
+    }
+    assert counted == {active.id, departed.id}
 
 
 async def test_gap4_vote_ring_and_profile_hide_a_suspended_player(
@@ -187,3 +229,58 @@ async def test_gap4_vote_ring_and_profile_hide_a_suspended_player(
 
     assert (await get_vote_ring(account.id, db_session)).eligible == 0
     assert (await client.get(f"/characters/{character2.id}")).status_code == 404
+
+
+def _gated(resp, code: ErrorCode) -> bool:
+    detail = resp.json().get("detail") if resp.status_code == 403 else None
+    return isinstance(detail, dict) and detail.get("code") == code.value
+
+
+@pytest.mark.needs_terms
+async def test_needs_terms_exempt_routes_and_dev_login(
+    client, db_session, account, character, auth_headers
+):
+    refused = await client.post(
+        "/characters", json={"display_name": "Nope"}, headers=auth_headers
+    )
+    assert _gated(refused, ErrorCode.terms_required)
+
+    for path, kwargs in (
+        ("/contact", {"json": {"name": "n", "email": "e@x.org", "message": "m"}}),
+        ("/email/unsubscribe?token=bad", {}),
+        ("/email/unsubscribe-all?token=bad", {}),
+        ("/terms/acceptance", {}),
+    ):
+        resp = await client.post(path, headers=auth_headers, **kwargs)
+        assert not _gated(resp, ErrorCode.terms_required), path
+
+
+@pytest.mark.needs_terms
+async def test_needs_terms_account_delete_is_exempt(client, character, auth_headers):
+    resp = await client.delete("/me/account", headers=auth_headers)
+    assert resp.status_code == 204
+
+
+@pytest.mark.needs_terms
+async def test_needs_terms_banned_life_keeps_its_own_routes(
+    client, db_session, character, auth_headers
+):
+    assert (await client.post("/terms/acceptance", headers=auth_headers)).status_code == 201
+    character.status = CharacterStatus.banned
+    await db_session.commit()
+    for path, body in (
+        ("/characters", {"display_name": "Again"}),
+        ("/me/active-character", {"character_id": character.id}),
+    ):
+        resp = await client.post(path, json=body, headers=auth_headers)
+        assert not _gated(resp, ErrorCode.account_banned), path
+
+
+@pytest.mark.needs_terms
+async def test_needs_terms_dev_login_stamps_terms_only_with_a_character(
+    client, db_session, era, some_faction
+):
+    named = await client.post("/auth/dev-login?key=nt1&name=Terms%20Bot")
+    assert await has_current_terms(named.json()["account_id"], db_session)
+    bare = await client.post("/auth/dev-login?key=nt2")
+    assert not await has_current_terms(bare.json()["account_id"], db_session)

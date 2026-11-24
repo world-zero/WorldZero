@@ -1344,7 +1344,8 @@ async def cancel_pending_invites_for(
     character_ids: list[int], session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> None:
     """Delete every pending invite to or from these characters (S3, #4204), then
-    let a collab left with no one to wait for convert to solo."""
+    settle each unsealed collab they touch: seal if the playable rest approved
+    (their absence was the last wait), else convert to solo when no one is left."""
     invites = (
         await session.scalars(
             select(PraxisInvite).where(
@@ -1360,10 +1361,17 @@ async def cancel_pending_invites_for(
     for invite in invites:
         await session.delete(invite)
     await session.flush()
-    for praxis_id in praxis_ids:
+    praxis_ids.update(
+        await session.scalars(
+            select(PraxisMember.praxis_id).where(
+                PraxisMember.character_id.in_(character_ids)
+            )
+        )
+    )
+    for praxis_id in sorted(praxis_ids):
         praxis = await get_praxis(praxis_id, session, lock=True, refresh=True)
-        if praxis.status != PraxisStatus.submitted:
-            await collab_consensus.convert_if_sole_member(praxis, session, era)
+        if praxis.type == PraxisType.collab and praxis.status != PraxisStatus.submitted:
+            await collab_consensus.on_member_leave(praxis, session, era)
 
 
 async def cancel_invite(

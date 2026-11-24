@@ -20,6 +20,7 @@ from schemas.character import (
     CharacterUpdate,
 )
 from schemas.params import Id, Page
+from services.account_deletion import delete_character
 from services.auth import get_current_account
 from services.badge import list_badges_for_character
 from services.character import (
@@ -28,13 +29,11 @@ from services.character import (
     build_character_outs,
     create_character,
     list_characters_for_viewer,
-    soft_delete_character,
     task_blocked_character_ids,
     update_character,
 )
 from services.era import load_current_era_stats
 from services.media import process_and_save_avatar
-from services.praxis import cancel_pending_invites_for
 from services.standing import is_public, standing_of
 
 router = APIRouter()
@@ -138,8 +137,7 @@ async def delete_character_route(
 ):
     if current_character.id != character_id:
         raise HTTPException(status_code=403, detail="Cannot delete another character.")
-    await soft_delete_character(character_id, session)
-    await cancel_pending_invites_for([character_id], session)
+    await delete_character(character_id, session)
 
 
 @router.post("/{character_id}/avatar", response_model=CharacterOut)

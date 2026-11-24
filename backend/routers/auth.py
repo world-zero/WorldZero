@@ -15,7 +15,6 @@ from db import get_db
 from errors import ErrorCode, coded_error, detail_code, raise_coded
 from game_config import CURRENT_ERA
 from models.account import Account, AuthProvider
-from models.terms_acceptance import CURRENT_TERMS_VERSION, TermsAcceptance
 from schemas.auth import (
     CurrentUser,
     DevLoginOut,
@@ -37,7 +36,7 @@ from services.auth import (
 from faction_slugs import real_faction_slugs
 from services.character import (
     create_character,
-    has_current_terms,
+    ensure_current_terms,
     record_level_reached,
     resolve_active_character,
 )
@@ -438,10 +437,8 @@ async def dev_login(
         character = result.character
 
     # A bot with a character is past onboarding; one without still walks the terms card.
-    if character is not None and not await has_current_terms(account.id, session):
-        session.add(
-            TermsAcceptance(account_id=account.id, version=CURRENT_TERMS_VERSION)
-        )
+    if character is not None:
+        await ensure_current_terms(account.id, session)
 
     invited_slugs = [slug for slug in (invited or "").split(",") if slug]
     needs_character = (
