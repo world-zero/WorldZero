@@ -23,8 +23,7 @@
   },
   "index": {
     "loadError": "Could not load factions.",
-    "loading": "Loading…",
-    "loggedOutHint": "Everyone starts unaffiliated. Earn an invitation through task work to join a faction."
+    "loading": "Loading…"
   },
   "detail": {
     "retry": "Try refreshing.",

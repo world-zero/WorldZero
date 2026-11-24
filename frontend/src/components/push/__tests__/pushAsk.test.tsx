@@ -39,7 +39,7 @@ afterEach(cleanup)
 describe('PushAsk', () => {
   it('stays away until the tap, then subscribes, switches the rows on and goes for good', async () => {
     render(<PushAsk praxisId={5} />)
-    const on = await screen.findByText('Turn on notifications')
+    const on = await screen.findByText('Notify Me!')
     expect(m.subscribe).not.toHaveBeenCalled()
     m.subscribe.mockResolvedValue('ok')
     fireEvent.click(on)
@@ -51,7 +51,7 @@ describe('PushAsk', () => {
 
   it('Not now dismisses it for good', async () => {
     render(<PushAsk praxisId={5} />)
-    fireEvent.click(await screen.findByText('Not now'))
+    fireEvent.click(await screen.findByText('Nope!'))
     expect(screen.queryByTestId('push-ask')).toBeNull()
     expect(localStorage.getItem(PUSH_ASK_DISMISSED_KEY)).toBe('1')
   })

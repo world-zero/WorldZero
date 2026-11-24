@@ -39,7 +39,7 @@
     "censoredComment": "Hidden — you blocked this player",
     "blockConfirm": {
       "title": "Block {{name}}?",
-      "body": "They can't invite you, challenge you or nudge you, and their taunts stop. Their comments and mentions show up hidden for you, so you'll see they're talking but not what they said. You'll still see what they complete. You won't be able to invite or challenge them either. They aren't told. You can unblock anytime.",
+      "body": "They will not be notified.",
       "action": "Block"
     },
     "addFriend": "Friend",
@@ -165,10 +165,7 @@
   "about": {
     "title": "About World Zero",
     "intro1": "World Zero is a game you play in real life.",
-    "intro2": "You play by going and doing cool things, telling us about it, and getting voted on by the community.",
-    "step1": "Choose a task",
-    "step2": "Actually do the task. Preferably in a really coll way",
-    "step3": "To show us you did the task, write about it! Take pictures!"
+    "intro2": "You play by going and doing cool things, telling us about it, and getting voted on by the community."
   },
   "contact": {
     "title": "Contact",
