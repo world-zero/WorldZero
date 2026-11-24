@@ -439,7 +439,7 @@ async def apply_ban(
         rescore_ids = await forfeit_duels_collect(life_ids, session)
         for life_id in life_ids:
             close_character_sockets(life_id)
-        await cancel_pending_invites_for(life_ids, session, era)
+        await cancel_pending_invites_for(life_ids, session, era, rescore_ids)
     else:
         character.status = CharacterStatus.active
 
@@ -657,7 +657,9 @@ async def suspend_account(
         rescore_ids = await forfeit_duels_collect(character_ids, session)
         for character_id in character_ids:
             close_character_sockets(character_id)
-        await cancel_pending_invites_for(list(character_ids), session, era)
+        await cancel_pending_invites_for(
+            list(character_ids), session, era, rescore_ids
+        )
     await log_mod_action(
         session,
         actor_id,

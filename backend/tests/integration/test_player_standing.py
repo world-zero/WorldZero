@@ -7,14 +7,29 @@ from sqlalchemy import select
 from errors import ErrorCode
 from models.account import Account, AccountStatus
 from models.character import CharacterStatus
-from models.praxis import PraxisInvite, PraxisStatus
+from models.duel import DuelStatus
+from models.praxis import (
+    Praxis,
+    PraxisInvite,
+    PraxisMember,
+    PraxisStatus,
+    PraxisType,
+)
 from models.vote import Vote
+from services import admin_service, character_stats
+from services import praxis as praxis_service
+from services.account_deletion import delete_character
 from services.character import has_current_terms, is_playable
 from services.praxis import invite_to_praxis
 from services.standing import counts_as_voter, standing_of
 from services.vote_ring import get_vote_ring
 from services.vote_tally import counted_votes
-from tests.integration.factories import make_admin, make_character, make_duel
+from tests.integration.factories import (
+    make_admin,
+    make_character,
+    make_duel,
+    make_solo_praxis,
+)
 
 
 async def _ban(client, character_id, headers, banned=True):
@@ -172,6 +187,128 @@ async def test_s7_unban_and_unsuspend_leave_forfeits(
 
     await db_session.refresh(duel)
     assert duel.forfeited_by_character_id == opponent.id
+
+
+async def test_a_ban_forfeits_a_sibling_lifes_duel_and_closes_its_socket(
+    client, db_session, account, auth_headers, era, some_faction, monkeypatch
+):
+    await make_admin(db_session, account)
+    duel, _, sibling_b = await make_duel(
+        db_session, era, label="sib", status=DuelStatus.pending
+    )
+    life_a = await make_character(
+        db_session, era, username="siba", account=await db_session.get(
+            Account, sibling_b.account_id
+        )
+    )
+    await db_session.commit()
+    closed = []
+    monkeypatch.setattr(admin_service, "close_character_sockets", closed.append)
+
+    assert (await _ban(client, life_a.id, auth_headers)).status_code == 200
+
+    await db_session.refresh(duel)
+    assert duel.forfeited_by_character_id == sibling_b.id
+    assert sibling_b.id in closed
+
+
+async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
+    client, db_session, account, auth_headers, era, character, active_task,
+    some_faction, monkeypatch
+):
+    """#4314: seal recalcs and the vote rescore must not lock out of order."""
+    await make_admin(db_session, account)
+    solo = await make_solo_praxis(db_session, active_task, character)
+    stay = await make_character(db_session, era, username="stay")
+    leave = await make_character(db_session, era, username="leave")
+    collab = Praxis(
+        task_id=active_task.id, created_by_id=stay.id, type=PraxisType.collab,
+        title="c", body_text="proof",
+    )
+    db_session.add(collab)
+    await db_session.flush()
+    db_session.add_all(
+        PraxisMember(praxis_id=collab.id, character_id=m.id) for m in (stay, leave)
+    )
+    db_session.add(Vote(
+        praxis_id=solo.id, voter_character_id=leave.id,
+        voter_account_id=leave.account_id, value=3,
+    ))
+    await db_session.commit()
+
+    taken: list[int] = []
+    events: list[str] = []
+    real = character_stats.lock_character_stats
+    real_praxis = praxis_service._lock_praxis
+
+    async def praxis_spy(praxis_id, session):
+        events.append(("praxis", praxis_id))
+        return await real_praxis(praxis_id, session)
+
+    async def spy(ids, session):
+        ids = sorted(set(ids))
+        events.append(("stats", 0))
+        taken.extend(ids)
+        return await real(ids, session)
+
+    monkeypatch.setattr(character_stats, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
+
+    assert (await _ban(client, leave.id, auth_headers)).status_code == 200
+
+    first = list(dict.fromkeys(taken))
+    assert {character.id, stay.id, leave.id} <= set(first)
+    assert first == sorted(first)
+    before = {
+        pid for kind, pid in events[: events.index(("stats", 0))] if kind == "praxis"
+    }
+    assert collab.id in before
+    assert {pid for kind, pid in events if kind == "praxis"} == before
+
+
+async def test_a_delete_locks_praxis_rows_before_any_stats_row(
+    db_session, era, active_task, some_faction, monkeypatch
+):
+    duel, _, leaver = await make_duel(
+        db_session, era, label="del", status=DuelStatus.active
+    )
+    stay = await make_character(db_session, era, username="delstay")
+    collab = Praxis(
+        task_id=active_task.id, created_by_id=stay.id, type=PraxisType.collab,
+        title="c", body_text="proof",
+    )
+    db_session.add(collab)
+    await db_session.flush()
+    db_session.add_all(
+        PraxisMember(praxis_id=collab.id, character_id=m.id) for m in (stay, leaver)
+    )
+    await db_session.commit()
+
+    events: list[tuple[str, int]] = []
+    real = character_stats.lock_character_stats
+    real_praxis = praxis_service._lock_praxis
+
+    async def praxis_spy(praxis_id, session):
+        events.append(("praxis", praxis_id))
+        return await real_praxis(praxis_id, session)
+
+    async def spy(ids, session):
+        events.append(("stats", 0))
+        return await real(ids, session)
+
+    monkeypatch.setattr(character_stats, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
+
+    await delete_character(leaver.id, db_session)
+
+    assert ("stats", 0) in events
+    before = {
+        pid for kind, pid in events[: events.index(("stats", 0))] if kind == "praxis"
+    }
+    assert collab.id in before
+    assert {pid for kind, pid in events if kind == "praxis"} == before
 
 
 async def test_gap4_voter_sql_agrees_with_the_predicate(db_session, era, some_faction):
