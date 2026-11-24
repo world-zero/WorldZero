@@ -57,7 +57,7 @@ runs:
           # failed (backup-red reports it); the local pair is enough to deploy.
           # Never rotated: README §8 says to prune old pre-v* by hand.
           # The explicit exit: set -e ignores a failure inside an && group.
-          # A stopped stack (prod-reset's down -v, a recovery deploy) has no
+          # A stopped stack (a recovery deploy) has no
           # database to dump, so it deploys without one and says so.
           backup="if docker compose ps --status running -q db | grep -q .; then [ -s $db ] || /srv/worldzero/backup.sh $ENVIRONMENT $BACKUP_LABEL || { [ -s $db ] && [ -s $media ]; } || { echo 'pre-deploy backup failed; not deploying' >&2; exit 1; }; else echo 'db not running; no pre-deploy backup' >&2; fi"
         fi
