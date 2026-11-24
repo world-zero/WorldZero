@@ -421,14 +421,13 @@ export const mockFeedItems: Record<string, ActivityFeedItem> = {
     },
     context_faction_slug: null,
   }),
-  friend_signup: makeFeedItem({
-    type: 'friend_signup',
+  collab_accepted: makeFeedItem({
+    type: 'collab_accepted',
     payload: {
       character_id: 12,
-      task_id: 101,
+      praxis_id: 55,
       task_title: 'Organize a neighborhood tool library',
       task_point_value: 45,
-      task_level_required: 3,
     },
     actor_faction_slug: 'everymen',
     context_faction_slug: 'everymen',

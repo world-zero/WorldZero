@@ -17,7 +17,7 @@ const KICKER_KEY = {
   vote_on_mine: 'feed:kicker.vote_on_mine',
   vote_changed_on_mine: 'feed:kicker.vote_changed_on_mine',
   foe_taunt: 'feed:kicker.foe_taunt',
-  friend_signup: 'feed:kicker.friend_signup',
+  collab_accepted: 'feed:kicker.collab_accepted',
   friend_defection: 'feed:kicker.friend_defection',
   global_task: 'feed:kicker.global_task',
   collaborator_submitted: 'feed:kicker.collaborator_submitted',

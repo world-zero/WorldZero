@@ -43,7 +43,6 @@ from services.activity_feed import (
     FEED_ITEM_TYPE_DUEL_CHALLENGE,
     FEED_ITEM_TYPE_FOE_TAUNT,
     FEED_ITEM_TYPE_FRIEND_COMPLETION,
-    FEED_ITEM_TYPE_COLLAB_ACCEPTED,
     FEED_ITEM_TYPE_GLOBAL_TASK,
     FEED_ITEM_TYPE_INVITATION_LETTER,
     FEED_ITEM_TYPE_NUDGE,
@@ -216,7 +215,7 @@ async def full_feed(
     )
 
     # --- collab praxis: collab_invite, awaiting_submission, and character2's member
-    # row feeding collaborator_submitted; character3's accepted invite feeds collab_accepted.
+    # row feeding collaborator_submitted; character3 accepts an invite.
     collab_praxis = Praxis(
         task_id=active_task.id,
         created_by_id=character2.id,

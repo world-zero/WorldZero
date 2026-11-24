@@ -38,7 +38,8 @@ from services.activity_feed import (
 #: duel, letter; awaiting_submission has no answered state). The answered
 #: badges ride the existing UNION, so no extra badge statement or session.
 #: duel_forfeited (#3766): one more fetch.
-EXPECTED_FEED_LOAD_STATEMENTS = 28
+#: #4323: the my-task-ids lookup went with friend_signup, one fewer.
+EXPECTED_FEED_LOAD_STATEMENTS = 27
 
 #: One ``UNION ALL`` over the fetch fan-out's windowed Selects (#1532).
 EXPECTED_BADGE_COUNT_STATEMENTS = 1

@@ -50,7 +50,7 @@
     "vote_on_mine": "Vote",
     "vote_changed_on_mine": "Vote changed",
     "foe_taunt": "Taunt",
-    "friend_signup": "Signup",
+    "collab_accepted": "Collab accepted",
     "friend_defection": "Defection",
     "global_task": "New task",
     "collaborator_submitted": "Collaborator submitted",
@@ -107,7 +107,7 @@
   "row": {
     "action": {
       "completedTask": "completed a task",
-      "signedUpSharedTask": "signed up for a task you're doing",
+      "collabAccepted": "accepted your collaboration request",
       "collaboratorSubmitted": "submitted their part of",
       "votedOnYourPraxis": "voted on your praxis",
       "changedTheirVote": "changed their vote on your praxis",

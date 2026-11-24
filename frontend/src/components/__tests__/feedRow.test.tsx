@@ -37,6 +37,22 @@ describe('normalizeFeedItem', () => {
     expect(row.badge?.label).toBe('Friend')
   })
 
+  it('maps an accepted collab invite to a row linking the collab praxis (#4323)', () => {
+    const row = normalizeFeedItem(
+      item('collab_accepted', {
+        character_id: 8,
+        praxis_id: 12,
+        task_title: 'Plant a tree',
+        task_point_value: 25,
+      }),
+    )!
+    expect(row.actor).toBe('Ada')
+    expect(row.action).toBe('accepted your collaboration request')
+    expect(row.actorHref).toBe('/characters/8')
+    expect(row.headlineHref).toBe('/praxis/12')
+    expect(row.badge?.label).toBe('Your Stuff')
+  })
+
   it('maps a collaborator submission to the your-stuff row (#571)', () => {
     const row = normalizeFeedItem(
       item('collaborator_submitted', {

@@ -160,7 +160,7 @@ export const FEED_TYPE_LABEL_KEY = {
   vote_changed_on_mine: 'feed:kicker.vote_changed_on_mine',
   friend_completion: 'feed:filter.typeName.friendCompletion',
   foe_completion: 'feed:filter.typeName.foeCompletion',
-  friend_signup: 'feed:kicker.friend_signup',
+  collab_accepted: 'feed:kicker.collab_accepted',
   collaborator_submitted: 'feed:kicker.collaborator_submitted',
   nudge: 'feed:kicker.nudge',
   comment_mention: 'feed:kicker.comment_mention',
