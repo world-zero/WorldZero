@@ -1382,6 +1382,9 @@ async def cancel_pending_invites_for(
     accounts = set(await session.scalars(
         select(Character.account_id).where(Character.id.in_(character_ids))
     ))
+    # Praxis locks precede stats locks (character_stats.py lock order).
+    for praxis_id in sorted(praxis_ids):
+        await _lock_praxis(praxis_id, session)
     await lock_settlement_stats(accounts, praxis_ids, lock_ids, session)
     for praxis_id in sorted(praxis_ids):
         praxis = await get_praxis(praxis_id, session, lock=True, refresh=True)

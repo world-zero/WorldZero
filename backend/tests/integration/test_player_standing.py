@@ -236,21 +236,34 @@ async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
     await db_session.commit()
 
     taken: list[int] = []
+    events: list[str] = []
     real = character_stats.lock_character_stats
+    real_praxis = praxis_service._lock_praxis
+
+    async def praxis_spy(praxis_id, session):
+        events.append(("praxis", praxis_id))
+        return await real_praxis(praxis_id, session)
 
     async def spy(ids, session):
         ids = sorted(set(ids))
+        events.append(("stats", 0))
         taken.extend(ids)
         return await real(ids, session)
 
     monkeypatch.setattr(character_stats, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
 
     assert (await _ban(client, leave.id, auth_headers)).status_code == 200
 
     first = list(dict.fromkeys(taken))
     assert {character.id, stay.id, leave.id} <= set(first)
     assert first == sorted(first)
+    before = {
+        pid for kind, pid in events[: events.index(("stats", 0))] if kind == "praxis"
+    }
+    assert collab.id in before
+    assert {pid for kind, pid in events if kind == "praxis"} == before
 
 
 async def test_gap4_voter_sql_agrees_with_the_predicate(db_session, era, some_faction):
