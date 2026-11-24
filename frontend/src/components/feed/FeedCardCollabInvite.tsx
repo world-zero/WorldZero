@@ -218,6 +218,7 @@ export default function FeedCardCollabInvite({ item }: Props) {
           <span className="label-caption">
             {i18n.t("feed:collabInvite.taskMeta", {
               points: task_point_value,
+              count: task_point_value,
               level: task_level_required,
             })}
           </span>

@@ -1905,6 +1905,43 @@
         "title": "CopyOverrideOut",
         "type": "object"
       },
+      "CopyProposalFiledOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CopyProposalLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "pr_number": {
+            "title": "Pr Number",
+            "type": "integer"
+          },
+          "pr_url": {
+            "title": "Pr Url",
+            "type": "string"
+          },
+          "pushed": {
+            "default": false,
+            "title": "Pushed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "pr_number",
+          "pr_url",
+          "lines",
+          "pushed"
+        ],
+        "title": "CopyProposalFiledOut",
+        "type": "object"
+      },
       "CopyProposalIn": {
         "properties": {
           "lines": {
@@ -1912,7 +1949,6 @@
               "$ref": "#/components/schemas/CopyProposalLineIn"
             },
             "maxItems": 200,
-            "minItems": 1,
             "title": "Lines",
             "type": "array"
           },
@@ -13032,7 +13068,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CopyProposalOut"
+                  "$ref": "#/components/schemas/CopyProposalFiledOut"
                 }
               }
             },

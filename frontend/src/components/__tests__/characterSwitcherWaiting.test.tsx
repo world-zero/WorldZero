@@ -5,7 +5,7 @@ import type { CharacterOut } from '../../api/auth'
 import { CharacterSwitcherRows } from '../CharacterSwitcherSheet'
 
 const life = (id: number, pending_requests_count: number) =>
-  ({ id, username: `u${id}`, display_name: `L${id}`, faction_slug: 'coven', pending_requests_count }) as unknown as CharacterOut
+  ({ id, username: `u${id}`, display_name: `L${id}`, faction_slug: 'coven', pending_requests_count, level: 1, score: 0 }) as unknown as CharacterOut
 
 describe('switcher count mark (#3776)', () => {
   const html = renderToStaticMarkup(

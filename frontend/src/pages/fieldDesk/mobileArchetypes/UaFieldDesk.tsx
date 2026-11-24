@@ -272,6 +272,7 @@ export default function UaFieldDesk({ state }: { state: FieldDeskHomeState }) {
                     {t('fieldDesk.home.taskMeta', {
                       faction: factionName(praxis.task_faction_slug),
                       points: formatPoints(praxis.score),
+                      count: praxis.score,
                     })}
                   </div>
                 </div>

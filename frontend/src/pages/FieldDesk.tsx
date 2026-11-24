@@ -323,7 +323,7 @@ function ContinueRow({
   const { t } = useTranslation('home')
   const isDraft = praxis.status === 'in_progress'
   const meta = isDraft
-    ? t('signedIn.continue.meta.draft', { points: formatPoints(praxis.score) })
+    ? t('signedIn.continue.meta.draft', { points: formatPoints(praxis.score), count: praxis.score })
     : t('signedIn.continue.meta.submitted', {
         points: formatPoints(praxis.score),
         count: praxis.voter_count,

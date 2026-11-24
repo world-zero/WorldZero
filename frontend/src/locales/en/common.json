@@ -110,7 +110,7 @@
       "podiumOnly": "Everyone's on the podium so far."
     },
     "mobile": {
-      "factionLevel": "{{faction}} · Lv {{level}}"
+      "factionLevel": "{{faction}} · Level {{level}}"
     }
   },
   "collaborationCard": {
@@ -144,13 +144,15 @@
         "tapToUse": "Tap to use",
         "waiting_one": "{{count}} request waiting",
         "waiting_other": "{{count}} requests waiting",
-        "meta": "{{faction}} · Level {{level}} · {{points}} pts",
+        "meta_one": "{{faction}} · Level {{level}} · {{points}} point",
+        "meta_other": "{{faction}} · Level {{level}} · {{points}} points",
         "createNew": "Create new character"
       },
       "questsHeading": "In progress",
       "questsEmpty": "You have no tasks in progress. I, the small in-progress box, wish you would feed me delicious delicious task drafts.",
       "viewAll": "All tasks",
-      "taskMeta": "{{faction}} · {{points}} pts",
+      "taskMeta_one": "{{faction}} · {{points}} point",
+      "taskMeta_other": "{{faction}} · {{points}} points",
       "pending_one": "{{count}} pending request",
       "pending_other": "{{count}} pending requests",
       "activity": "New activity",
@@ -308,9 +310,11 @@
       "eraPoints_other": "points in the era: {{era}}",
       "points_one": "point",
       "points_other": "points",
-      "toNextLevel": "{{points}} to Level {{level}}",
+      "toNextLevel_one": "{{points}} point to Level {{level}}",
+      "toNextLevel_other": "{{points}} points to Level {{level}}",
       "topLevel": "Nowhere to go from here but the top",
-      "allTime": "{{points}} all-time",
+      "allTime_one": "{{points}} point all-time",
+      "allTime_other": "{{points}} points all-time",
       "trackLabel": "{{score}} of {{target}} points toward Level {{level}}",
       "noCharacter": "No character yet"
     },

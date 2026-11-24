@@ -139,7 +139,7 @@ describe("Singularity task detail — the shared anatomy", () => {
   it("renders the author byline with a ROUND avatar", () => {
     const { html, text } = render(<SingularityTaskDetail state={baseState()} />);
     expect(text).toContain("Wren Abalone");
-    expect(text).toContain("author · lvl 4");
+    expect(text).toContain("author · Level 4");
     expect(html).toContain('href="/characters/31"');
     // The design's rounded square is a duplicate-key artifact; authors get circles.
     expect(html).toContain("border-radius:50%");

@@ -62,6 +62,7 @@ function task(allowedModes: string[], slug: string | null = null): TaskOut {
 const praxis = {
   id: 55,
   task_id: 7,
+  task_point_value: 20,
   task_title: "A Very Human Thing",
   type: "solo",
   status: "in_progress",

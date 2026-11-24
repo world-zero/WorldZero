@@ -6,7 +6,7 @@ import '../../i18n'
 import type { CharacterOut } from '../../api/auth'
 
 const noPortrait = {
-  id: 7, username: 'wren', display_name: 'Ash', faction_slug: 'coven', avatar_url: null,
+  id: 7, username: 'wren', display_name: 'Ash', faction_slug: 'coven', avatar_url: null, level: 1, score: 0,
 } as unknown as CharacterOut
 
 vi.mock('../../hooks/useFormFactor', () => ({ useFormFactor: () => 'mobile' }))

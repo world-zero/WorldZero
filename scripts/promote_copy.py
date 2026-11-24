@@ -13,7 +13,7 @@ An all-asterisks override means "nothing belongs here": never written, listed as
 Keep the rows after the bake: they are the list of copy the owner wrote, and
 ``--guard <base-ref>`` (CI, every PR) fails a PR that changes or removes one;
 typo-class rewrites pass (#4277; see ``is_typo_fix``).
-Revert a row in the copy-edit page to release its key. Stdlib only.
+To release a key, approve its proposal at /admin/copy-proposals, then re-run Test. Stdlib only.
 """
 
 import difflib
@@ -174,8 +174,12 @@ def _file_proposal(lines: list[dict]) -> None:
             data=json.dumps(proposal_payload(lines, number, url)).encode(),
             headers={"Content-Type": "application/json", "X-Copy-Proposal-Token": token},
         )
-        urllib.request.urlopen(request, timeout=20).close()
-        print("Filed a copy proposal; the owner has been pushed.")
+        with urllib.request.urlopen(request, timeout=20) as response:
+            pushed = json.load(response).get("pushed")
+        if not lines:
+            print("No owner-written copy changed; withdrew this PR's copy proposal.")
+        else:
+            print("Filed a copy proposal" + ("; the owner has been pushed." if pushed else "."))
     except (OSError, ValueError) as e:
         print(f"No copy proposal filed: POST failed ({e}).", file=sys.stderr)
 
@@ -340,14 +344,15 @@ if __name__ == "__main__":
         if subprocess.run(["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"], capture_output=True).returncode:
             sys.exit(f"--guard: {ref!r} is not a commit here; fetch it (fetch-depth: 0) and rerun.")
         overrides = _fetch("dev")
+        proposed = guard_lines(overrides, _git_catalog(ref), _disk_catalog)
         hits = guard(overrides, _git_catalog(ref), _disk_catalog)
-        if hits:
-            _file_proposal(guard_lines(overrides, _git_catalog(ref), _disk_catalog))
+        if hits or os.environ.get("COPY_PROPOSAL_TOKEN"):
+            _file_proposal(proposed)
         for line in hits:
             print(f"::error::{line}")
         if hits:
             print("Live copy on dev.worldzero.org is owner-written. Restore those values; to")
-            print("release a key, the owner Reverts its row on the copy-edit page.")
+            print("release a key, the owner approves its proposal at /admin/copy-proposals; then re-run Test.")
         sys.exit(bool(hits) or print("ok: no owner-written copy changed"))
     lines = promote(_fetch("dev" if "--dev" in sys.argv else "prod"), CATALOGS)
     print("\n".join(lines) or "Nothing to promote — catalogs already match.")

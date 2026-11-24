@@ -28,7 +28,7 @@ class CopyProposalLineIn(WireModel):
 class CopyProposalIn(WireModel):
     pr_number: int = Field(..., ge=1)
     pr_url: HttpUrl
-    lines: list[CopyProposalLineIn] = Field(..., min_length=1, max_length=MAX_LINES)
+    lines: list[CopyProposalLineIn] = Field(..., max_length=MAX_LINES)
 
 
 class CopyProposalLineOut(CopyProposalLineIn):
@@ -42,6 +42,11 @@ class CopyProposalOut(WireModel):
     pr_number: int
     pr_url: str
     lines: list[CopyProposalLineOut]
+
+
+class CopyProposalFiledOut(CopyProposalOut):
+    #: True only when this filing sent the owner a push.
+    pushed: bool = False
 
 
 class CopyProposalLineRef(WireModel):

@@ -519,6 +519,7 @@ export default function DefaultProposeTask({
                   <span style={{ color: "var(--color-success)" }}>
                     {t("proposeTask.preview.bonusPoints", {
                       points: metaBonusValue || "?",
+                      count: Number(metaBonusValue),
                     })}
                   </span>
                 ) : (

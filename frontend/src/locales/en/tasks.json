@@ -46,7 +46,7 @@
     },
     "meta": "META",
     "metataskIssuer": "Metatask issued by {{faction}} · open to every faction",
-    "author": "author · lvl {{level}}",
+    "author": "author · Level {{level}}",
     "stats": {
       "level": "Level",
       "inProgress": "people working on this"

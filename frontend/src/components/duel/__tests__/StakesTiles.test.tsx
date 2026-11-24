@@ -50,12 +50,12 @@ describe('StakesTiles', () => {
     const t = text(side({ win_multiplier: 1.5, loss_multiplier: 0.5, tie_multiplier: 1.0 }), 'active')
     expect(t).toMatch(/If you win45/i)
     expect(t).toMatch(/If you lose15/i)
-    expect(t).toMatch(/A tie pays 30\./)
+    expect(t).toMatch(/A tie pays 30 points\./)
   })
 
   it('prints the server-resolved tie rate, whatever rule picked it (#2664, #2865)', () => {
-    expect(text(SKEWED, 'active')).toMatch(/A tie pays 60\./)
-    expect(text(side({ tie_multiplier: 0.5 }), 'active')).toMatch(/A tie pays 15\./)
+    expect(text(SKEWED, 'active')).toMatch(/A tie pays 60 points\./)
+    expect(text(side({ tie_multiplier: 0.5 }), 'active')).toMatch(/A tie pays 15 points\./)
   })
 
   it("an unaffiliated ('na') viewer sees the scorer's 1.5/0.5 tiles, as the server sends them", () => {
@@ -75,7 +75,7 @@ describe('StakesTiles', () => {
   })
 
   it('names the rival bonus only on a qualifying duel (#3858)', () => {
-    expect(text(side({ rival_bonus: 5 }), 'active')).toMatch(/Rival duel: whoever wins.*takes 5 more/)
+    expect(text(side({ rival_bonus: 5 }), 'active')).toMatch(/Rival duel: whoever wins.*takes 5 points more/)
     expect(text(side({ rival_bonus: 0 }), 'active')).not.toMatch(/Rival duel/)
     expect(text(side({ rival_bonus: 5 }), 'pending')).not.toMatch(/Rival duel/)
   })

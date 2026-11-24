@@ -123,7 +123,7 @@ describe('the home level track', () => {
 
   it('still says how far the next level is — the caption keeps the climb', () => {
     const text = render('na').replace(/<[^>]*>/g, ' ')
-    expect(text).toContain('145 to Level 4')
-    expect(text).toContain('185 all-time')
+    expect(text).toContain('145 points to Level 4')
+    expect(text).toContain('185 points all-time')
   })
 })

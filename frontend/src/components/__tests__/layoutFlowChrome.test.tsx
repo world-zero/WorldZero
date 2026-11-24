@@ -58,6 +58,7 @@ describe('phone chrome during the onboarding flow', () => {
     renderApp({ id: 1, character: null, has_accepted_terms: false })
     expect(screen.getByTestId('tab-bar')).toBeTruthy()
     expect(document.querySelector('[style*="--tab-bar-clearance"]')).toBeNull()
+    expect(document.querySelector('.ob-bleed')).toBeNull()
   })
 
   it('desktop keeps its top nav mid-flow', () => {

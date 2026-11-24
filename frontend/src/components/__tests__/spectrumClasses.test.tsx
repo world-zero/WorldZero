@@ -132,6 +132,7 @@ describe("the seal wears the spectrum as a border, not a bar (#2520)", () => {
             title: "A small kindness",
             condition: "Do it twice",
             bonus_points: 3,
+            point_value: 3,
             metatask_faction_slug: "na",
           } as never}
         />
