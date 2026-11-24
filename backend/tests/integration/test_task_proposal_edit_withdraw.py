@@ -248,4 +248,5 @@ async def test_mod_edit_sees_an_activation_made_after_they_loaded_it(
             proposer.account_id,
         )
 
-    assert exc.value.status_code == 400
+    assert exc.value.status_code == 409
+    assert exc.value.detail["code"] == ErrorCode.task_scoring_locked.value
