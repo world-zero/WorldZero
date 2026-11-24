@@ -188,7 +188,8 @@ export function CollabPublishClock({
 function SideAvatar({ side }: { side: DuelSideOut }) {
   return (
     <RosterAvatar
-      name={sideName(side)}
+      name={side.display_name}
+      absent={side.name_state === "absent"}
       // Monogram fallback (#2128).
       avatarUrl={side.avatar_url}
       size={28}

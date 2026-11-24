@@ -81,7 +81,8 @@ function DuelPairSide({
   return (
     <div className="flex flex-col items-center gap-1" style={{ minWidth: 0 }}>
       <RosterAvatar
-        name={sideName(side)}
+        name={side.display_name}
+        absent={side.name_state === "absent"}
         avatarUrl={side.avatar_url}
         size={DUEL_PAIR_AVATAR_SIZE}
         background={factionCssVar(side.faction_slug, "light")}

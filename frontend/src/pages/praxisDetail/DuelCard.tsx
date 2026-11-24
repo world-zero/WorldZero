@@ -11,7 +11,7 @@
  * are still reachable by the author but belong to the composer's waiting
  * surface (ADR-0062: one state, one owner).
  *
- * Both rows show a `display_name`, never "You" (#999); sides come from the
+ * Both rows show `sideName(side)`, never "You" (#999); sides come from the
  * PRAXIS, not the viewer. Archetypes dress it via `style`, `heading` and `ink`
  * (#1153).
  */
