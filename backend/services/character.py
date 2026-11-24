@@ -680,8 +680,8 @@ async def soft_delete_character(
     A moderator ban (``admin_service.apply_ban``) must not call this: it is
     reversible and must keep evidence. Both share the ADR-0011 forfeit (#1577).
     ``defer_rescore`` returns the ids to re-score instead, so the caller can
-    lock praxis rows before stats rows. Praxis media survives both. The unlink is last and non-transactional (the
-    router commits), so a failed commit leaves at worst a dead ``avatar_url``.
+    lock praxis rows before stats rows. Praxis media survives both. The unlink
+    is last and non-transactional (the router commits), so a failed commit leaves at worst a dead ``avatar_url``.
     """
     # Not get_character_by_id: an account's banned lives are deleted too.
     character = await session.get(Character, character_id)
