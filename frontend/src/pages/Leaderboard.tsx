@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useTranslation } from 'react-i18next'
-import { getLeaderboard } from '../api/leaderboard'
+import { useSearchParams } from 'react-router-dom'
+import { getLeaderboard, getLeaderboardEra } from '../api/leaderboard'
 import { getNearbyAirports } from '../api/me'
 import { listPraxes } from '../api/praxis'
 import { listRelationships } from '../api/relationships'
@@ -32,7 +33,13 @@ export default function Leaderboard() {
   const config = useGameConfig()
   // ponytail: one unpaginated fetch, everything ranked client-side; fine for
   // ~42 players, breaks in the high hundreds. Then move search/rank server-side.
-  const { data, loading, error } = useResource(() => getLeaderboard({ limit: 500 }), [])
+  const eraParam = Number(useSearchParams()[0].get('era'))
+  const eraId = Number.isInteger(eraParam) && eraParam > 0 ? eraParam : undefined
+  const { data, loading, error } = useResource(() => getLeaderboard({ limit: 500, era: eraId }), [eraId])
+  const { data: pastEra } = useResource(
+    async () => (eraId === undefined ? null : getLeaderboardEra(eraId)),
+    [eraId],
+  )
   const [scoreMode, setScoreMode] = useState<ScoreMode>('era')
 
   const characters = useMemo(() => data ?? [], [data])
@@ -46,7 +53,9 @@ export default function Leaderboard() {
 
   // From `/game-config` (signed-out readers too); blank until it lands.
   let eyebrow = t('leaderboard.eyebrowAllTime')
-  if (scoreMode === 'era') {
+  if (scoreMode === 'era' && eraId !== undefined) {
+    eyebrow = pastEra ? t('leaderboard.eyebrowEra', { era: pastEra.name }) : ''
+  } else if (scoreMode === 'era') {
     eyebrow = config ? t('leaderboard.eyebrowEra', { era: config.era_name }) : ''
   }
 

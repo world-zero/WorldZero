@@ -25,7 +25,10 @@ vi.mock('../../../hooks/useTheme', () => ({ useTheme: mocks.useTheme }))
 vi.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: null as CurrentUser | null }),
 }))
-vi.mock('../../../api/leaderboard', () => ({ getLeaderboard: async () => [] }))
+vi.mock('../../../api/leaderboard', () => ({
+  getLeaderboard: async () => [],
+  getLeaderboardEra: async () => null,
+}))
 
 import Leaderboard from '../../Leaderboard'
 import { DesktopPlayers, MobilePlayers } from './playersAt'
