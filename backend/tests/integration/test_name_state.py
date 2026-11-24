@@ -8,12 +8,25 @@ from models.character import CharacterStatus, NameState
 from services.standing import public_name, standing_of
 
 NOW = datetime.now(timezone.utc)
+LIVES = [
+    (CharacterStatus.active, None),
+    (CharacterStatus.banned, None),
+    (CharacterStatus.banned, NOW),
+]
+
+
+def _expected(account_status, life):
+    if account_status == AccountStatus.deleted or life != CharacterStatus.active:
+        return NameState.absent
+    if account_status == AccountStatus.suspended:
+        return NameState.suspended
+    return NameState.ok
+
+
 CASES = [
-    (AccountStatus.active, CharacterStatus.active, None, NameState.ok),
-    (AccountStatus.suspended, CharacterStatus.active, None, NameState.suspended),
-    (AccountStatus.active, CharacterStatus.banned, None, NameState.absent),
-    (AccountStatus.active, CharacterStatus.banned, NOW, NameState.absent),
-    (AccountStatus.deleted, CharacterStatus.active, None, NameState.absent),
+    (account_status, life, departed_at, _expected(account_status, life))
+    for account_status in AccountStatus
+    for life, departed_at in LIVES
 ]
 
 

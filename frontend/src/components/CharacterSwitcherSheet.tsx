@@ -122,6 +122,7 @@ export function CharacterSwitcherRows({
                   faction: factionName(life.faction_slug),
                   level: life.level,
                   points: life.score,
+                  count: life.score,
                 })}
               </span>
             </span>

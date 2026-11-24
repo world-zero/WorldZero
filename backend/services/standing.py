@@ -5,11 +5,14 @@ character; the two are independent.
 """
 
 import enum
+import logging
 from dataclasses import dataclass
 from typing import Iterable, Optional
 
 from models.account import AccountStatus
 from models.character import Character, CharacterStatus, NameState
+
+logger = logging.getLogger(__name__)
 
 
 class AccountStanding(enum.Enum):
@@ -115,7 +118,11 @@ class PublicIdentity:
 def public_identity(character: Character) -> PublicIdentity:
     # vars(), never getattr: an unloaded or expired name_state would lazy-load from
     # sync code (MissingGreenlet). A just-created character reads as ok.
-    state = NameState(vars(character).get("name_state", NameState.ok.value))
+    raw = vars(character).get("name_state")
+    if raw is None:
+        logger.warning("name_state not loaded for %r", character)
+        raw = NameState.ok.value
+    state = NameState(raw)
     if state == NameState.absent:
         return PublicIdentity("", "", "", state)
     return PublicIdentity(

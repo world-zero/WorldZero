@@ -150,12 +150,21 @@ async def test_activity_feed_awaiting_submission_in_requests(
         headers=auth_headers,
     )
 
-    requests = (
-        await client.get(
-            "/activity-feed", params={"filter": "requests", "limit": 100},
-            headers=auth_headers,
-        )
-    ).json()
+    async def requests_for_invitee() -> dict:
+        return (
+            await client.get(
+                "/activity-feed", params={"filter": "requests", "limit": 100},
+                headers=auth_headers,
+            )
+        ).json()
+
+    joined = await requests_for_invitee()
+    assert not [i for i in joined["items"] if i["type"] == "awaiting_submission"], (
+        "#4296: nobody has submitted yet, so nobody is waiting on the invitee"
+    )
+
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers2)
+    requests = await requests_for_invitee()
     awaiting = [i for i in requests["items"] if i["type"] == "awaiting_submission"]
     assert len(awaiting) == 1, requests["items"]
     assert awaiting[0]["payload"]["praxis_id"] == praxis_id
@@ -219,6 +228,11 @@ async def test_one_member_collab_owes_nobody_until_someone_joins(
         headers=auth_headers,
     )
 
+    assert await awaiting_for_creator() == [], (
+        "#4296: a joined collab where nobody has submitted owes nobody either"
+    )
+
+    await client.post(f"/praxes/{praxis_id}/submit", headers=auth_headers)
     appeared = await awaiting_for_creator()
     assert len(appeared) == 1, appeared
     assert appeared[0]["payload"]["praxis_id"] == praxis_id

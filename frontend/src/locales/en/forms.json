@@ -21,7 +21,7 @@
     "submitIdle": "Create & step out",
     "submitGlyph": "▸",
     "submitBusy": "Stepping out…",
-    "startsAt": "starts at Lvl 0 · 0 pts",
+    "startsAt": "starts at Level 0 · 0 points",
     "previewFallbackName": "Wanderer",
     "help": "Upload a photo — your character's form manifest. Until you answer a calling you play as Unaffiliated, and every path is open to you."
   },
@@ -36,7 +36,7 @@
     "notFound": "Character not found.",
     "notOwner": "You can only edit your own character.",
     "heading": "Edit character",
-    "intro": "Your character is yours before any faction is. Set your portrait, name and story — it follows you onto every task and praxis you submit.",
+    "intro": "You are never above changing for the better.",
     "avatarHint": "Unlike Dorian Gray, you will age before your portrait does. With no portrait, you will show up as “{{initial}}”. You and this text will age at the same rate.",
     "displayNameCount": "{{count}}/50",
     "handleHint": "Auto-derived · permanent",
@@ -57,15 +57,6 @@
     "justNow": "just now",
     "seconds": "{{seconds}}s ago",
     "minutes": "{{minutes}}m ago"
-  },
-  "taskMeta": {
-    "points_one": "{{points}} point",
-    "points_other": "{{points}} points",
-    "duel": "duel",
-    "collab": "collab"
-  },
-  "metatasks": {
-    "bonusPoints": "+{{points}} pts"
   },
   "media": {
     "removeAria": "Remove {{name}}"
@@ -134,11 +125,13 @@
       "empty": "No metatasks match.",
       "alreadyAttached": "Attached",
       "addAria": "Attach “{{title}}”",
-      "pending": "Attaching the {{faction}} metatask · +{{points}} pts on completion",
+      "pending_one": "Attaching the {{faction}} metatask · +{{points}} point on completion",
+      "pending_other": "Attaching the {{faction}} metatask · +{{points}} points on completion",
       "cancel": "Not now",
       "confirm": "Add it on",
       "removeTitle": "Peel off the metatask?",
-      "removeBody": "This removes the {{faction}} metatask and its +{{points}} pts bonus.",
+      "removeBody_one": "This removes the {{faction}} metatask and its +{{points}} point bonus.",
+      "removeBody_other": "This removes the {{faction}} metatask and its +{{points}} points bonus.",
       "removeConfirm": "Peel it off"
     },
     "invite": {
@@ -282,7 +275,6 @@
       "statusUnsaved": "Not saved yet",
       "statusSubmitted": "Submitted",
       "taskLabel": "The task",
-      "pointsUnit": "Points",
       "levelLabel": "Level {{level}}",
       "titleLabel": "Title (required)",
       "titlePlaceholder": "Title",
@@ -306,7 +298,8 @@
       "proofLabel": "Proof",
       "proofButton": "Drop a photo \nor browse files\nof the work",
       "proofButtonMobile": "Take or choose a photo",
-      "recapPoints": "{{points}} pts",
+      "recapPoints_one": "{{points}} point",
+      "recapPoints_other": "{{points}} points",
       "proofHelper": "Photos, clips or receipts — max 50 MB each.",
       "submit": "Submit",
       "submitBusy": "Submitting…",
@@ -322,7 +315,7 @@
     },
     "successMeta": {
       "heading": "Metatask proposed!",
-      "body": "An admin will review it, and only admins can see it for its first {{hours}} hours; other players see it after that. Once activated it is listed under {{faction}}, which records who issued it rather than who may use it: players of any faction can apply it to their praxis for a points bonus."
+      "body": "The grand council of moderators will review your task idea and determine its fate."
     },
     "factionLabel": "Faction",
     "fields": {
@@ -357,7 +350,8 @@
     "preview": {
       "metaHeading": "Metatask preview — {{faction}}",
       "taskHeading": "Task preview — {{faction}} · Pending",
-      "bonusPoints": "+{{points}} bonus pts",
+      "bonusPoints_one": "+{{points}} bonus point",
+      "bonusPoints_other": "+{{points}} bonus points",
       "points_one": "{{points}} point",
       "points_other": "{{points}} points",
       "level": "Level {{level}}",

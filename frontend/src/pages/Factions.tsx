@@ -65,12 +65,6 @@ export function FactionsDirectory({ state }: { state: FactionsDirectoryState }) 
 
       {error && <ErrorBanner className="mb-4" message={error} />}
 
-      {!character && (
-        <p className="font-body content-text text-muted mb-6">
-          {t('index.loggedOutHint')}
-        </p>
-      )}
-
       {unaffiliated && (
         <section
           className="sidebar-card unaffiliated-banner mb-4"
@@ -86,7 +80,7 @@ export function FactionsDirectory({ state }: { state: FactionsDirectoryState }) 
             </div>
             {/* Every clause is load-bearing (#1963): invitations are earned per
                 faction (ADR-0022); the threshold is unnamed because it lives in
-                EraConfig; delivery is passive. One voice with `index.loggedOutHint`. */}
+                EraConfig; delivery is passive. */}
             <p
               className="font-body unaffiliated-banner-body"
             >

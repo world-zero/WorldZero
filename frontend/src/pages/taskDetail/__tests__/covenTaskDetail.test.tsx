@@ -125,7 +125,7 @@ describe("Coven task detail — the copy", () => {
   it("renders the author byline and the two header stats", () => {
     const { html, text } = render(<CovenTaskDetail state={baseState()} />);
     expect(text).toContain("Wren Abalone");
-    expect(text).toContain("author · lvl 4");
+    expect(text).toContain("author · Level 4");
     expect(html).toContain('href="/characters/31"');
     expect(text).toContain("Level");
     expect(text).toContain("people working on this");

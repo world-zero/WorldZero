@@ -565,7 +565,7 @@ export default function UaProposeTask({ state }: { state: ProposeTaskState }) {
                 >
                   {isMetatask ? (
                     <span style={{ color: CREDIT }}>
-                      {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })}
+                      {t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?', count: Number(metaBonusValue) })}
                     </span>
                   ) : (
                     <span>

@@ -110,7 +110,7 @@ describe('UA mobile home — what it draws', () => {
     expect(text.toLowerCase()).toContain('era 1')
     expect(text).toContain('Ten thumbnails before breakfast')
     expect(text).toContain('Level 2')
-    expect(text).toContain('160 to Level 5')
+    expect(text).toContain('160 points to Level 5')
     expect(html).toContain('role="progressbar"')
     expect(html).toContain(`href="${FIND_TASK_LINK}"`)
     expect(html).toContain(`href="${CAST_VOTES_LINK}"`)

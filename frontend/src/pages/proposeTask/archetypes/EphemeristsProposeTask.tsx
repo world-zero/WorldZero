@@ -602,7 +602,7 @@ export default function EphemeristsProposeTask({ state }: { state: ProposeTaskSt
                 >
                   <span>
                     {isMetatask
-                      ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?' })
+                      ? t('proposeTask.preview.bonusPoints', { points: metaBonusValue || '?', count: Number(metaBonusValue) })
                       : t('proposeTask.preview.points', {
                           points: pointValue || '?',
                           // Empty/unparseable draws "?" with the plural (#2598).

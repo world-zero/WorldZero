@@ -47,6 +47,7 @@ const task = {
 const praxis = {
   id: 55,
   task_id: 7,
+  task_point_value: 20,
   task_title: "Bless the work",
   task_faction_slug: "coven",
   type: "solo",

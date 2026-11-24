@@ -11,9 +11,14 @@ from dependencies import require_permission
 from errors import ErrorCode, raise_coded
 from models.account import Account
 from models.roles import Permission
-from schemas.copy_proposal import CopyProposalIn, CopyProposalLineRef, CopyProposalOut
+from schemas.copy_proposal import (
+    CopyProposalFiledOut,
+    CopyProposalIn,
+    CopyProposalLineRef,
+    CopyProposalOut,
+)
 from services import copy_proposal as service
-from services.push import notify_copy_proposal
+from services.push import notify_copy_proposal, push_available
 
 router = APIRouter(prefix="/copy-proposals")
 
@@ -33,17 +38,20 @@ def _require_token(
         raise_coded(401, ErrorCode.copy_proposal_token_invalid, "Bad proposal token.")
 
 
-@router.post("", response_model=CopyProposalOut, status_code=201)
+@router.post("", response_model=CopyProposalFiledOut, status_code=201)
 async def file_copy_proposal(
     data: CopyProposalIn,
     _: None = Depends(_require_token),
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     proposal, needs_eyes = await service.file_proposal(data, session)
-    if needs_eyes:
+    pushed = needs_eyes and push_available()
+    if pushed:
         await notify_copy_proposal(session, proposal)
     await session.commit()
-    return proposal
+    return CopyProposalFiledOut.model_validate(proposal).model_copy(
+        update={"pushed": pushed}
+    )
 
 
 @router.get("", response_model=list[CopyProposalOut])

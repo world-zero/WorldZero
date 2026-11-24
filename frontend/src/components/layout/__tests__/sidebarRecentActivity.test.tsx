@@ -132,7 +132,7 @@ describe('the panel carries the whole live feed, not just global news', () => {
   })
 
   it('shows the stars that voter gave, not the praxis total (#2402)', () => {
-    expect(render()).toContain(i18n.t('feed:row.pointsEarned', { points: 4 }))
+    expect(render()).toContain(i18n.t('feed:row.pointsEarned', { points: 4, count: 4 }))
   })
 
   it('never prints the deleted placeholder title', () => {

@@ -45,3 +45,14 @@ describe('Typo fixes waiting', () => {
     expect(i18n.getResource('en', NS, KEY)).toBe('World Zero')
   })
 })
+
+describe('Typo fixes waiting, late arrivals', () => {
+  it('shows a row whose override loads after mount', async () => {
+    render(<CopyEditor />)
+    expect(screen.queryByText('Typo fixes waiting')).toBeNull()
+    i18n.addResource('en', NS, KEY, 'Wrold Zero')
+    overriddenKeys.add(`${NS}:${KEY}`)
+    await i18n.changeLanguage('en')
+    await waitFor(() => expect(screen.getByText('Typo fixes waiting')).toBeTruthy())
+  })
+})

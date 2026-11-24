@@ -167,8 +167,8 @@ describe('the meta line (#888)', () => {
   it('shows the level on a level-0 task, so the segment count never varies', () => {
     const zero = text(render(<PraxisStats praxis={praxis({ task_level_required: 0 })} />))
     const five = text(render(<PraxisStats praxis={praxis({ task_level_required: 5 })} />))
-    expect(zero).toContain('L0')
-    expect(five).toContain('L5')
+    expect(zero).toContain('Level 0')
+    expect(five).toContain('Level 5')
     // A ragged meta line across a wall of cards was the bug.
     const separators = (html: string) => (html.match(/·/g) ?? []).length
     expect(separators(zero)).toBe(separators(five))
@@ -194,7 +194,7 @@ describe("the meta line does not restate the stamp (#1833, widened by #2114)", (
     // `12points`: the stamp's figure with its unit, unlike the band's `12 pts`.
     expect(html, 'the stamp still carries the figure').toContain('12points')
     expect(html, 'and the meta line does not repeat it').not.toContain(i18n.t('praxis:card.points', { points: 12, count: 12 }))
-    expect(html).toContain('L2')
+    expect(html).toContain('Level 2')
     expect(html).toContain('solo')
   })
 

@@ -87,21 +87,27 @@ def forget_grant(account_id: int) -> None:
     _GRANTS.pop(account_id, None)
 
 
-async def require_google_account(account_id: int, session: AsyncSession) -> str:
-    """The Account's Google ``provider_user_id``, or a 403. The real guard."""
-    provider_user_id = await session.scalar(
-        select(OAuthProvider.provider_user_id).where(
-            OAuthProvider.account_id == account_id,
-            OAuthProvider.provider == AuthProvider.GOOGLE,
+async def require_google_account(
+    account_id: int, session: AsyncSession
+) -> list[str]:
+    """The Account's Google ``provider_user_id``s, oldest first, or a 403."""
+    provider_user_ids = list(
+        await session.scalars(
+            select(OAuthProvider.provider_user_id)
+            .where(
+                OAuthProvider.account_id == account_id,
+                OAuthProvider.provider == AuthProvider.GOOGLE,
+            )
+            .order_by(OAuthProvider.id)
         )
     )
-    if provider_user_id is None:
+    if not provider_user_ids:
         raise_coded(
             403,
             ErrorCode.google_photos_unavailable,
             "Google Photos needs a Google sign-in.",
         )
-    return provider_user_id
+    return provider_user_ids
 
 
 def authorize_url(state: str, google_user_id: str) -> str:
@@ -134,9 +140,9 @@ def _id_token_claims(id_token: str) -> dict:
 
 
 async def complete_authorization(
-    account_id: int, google_user_id: str, code: str
+    account_id: int, google_user_ids: list[str], code: str
 ) -> None:
-    """Swap ``code`` for a token, check it is this Account's Google, hold it."""
+    """Swap ``code`` for a token, check it is one of this Account's Googles, hold it."""
     async with _http_client() as client:
         response = await client.post(
             _TOKEN_URL,
@@ -153,7 +159,7 @@ async def complete_authorization(
     body = response.json()
     claims = _id_token_claims(body.get("id_token", ""))
     if (
-        claims.get("sub") != google_user_id
+        claims.get("sub") not in google_user_ids
         or claims.get("aud") != settings.GOOGLE_CLIENT_ID
         or claims.get("iss") not in _ISSUERS
     ):

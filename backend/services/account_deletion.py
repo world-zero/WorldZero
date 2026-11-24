@@ -69,6 +69,14 @@ def _is_live(tombstone: AccountTombstone) -> bool:
     return _is_live_at(tombstone.created_at)
 
 
+async def delete_character(
+    character_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
+) -> None:
+    """One life's self-deletion: the soft delete, then its invites (S3)."""
+    await soft_delete_character(character_id, session, era)
+    await cancel_pending_invites_for([character_id], session, era)
+
+
 async def resolve_account_tombstone(
     provider: str, provider_user_id: str, session: AsyncSession
 ) -> AccountTombstone | None:

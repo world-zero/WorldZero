@@ -146,13 +146,11 @@ describe('factions directory', () => {
     expect(err.text).toContain('Unable to reach the server')
   })
 
-  it('signed out: hint, no banner; no faction: banner; with faction: neither', () => {
+  it('signed out: no banner; no faction: banner; with faction: neither', () => {
     const out = dir(null, { user: null })
-    expect(out.text).toContain(i18n.t('factions:index.loggedOutHint'))
     expect(out.html).not.toContain('sidebar-card')
     const none = dir(STATUS, { user: VIEWER(null) })
     expect(none.html).toContain('sidebar-card')
-    expect(none.text).not.toContain(i18n.t('factions:index.loggedOutHint'))
     const member = dir(STATUS)
     expect(member.html).not.toContain('sidebar-card')
   })

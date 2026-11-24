@@ -1,3 +1,7 @@
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,3 +25,13 @@ async def test_seeded_admin_has_current_terms_and_reseed_is_idempotent(
 
     await bootstrap_admin(db_session, CURRENT_ERA, acc)
     assert await has_current_terms(acc.id, db_session)
+
+
+def test_seed_imports_in_a_fresh_interpreter():
+    # In-process, the app has already loaded the modules a cycle would break on.
+    backend = Path(__file__).resolve().parents[2]
+    done = subprocess.run(
+        [sys.executable, "-c", "import seed"],
+        cwd=backend, capture_output=True, text=True,
+    )
+    assert done.returncode == 0, done.stderr

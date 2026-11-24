@@ -149,7 +149,8 @@ function spotLook(el: Element): CSSProperties {
     letterSpacing: cs.letterSpacing,
     color: cs.color,
     textAlign: cs.textAlign as CSSProperties['textAlign'],
-    whiteSpace: cs.whiteSpace === 'nowrap' ? 'pre-wrap' : cs.whiteSpace,
+    // Always pre-wrap: a box copying the spot's `normal` hides the newlines it is editing (#4293).
+    whiteSpace: 'pre-wrap',
     padding: cs.padding,
   }
 }
@@ -213,9 +214,8 @@ export default function CopyEditor() {
     lastSpot.current?.focus({ preventScroll: true })
     lastSpot.current = null
   }, [target])
-  const [accepted, setAccepted] = useState(0)
-  // Recomputed after a save or revert closes the panel, and after accept all.
-  const typos = useMemo(typoRows, [target, accepted])
+  // Not memoised: overrides and lazy namespaces load after mount, and i18n re-renders us.
+  const typos = typoRows()
   const acceptAll = async () => {
     try {
       for (const row of typos) await saveCopy(row, row.shipped, baseOf(row))
@@ -223,7 +223,6 @@ export default function CopyEditor() {
     } catch (err) {
       setNotice(extractError(err, t('copyEdit.typoFixes.error')))
     }
-    setAccepted((n) => n + 1)
   }
   const box = useRef<HTMLTextAreaElement>(null)
   const placed = spotRect !== null

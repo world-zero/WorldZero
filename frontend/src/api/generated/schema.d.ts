@@ -3052,6 +3052,22 @@ export interface components {
             /** Value */
             value: string;
         };
+        /** CopyProposalFiledOut */
+        CopyProposalFiledOut: {
+            /** Id */
+            id: number;
+            /** Lines */
+            lines: components["schemas"]["CopyProposalLineOut"][];
+            /** Pr Number */
+            pr_number: number;
+            /** Pr Url */
+            pr_url: string;
+            /**
+             * Pushed
+             * @default false
+             */
+            pushed: boolean;
+        };
         /** CopyProposalIn */
         CopyProposalIn: {
             /** Lines */
@@ -8056,7 +8072,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CopyProposalOut"];
+                    "application/json": components["schemas"]["CopyProposalFiledOut"];
                 };
             };
             /** @description Validation Error */

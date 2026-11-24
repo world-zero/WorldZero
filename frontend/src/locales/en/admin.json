@@ -488,7 +488,7 @@
         "votes": "Votes cast",
         "status": "Status"
       },
-      "lvl": "lvl {{level}}",
+      "lvl": "Level {{level}}",
       "status": {
         "active": "active",
         "suspended": "suspended",
@@ -499,7 +499,7 @@
       "banError": "Could not update character.",
       "suspendError": "Could not update account.",
       "panel": {
-        "meta": "@{{username}} · {{faction}} · lvl {{level}} · account #{{account}}",
+        "meta": "@{{username}} · {{faction}} · Level {{level}} · account #{{account}}",
         "profile": "Profile",
         "praxis": "Praxis",
         "reports": "Reports",
@@ -581,8 +581,8 @@
         },
         "invitation": {
           "name": "Faction invitation (tasks, points)",
-          "value_one": "{{invitation_task_threshold}} task · {{invitation_point_threshold}} pts",
-          "value_other": "{{invitation_task_threshold}} tasks · {{invitation_point_threshold}} pts",
+          "value_one": "{{invitation_task_threshold}} task · {{invitation_point_threshold}} points",
+          "value_other": "{{invitation_task_threshold}} tasks · {{invitation_point_threshold}} points",
           "when": "a faction reaches about five in one community"
         },
         "flag_level": {

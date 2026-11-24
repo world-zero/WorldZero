@@ -58,7 +58,6 @@ export default function PushAsk({ praxisId }: { readonly praxisId: number }) {
         </svg>
         <h2 id="push-ask-title" className="push-ask-title">{t('pushAsk.title')}</h2>
       </div>
-      <p className="push-ask-body">{t('pushAsk.body')}</p>
       <div className="push-ask-actions">
         <button type="button" className="btn-primary" disabled={busy} onClick={turnOn}>
           {t('pushAsk.turnOn')}
@@ -67,7 +66,6 @@ export default function PushAsk({ praxisId }: { readonly praxisId: number }) {
           {t('pushAsk.notNow')}
         </button>
       </div>
-      <p className="push-ask-note">{t('pushAsk.note')}</p>
     </section>
   )
 }

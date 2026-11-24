@@ -143,12 +143,13 @@ export default function EphemeristsSeal({ metatask, removable, onRemove }: SealS
             style={{
               fontFamily: DECO,
               fontSize: 'var(--text-title)',
+              textTransform: 'uppercase',
               lineHeight: 0.8,
               color: OCHRE,
               whiteSpace: 'nowrap',
             }}
           >
-            {t('detail.seal.bonus', { points: metatask.point_value })}
+            {t('detail.seal.bonus', { points: metatask.point_value, count: metatask.point_value })}
           </span>
         </span>
       </div>
