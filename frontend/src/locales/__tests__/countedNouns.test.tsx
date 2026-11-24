@@ -23,6 +23,16 @@ const POINT_BEARING = [
   'forms:proposeTask.preview.points',
   'praxis:card.points',
   'praxis:detail.taskRef.points',
+  'common:fieldDesk.home.switcher.meta',
+  'common:fieldDesk.home.taskMeta',
+  'feed:row.pointsEarned',
+  'feed:collabInvite.taskMeta',
+  'forms:editPraxis.attach.pending',
+  'forms:editPraxis.attach.removeBody',
+  'forms:editPraxis.composer.recapPoints',
+  'forms:proposeTask.preview.bonusPoints',
+  'home:signedIn.continue.meta.draft',
+  'praxis:detail.seal.bonus',
 ] as const
 
 const VARS = { era: 'Era One', level: 2, points: '1', score: '1' }
