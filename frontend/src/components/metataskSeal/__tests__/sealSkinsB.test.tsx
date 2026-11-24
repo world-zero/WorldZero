@@ -120,4 +120,11 @@ describe("seal skins B — na renders via the tuned DefaultSeal", () => {
     expect(html).toContain(factionName("na"));
     expect(html).toContain('data-card-masthead="na"');
   });
+
+  it("sets the na bonus in uppercase", () => {
+    const task = metatask("na");
+    const bonus = i18n.t("praxis:detail.seal.bonus", { points: task.point_value, count: task.point_value });
+    const html = markup(<DefaultSeal metatask={task} removable={false} />);
+    expect(bonusStyle(html, bonus)).toMatch(/text-transform:\s*uppercase/);
+  });
 });
