@@ -218,3 +218,51 @@ async def test_filing_pushes_every_edit_copy_holder(
         1,
     )
     assert [t.endpoint for t in targets] == [SUBSCRIPTION["endpoint"]]
+
+
+@pytest.mark.asyncio
+async def test_rerun_keeps_an_unchanged_rejected_line_rejected(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    token_on,
+):
+    await _own(db_session, account)
+    proposal_id = (await _file(client)).json()["id"]
+    await _approve(client, proposal_id, auth_headers, "reject")
+
+    again = await _file(client)
+    assert again.json()["lines"][0]["status"] == "rejected"
+    assert again.json()["pushed"] is False
+
+    changed = await _file(
+        client, {**BODY, "lines": [{**LINE, "proposed_value": "Base"}]}
+    )
+    assert changed.json()["lines"][0]["status"] == "open"
+
+
+@pytest.mark.asyncio
+async def test_empty_lines_without_a_proposal_store_nothing(
+    client: AsyncClient, db_session: AsyncSession, token_on
+):
+    resp = await _file(client, {**BODY, "lines": []})
+    assert resp.status_code == 201
+    assert resp.json()["pushed"] is False
+    assert (await db_session.execute(CopyProposal.__table__.select())).all() == []
+
+
+@pytest.mark.asyncio
+async def test_empty_lines_withdraw_the_proposal(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    auth_headers: dict,
+    token_on,
+):
+    await _own(db_session, account)
+    await _file(client)
+    resp = await _file(client, {**BODY, "lines": []})
+    assert resp.status_code == 201
+    assert resp.json()["pushed"] is False
+    assert (await client.get("/copy-proposals", headers=auth_headers)).json() == []

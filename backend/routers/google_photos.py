@@ -51,10 +51,10 @@ async def authorize(
     session: AsyncSession = Depends(get_db, scope="function"),
 ):
     """Popup entry: bind a `state` to this session, then on to Google's consent."""
-    google_user_id = await google_photos.require_google_account(account.id, session)
+    google_user_ids = await google_photos.require_google_account(account.id, session)
     state = secrets.token_urlsafe(32)
     request.session[_STATE_KEY] = {"state": state, "account_id": account.id}
-    return RedirectResponse(google_photos.authorize_url(state, google_user_id), 302)
+    return RedirectResponse(google_photos.authorize_url(state, google_user_ids[0]), 302)
 
 
 @router.get("/callback", response_class=HTMLResponse)
@@ -76,9 +76,9 @@ async def callback(
         )
     ):
         return _handback_page(False)
-    google_user_id = await google_photos.require_google_account(account.id, session)
+    google_user_ids = await google_photos.require_google_account(account.id, session)
     try:
-        await google_photos.complete_authorization(account.id, google_user_id, code)
+        await google_photos.complete_authorization(account.id, google_user_ids, code)
     except Exception as error:  # noqa: BLE001 - a navigation can't show JSON; any refusal fails the popup
         logger.warning(
             "Google Photos authorization failed for account %s: %r", account.id, error
