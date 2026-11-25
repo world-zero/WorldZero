@@ -148,7 +148,9 @@ async def test_task_status_needs_the_box_for_its_transition(
 
 
 P = TaskStatus
-RP, MT, DT = Permission.review_proposals, Permission.manage_tasks, Permission.delete_import_tasks
+RP = Permission.review_proposals
+MT = Permission.manage_tasks
+DT = Permission.delete_import_tasks
 
 
 @pytest.mark.parametrize(
@@ -168,7 +170,8 @@ RP, MT, DT = Permission.review_proposals, Permission.manage_tasks, Permission.de
     ],
 )
 async def test_task_status_permission_follows_the_pair(
-    client, db_session, account, character, auth_headers, held, start, target, expected
+    client, db_session, account, character, auth_headers, held, start, target,
+    expected,
 ):
     task = await make_task(db_session, character, status=start, commit=True)
     await make_admin(db_session, account, permissions=held)
