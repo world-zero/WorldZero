@@ -28,7 +28,7 @@ export function RosterAvatar({
   /** Dashed for an unanswered invite, like its pill. */
   dashed?: boolean
   color?: string
-  /** Empty/absent falls back to the monogram. */
+  /** Empty/null falls back to the monogram (unless `absent`). */
   avatarUrl?: string | null
 }) {
   if (avatarUrl && !absent) {
