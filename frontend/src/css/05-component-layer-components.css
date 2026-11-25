@@ -327,6 +327,8 @@
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    /* Syllable break + visible hyphen first; the column's overflow-wrap: anywhere only catches the unhyphenable. */
+    hyphens: auto;
   }
 
   /* ── Functional ink role classes (#1609) ──

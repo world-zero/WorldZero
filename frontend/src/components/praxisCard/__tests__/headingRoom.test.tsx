@@ -5,6 +5,8 @@
  * stamp's `min-width: auto` is its own drawn size.
  */
 import { describe, it, expect } from 'vitest'
+import { readIndexCss } from '../../../test/indexCss'
+import { ruleBodies, stripComments } from '../../../utils/__tests__/cssVars'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactElement } from 'react'
@@ -115,5 +117,11 @@ describe('an unbreakable title stays inside its column (#2556)', () => {
 describe('a list-card title clamps to 3 lines', () => {
   it('the title carries the clamp class (`.card-title`, 3 lines)', () => {
     expect(body({ title: 'word '.repeat(80) })).toMatch(/<h2 class="[^"]*\bcard-title\b/)
+  })
+})
+
+describe("a cut title shows its cut (#4332)", () => {
+  it("the shared .card-title rule hyphenates", () => {
+    expect(ruleBodies(stripComments(readIndexCss()), '.card-title').join(';')).toMatch(/hyphens:\s*auto/)
   })
 })
