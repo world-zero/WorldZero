@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Run the remote backup string from .github/actions/deploy-stack/action.yml
+# against stub `docker` and backup.sh. The string is extracted, not copied, so
+# drift in the action fails here. Run it: deploy/test-deploy-backup
+set -uo pipefail
+
+here=$(cd "$(dirname "$0")" && pwd)
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+mkdir -p "$tmp/bin" "$tmp/backups"
+
+# The lines that build db, media and the string, with the backup dir moved under $tmp.
+sed -n -E '/^ *(db|media)="\/srv\/backups|^ *backup="if docker/p' \
+  "$here/../.github/actions/deploy-stack/action.yml" |
+  sed "s#/srv/backups#$tmp/backups#" >"$tmp/lines.sh"
+[[ $(wc -l <"$tmp/lines.sh") == 3 ]] || { echo "FAIL could not extract the backup string"; exit 1; }
+
+# `docker compose ps --status running -q <service>`: an id if $STUB/<service>-up exists.
+cat >"$tmp/bin/docker" <<'EOF'
+#!/usr/bin/env bash
+[[ -e "$STUB/${*: -1}-up" ]] && echo abc123
+exit 0
+EOF
+cat >"$tmp/bin/backup.sh" <<'EOF'
+#!/usr/bin/env bash
+echo "backup.sh $*" >>"$STUB/calls"
+[[ -e "$STUB/writes-db" ]] && echo new >"$DB"
+[[ -e "$STUB/writes-media" ]] && echo new >"$MEDIA"
+[[ -e "$STUB/backup-fails" ]] && exit 1
+exit 0
+EOF
+chmod +x "$tmp/bin/"*
+
+fails=0
+check() { if "${@:2}"; then echo "ok   $1"; else echo "FAIL $1"; fails=$((fails + 1)); fi; }
+has() { [[ " $flags " == *" $1 "* ]]; }
+db=$tmp/backups/t-db-v1.dump media=$tmp/backups/t-media-v1.tgz
+
+# run <flags...>: db-up backend-up writes-db writes-media backup-fails have-db have-media
+# have-skipped. Sets $rc, $out and $calls.
+run() {
+  flags=$*
+  rm -rf "$tmp/stub" "$tmp/backups"; mkdir -p "$tmp/stub" "$tmp/backups"
+  local f; for f in "$@"; do touch "$tmp/stub/$f"; done
+  has have-db && echo old >"$db"
+  has have-media && echo old >"$media"
+  has have-skipped && touch "$media.skipped"
+  out=$(STUB=$tmp/stub DB=$db MEDIA=$media PATH="$tmp/bin:$PATH" \
+        BACKUP_SH=$tmp/bin/backup.sh BACKUP_LABEL=v1 ENVIRONMENT=t \
+        bash -c 'set -e; . "$1"; eval "$backup"; echo reached-deploy' _ "$tmp/lines.sh" 2>&1)
+  rc=$?
+  calls=$(cat "$tmp/stub/calls" 2>/dev/null | grep -c "^backup.sh")
+}
+deploys() { test "$rc" = 0 && grep -q reached-deploy <<<"$out"; }
+refuses() { test "$rc" != 0 && ! grep -q reached-deploy <<<"$out"; }
+
+run db-up backend-up have-db have-media
+check "existing pair: deploys"          deploys
+check "existing pair: backup.sh not run" test "$calls" = 0
+check "existing pair: db untouched"     grep -qx old "$db"
+
+run db-up backend-up have-db have-skipped
+check "db + .skipped marker: keeps it"  test "$calls" = 0
+check "db + .skipped marker: deploys"   deploys
+
+run db-up backend-up writes-db writes-media
+check "backup ok: deploys"              deploys
+check "backup ok: backup.sh ran once"   test "$calls" = 1
+check "backup ok: label reaches it"     grep -qx 'backup.sh t v1' "$tmp/stub/calls"
+
+run db-up backend-up writes-db writes-media backup-fails
+check "backup fails, both written: deploys" deploys
+
+run db-up backend-up backup-fails
+check "backup fails, nothing written: refuses" refuses
+check "backup fails, nothing written: says so" grep -q 'not deploying' <<<"$out"
+
+run db-up writes-db backup-fails
+check "db-only, backend down: deploys"  deploys
+check "db-only, backend down: marker"   test -e "$media.skipped"
+check "db-only, backend down: says so"  grep -q 'db-only pre-deploy dump' <<<"$out"
+# The re-run the marker exists for: backend up now, dump must not be redone.
+echo old >"$db"
+out=$(STUB=$tmp/stub DB=$db MEDIA=$media PATH="$tmp/bin:$PATH" BACKUP_SH=$tmp/bin/backup.sh \
+      BACKUP_LABEL=v1 ENVIRONMENT=t bash -c 'set -e; . "$1"; eval "$backup"; echo reached-deploy' _ "$tmp/lines.sh" 2>&1)
+check "db-only re-run: deploys"         grep -q reached-deploy <<<"$out"
+check "db-only re-run: db survives"     grep -qx old "$db"
+
+run db-up backend-up writes-db backup-fails
+check "db-only, backend up: refuses"    refuses
+
+run db-up backup-fails have-db
+check "stale db, no media, backend down: skips, db survives" grep -qx old "$db"
+
+run
+check "db not running: deploys"         deploys
+check "db not running: backup.sh not run" test "$calls" = 0
+check "db not running: says so"         grep -q 'db not running' <<<"$out"
+
+if ((fails)); then echo "$fails check(s) failed"; exit 1; fi
+echo "all checks passed"
