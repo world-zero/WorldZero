@@ -45,6 +45,10 @@ run() {
   has have-db && echo old >"$db"
   has have-media && echo old >"$media"
   has have-skipped && touch "$media.skipped"
+  exec_backup
+}
+# Runs the string against the current stub dir. Sets $rc, $out and $calls.
+exec_backup() {
   out=$(STUB=$tmp/stub DB=$db MEDIA=$media PATH="$tmp/bin:$PATH" \
         BACKUP_SH=$tmp/bin/backup.sh BACKUP_LABEL=v1 ENVIRONMENT=t \
         bash -c 'set -e; . "$1"; eval "$backup"; echo reached-deploy' _ "$tmp/lines.sh" 2>&1)
@@ -79,12 +83,14 @@ run db-up writes-db backup-fails
 check "db-only, backend down: deploys"  deploys
 check "db-only, backend down: marker"   test -e "$media.skipped"
 check "db-only, backend down: says so"  grep -q 'db-only pre-deploy dump' <<<"$out"
-# The re-run the marker exists for: backend up now, dump must not be redone.
-echo old >"$db"
-out=$(STUB=$tmp/stub DB=$db MEDIA=$media PATH="$tmp/bin:$PATH" BACKUP_SH=$tmp/bin/backup.sh \
-      BACKUP_LABEL=v1 ENVIRONMENT=t bash -c 'set -e; . "$1"; eval "$backup"; echo reached-deploy' _ "$tmp/lines.sh" 2>&1)
+# The re-run the marker exists for: backend up now, db migrated. The string
+# keeps any db plus the .skipped marker whatever the backend is doing, so the
+# dump is not redone and the backend being up does not make it refuse.
+echo old >"$db"; rm -f "$tmp/stub/calls"; touch "$tmp/stub/backend-up"
+exec_backup
 check "db-only re-run: deploys"         grep -q reached-deploy <<<"$out"
 check "db-only re-run: db survives"     grep -qx old "$db"
+check "db-only re-run: backup.sh not run" test "$calls" = 0
 
 run db-up backend-up writes-db backup-fails
 check "db-only, backend up: refuses"    refuses
