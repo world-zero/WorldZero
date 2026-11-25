@@ -74,9 +74,7 @@ async def delete_character(
     character_id: int, session: AsyncSession, era: EraConfig = CURRENT_ERA
 ) -> None:
     """One life's self-deletion: the soft delete, then its invites (S3)."""
-    rescore_ids = await soft_delete_character(
-        character_id, session, era, defer_rescore=True
-    )
+    rescore_ids = await soft_delete_character(character_id, session, era)
     await cancel_pending_invites_for([character_id], session, era, rescore_ids)
     await _rescore(rescore_ids, session, era, emit_taunts=True)
 
@@ -245,9 +243,7 @@ async def delete_account(
     rescore_ids: set[int] = set()
     for character in characters:
         # Bans, stamps departed_at, forfeits duels (ADR-0011), unlinks avatar.
-        rescore_ids |= await soft_delete_character(
-            character.id, session, era, defer_rescore=True
-        )
+        rescore_ids |= await soft_delete_character(character.id, session, era)
         character.username = await _released_username(character.id, session)
         character.display_name = DELETED_DISPLAY_NAME
         character.bio = ""

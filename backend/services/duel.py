@@ -75,25 +75,6 @@ async def _characters_share_account(
     return first.account_id == second.account_id
 
 
-async def forfeit_duels_for_character(
-    character_id: int,
-    session: AsyncSession,
-    era: EraConfig = CURRENT_ERA,
-) -> None:
-    """Self-delete's duel forfeit (ADR-0011, #3766): forfeit, then re-score.
-
-    Admin ban/suspend use ``forfeit_duels_collect`` plus
-    ``recalculate_for_account_votes`` instead, silently (no taunts). Sticky: the
-    first forfeit stands.
-    """
-    await _rescore(
-        await forfeit_duels_collect([character_id], session),
-        session,
-        era,
-        emit_taunts=True,
-    )
-
-
 async def forfeit_duels_collect(
     character_ids: Iterable[int], session: AsyncSession
 ) -> set[int]:

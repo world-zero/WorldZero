@@ -398,9 +398,10 @@ async def lock_settlement_stats(
     praxis_ids: set[int],
     extra_character_ids: Iterable[int],
     session: AsyncSession,
-) -> None:
+) -> set[int]:
     """One ascending lock pass over ``praxis_ids``' members and duel opponents,
-    everything ``account_ids`` voted on, and ``extra_character_ids`` (#4314)."""
+    everything ``account_ids`` voted on, and ``extra_character_ids`` (#4314).
+    Returns the locked ids: a rescore must stay inside them."""
     voted = await session.scalars(
         select(Vote.praxis_id).where(Vote.voter_account_id.in_(account_ids))
     )
@@ -408,29 +409,42 @@ async def lock_settlement_stats(
         praxis_ids | set(voted), set(extra_character_ids), session
     )
     await lock_character_stats(ids, session)
+    return ids
 
 
 async def recalculate_for_account_votes(
     account_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-    extra_character_ids: frozenset[int] | set[int] = frozenset(),
+    locked_character_ids: set[int] | None = None,
 ) -> None:
     """Re-score every praxis ``account_id`` voted on, after a moderation flip.
 
     Tallies skip moderated voters on read, so stored scores must follow.
     ``extra_character_ids`` join the same ascending pass: advisory locks are
     held to commit, so a second pass could lock out of order. Silent (ADR-0068).
+    ``locked_character_ids`` (from ``lock_settlement_stats``) is rescored as is:
+    re-selecting votes could find an id committed after the lock.
     """
+    if locked_character_ids is not None:
+        if not locked_character_ids:
+            return
+        era_row = await get_current_era_row(session)
+        for character_id in sorted(locked_character_ids):
+            await recalculate_character_stats(
+                character_id, session, era, era_row=era_row, emit_taunts=False
+            )
+        await session.flush()
+        return
     voted = await session.execute(
         select(Vote.praxis_id).where(Vote.voter_account_id == account_id)
     )
     praxis_ids = set(voted.scalars().all())
-    if not praxis_ids and not extra_character_ids:
+    if not praxis_ids:
         return
     live = await get_current_era_row(session)
     await _recalculate_with_duel_opponents(
-        praxis_ids, set(extra_character_ids), session, era, live, emit_taunts=False
+        praxis_ids, set(), session, era, live, emit_taunts=False
     )
 
 
