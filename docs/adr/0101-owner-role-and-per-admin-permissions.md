@@ -29,3 +29,20 @@
   `score` without `all_time_score` and stuck `peak_level`. A wrong score is fixed by
   recalculation or by undoing its cause.
 - Admins that existed before the migration, other than account 1, start with no boxes.
+
+## Amendment (#4305): the status route checks the (from, to) pair
+
+This supersedes the "re-checks the finer one by transition (proposal, delete,
+everything else)" clause above. `update_task_status` picks the boxes by the
+`(from, to)` pair, first match wins:
+
+1. Either end is `deleted`: `delete_import_tasks`.
+2. `pending` to `backdoor`: `manage_tasks` AND `review_proposals`.
+3. Any other move out of `pending`: `review_proposals`.
+4. Everything else: `manage_tasks`.
+
+The two-box rule for pending to backdoor is a least-privilege default: it
+publishes a proposal and opens a window, so it takes both boxes. The owner has
+not ruled on it and may loosen it. `taskMoveNeeds` in
+`frontend/src/auth/permissions.ts` mirrors this by hand; a table test on each
+side holds the same rows.
