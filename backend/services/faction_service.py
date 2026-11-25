@@ -87,7 +87,7 @@ class MoveFacts:
     defected: frozenset[str]
     letters: frozenset[str]
     albescent_unlocked: bool
-    level: int | None
+    peak_level: int | None
 
 
 async def load_move_facts(
@@ -99,9 +99,9 @@ async def load_move_facts(
     defections: list[FactionDefectionHistory] | None = None,
     letters: list[InvitationLetter] | None = None,
 ) -> MoveFacts:
-    """The four reads behind :func:`move_refusal`: history, letters, unlock, level.
+    """The four reads behind :func:`move_refusal`: history, letters, unlock, era peak.
 
-    Constant query count across factions. No stats row → level ``None`` (below
+    Constant query count across factions. No stats row → peak ``None`` (below
     the ceiling). Pass ``defections``/``letters`` to skip re-reading them.
     """
     if defections is None:
@@ -125,7 +125,7 @@ async def load_move_facts(
         albescent_unlocked=await can_start_as_albescent(
             character.account_id, session, era
         ),
-        level=stats.level if stats is not None else None,
+        peak_level=stats.era_peak_level if stats is not None else None,
     )
 
 
@@ -182,7 +182,7 @@ def move_refusal(
         # (2) This life must NOT meet the level: the game's only *ceiling* gate.
         # Albescent is New Game+, never the earner. Same predicate as the earn
         # floor, deliberately not negated (#2868).
-        if meets_albescent_level(facts.level, facts.current_slug, False, era):
+        if meets_albescent_level(facts.peak_level, facts.current_slug, False, era):
             return coded_error(
                 403,
                 ErrorCode.faction_albescent_new_game_plus_only,

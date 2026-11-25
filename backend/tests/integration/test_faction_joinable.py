@@ -38,7 +38,16 @@ LETTERED = ["ua", "snide", "wow", "coven"]
 
 
 async def _setup(
-    db, account, character, era_row, *, letters=(), left=(), unlocked=False, level=0
+    db,
+    account,
+    character,
+    era_row,
+    *,
+    letters=(),
+    left=(),
+    unlocked=False,
+    level=0,
+    peak=None,
 ):
     for slug in CURRENT_ERA.factions:
         if await db.scalar(select(Faction).where(Faction.slug == slug)) is None:
@@ -67,6 +76,7 @@ async def _setup(
         stats = CharacterStats(character_id=character.id, era_id=era_row.id)
         db.add(stats)
     stats.level = level
+    stats.era_peak_level = level if peak is None else peak
     await db.commit()
 
 
@@ -188,3 +198,56 @@ async def test_status_row_names_the_new_game_plus_refusal_for_the_earner(
         headers=auth_headers,
     )
     assert choose.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_earner_who_dipped_below_the_line_is_still_refused(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    auth_headers: dict,
+):
+    await _setup(
+        db_session,
+        account,
+        character,
+        era,
+        unlocked=True,
+        level=CEILING - 1,
+        peak=CEILING,
+    )
+    row = {
+        r["slug"]: r
+        for r in (await client.get("/factions/status", headers=auth_headers)).json()[
+            "all_factions"
+        ]
+    }[ALBESCENT_FACTION_SLUG]
+    assert row["joinable"] is False
+    assert row["refusal"] == "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
+    choose = await client.post(
+        "/factions/choose",
+        json={"faction_slug": ALBESCENT_FACTION_SLUG},
+        headers=auth_headers,
+    )
+    assert choose.status_code == 403
+    assert choose.json()["detail"]["code"] == "FACTION_ALBESCENT_NEW_GAME_PLUS_ONLY"
+
+
+@pytest.mark.asyncio
+async def test_new_life_with_peak_zero_can_join_albescent(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    account: Account,
+    character: Character,
+    era: Era,
+    auth_headers: dict,
+):
+    await _setup(db_session, account, character, era, unlocked=True, level=0, peak=0)
+    choose = await client.post(
+        "/factions/choose",
+        json={"faction_slug": ALBESCENT_FACTION_SLUG},
+        headers=auth_headers,
+    )
+    assert choose.status_code == 200
