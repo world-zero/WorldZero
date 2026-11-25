@@ -22,9 +22,22 @@ export const NEEDS = {
 
 export type Need = keyof typeof NEEDS
 
-/** `PUT /admin/tasks/{id}/status` re-checks by transition: mirrors `admin_service.update_task_status`. */
-export const taskStatusNeed = (status: string): Need =>
-  status === 'pending' ? 'proposals' : status === 'deleted' ? 'deleteTask' : 'editTask'
+const MOVE_TARGETS = ['active', 'retired', 'backdoor', 'deleted']
+
+/** Every box `PUT /admin/tasks/{id}/status` wants for a (from, to) move: mirrors `admin_service.update_task_status`. */
+export const taskMoveNeeds = (from: string, to: string): Need[] =>
+  from === 'deleted' || to === 'deleted'
+    ? ['deleteTask']
+    : from === 'pending'
+      ? to === 'backdoor' ? ['proposals', 'editTask'] : ['proposals']
+      : ['editTask']
+
+/** `canMove(from, to)`; without `to`, whether any move out of `from` is allowed. */
+export function useCanMove(): (from: string, to?: string) => boolean {
+  const can = useCan()
+  return (from, to) =>
+    (to ? [to] : MOVE_TARGETS).some((target) => taskMoveNeeds(from, target).every(can))
+}
 
 export function useCan(): (need: Need) => boolean {
   const { user } = useAuth()
