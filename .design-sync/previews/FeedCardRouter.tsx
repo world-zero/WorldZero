@@ -38,7 +38,7 @@ export function GlobalTaskRow() {
 }
 
 /** A player accepting your collab invite — Everymen frame. */
-export function FriendSignupRow() {
+export function CollabAcceptedRow() {
   return (
     <div style={wrap}>
       <FeedCardRouter item={mockFeedItems.collab_accepted} />

@@ -141,29 +141,3 @@ export function FriendCompletion() {
     </div>
   )
 }
-
-/** A friend signed up for a task — the global/community register. */
-export function FriendSignup() {
-  return (
-    <div style={wrap}>
-      <WowFeedFrame
-        kicker="Vote"
-        time="5h ago"
-        tag={null}
-        archive={<FeedArchiveButton onAct={() => {}} />}
-      >
-        <FeedRow
-          accent={ACCENT}
-          initial="A"
-          actor="Ada Reed"
-          action="signed up for a task"
-          badge="Global"
-          badgeBg="var(--badge-global)"
-          time="3 hours ago"
-          headline="Organize a neighborhood tool library"
-          meta="45 points · Level 3"
-        />
-      </WowFeedFrame>
-    </div>
-  )
-}
