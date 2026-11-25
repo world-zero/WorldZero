@@ -41,6 +41,7 @@ async def _set_level(
         )
     )
     stats.level = level
+    stats.era_peak_level = level
     await session.commit()
 
 
