@@ -509,12 +509,12 @@ async def test_self_delete_forfeit_still_taunts(
     character3: Character,
 ):
     """The one forfeit path that is the player's own act, so it is news."""
-    from services.character import soft_delete_character
+    from services.account_deletion import delete_character
 
     _, challenger, opponent = await make_duel(db_session, era, label="sdel")
     await _watch_for_taunts(db_session, era, character3, challenger)
 
-    await soft_delete_character(opponent.id, db_session)
+    await delete_character(opponent.id, db_session)
 
     assert await _taunts(db_session) != []
 

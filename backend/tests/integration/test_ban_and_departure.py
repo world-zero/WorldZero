@@ -106,7 +106,7 @@ async def test_leaving_does_not_overwrite_an_already_forfeited_duel(
     departure: str,
 ):
     """Sticky (ADR-0011): the first forfeit is never overwritten."""
-    from services.character import soft_delete_character
+    from services.account_deletion import delete_character
 
     await make_admin(db_session, account)
     duel, challenger, opponent = await make_duel(
@@ -117,7 +117,7 @@ async def test_leaving_does_not_overwrite_an_already_forfeited_duel(
         banned = await _ban(client, opponent.id, auth_headers, banned=True)
         assert banned.status_code == 200
     else:
-        await soft_delete_character(opponent.id, db_session)
+        await delete_character(opponent.id, db_session)
 
     await db_session.refresh(duel)
     assert duel.forfeited_by_character_id == challenger.id

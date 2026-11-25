@@ -47,9 +47,9 @@ from models.praxis import (
 )
 from models.praxis_room import PraxisRoomUpdate
 from models.task import Task
+from services.account_deletion import delete_character
 from services.admin_service import apply_ban, suspend_account
 from services.auth import create_jwt
-from services.character import soft_delete_character
 from services.character_stats import recalculate_character_stats
 from services.praxis import (
     delete_praxis,
@@ -662,7 +662,7 @@ async def test_removing_a_player_closes_their_socket_not_the_collaborators(
         "suspend": lambda: suspend_account(
             account2.id, True, db_session, actor_id=account.id
         ),
-        "delete": lambda: soft_delete_character(character2.id, db_session),
+        "delete": lambda: delete_character(character2.id, db_session),
     }
     async with running_rooms(
         db_session, monkeypatch, flush_debounce_seconds=0.05

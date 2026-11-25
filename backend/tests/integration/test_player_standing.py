@@ -9,6 +9,8 @@ from models.account import Account, AccountStatus
 from models.character import CharacterStatus
 from models.duel import DuelStatus
 from models.praxis import (
+    MediaItem,
+    MediaType,
     Praxis,
     PraxisInvite,
     PraxisMember,
@@ -16,7 +18,7 @@ from models.praxis import (
     PraxisType,
 )
 from models.vote import Vote
-from services import admin_service, character_stats
+from services import admin_service, character_stats, collab_consensus
 from services import praxis as praxis_service
 from services.account_deletion import delete_character
 from services.character import has_current_terms, is_playable
@@ -220,7 +222,9 @@ async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
     await make_admin(db_session, account)
     solo = await make_solo_praxis(db_session, active_task, character)
     stay = await make_character(db_session, era, username="stay")
-    leave = await make_character(db_session, era, username="leave")
+    _, _, leave = await make_duel(
+        db_session, era, label="lk", status=DuelStatus.active
+    )
     collab = Praxis(
         task_id=active_task.id, created_by_id=stay.id, type=PraxisType.collab,
         title="c", body_text="proof",
@@ -228,8 +232,12 @@ async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
     db_session.add(collab)
     await db_session.flush()
     db_session.add_all(
-        PraxisMember(praxis_id=collab.id, character_id=m.id) for m in (stay, leave)
+        PraxisMember(praxis_id=collab.id, character_id=m.id, has_approved=m is stay)
+        for m in (stay, leave)
     )
+    db_session.add(MediaItem(
+        praxis_id=collab.id, type=MediaType.image, file_path="proof.png"
+    ))
     db_session.add(Vote(
         praxis_id=solo.id, voter_character_id=leave.id,
         voter_account_id=leave.account_id, value=3,
@@ -254,12 +262,15 @@ async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
     monkeypatch.setattr(character_stats, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
+    monkeypatch.setattr(collab_consensus, "_lock_praxis", praxis_spy)
 
     assert (await _ban(client, leave.id, auth_headers)).status_code == 200
 
     first = list(dict.fromkeys(taken))
     assert {character.id, stay.id, leave.id} <= set(first)
     assert first == sorted(first)
+    await db_session.refresh(collab)
+    assert collab.status == PraxisStatus.submitted
     before = {
         pid for kind, pid in events[: events.index(("stats", 0))] if kind == "praxis"
     }
@@ -300,6 +311,7 @@ async def test_a_delete_locks_praxis_rows_before_any_stats_row(
     monkeypatch.setattr(character_stats, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
+    monkeypatch.setattr(collab_consensus, "_lock_praxis", praxis_spy)
 
     await delete_character(leaver.id, db_session)
 

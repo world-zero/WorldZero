@@ -672,15 +672,14 @@ async def soft_delete_character(
     character_id: int,
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
-    *,
-    defer_rescore: bool = False,
 ) -> set[int]:
     """Self-deletion: status banned, ``departed_at`` set, avatar erased (#1568).
 
     A moderator ban (``admin_service.apply_ban``) must not call this: it is
     reversible and must keep evidence. Both share the ADR-0011 forfeit (#1577).
-    ``defer_rescore`` returns the ids to re-score instead, so the caller can
-    lock praxis rows before stats rows. Praxis media survives both. The unlink
+    Returns the ids to re-score, so the caller can lock praxis rows before
+    stats rows (``account_deletion.delete_character`` is the full delete).
+    Praxis media survives both. The unlink
     is last and non-transactional (the router commits), so a failed commit
     leaves at worst a dead ``avatar_url``.
     """
@@ -698,13 +697,9 @@ async def soft_delete_character(
     character.avatar_url = ""
 
     # Deferred: services.duel -> character_stats -> this module.
-    from services.duel import forfeit_duels_collect, forfeit_duels_for_character
+    from services.duel import forfeit_duels_collect
 
-    rescore_ids: set[int] = set()
-    if defer_rescore:
-        rescore_ids = await forfeit_duels_collect([character_id], session)
-    else:
-        await forfeit_duels_for_character(character_id, session, era)
+    rescore_ids = await forfeit_duels_collect([character_id], session)
     close_character_sockets(character_id)
 
     # No-op for remote URLs or another character's file (player-written column).

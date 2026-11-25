@@ -839,7 +839,7 @@ async def test_self_deletion_forfeits_settled_duels(
 ):
     """``DELETE /characters/{id}`` path; the ban leg is in test_ban_and_departure.py."""
     from models.duel import Duel, DuelStatus
-    from services.character import soft_delete_character
+    from services.account_deletion import delete_character
     from services.praxis import get_praxis
     from services.praxis_scoring import compute_contributions
 
@@ -855,7 +855,7 @@ async def test_self_deletion_forfeits_settled_duels(
     db_session.add(duel)
     await db_session.commit()
 
-    await soft_delete_character(character2.id, db_session)
+    await delete_character(character2.id, db_session)
     await db_session.refresh(duel)
     assert duel.status == DuelStatus.settled
     assert duel.forfeited_by_character_id == character2.id

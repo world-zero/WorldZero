@@ -429,7 +429,7 @@ async def apply_ban(
             "This character was deleted by its player and cannot be restored.",
         )
 
-    rescore_ids: set[int] = set()
+    rescore_ids: set[int] | None = None
     if banned:
         character.status = CharacterStatus.banned
         # S1: the ban stops every life, so every life's duels, sockets, invites go.
@@ -439,7 +439,9 @@ async def apply_ban(
         rescore_ids = await forfeit_duels_collect(life_ids, session)
         for life_id in life_ids:
             close_character_sockets(life_id)
-        await cancel_pending_invites_for(life_ids, session, era, rescore_ids)
+        rescore_ids = await cancel_pending_invites_for(
+            life_ids, session, era, rescore_ids, lock_votes=True
+        )
     else:
         character.status = CharacterStatus.active
 
@@ -648,7 +650,7 @@ async def suspend_account(
         await refuse_unfit_target(account_id, actor_id, session)
     account.status = AccountStatus.suspended if suspended else AccountStatus.active
     await session.flush()
-    rescore_ids: set[int] = set()
+    rescore_ids: set[int] | None = None
     if suspended:
         # Same as a ban; lifting the suspension does not undo it (#3766).
         character_ids = (await session.scalars(
@@ -657,8 +659,8 @@ async def suspend_account(
         rescore_ids = await forfeit_duels_collect(character_ids, session)
         for character_id in character_ids:
             close_character_sockets(character_id)
-        await cancel_pending_invites_for(
-            list(character_ids), session, era, rescore_ids
+        rescore_ids = await cancel_pending_invites_for(
+            list(character_ids), session, era, rescore_ids, lock_votes=True
         )
     await log_mod_action(
         session,

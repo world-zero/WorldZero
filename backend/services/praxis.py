@@ -1346,13 +1346,15 @@ async def cancel_pending_invites_for(
     session: AsyncSession,
     era: EraConfig = CURRENT_ERA,
     lock_ids: frozenset[int] | set[int] = frozenset(),
-) -> None:
+    lock_votes: bool = False,
+) -> set[int]:
     """Delete every pending invite to or from these characters (S3, #4204), then
     settle each unsealed collab they touch: seal if the playable rest approved
     (their absence was the last wait), else convert to solo when no one is left.
 
-    Stats locks for the seal recalcs and the caller's later vote rescore
-    (``lock_ids`` = its extra rescore ids) are taken here in one ascending pass."""
+    Stats locks for the seal recalcs and the caller's later rescore (``lock_ids``
+    = its extra ids; ``lock_votes`` adds everything the accounts voted on, for ban
+    and suspend) are taken here in one ascending pass; returns the ids locked."""
     invites = (
         await session.scalars(
             select(PraxisInvite).where(
@@ -1381,15 +1383,16 @@ async def cancel_pending_invites_for(
     )
     accounts = set(await session.scalars(
         select(Character.account_id).where(Character.id.in_(character_ids))
-    ))
+    )) if lock_votes else set()
     # Praxis locks precede stats locks (character_stats.py lock order).
     for praxis_id in sorted(praxis_ids):
         await _lock_praxis(praxis_id, session)
-    await lock_settlement_stats(accounts, praxis_ids, lock_ids, session)
+    locked = await lock_settlement_stats(accounts, praxis_ids, lock_ids, session)
     for praxis_id in sorted(praxis_ids):
         praxis = await get_praxis(praxis_id, session, lock=True, refresh=True)
         if praxis.type == PraxisType.collab and praxis.status != PraxisStatus.submitted:
             await collab_consensus.on_member_leave(praxis, session, era)
+    return locked
 
 
 async def cancel_invite(
