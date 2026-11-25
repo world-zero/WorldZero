@@ -89,6 +89,10 @@ jobs:
       - name: Backup-pull reporting (stubbed)
         run: bash deploy/test-wz-backup-pull
 
+      # The pre-deploy backup string in deploy-stack/action.yml, eval'd against stubs.
+      - name: Deploy backup string (stubbed)
+        run: bash deploy/test-deploy-backup
+
       # Copy the owner edited live on dev may not be rewritten or removed by a PR.
       - name: Owner copy guard
         if: github.event_name == 'pull_request'
