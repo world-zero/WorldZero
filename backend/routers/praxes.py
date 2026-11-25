@@ -76,6 +76,7 @@ from services.praxis import (
     change_praxis_type,
     create_praxis,
     delete_media_item,
+    refuse_if_under_review,
     refuse_live_collab_media,
     delete_praxis,
     flag_praxis,
@@ -340,6 +341,7 @@ async def upload_media_route(
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character.id, "add media to", session, CURRENT_ERA, lock=True
     )
+    refuse_if_under_review(praxis)
     refuse_live_collab_media(praxis)
     media_item = await process_and_save_media(
         file, praxis_id, character.id, display_order
@@ -370,6 +372,7 @@ async def ingest_google_photos_route(
     praxis = await get_praxis_settling_consensus_for_member(
         praxis_id, character.id, "add media to", session, CURRENT_ERA, lock=True
     )
+    refuse_if_under_review(praxis)
     refuse_live_collab_media(praxis)
     return await google_photos.ingest_picked_media(
         praxis=praxis,

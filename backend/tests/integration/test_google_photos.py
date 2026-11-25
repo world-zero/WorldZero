@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
 from models.account import AuthProvider, OAuthProvider
 from models.character import Character
+from models.praxis import ModerationStatus, Praxis
 from models.task import Task
 from services import google_photos
 from services import media as media_service
@@ -354,3 +355,26 @@ async def test_abandon_deletes_session_and_token(
     assert response.status_code == 204
     assert not google_photos._GRANTS
     assert any(call.method == "DELETE" for call in google.calls)
+
+
+@pytest.mark.asyncio
+async def test_ingest_refused_under_review_before_any_download(
+    client, db_session, google_character, active_task, auth_headers, google
+):
+    await _authorise(client, auth_headers)
+    await client.post("/auth/google/photos/sessions", headers=auth_headers)
+    praxis_id = await _praxis_id(client, active_task, auth_headers)
+    praxis = await db_session.get(Praxis, praxis_id)
+    praxis.moderation_status = ModerationStatus.hidden
+    await db_session.commit()
+    calls_before = len(google.calls)
+
+    response = await client.post(
+        f"/praxes/{praxis_id}/media/google-photos",
+        json={"session_id": "sess-1"},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["code"] == "UNDER_REVIEW"
+    assert len(google.calls) == calls_before

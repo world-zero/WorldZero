@@ -862,6 +862,7 @@ async def add_media_batch(
     follows request position, appended. A successful batch cancels a pending
     publish once (ADR-0012); an all-rejected batch doesn't.
     """
+    refuse_if_under_review(praxis)
     refuse_live_collab_media(praxis)
     display_order = await _next_media_display_order(praxis.id, session)
     results: List[MediaUploadResultOut] = []
