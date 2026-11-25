@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 // Type-only: TaskCard is eager, so this file must not reach api/admin (#1141).
 import type { AdminTaskStatus } from '../../api/admin'
+import { useCanMove } from '../../auth/permissions'
 import { extractError } from '../../utils/errors'
 import { fromLocalInput, toLocalInput, type BackdoorWindow } from './backdoorWindow'
 
@@ -29,11 +30,12 @@ export default function TaskStatusControl({
   const [closes, setCloses] = useState('')
   const [error, setError] = useState<string | null>(null)
 
+  const canMove = useCanMove()
   const isBackdoor = status === 'backdoor'
-  const activate = status === 'pending' || status === 'retired' || isBackdoor
-  const retire = status === 'pending' || status === 'active' || isBackdoor
-  const schedule = status === 'pending' || status === 'active' || status === 'retired'
-  if (!activate && !retire) return null
+  const activate = (status === 'pending' || status === 'retired' || isBackdoor) && canMove(status, 'active')
+  const retire = (status === 'pending' || status === 'active' || isBackdoor) && canMove(status, 'retired')
+  const schedule = (status === 'pending' || status === 'active' || status === 'retired') && canMove(status, 'backdoor')
+  if (!activate && !retire && !schedule) return null
 
   const button = (label: string, tone: 'danger' | 'success', onClick: () => void) =>
     variant === 'panel' ? (

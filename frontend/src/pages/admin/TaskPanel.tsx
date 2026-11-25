@@ -9,7 +9,7 @@ import { fromLocalInput, toLocalInput, type BackdoorWindow } from '../../compone
 import { SidePanel } from './AdminList'
 import TaskDeleteConfirm from './TaskDeleteConfirm'
 import { requestTaskDelete } from './taskDelete'
-import { taskStatusNeed, useCan } from '../../auth/permissions'
+import { useCan, useCanMove } from '../../auth/permissions'
 import type { AdminTaskRow } from './adminTaskRows'
 
 // Text presentation selector: bare U+2197 renders as an emoji on iOS (#1702).
@@ -37,7 +37,8 @@ export default function TaskPanel({ task, factions, proposal, onChanged, onDelet
   const { t } = useTranslation('admin')
   const config = useGameConfig()
   const can = useCan()
-  const canStatus = can(taskStatusNeed(task.status))
+  const canMove = useCanMove()
+  const canStatus = canMove(task.status)
   const canEdit = can('editTask')
   const frozen = !canEdit
   // Scoring reads points and faction live: once a live task is done, changing them rewrites scores (#4298).

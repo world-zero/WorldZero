@@ -6,7 +6,7 @@ import type { TaskOut } from '../../api/tasks'
 import type { AdminTaskStatus } from '../../api/admin'
 import { useAuth } from '../../auth/AuthContext'
 import { useAdminMode } from '../../auth/AdminModeContext'
-import { taskStatusNeed, useCan } from '../../auth/permissions'
+import { useCan, useCanMove } from '../../auth/permissions'
 import StartHereMark from '../StartHereMark'
 import TaskStatusControl from '../admin/TaskStatusControl'
 import type { BackdoorWindow } from '../admin/backdoorWindow'
@@ -58,6 +58,7 @@ export default function TaskCard({
   const { user } = useAuth()
   const { adminMode } = useAdminMode()
   const can = useCan()
+  const canMove = useCanMove()
 
   /**
    * The write's own answer, so the card redraws itself without a page reload.
@@ -68,7 +69,7 @@ export default function TaskCard({
    */
   const [moderated, setModerated] = useState<TaskOut | null>(null)
   const shown = displayedTask(task, moderated)
-  const showAdminControls = user?.is_admin && adminMode && (can('tasks') || can(taskStatusNeed(shown.status)))
+  const showAdminControls = user?.is_admin && adminMode && (can('tasks') || canMove(shown.status))
   // Read off the SHOWN task so the write's answer refreshes it.
   const shownInProgressCount = inProgressCount ?? shown.in_progress_count
 
@@ -180,7 +181,7 @@ export default function TaskCard({
               {t('tasks.actions.openInAdmin')} {'\u2197\uFE0E'}
             </Link>
           )}
-          {can(taskStatusNeed(shown.status)) && (
+          {canMove(shown.status) && (
             <TaskStatusControl
               status={shown.status}
               variant="strip"

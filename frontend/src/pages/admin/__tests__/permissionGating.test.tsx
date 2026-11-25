@@ -169,6 +169,13 @@ describe('the task panel without manage_tasks', () => {
     expect(screen.queryByText(/error/i)).toBeNull()
   })
 
+  it('offers a proposal no Backdoor button to review_proposals alone', () => {
+    holding('review_proposals')
+    panel('pending')
+    expect(screen.getByRole('button', { name: 'activate' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'backdoor' })).toBeNull()
+  })
+
   it('restores a deleted task with delete_import_tasks alone', async () => {
     holding('delete_import_tasks')
     const onChanged = panel('deleted')
