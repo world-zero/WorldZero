@@ -27,6 +27,7 @@ from services.standing import counts_as_voter, standing_of
 from services.vote_ring import get_vote_ring
 from services.vote_tally import counted_votes
 from tests.integration.factories import (
+    cast_vote,
     make_admin,
     make_character,
     make_duel,
@@ -248,10 +249,15 @@ async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
     events: list[str] = []
     real = character_stats.lock_character_stats
     real_praxis = praxis_service._lock_praxis
+    real_collab = collab_consensus._lock_praxis
 
     async def praxis_spy(praxis_id, session):
         events.append(("praxis", praxis_id))
         return await real_praxis(praxis_id, session)
+
+    async def collab_spy(praxis_id, session):
+        events.append(("praxis", praxis_id))
+        return await real_collab(praxis_id, session)
 
     async def spy(ids, session):
         ids = sorted(set(ids))
@@ -262,7 +268,7 @@ async def test_a_ban_takes_every_stats_lock_in_one_ascending_pass(
     monkeypatch.setattr(character_stats, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
-    monkeypatch.setattr(collab_consensus, "_lock_praxis", praxis_spy)
+    monkeypatch.setattr(collab_consensus, "_lock_praxis", collab_spy)
 
     assert (await _ban(client, leave.id, auth_headers)).status_code == 200
 
@@ -299,10 +305,15 @@ async def test_a_delete_locks_praxis_rows_before_any_stats_row(
     events: list[tuple[str, int]] = []
     real = character_stats.lock_character_stats
     real_praxis = praxis_service._lock_praxis
+    real_collab = collab_consensus._lock_praxis
 
     async def praxis_spy(praxis_id, session):
         events.append(("praxis", praxis_id))
         return await real_praxis(praxis_id, session)
+
+    async def collab_spy(praxis_id, session):
+        events.append(("praxis", praxis_id))
+        return await real_collab(praxis_id, session)
 
     async def spy(ids, session):
         events.append(("stats", 0))
@@ -311,7 +322,7 @@ async def test_a_delete_locks_praxis_rows_before_any_stats_row(
     monkeypatch.setattr(character_stats, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
     monkeypatch.setattr(praxis_service, "_lock_praxis", praxis_spy)
-    monkeypatch.setattr(collab_consensus, "_lock_praxis", praxis_spy)
+    monkeypatch.setattr(collab_consensus, "_lock_praxis", collab_spy)
 
     await delete_character(leaver.id, db_session)
 
@@ -435,3 +446,34 @@ async def test_needs_terms_dev_login_stamps_terms_only_with_a_character(
     assert await has_current_terms(named.json()["account_id"], db_session)
     bare = await client.post("/auth/dev-login?key=nt2")
     assert not await has_current_terms(bare.json()["account_id"], db_session)
+
+
+@pytest.mark.parametrize("whole_account", [False, True])
+async def test_a_delete_does_not_stats_lock_a_strangers_voted_praxis(
+    db_session, era, active_task, some_faction, monkeypatch, whole_account
+):
+    """Seam: lock_votes=False on the self-delete paths (#4331)."""
+    from services.account_deletion import delete_account
+
+    voter = await make_character(db_session, era, username="lvvoter")
+    stranger = await make_character(db_session, era, username="lvstranger")
+    praxis = await make_solo_praxis(db_session, active_task, stranger)
+    await cast_vote(db_session, praxis, voter, 3)
+    await db_session.commit()
+
+    taken: set[int] = set()
+    real = character_stats.lock_character_stats
+
+    async def spy(ids, session):
+        taken.update(ids)
+        return await real(ids, session)
+
+    monkeypatch.setattr(character_stats, "lock_character_stats", spy)
+    monkeypatch.setattr(praxis_service, "lock_character_stats", spy)
+
+    if whole_account:
+        await delete_account(voter.account_id, db_session)
+    else:
+        await delete_character(voter.id, db_session)
+
+    assert stranger.id not in taken

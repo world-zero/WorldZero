@@ -576,28 +576,30 @@ async def test_accepted_invite_from_a_non_friend_is_one_row(
     assert items[0]["timestamp"].startswith(member.joined_at.isoformat()[:19])
 
 
-@pytest.mark.asyncio
-async def test_collab_accepted_shows_once_after_leave_and_reinvite(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    character: Character,
-    character2: Character,
-    active_task: Task,
-    auth_headers: dict,
-):
-    """Seam: /activity-feed collab_accepted; two accepted invites, one live member."""
-    from models.praxis import (
-        Praxis,
-        PraxisInvite,
-        PraxisInviteStatus,
-        PraxisMember,
-        PraxisStatus,
-        PraxisType,
+async def _join(db_session, praxis_id, inviter, invitee):
+    from services.praxis import invite_to_praxis, respond_to_invite
+
+    invite = await invite_to_praxis(praxis_id, invitee.id, inviter.id, db_session)
+    await respond_to_invite(invite.id, invitee.id, True, db_session)
+    await db_session.commit()
+
+
+async def _collab_accepted(client, headers):
+    response = await client.get(
+        "/activity-feed",
+        params={"filter": "your_stuff", "limit": 100, "types": ["collab_accepted"]},
+        headers=headers,
     )
+    assert response.status_code == 200, response.text
+    return response.json()["items"]
+
+
+async def _collab_of(db_session, task, creator):
+    from models.praxis import Praxis, PraxisMember, PraxisStatus, PraxisType
 
     collab = Praxis(
-        task_id=active_task.id,
-        created_by_id=character.id,
+        task_id=task.id,
+        created_by_id=creator.id,
         type=PraxisType.collab,
         status=PraxisStatus.in_progress,
         title="Together",
@@ -605,30 +607,62 @@ async def test_collab_accepted_shows_once_after_leave_and_reinvite(
     )
     db_session.add(collab)
     await db_session.flush()
-    db_session.add_all(
-        [
-            PraxisMember(praxis_id=collab.id, character_id=character.id),
-            PraxisMember(praxis_id=collab.id, character_id=character2.id),
-        ]
-        + [
-            PraxisInvite(
-                praxis_id=collab.id,
-                inviter_id=character.id,
-                invitee_id=character2.id,
-                status=PraxisInviteStatus.accepted,
-            )
-            for _ in range(2)
-        ]
-    )
+    db_session.add(PraxisMember(praxis_id=collab.id, character_id=creator.id))
     await db_session.commit()
+    return collab
 
-    response = await client.get(
-        "/activity-feed",
-        params={"filter": "your_stuff", "limit": 100, "types": ["collab_accepted"]},
-        headers=auth_headers,
-    )
-    assert response.status_code == 200, response.text
-    assert len(response.json()["items"]) == 1
+
+@pytest.mark.asyncio
+async def test_collab_accepted_shows_once_after_leave_and_reinvite(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+):
+    """Seam: /activity-feed collab_accepted; two accepted invites, one live member."""
+    from services.praxis import leave_praxis
+
+    collab = await _collab_of(db_session, active_task, character)
+    await _join(db_session, collab.id, character, character3)
+    await _join(db_session, collab.id, character, character2)
+    await leave_praxis(collab.id, character2.id, db_session)
+    await db_session.commit()
+    await _join(db_session, collab.id, character, character2)
+
+    items = await _collab_accepted(client, auth_headers)
+    names = [i["actor_display_name"] for i in items]
+    assert names.count(character2.display_name) == 1
+
+
+@pytest.mark.asyncio
+async def test_collab_accepted_follows_the_newest_inviter(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    character: Character,
+    character2: Character,
+    character3: Character,
+    active_task: Task,
+    auth_headers: dict,
+    auth_headers3: dict,
+):
+    """X joins via A, leaves, rejoins via B: only B sees "X accepted"."""
+    from services.praxis import leave_praxis
+
+    collab = await _collab_of(db_session, active_task, character)
+    await _join(db_session, collab.id, character, character3)
+    await _join(db_session, collab.id, character, character2)
+    await leave_praxis(collab.id, character2.id, db_session)
+    await db_session.commit()
+    await _join(db_session, collab.id, character3, character2)
+
+    assert [
+        i["actor_display_name"] for i in await _collab_accepted(client, auth_headers3)
+    ] == [character2.display_name]
+    seen_by_a = await _collab_accepted(client, auth_headers)
+    assert [i["actor_display_name"] for i in seen_by_a] == [character3.display_name]
 
 
 async def _walk(client: AsyncClient, headers: dict, limit: int) -> list[str]:

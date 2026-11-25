@@ -996,12 +996,12 @@ def _collab_accepted_query(ctx: FeedContext) -> Select:
         .where(
             PraxisInvite.inviter_id == ctx.character_id,
             PraxisInvite.status == PraxisInviteStatus.accepted,
-            # A leave + re-invite leaves two accepted invites on one live member row.
+            # Newest accepted invite per invitee wins, whoever sent it: a leave +
+            # re-invite leaves two on one live member row.
             ~exists().where(
                 newer.id > PraxisInvite.id,
                 newer.praxis_id == PraxisInvite.praxis_id,
                 newer.invitee_id == PraxisInvite.invitee_id,
-                newer.inviter_id == PraxisInvite.inviter_id,
                 newer.status == PraxisInviteStatus.accepted,
             ),
         )
