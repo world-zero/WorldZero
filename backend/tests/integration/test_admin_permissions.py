@@ -147,6 +147,39 @@ async def test_task_status_needs_the_box_for_its_transition(
         assert r.status_code == expected, (status, r.text)
 
 
+P = TaskStatus
+RP, MT, DT = Permission.review_proposals, Permission.manage_tasks, Permission.delete_import_tasks
+
+
+@pytest.mark.parametrize(
+    ("held", "start", "target", "expected"),
+    [
+        ([RP], P.pending, "backdoor", 403),
+        ([RP], P.pending, "deleted", 403),
+        ([RP], P.pending, "active", 200),
+        ([RP], P.pending, "retired", 200),
+        ([MT], P.pending, "backdoor", 403),
+        ([MT, RP], P.pending, "backdoor", 200),
+        ([DT], P.pending, "deleted", 200),
+        ([DT], P.deleted, "pending", 200),
+        ([RP], P.deleted, "pending", 403),
+        ([MT], P.active, "retired", 200),
+        ([RP], P.active, "retired", 403),
+    ],
+)
+async def test_task_status_permission_follows_the_pair(
+    client, db_session, account, character, auth_headers, held, start, target, expected
+):
+    task = await make_task(db_session, character, status=start, commit=True)
+    await make_admin(db_session, account, permissions=held)
+    r = await client.put(
+        f"/admin/tasks/{task.id}/status", json={"status": target}, headers=auth_headers
+    )
+    assert r.status_code == expected, r.text
+    if expected == 403:
+        assert code(r) == "ADMIN_PERMISSION_REQUIRED"
+
+
 async def test_me_carries_the_permissions_the_client_gates_on(
     client, db_session, account, auth_headers
 ):

@@ -747,15 +747,16 @@ async def update_task_status(
             detail=f"Task is already {task.status.value}.",
         )
 
-    # One route spans three boxes: approving or rejecting a proposal, Delete
-    # and its undo, and everything else (retire, reactivate, backdoor).
-    if task.status == TaskStatus.pending:
-        needed = Permission.review_proposals
-    elif TaskStatus.deleted in (task.status, new_status):
-        needed = Permission.delete_import_tasks
+    # The (from, to) pair picks the boxes; order matters: deleted first.
+    if TaskStatus.deleted in (task.status, new_status):
+        needed = {Permission.delete_import_tasks}
+    elif task.status == TaskStatus.pending and new_status == TaskStatus.backdoor:
+        needed = {Permission.manage_tasks, Permission.review_proposals}
+    elif task.status == TaskStatus.pending:
+        needed = {Permission.review_proposals}
     else:
-        needed = Permission.manage_tasks
-    if needed not in held:
+        needed = {Permission.manage_tasks}
+    if not needed <= held:
         raise_coded(
             403, ErrorCode.admin_permission_required, "You lack that permission."
         )
