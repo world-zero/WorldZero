@@ -21,7 +21,11 @@ from services.era import get_current_era_row, get_or_create_stats
 from services.era_gates import may_apply_metatask
 from services.faction_service import faction_permits
 from services.meta_task import faction_bypasses_metatask_level, metatask_cap_for_level
-from services.praxis import get_praxis, get_praxis_settling_consensus
+from services.praxis import (
+    get_praxis,
+    get_praxis_settling_consensus,
+    refuse_if_under_review,
+)
 
 
 def _check_metatask_eligibility(
@@ -63,6 +67,7 @@ async def apply_metatask(
     # Plain read, no settle (#2874): only ``in_progress`` is accepted, which has
     # no pending-publish window.
     praxis = await get_praxis(praxis_id, session)
+    refuse_if_under_review(praxis)
     task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found.")
@@ -144,6 +149,7 @@ async def remove_metatask(
     # and the rescore must price the published praxis.
     praxis = await get_praxis_settling_consensus(praxis_id, session, era)
 
+    refuse_if_under_review(praxis)
     member_ids = {member.character_id for member in praxis.members}
     if character_id not in member_ids:
         raise HTTPException(
