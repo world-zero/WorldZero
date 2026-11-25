@@ -421,10 +421,8 @@ async def recalculate_for_account_votes(
     """Re-score every praxis ``account_id`` voted on, after a moderation flip.
 
     Tallies skip moderated voters on read, so stored scores must follow.
-    ``extra_character_ids`` join the same ascending pass: advisory locks are
-    held to commit, so a second pass could lock out of order. Silent (ADR-0068).
-    ``locked_character_ids`` (from ``lock_settlement_stats``) is rescored as is:
-    re-selecting votes could find an id committed after the lock.
+    Silent (ADR-0068). ``locked_character_ids`` (from ``lock_settlement_stats``)
+    is rescored as is: re-selecting votes could find an id committed after the lock.
     """
     if locked_character_ids is not None:
         if not locked_character_ids:
